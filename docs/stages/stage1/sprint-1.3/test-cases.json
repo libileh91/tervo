@@ -1,0 +1,280 @@
+{
+  "$schema": "Phase 1 - Sprint 1.3 Test Cases",
+  "sprint": "1.3",
+  "description": "Tests for ChecklistService extraction + endpoints + InspectionPage + validation refine",
+  "notes": "INT-17 (model+seed) et INT-21 (validation brute) existent déjà dans le code. Les tests ciblent le refactoring et ce qui est nouveau.",
+  "test_cases": [
+    {
+      "id": "TC-INT-17-01",
+      "task": "INT-17",
+      "title": "ChecklistService - create_default_items() via JobService.create_job()",
+      "type": "unit",
+      "preconditions": [
+        "ChecklistService créé dans services/checklist.py",
+        "JobRepository.create() délègue à ChecklistService.create_default_items()",
+        "_seed_checklist() supprimé de JobRepository"
+      ],
+      "steps": [
+        "Créer un job (via POST /jobs)",
+        "Vérifier que ChecklistService.create_default_items() est appelé",
+        "Vérifier que 5 items sont créés (3 pré, 2 post) avec les labels actuels",
+        "Vérifier que JobRepository._seed_checklist() n'existe plus"
+      ],
+      "expected_result": {
+        "service_appelé": "true (JobRepository.create() utilise ChecklistService)",
+        "total_items": 5,
+        "pre_items": 3,
+        "post_items": 2,
+        "labels_pre": [
+          "Vérifier équipement de protection individuelle (EPI)",
+          "Vérifier les accès et sécuriser la zone de travail",
+          "Couper l'alimentation électrique de l'équipement"
+        ],
+        "labels_post": [
+          "Nettoyer la zone de travail et remettre en état",
+          "Rétablir l'alimentation et tester le fonctionnement"
+        ],
+        "seed_supprimé": "true (_seed_checklist plus dans JobRepository)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-17-02",
+      "task": "INT-17",
+      "title": "ChecklistService - validate_all_checked() avec tous cochés",
+      "type": "unit",
+      "preconditions": ["ChecklistService créé", "5 items existent pour un job, tous checked=true"],
+      "steps": ["Appeler ChecklistService.validate_all_checked(job_id)", "Vérifier le retour"],
+      "expected_result": {
+        "is_valid": true,
+        "errors": []
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-17-03",
+      "task": "INT-17",
+      "title": "ChecklistService - validate_all_checked() avec items non cochés",
+      "type": "unit",
+      "preconditions": ["5 items existent, 2 non cochés (1 pré, 1 post)"],
+      "steps": ["Appeler ChecklistService.validate_all_checked(job_id)"],
+      "expected_result": {
+        "is_valid": false,
+        "errors": ["1 item pré-intervention non coché", "1 item post-intervention non coché"]
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-18-01",
+      "task": "INT-18",
+      "title": "GET /jobs/{id}/checklist - liste items triée par position",
+      "type": "api",
+      "preconditions": ["Job avec id=1 existe avec 5 checklist items"],
+      "steps": ["GET /api/v1/jobs/1/checklist", "Header: Authorization: Bearer <token>"],
+      "expected_result": {
+        "status_code": 200,
+        "body": "array of 5 items",
+        "body[0]": {
+          "id": "int",
+          "category": "pre_intervention",
+          "label": "string",
+          "checked": false,
+          "note": null,
+          "position": 0
+        },
+        "tri_par_position_asc": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-18-02",
+      "task": "INT-18",
+      "title": "PUT /jobs/{id}/checklist/{id} - cocher un item",
+      "type": "api",
+      "preconditions": ["Checklist item id=1 pour job id=1, technicien assigné"],
+      "steps": [
+        "PUT /api/v1/jobs/1/checklist/1",
+        "Header: Authorization: Bearer <token>",
+        "Body: { \"checked\": true, \"note\": \"RAS, installation propre\" }"
+      ],
+      "expected_result": {
+        "status_code": 200,
+        "body": {
+          "id": 1,
+          "checked": true,
+          "note": "RAS, installation propre"
+        }
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-18-03",
+      "task": "INT-18",
+      "title": "PUT /jobs/{id}/checklist/{id} - item inexistant (404)",
+      "type": "api",
+      "preconditions": [],
+      "steps": [
+        "PUT /api/v1/jobs/1/checklist/999",
+        "Header: Authorization: Bearer <token>",
+        "Body: { \"checked\": true }"
+      ],
+      "expected_result": {
+        "status_code": 404,
+        "body.detail": "Item non trouvé"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-18-04",
+      "task": "INT-18",
+      "title": "PUT /jobs/{id}/checklist/{id} - non assigné (403)",
+      "type": "api",
+      "preconditions": ["Job assigné à un autre technicien"],
+      "steps": [
+        "PUT /api/v1/jobs/1/checklist/1 avec un autre token technicien",
+        "Header: Authorization: Bearer <other_token>",
+        "Body: { \"checked\": true }"
+      ],
+      "expected_result": {
+        "status_code": 403,
+        "body.detail": "Vous n'êtes pas assigné à ce job"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-19-01",
+      "task": "INT-19",
+      "title": "PUT /checklist/batch - mise à jour multiple",
+      "type": "api",
+      "preconditions": ["Job avec id=1, checklist items ids 1,2,3,4,5"],
+      "steps": [
+        "PUT /api/v1/jobs/1/checklist/batch",
+        "Header: Authorization: Bearer <token>",
+        "Body: { \"items\": [ { \"id\": 1, \"checked\": true, \"note\": \"RAS\" }, { \"id\": 2, \"checked\": true }, { \"id\": 3, \"checked\": true } ] }"
+      ],
+      "expected_result": {
+        "status_code": 200,
+        "body": {
+          "updated": 3
+        },
+        "batch_atomique": "true (tout ou rien via transaction)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-19-02",
+      "task": "INT-19",
+      "title": "PUT /checklist/batch - item non trouvé (erreur 404)",
+      "type": "api",
+      "preconditions": [],
+      "steps": [
+        "PUT /api/v1/jobs/1/checklist/batch",
+        "Header: Authorization: Bearer <token>",
+        "Body: { \"items\": [ { \"id\": 999, \"checked\": true } ] }"
+      ],
+      "expected_result": {
+        "status_code": 404,
+        "body.detail": "Item 999 non trouvé pour ce job"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-20-01",
+      "task": "INT-20",
+      "title": "Frontend - InspectionPage affichage sections pré/post",
+      "type": "e2e",
+      "preconditions": ["Job en_cours avec id=1", "Checklist items seedés (5 items)"],
+      "steps": ["Naviguer vers /jobs/1/inspection", "Vérifier l'affichage"],
+      "expected_result": {
+        "route": "/jobs/1/inspection accessible",
+        "section_pre": "visible avec titre 'Pré-intervention'",
+        "section_post": "visible avec titre 'Post-intervention'",
+        "items_pre": "3 items avec checkbox + textarea note",
+        "items_post": "2 items avec checkbox + textarea note",
+        "bouton_sauvegarder": "visible"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-20-02",
+      "task": "INT-20",
+      "title": "Frontend - InspectionPage job non démarré",
+      "type": "e2e",
+      "preconditions": ["Job planifié (status !== 'en_cours')"],
+      "steps": ["Naviguer vers /jobs/{id}/inspection sur un job 'planifié'"],
+      "expected_result": {
+        "message_bloquant": "Veuillez d'abord démarrer le job",
+        "checklist_non_editable": "true (checkbox désactivées ou page bloquée)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-20-03",
+      "task": "INT-20",
+      "title": "Frontend - InspectionPage sauvegarde batch + invalidation",
+      "type": "e2e",
+      "preconditions": ["Plusieurs items cochés et notes ajoutées"],
+      "steps": ["Cocher 3 items, ajouter 2 notes", "Cliquer 'Sauvegarder'"],
+      "expected_result": {
+        "appel_batch_api": "PUT /jobs/{id}/checklist/batch appelé",
+        "toast_succès": "visible",
+        "cache_invalidé": "queryKey ['checklist', jobId] ET ['job', jobId] invalidés",
+        "donnees_persistées": "après rechargement page, items toujours cochés"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-20-04",
+      "task": "INT-20",
+      "title": "Frontend - InspectionPage navigation retour JobDetail",
+      "type": "e2e",
+      "preconditions": ["InspectionPage ouverte"],
+      "steps": ["Cliquer sur le bouton '← Retour'"],
+      "expected_result": {
+        "navigation": "retour vers /jobs/{id} (JobDetailPage)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-21-01",
+      "task": "INT-21",
+      "title": "PUT /complete - message erreur détaillé par catégorie",
+      "type": "api",
+      "preconditions": [
+        "Job en_cours avec 2 items non cochés (1 pré, 1 post)",
+        "INT-17 terminé (validate_all_checked injecté dans complete_job)"
+      ],
+      "steps": ["PUT /api/v1/jobs/{id}/complete", "Header: Authorization: Bearer <token>"],
+      "expected_result": {
+        "status_code": 400,
+        "body.detail": "contient 'pré' et 'post' (ex: '3 items non cochés (2 pré, 1 post)')"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-21-02",
+      "task": "INT-21",
+      "title": "Frontend - bouton Terminer désactivé si checklist incomplète",
+      "type": "e2e",
+      "preconditions": ["Job en_cours avec items non cochés", "DashboardPage ou JobDetailPage ouverte"],
+      "steps": ["Vérifier le bouton 'Terminer'"],
+      "expected_result": {
+        "bouton_terminer_desactive": "true (disabled)",
+        "tooltip": "Complétez la checklist d'abord"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-21-03",
+      "task": "INT-21",
+      "title": "Frontend - bouton Terminer activé si checklist complète",
+      "type": "e2e",
+      "preconditions": ["Job en_cours avec tous les items cochés"],
+      "steps": ["Vérifier le bouton 'Terminer'"],
+      "expected_result": {
+        "bouton_terminer_actif": "true (pas disabled)"
+      },
+      "actual_result": null
+    }
+  ]
+}

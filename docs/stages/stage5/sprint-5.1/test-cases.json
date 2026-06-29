@@ -1,0 +1,119 @@
+{
+  "$schema": "Phase 5 - Sprint 5.1 Test Cases",
+  "sprint": "5.1",
+  "description": "Tests for Admin CRUD, audit logs",
+  "test_cases": [
+    {
+      "id": "TC-INT-56-01",
+      "task": "INT-56",
+      "title": "GET /admin/users - liste paginée (admin requis)",
+      "type": "api",
+      "preconditions": ["Au moins 2 utilisateurs en base", "Token admin valide"],
+      "steps": ["GET /api/v1/admin/users", "Header: Authorization: Bearer <admin_token>"],
+      "expected_result": {
+        "status_code": 200,
+        "body.items": "array (>= 2 users)",
+        "body.items[0].username": "string",
+        "body.items[0].role": "admin ou technician",
+        "body.items[0].is_active": "bool"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-56-02",
+      "task": "INT-56",
+      "title": "GET /admin/users - accès refusé si non admin (403)",
+      "type": "api",
+      "preconditions": ["Token technicien (non admin)"],
+      "steps": ["GET /api/v1/admin/users", "Header: Authorization: Bearer <tech_token>"],
+      "expected_result": {
+        "status_code": 403,
+        "body.detail": "Accès réservé aux administrateurs"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-57-01",
+      "task": "INT-57",
+      "title": "DELETE /admin/users/{id} - soft-delete",
+      "type": "api",
+      "preconditions": ["Token admin valide", "User id=2 (technician) existe"],
+      "steps": ["DELETE /api/v1/admin/users/2", "Header: Authorization: Bearer <admin_token>"],
+      "expected_result": {
+        "status_code": 204,
+        "user.is_active": "false (vérifié en base)",
+        "user_toujours_present": "true (SELECT retourne l'utilisateur)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-58-01",
+      "task": "INT-58",
+      "title": "POST /admin/register - création technicien",
+      "type": "api",
+      "preconditions": ["Token admin valide"],
+      "steps": [
+        "POST /api/v1/admin/register",
+        "Header: Authorization: Bearer <admin_token>",
+        "Body: { \"username\": \"newtech\", \"email\": \"new@resq.app\", \"password\": \"pass123\", \"full_name\": \"Nouveau Tech\" }"
+      ],
+      "expected_result": {
+        "status_code": 201,
+        "body.username": "newtech",
+        "body.role": "technician",
+        "body.password": "absent (ne pas retourner le password)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-59-01",
+      "task": "INT-59",
+      "title": "Frontend - AdminUsersPage accessible aux admins",
+      "type": "e2e",
+      "preconditions": ["Compte admin", "Compte technicien"],
+      "steps": [
+        "Login en tant qu'admin",
+        "Naviguer vers /admin/users",
+        "Vérifier la liste des utilisateurs"
+      ],
+      "expected_result": {
+        "page_accessible_admin": "true (admin peut voir la page)",
+        "liste_utilisateurs": "visible avec DataTable",
+        "bouton_nouveau": "visible"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-59-02",
+      "task": "INT-59",
+      "title": "Frontend - AdminUsersPage bloquée pour technicien",
+      "type": "e2e",
+      "preconditions": ["Compte technicien"],
+      "steps": [
+        "Login en tant que technicien",
+        "Naviguer vers /admin/users"
+      ],
+      "expected_result": {
+        "redirection": "true (redirigé vers Dashboard ou 403)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-60-01",
+      "task": "INT-60",
+      "title": "Audit log - création d'un job",
+      "type": "integration",
+      "preconditions": ["Modèle AuditLog créé", "Migration appliquée"],
+      "steps": [
+        "Créer un job via API",
+        "Vérifier la table audit_log"
+      ],
+      "expected_result": {
+        "entry_creee": "true (SELECT FROM audit_log WHERE action='create' AND entity_type='job')",
+        "user_id_correct": "true (correspond au créateur)",
+        "details": "contient le titre du job"
+      },
+      "actual_result": null
+    }
+  ]
+}

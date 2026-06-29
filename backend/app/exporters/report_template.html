@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Rapport d'intervention {{ job.title }}</title>
+<style>
+  @page { size: A4; margin: 2cm 1.5cm;
+    @bottom-center { content: "Page " counter(page) " / " counter(pages); font-size: 9px; color: #888; }
+  }
+  body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; line-height: 1.5; color: #222; }
+  h1 { font-size: 18px; color: #1a56db; margin-bottom: 4px; }
+  h2 { font-size: 14px; color: #1a56db; border-bottom: 2px solid #1a56db; padding-bottom: 4px; margin: 20px 0 10px; }
+  h3 { font-size: 12px; color: #444; margin: 10px 0 5px; }
+  .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+  .header-right { text-align: right; font-size: 10px; color: #666; }
+  .info-grid { display: flex; gap: 20px; margin-bottom: 6px; }
+  .info-block { flex: 1; background: #f5f7fa; padding: 10px; border-radius: 4px; }
+  .info-block strong { display: block; font-size: 10px; color: #888; text-transform: uppercase; margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0; }
+  th { background: #f0f2f5; text-align: left; padding: 6px 8px; font-size: 10px; text-transform: uppercase; color: #555; }
+  td { padding: 5px 8px; border-bottom: 1px solid #eee; font-size: 11px; }
+  .check-yes { color: #16a34a; }
+  .check-no { color: #dc2626; }
+  .section-label { font-weight: 600; margin: 12px 0 4px; font-size: 11px; }
+  .section-label.pre { color: #2563eb; }
+  .section-label.post { color: #16a34a; }
+  .photos-grid { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+  .photos-grid img { width: 130px; height: 100px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+  .observations { background: #fff8e1; padding: 10px; border-radius: 4px; border-left: 3px solid #f59e0b; margin: 8px 0; font-style: italic; }
+  .footer { margin-top: 30px; text-align: center; font-size: 9px; color: #aaa; border-top: 1px solid #eee; padding-top: 10px; }
+  .signature-line { margin-top: 40px; display: flex; justify-content: space-between; }
+  .signature-box { width: 45%; }
+  .signature-box .line { border-top: 1px solid #333; padding-top: 4px; font-size: 10px; color: #555; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>{{ job.title }}</h1>
+    <div class="header-meta">
+      <span>Ref: {{ job.id }}</span>
+      <span>Statut: {{ job.status_label }}</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <strong>ResQ - Rapport</strong><br>
+    Genere le {{ generated_at }}
+  </div>
+</div>
+
+<h2>Informations</h2>
+<div class="info-grid">
+  <div class="info-block">
+    <strong>Client</strong>
+    <span>{{ client.full_name }}</span><br>
+    <span>{{ client.address }}</span><br>
+    {% if client.city %}<span>{{ client.postal_code }} {{ client.city }}</span><br>{% endif %}
+    {% if client.phone %}<span>Tel: {{ client.phone }}</span>{% endif %}
+  </div>
+  <div class="info-block">
+    <strong>Technicien</strong>
+    <span>{{ technician.full_name }}</span><br>
+    <span>Intervention le {{ job.scheduled_date }}</span><br>
+    {% if job.scheduled_start_time %}
+    <span>Creneau: {{ job.scheduled_start_time }}{% if job.scheduled_end_time %} - {{ job.scheduled_end_time }}{% endif %}</span>
+    {% endif %}
+  </div>
+</div>
+
+<h2>Checklist d'inspection</h2>
+
+{% if checklist_pre %}
+<h3 class="section-label pre">Pre-intervention</h3>
+<table>
+  <tr><th>Etat</th><th>Point</th><th>Note</th></tr>
+  {% for item in checklist_pre %}
+  <tr>
+    <td class="{{ 'check-yes' if item.checked else 'check-no' }}">{{ 'O' if item.checked else 'X' }}</td>
+    <td>{{ item.label }}</td>
+    <td>{{ item.note or '' }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+{% if checklist_post %}
+<h3 class="section-label post">Post-intervention</h3>
+<table>
+  <tr><th>Etat</th><th>Point</th><th>Note</th></tr>
+  {% for item in checklist_post %}
+  <tr>
+    <td class="{{ 'check-yes' if item.checked else 'check-no' }}">{{ 'O' if item.checked else 'X' }}</td>
+    <td>{{ item.label }}</td>
+    <td>{{ item.note or '' }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+{% if photos_avant or photos_apres %}
+<h2>Photos</h2>
+{% if photos_avant %}
+<h3 class="section-label pre">Avant</h3>
+<div class="photos-grid">
+  {% for photo in photos_avant %}
+  <img src="{{ photo }}" alt="avant" />
+  {% endfor %}
+</div>
+{% endif %}
+{% if photos_apres %}
+<h3 class="section-label post">Apres</h3>
+<div class="photos-grid">
+  {% for photo in photos_apres %}
+  <img src="{{ photo }}" alt="apres" />
+  {% endfor %}
+</div>
+{% endif %}
+{% endif %}
+
+{% if materials %}
+<h2>Materiaux utilises</h2>
+<table>
+  <tr><th style="width:60%;">Materiau</th><th>Quantite</th></tr>
+  {% for mat in materials %}
+  <tr>
+    <td>{{ mat.name }}</td>
+    <td>{{ mat.quantity or '---' }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+{% if job.observations %}
+<h2>Observations</h2>
+<div class="observations">{{ job.observations }}</div>
+{% endif %}
+
+<div class="signature-line">
+  <div class="signature-box"><div class="line">Signature du technicien</div></div>
+  <div class="signature-box"><div class="line">Signature du client</div></div>
+</div>
+
+<div class="footer">ResQ - Rapport #{{ job.id }} - {{ generated_at }}</div>
+
+</body>
+</html>

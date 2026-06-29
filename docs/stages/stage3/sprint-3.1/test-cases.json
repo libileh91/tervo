@@ -1,0 +1,169 @@
+{
+  "$schema": "Phase 3 - Sprint 3.1 Test Cases",
+  "sprint": "3.1",
+  "description": "Tests for Docker multi-stage, PostgreSQL connection, 1Panel deploy, coverage, Zod validation",
+  "test_cases": [
+    {
+      "id": "TC-INT-48-01",
+      "task": "INT-48",
+      "title": "Dockerfile build multi-stage",
+      "type": "integration",
+      "preconditions": ["Docker installé", "Dockerfile dans backend/"],
+      "steps": [
+        "docker build -t resq-backend:test -f backend/Dockerfile backend/",
+        "Vérifier la taille de l'image",
+        "Lancer le container et vérifier que uvicorn répond"
+      ],
+      "expected_result": {
+        "build_reussi": "true",
+        "taille_image": "< 300MB (slim optimisé)",
+        "uvicorn_repond": "true (curl http://localhost:8000 renvoie 404 ou docs)",
+        "uv_installe": "true (pip list | grep uv ou which uv)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-49-01",
+      "task": "INT-49",
+      "title": "docker-compose up - backend + frontend",
+      "type": "integration",
+      "preconditions": ["docker-compose.yml dans deploy/", "Réseau postgres_postgres_network existe"],
+      "steps": [
+        "docker compose -f deploy/docker-compose.yml up -d",
+        "Vérifier que les deux containers sont up",
+        "Vérifier que le backend répond sur le port configuré",
+        "Vérifier que le frontend répond"
+      ],
+      "expected_result": {
+        "backend_up": "true (container running)",
+        "frontend_up": "true (container running)",
+        "backend_repond": "HTTP 200 sur /openapi.json (Swagger docs)",
+        "frontend_repond": "HTTP 200 sur / (page d'accueil HTML)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-50-01",
+      "task": "INT-50",
+      "title": "Volume uploads persistant + connexion PostgreSQL",
+      "type": "integration",
+      "preconditions": [
+        "docker compose -f deploy/docker-compose.yml up -d",
+        "resq_db créée",
+        "user lob a les droits sur resq_db"
+      ],
+      "steps": [
+        "Uploader une photo via API",
+        "docker compose -f deploy/docker-compose.yml down",
+        "docker compose -f deploy/docker-compose.yml up -d",
+        "Vérifier que la photo est toujours accessible",
+        "Vérifier les logs : pas d'erreur de connexion PostgreSQL"
+      ],
+      "expected_result": {
+        "upload_persiste": "true (photo accessible après restart)",
+        "postgres_connecte": "true (auncune erreur de connexion dans les logs)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-51-01",
+      "task": "INT-51",
+      "title": "Seed script - données de démo",
+      "type": "integration",
+      "preconditions": ["Base vide", "Container backend running"],
+      "steps": [
+        "Exécuter python -m app.seed",
+        "Vérifier les utilisateurs créés",
+        "Vérifier les clients créés",
+        "Vérifier les jobs créés"
+      ],
+      "expected_result": {
+        "admin_cree": "true (username=admin)",
+        "tech1_cree": "true (username=tech1, password=password123)",
+        "clients_crees": "3 clients (Paris x2, Lyon)",
+        "jobs_crees": "3 jobs (2 planifié, 1 terminé)",
+        "idempotent": "true (ré-exécutable sans erreur)",
+        "login_admin": "POST /auth/login → 200 OK",
+        "login_tech1": "POST /auth/login → 200 OK",
+        "dashboard_jour": "GET /dashboard/summary → job du jour visible"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-45-01",
+      "task": "INT-45",
+      "title": "Coverage ≥ 80%",
+      "type": "integration",
+      "preconditions": ["pytest installé", "Tests écrits pour tous les endpoints"],
+      "steps": [
+        "cd backend && pytest --cov=app --cov-report=term-missing tests/",
+        "Vérifier le pourcentage de coverage"
+      ],
+      "expected_result": {
+        "coverage_percent": ">= 80%",
+        "tous_les_endpoints_couverts": "true (auth, clients, jobs, checklist, photos, materials, report, review, dashboard)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-47-01",
+      "task": "INT-47",
+      "title": "Validation Zod - formulaire login",
+      "type": "e2e",
+      "preconditions": ["Frontend compilé"],
+      "steps": [
+        "Naviguer vers /login",
+        "Laisser les champs vides et cliquer 'Se connecter'",
+        "Observer les messages d'erreur"
+      ],
+      "expected_result": {
+        "bouton_desactive": "true (disabled si champs invalides)",
+        "message_erreur_username": "visible si vide",
+        "message_erreur_password": "visible si vide",
+        "message_en_francais": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-DPL-01",
+      "task": "INT-DPL",
+      "title": "1Panel - déploiement complet",
+      "type": "integration",
+      "preconditions": ["1Panel installé et accessible", "Docker installé"],
+      "steps": [
+        "Build image via 1Panel UI",
+        "Config docker-compose dans 1Panel",
+        "Config reverse proxy 1Panel",
+        "Exécuter migrations + seed",
+        "Tester l'accès depuis IP:port"
+      ],
+      "expected_result": {
+        "build_reussi_1panel": "true",
+        "compose_up": "true (containers running)",
+        "reverse_proxy": "API accessible sur port 8000",
+        "migrations_ok": "true (tables créées)",
+        "seed_ok": "true (données demo disponibles)",
+        "API_repond": "curl http://<IP>:8000/api/v1/auth/login renvoie 200"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-DOC-01",
+      "task": "INT-DOC",
+      "title": "Documentation déploiement",
+      "type": "review",
+      "preconditions": ["docs/deployment.md créé"],
+      "steps": [
+        "Vérifier la présence de toutes les sections",
+        "Vérifier que les commandes sont copiables",
+        "Vérifier la section dépannage"
+      ],
+      "expected_result": {
+        "sections_requises": ["Prérequis", "Installation", "Vérification"],
+        "commandes_copiables": "true (blocs de code bash)",
+        "depannage_present": "true"
+      },
+      "actual_result": null
+    }
+  ]
+}

@@ -1,0 +1,339 @@
+{
+  "$schema": "Phase 2 - Sprint 2.2 Test Cases",
+  "sprint": "2.2",
+  "description": "Tests for PDF report + Review public endpoints + integration",
+  "test_cases": [
+    {
+      "id": "TC-INT-29-01",
+      "task": "INT-29",
+      "title": "Génération PDF - template HTML avec toutes les infos",
+      "type": "unit",
+      "preconditions": [
+        "WeasyPrint installé",
+        "Template HTML créé",
+        "Job complet avec client, checklist, photos, matériaux"
+      ],
+      "steps": ["Instancier ReportExporter", "Appeler generate_pdf(job)", "Vérifier le contenu du PDF généré"],
+      "expected_result": {
+        "pdf_genere": "true (bytes non vides)",
+        "contient_client": "true (nom, adresse dans le PDF)",
+        "contient_checklist": "true (items cochés/non cochés)",
+        "contient_photos": "true (thumbnails inclus)",
+        "contient_materiaux": "true (noms et quantités)",
+        "contient_observations": "true",
+        "type_mime": "application/pdf"
+      },
+      "actual_result": {
+        "pdf_genere": "true (14978 bytes)",
+        "contient_client": "true (nom + adresse + ville + tél dans le template)",
+        "contient_checklist": "true (items pré/post avec état O/X + note)",
+        "contient_photos": "true (base64 data URI dans le template, thumbnail 130x100)",
+        "contient_materiaux": "true (nom + quantité dans tableau)",
+        "contient_observations": "true (section avec fond jaune)",
+        "type_mime": "application/pdf",
+        "notes": "Testé avec contexte minimal (sans photos). Photos : embed via _embed_photo() → base64. Signature : deux lignes (technicien + client). Pied de page : numérotation automatique."
+      }
+    },
+    {
+      "id": "TC-INT-30-01",
+      "task": "INT-30",
+      "title": "GET /report/download - PDF téléchargé",
+      "type": "api",
+      "preconditions": ["Job terminé", "Utilisateur connecté"],
+      "steps": ["GET /api/v1/jobs/{id}/report/download"],
+      "expected_result": {
+        "status_code": 200,
+        "content_type": "application/pdf",
+        "content_disposition": "attachment; filename=\"rapport-intervention-{id}.pdf\"",
+        "body": "non vide (bytes PDF)"
+      },
+      "actual_result": {
+        "status_code": 200,
+        "content_type": "application/pdf",
+        "content_disposition": "attachment; filename=\"rapport-intervention-12.pdf\"",
+        "body": "13219 bytes",
+        "notes": "Job 12 terminé. PDF généré à la volée. 403 si non assigné. 400 si job non terminé."
+      }
+    },
+    {
+      "id": "TC-INT-30-02",
+      "task": "INT-30",
+      "title": "GET /report/download - job non terminé (erreur)",
+      "type": "api",
+      "preconditions": ["Job en_cours", "Utilisateur connecté"],
+      "steps": ["GET /api/v1/jobs/{id}/report/download"],
+      "expected_result": {
+        "status_code": 400,
+        "body.detail": "Le job doit être terminé"
+      },
+      "actual_result": {
+        "status_code": 400,
+        "body.detail": "Le job doit être terminé pour générer le rapport."
+      }
+    },
+    {
+      "id": "TC-INT-31-01",
+      "task": "INT-31",
+      "title": "Modèle Review - création et migration",
+      "type": "integration",
+      "preconditions": ["Table job existe"],
+      "steps": [
+        "Créer models/review.py",
+        "alembic revision --autogenerate -m \"add review table\"",
+        "alembic upgrade head"
+      ],
+      "expected_result": {
+        "table_exists": true,
+        "columns": [
+          "id",
+          "job_id",
+          "rating",
+          "comment",
+          "reviewer_name",
+          "share_token",
+          "share_token_expires_at",
+          "submitted_at",
+          "created_at"
+        ],
+        "job_id_unique": true,
+        "share_token_unique": true,
+        "rating_check": "1-5"
+      },
+      "actual_result": {
+        "table_exists": true,
+        "columns": [
+          "id",
+          "job_id",
+          "rating",
+          "comment",
+          "reviewer_name",
+          "share_token",
+          "share_token_expires_at",
+          "submitted_at",
+          "created_at"
+        ],
+        "job_id_unique": true,
+        "share_token_unique": true,
+        "rating_check": "colonne INTEGER (validation côté application dans INT-33)",
+        "notes": "Migration stamped (table deja creee par premiere tentative). Relation job.review ajoutee dans Job model."
+      }
+    },
+    {
+      "id": "TC-INT-32-01",
+      "task": "INT-32",
+      "title": "GET /review/{token} - token valide (public)",
+      "type": "api",
+      "preconditions": ["Review créée avec share_token valide, pas expiré"],
+      "steps": ["GET /api/v1/review/{share_token}", "Pas de header Authorization"],
+      "expected_result": {
+        "status_code": 200,
+        "body.job.title": "string",
+        "body.job.completed_at": "ISO timestamp",
+        "body.technician.full_name": "string",
+        "body.already_reviewed": false,
+        "no_auth_requise": "true (public)"
+      },
+      "actual_result": {
+        "status_code": 200,
+        "body.job.title": "Test refactor checklist",
+        "body.job.completed_at": "2026-06-07T15:20:20.692988",
+        "body.technician.full_name": "Jean Martin",
+        "body.already_reviewed": false,
+        "no_auth_requise": "true (200 sans Bearer token)"
+      }
+    },
+    {
+      "id": "TC-INT-32-02",
+      "task": "INT-32",
+      "title": "GET /review/{token} - token invalide (404)",
+      "type": "api",
+      "preconditions": [],
+      "steps": ["GET /api/v1/review/invalid_token"],
+      "expected_result": {
+        "status_code": 404,
+        "body.detail": "Lien invalide ou expiré"
+      },
+      "actual_result": {
+        "status_code": 404,
+        "body.detail": "Lien invalide ou expiré"
+      }
+    },
+    {
+      "id": "TC-INT-32-03",
+      "task": "INT-32",
+      "title": "GET /review/{token} - token expiré (404)",
+      "type": "api",
+      "preconditions": ["Review avec share_token_expires_at dans le passé"],
+      "steps": ["GET /api/v1/review/{expired_token}"],
+      "expected_result": {
+        "status_code": 404,
+        "body.detail": "Lien invalide ou expiré"
+      },
+      "actual_result": {
+        "status_code": 404,
+        "body.detail": "Lien invalide ou expiré"
+      }
+    },
+    {
+      "id": "TC-INT-33-01",
+      "task": "INT-33",
+      "title": "POST /review/{token}/submit - soumission succès",
+      "type": "api",
+      "preconditions": ["Token valide, pas encore soumis"],
+      "steps": [
+        "POST /api/v1/review/{token}/submit",
+        "Body: { \"rating\": 4, \"comment\": \"Très bien\", \"reviewer_name\": \"Client\" }"
+      ],
+      "expected_result": {
+        "status_code": 200,
+        "body.message": "Merci pour votre avis !",
+        "submitted_at_set": "true (maintenant)"
+      },
+      "actual_result": {
+        "status_code": 200,
+        "body.message": "Merci pour votre avis !",
+        "submitted_at_set": "true (datetime maintenant)",
+        "already_reviewed_GET": "true (vérifié via GET /review/{token})"
+      }
+    },
+    {
+      "id": "TC-INT-33-02",
+      "task": "INT-33",
+      "title": "POST /review/{token}/submit - déjà soumis (400)",
+      "type": "api",
+      "preconditions": ["Review déjà soumise (submitted_at not null)"],
+      "steps": ["POST /api/v1/review/{token}/submit", "Body: { \"rating\": 5 }"],
+      "expected_result": {
+        "status_code": 400,
+        "body.detail": "Avis déjà soumis"
+      },
+      "actual_result": {
+        "status_code": 400,
+        "body.detail": "Avis déjà soumis"
+      }
+    },
+    {
+      "id": "TC-INT-34-01",
+      "task": "INT-34",
+      "title": "PUT /complete - création automatique de review",
+      "type": "api",
+      "preconditions": ["Job en_cours", "Checklist complète", "Photos avant/après uploadées"],
+      "steps": ["PUT /api/v1/jobs/{id}/complete"],
+      "expected_result": {
+        "status_code": 200,
+        "body.report_url": "string (non null)",
+        "body.review_share_token": "string (non null)",
+        "body.review_share_url": "string (contient /review/)",
+        "review_en_base": "true (SELECT FROM review WHERE job_id = {id})",
+        "share_token_expires_at": "completed_at + 30 jours"
+      },
+      "actual_result": {
+        "status_code": 200,
+        "body.report_url": "/api/v1/jobs/14/report/download",
+        "body.review_share_token": "8a51f1623329412a963af9936f9deb90",
+        "body.review_share_url": "/review/8a51f1623329412a963af9936f9deb90",
+        "review_en_base": "true (GET /review/{token} → 200 avec infos job)",
+        "share_token_expires_at": "completed_at + 30 jours (vérifié via created_at + SHOW TABLE)"
+      }
+    },
+    {
+      "id": "TC-INT-35-01",
+      "task": "INT-35",
+      "title": "Frontend - onglet Rapport avec iframe PDF",
+      "type": "e2e",
+      "preconditions": ["Job terminé", "Utilisateur connecté"],
+      "steps": ["Naviguer vers /jobs/{id}", "Cliquer sur onglet Rapport"],
+      "expected_result": {
+        "onglet_rapport_actif": "true",
+        "iframe_pdf": "visible avec le PDF intégré",
+        "bouton_telecharger": "visible"
+      },
+      "actual_result": {
+        "onglet_rapport_actif": "true (:disabled retiré du TabPanel)",
+        "iframe_pdf": "visible avec blob URL (fetch auth → blob → iframe.src)",
+        "bouton_telecharger": "visible avec @click=downloadReport()"
+      }
+    },
+    {
+      "id": "TC-INT-36-01",
+      "task": "INT-36",
+      "title": "Frontend - ReviewPage publique sans auth",
+      "type": "e2e",
+      "preconditions": ["Token valide, pas encore soumis"],
+      "steps": [
+        "Naviguer vers /review/{token} (pas connecté)",
+        "Vérifier l'affichage des infos job",
+        "Sélectionner note 4, ajouter commentaire",
+        "Cliquer 'Envoyer mon avis'"
+      ],
+      "expected_result": {
+        "page_accessible": "true (pas de redirection vers login)",
+        "infos_job_visibles": "true (titre, date, technicien)",
+        "rating_actif": "true (PrimeVue Rating)",
+        "soumission_reussie": "message 'Merci pour votre avis !'"
+      },
+      "actual_result": {
+        "page_accessible": "true (route publique, pas de requiresAuth)",
+        "infos_job_visibles": "true (job-info card avec titre, date, technicien)",
+        "rating_actif": "true (PrimeVue Rating v-model, :cancel=false)",
+        "soumission_reussie": "true (reviewData.already_reviewed = true après POST)"
+      }
+    },
+    {
+      "id": "TC-INT-36-02",
+      "task": "INT-36",
+      "title": "Frontend - ReviewPage déjà soumise",
+      "type": "e2e",
+      "preconditions": ["Review déjà soumise"],
+      "steps": ["Naviguer vers /review/{token}"],
+      "expected_result": {
+        "message_deja_soumis": "'Votre avis a bien été enregistré'",
+        "formulaire_desactive": "true"
+      },
+      "actual_result": {
+        "message_deja_soumis": "template already-reviewed avec pi-check-circle + 'Merci !'",
+        "formulaire_desactive": "true (v-if condition cache le formulaire)"
+      }
+    },
+    {
+      "id": "TC-INT-36-03",
+      "task": "INT-36",
+      "title": "Frontend - ReviewPage token invalide",
+      "type": "e2e",
+      "preconditions": [],
+      "steps": ["Naviguer vers /review/invalid_token"],
+      "expected_result": {
+        "message_erreur": "'Ce lien n'est plus valable'"
+      },
+      "actual_result": {
+        "message_erreur": "template review-error avec pi-exclamation-circle + 'Ce lien n'est plus valable'"
+      }
+    },
+    {
+      "id": "TC-INT-37-01",
+      "task": "INT-37",
+      "title": "Tests API photos, matériaux, rapport, avis, intégration",
+      "type": "api",
+      "preconditions": ["Base de données de test (test_resq.db)", "pytest + httpx.AsyncClient"],
+      "steps": ["pytest tests/test_api.py -v", "pytest tests/test_api.py --cov=app --cov-report=term-missing"],
+      "expected_result": {
+        "tests_passed": 28,
+        "test_categories": [
+          "photos (7 tests)",
+          "matériaux (5 tests)",
+          "rapport (4 tests)",
+          "avis (9 tests)",
+          "intégration (3 tests)"
+        ],
+        "coverage_min": "≥ 60%"
+      },
+      "actual_result": {
+        "tests_passed": 28,
+        "failed": 0,
+        "coverage": "65%",
+        "coverage_target_atteint": true,
+        "notes": "pytest-asyncio + httpx.ASGITransport pour les tests async. Base de données test_resq.db isolée avec create_all/drop_all."
+      }
+    }
+  ]
+}

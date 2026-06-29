@@ -1,0 +1,30 @@
+# ── Python ────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.pytest_cache/
+.coverage
+*.db
+
+# ── Environment ───────────────────────────────────
+.env
+
+# ── Version control ───────────────────────────────
+.git/
+.gitignore
+
+# ── Project metadata / docs (not needed at runtime) ──
+.agents/
+docs/
+notes/
+
+# ── Frontend (separate container) ─────────────────
+frontend/
+
+# ── Local uploads (mounted as volume in prod) ─────
+uploads/
+
+# ── Docker itself ────────────────────────────────
+Dockerfile
+.dockerignore

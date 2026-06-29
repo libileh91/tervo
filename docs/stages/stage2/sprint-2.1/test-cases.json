@@ -1,0 +1,225 @@
+{
+  "$schema": "Phase 2 - Sprint 2.1 Test Cases",
+  "sprint": "2.1",
+  "description": "Tests for JobPhoto model + upload + material CRUD",
+  "test_cases": [
+    {
+      "id": "TC-INT-22-01",
+      "task": "INT-22",
+      "title": "Modèle JobPhoto - création et migration",
+      "type": "integration",
+      "preconditions": ["Table job existe", "Alembic configuré"],
+      "steps": [
+        "Créer models/job_photo.py avec JobPhoto",
+        "Importer dans models/__init__.py",
+        "alembic revision --autogenerate -m \"add job_photo table\"",
+        "alembic upgrade head",
+        "Vérifier la table job_photo"
+      ],
+      "expected_result": {
+        "table_exists": true,
+        "columns": ["id", "job_id", "category", "file_path", "thumbnail_path", "taken_at"],
+        "fk_job": "ON DELETE CASCADE",
+        "check_category": "avant, après",
+        "upload_dir_exists": "true (backend/uploads/photos/)"
+      },
+      "actual_result": {
+        "table_exists": true,
+        "columns": ["id", "job_id", "category", "file_path", "thumbnail_path", "taken_at"],
+        "fk_job": "ON DELETE CASCADE",
+        "check_category": "avant, après",
+        "upload_dir_exists": "true (backend/uploads/photos/)",
+        "notes": "Matériel (Material) créé dans la même migration."
+      }
+    },
+    {
+      "id": "TC-INT-23-01",
+      "task": "INT-23",
+      "title": "POST /photos - upload succès 201",
+      "type": "api",
+      "preconditions": ["Job existe", "Utilisateur connecté et assigné", "Fichier test.jpg < 10MB"],
+      "steps": [
+        "Créer FormData avec file=test.jpg, category='avant'",
+        "POST /api/v1/jobs/{id}/photos avec Content-Type multipart/form-data"
+      ],
+      "expected_result": {
+        "status_code": 201,
+        "body.id": "int",
+        "body.category": "avant",
+        "body.file_url": "string (contient /uploads/photos/)",
+        "body.thumbnail_url": "string (contient /uploads/photos/thumb_)",
+        "body.taken_at": "ISO timestamp",
+        "fichier_sur_disque": "true (file_path existe)",
+        "thumbnail_sur_disque": "true (thumbnail_path existe)",
+        "thumbnail_dimensions": "300x300 max"
+      },
+      "actual_result": {
+        "status_code": 201,
+        "body.id": 1,
+        "body.category": "avant",
+        "body.file_url": "/uploads/photos/0166de308c9d424987bd057ff1ec3071.jpg",
+        "body.thumbnail_url": "/uploads/photos/thumb_0166de308c9d424987bd057ff1ec3071.jpg",
+        "body.taken_at": "2026-06-07T17:24:45",
+        "fichier_sur_disque": true,
+        "thumbnail_sur_disque": true,
+        "thumbnail_dimensions": "300x300 max",
+        "notes": "Upload testé avec image JPEG 400x300 + JPEG 800x600. Thumbnails générés avec Pillow."
+      }
+    },
+    {
+      "id": "TC-INT-23-02",
+      "task": "INT-23",
+      "title": "POST /photos - fichier trop volumineux (erreur)",
+      "type": "api",
+      "preconditions": ["Job existe", "Fichier > 10MB"],
+      "steps": ["POST /api/v1/jobs/{id}/photos avec fichier > 10MB"],
+      "expected_result": {
+        "status_code": 413,
+        "body.detail": "contient 'too large' ou '10 MB'"
+      },
+      "actual_result": {
+        "status_code": 400,
+        "body.detail": "Fichier trop volumineux (max 10 Mo)"
+      }
+    },
+    {
+      "id": "TC-INT-23-03",
+      "task": "INT-23",
+      "title": "POST /photos - non assigné (403)",
+      "type": "api",
+      "preconditions": ["Job assigné à un autre technicien"],
+      "steps": ["POST /api/v1/jobs/{id}/photos avec un autre token"],
+      "expected_result": {
+        "status_code": 403,
+        "body.detail": "Vous n'êtes pas assigné"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-24-01",
+      "task": "INT-24",
+      "title": "DELETE /photos/{id} - suppression fichier + DB",
+      "type": "api",
+      "preconditions": ["Photo existante uploadée"],
+      "steps": ["DELETE /api/v1/jobs/{id}/photos/{photo_id}"],
+      "expected_result": {
+        "status_code": 204,
+        "fichier_supprimé": "true (file_path n'existe plus)",
+        "thumbnail_supprimé": "true (thumbnail_path n'existe plus)",
+        "entree_db_supprimée": "true (SELECT retourne None)"
+      },
+      "actual_result": {
+        "status_code": 204,
+        "fichier_supprimé": true,
+        "thumbnail_supprimé": true,
+        "entree_db_supprimée": true,
+        "notes": "Upload + delete testé. Fichiers supprimés du disque avant suppression DB."
+      }
+    },
+    {
+      "id": "TC-INT-24-02",
+      "task": "INT-24",
+      "title": "DELETE /photos/{id} - photo inexistante (404)",
+      "type": "api",
+      "preconditions": [],
+      "steps": ["DELETE /api/v1/jobs/{id}/photos/999"],
+      "expected_result": {
+        "status_code": 404
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-25-01",
+      "task": "INT-25",
+      "title": "Modèle Material - création et migration",
+      "type": "integration",
+      "preconditions": ["Table job existe"],
+      "steps": [
+        "Créer models/material.py",
+        "alembic revision --autogenerate -m \"add material table\"",
+        "alembic upgrade head"
+      ],
+      "expected_result": {
+        "table_exists": true,
+        "columns": ["id", "job_id", "name", "quantity", "position"],
+        "quantity_type": "VARCHAR (texte libre)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-26-01",
+      "task": "INT-26",
+      "title": "POST /materials - ajout matériau",
+      "type": "api",
+      "preconditions": ["Job existe", "Utilisateur connecté et assigné"],
+      "steps": ["POST /api/v1/jobs/{id}/materials", "Body: { \"name\": \"Filtre HEPA\", \"quantity\": \"1\" }"],
+      "expected_result": {
+        "status_code": 201,
+        "body.name": "Filtre HEPA",
+        "body.quantity": "1"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-26-02",
+      "task": "INT-26",
+      "title": "GET /materials - liste triée",
+      "type": "api",
+      "preconditions": ["3 matériaux ajoutés au job"],
+      "steps": ["GET /api/v1/jobs/{id}/materials"],
+      "expected_result": {
+        "status_code": 200,
+        "body": "array of 3 items",
+        "tri_par_position": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-26-03",
+      "task": "INT-26",
+      "title": "DELETE /materials/{id} - suppression",
+      "type": "api",
+      "preconditions": ["Matériau existe"],
+      "steps": ["DELETE /api/v1/jobs/{id}/materials/{mat_id}"],
+      "expected_result": {
+        "status_code": 204
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-27-01",
+      "task": "INT-27",
+      "title": "Frontend - onglet Photos actif + upload",
+      "type": "e2e",
+      "preconditions": ["Job en_cours", "Utilisateur connecté"],
+      "steps": ["Naviguer vers /jobs/{id}", "Cliquer sur onglet Photos", "Cliquer 'Prendre une photo'"],
+      "expected_result": {
+        "onglet_photos_actif": "true (plus disabled)",
+        "appareil_natif": "appareil photo ouvre",
+        "upload_reussi": "thumbnail visible après upload"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-28-01",
+      "task": "INT-28",
+      "title": "Frontend - onglet Matériaux CRUD",
+      "type": "e2e",
+      "preconditions": ["Job en_cours", "Utilisateur connecté"],
+      "steps": [
+        "Naviguer vers /jobs/{id}",
+        "Cliquer sur onglet Matériaux",
+        "Ajouter un matériau",
+        "Modifier la quantité",
+        "Supprimer le matériau"
+      ],
+      "expected_result": {
+        "onglet_materiaux_actif": "true",
+        "ajout_reussi": "nouveau matériau dans la liste",
+        "modification_reussie": "quantité mise à jour",
+        "suppression_reussie": "matériau retiré de la liste"
+      },
+      "actual_result": null
+    }
+  ]
+}

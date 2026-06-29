@@ -1,0 +1,135 @@
+{
+  "$schema": "Phase 4 - Sprint 4.1 Test Cases",
+  "sprint": "4.1",
+  "description": "Tests for responsive mobile, states management, transitions, quick client creation, navigation",
+  "test_cases": [
+    {
+      "id": "TC-INT-38-01",
+      "task": "INT-38",
+      "title": "Responsive - layout mobile adapté",
+      "type": "e2e",
+      "preconditions": ["Application lancée"],
+      "steps": [
+        "Ouvrir l'app en viewport 375px (iPhone SE)",
+        "Ouvrir l'app en viewport 430px (Galaxy S22)",
+        "Vérifier les breakpoints"
+      ],
+      "expected_result": {
+        "bottom_nav_fixe": "true (visible et collé en bas)",
+        "safe_area_iphone": "padding-bottom: env(safe-area-inset-bottom)",
+        "boutons_full_width": "true (classe PrimeVue fluid)",
+        "pas_de_scroll_horizontal": "true",
+        "font_size_min_16px": "true (pas de zoom automatique iOS)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-39-01",
+      "task": "INT-39",
+      "title": "États - Loading skeleton sur toutes les pages",
+      "type": "e2e",
+      "preconditions": ["Application lancée", "Ralentir le réseau (Slow 3G)"],
+      "steps": [
+        "Naviguer vers chaque page",
+        "Observer l'état de chargement"
+      ],
+      "expected_result": {
+        "dashboard_loading": "Skeleton visible",
+        "jobs_loading": "Skeleton visible",
+        "clients_loading": "Skeleton visible",
+        "job_detail_loading": "Skeleton visible",
+        "client_detail_loading": "Skeleton visible"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-39-02",
+      "task": "INT-39",
+      "title": "États - Empty state sur pages sans données",
+      "type": "e2e",
+      "preconditions": ["Aucun job/client dans la base"],
+      "steps": [
+        "Naviguer vers Dashboard",
+        "Naviguer vers Jobs",
+        "Naviguer vers Clients"
+      ],
+      "expected_result": {
+        "dashboard_empty": "message 'Aucun job aujourd'hui' + icône",
+        "jobs_empty": "message adapté + bouton 'Nouveau job'",
+        "clients_empty": "message adapté + bouton 'Nouveau client'"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-39-03",
+      "task": "INT-39",
+      "title": "États - Error state avec bouton Réessayer",
+      "type": "e2e",
+      "preconditions": ["Backend indisponible (arrêter le serveur)"],
+      "steps": ["Naviguer vers Dashboard", "Observer l'état d'erreur"],
+      "expected_result": {
+        "message_erreur": "visible et compréhensible",
+        "bouton_reessayer": "visible et cliquable (appelle refetch())"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-40-01",
+      "task": "INT-40",
+      "title": "Transitions - animation entre pages",
+      "type": "e2e",
+      "preconditions": ["Application lancée", "Réseau normal"],
+      "steps": [
+        "Naviguer de Dashboard → Jobs",
+        "Naviguer de Jobs → JobDetail",
+        "Observer les transitions"
+      ],
+      "expected_result": {
+        "transition_visible": "true (slide horizontale ou fade)",
+        "duree_300ms_max": "transition rapide (< 300ms)",
+        "pas_d_animation_login": "Login page sans transition"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-41-01",
+      "task": "INT-41",
+      "title": "Création rapide client + job - workflow complet",
+      "type": "e2e",
+      "preconditions": ["Client inexistant", "Utilisateur connecté"],
+      "steps": [
+        "Naviguer vers formulaire nouveau job",
+        "Chercher client inexistant → 'Aucun résultat'",
+        "Cliquer '➕ Nouveau client'",
+        "Remplir nom + téléphone + adresse",
+        "Remplir titre job + date",
+        "Soumettre"
+      ],
+      "expected_result": {
+        "client_créé": "true (requête POST /clients réussie)",
+        "job_créé": "true (requête POST /jobs réussie)",
+        "redirection": "JobDetailPage du nouveau job"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-42-01",
+      "task": "INT-42",
+      "title": "Navigation contextuelle - Dashboard → Job → Inspection",
+      "type": "e2e",
+      "preconditions": ["Jobs aujourd'hui", "Utilisateur connecté"],
+      "steps": [
+        "Dashboard → clic sur 'Prochain job'",
+        "JobDetail → clic sur '📋 Checklist'",
+        "Inspection → clic '← Retour'"
+      ],
+      "expected_result": {
+        "dashboard_to_jobdetail": "route /jobs/{id}",
+        "jobdetail_to_inspection": "route /jobs/{id}/inspection",
+        "inspection_to_jobdetail": "retour vers /jobs/{id}",
+        "noms_de_route_utilises": "true (pas de paths en dur)"
+      },
+      "actual_result": null
+    }
+  ]
+}

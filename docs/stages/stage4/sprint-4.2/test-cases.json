@@ -1,0 +1,109 @@
+{
+  "$schema": "Phase 4 - Sprint 4.2 Test Cases",
+  "sprint": "4.2",
+  "description": "Tests for E2E Playwright, performance, documentation",
+  "test_cases": [
+    {
+      "id": "TC-INT-43-01",
+      "task": "INT-43",
+      "title": "E2E - Workflow complet login → rapport",
+      "type": "e2e",
+      "preconditions": ["Playwright installé", "Backend + frontend lancés", "Seed données existant"],
+      "steps": [
+        "Login avec tech1 / password123",
+        "Créer un client",
+        "Créer un job",
+        "Démarrer le job",
+        "Cocher la checklist",
+        "Uploader photos avant/après",
+        "Compléter le job",
+        "Télécharger le rapport"
+      ],
+      "expected_result": {
+        "login_reussi": "redirigé vers Dashboard",
+        "client_cree": "visible dans liste clients",
+        "job_cree": "visible dans liste jobs",
+        "job_demarre": "status = en_cours",
+        "checklist_completee": "tous les items cochés",
+        "photos_uploaded": "thumbnails visibles",
+        "job_complete": "status = terminé, durée calculée",
+        "rapport_telecharge": "PDF reçu (Content-Type: application/pdf)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-44-01",
+      "task": "INT-44",
+      "title": "E2E - Avis client via lien public",
+      "type": "e2e",
+      "preconditions": ["Job terminé avec share_token", "Playwright installé"],
+      "steps": [
+        "Ouvrir une nouvelle page (sans session)",
+        "Naviguer vers /review/{share_token}",
+        "Vérifier les infos du job",
+        "Sélectionner note 4 + commentaire",
+        "Soumettre"
+      ],
+      "expected_result": {
+        "page_publique": "true (pas de redirection login)",
+        "infos_job_visibles": "true",
+        "soumission_reussie": "message 'Merci pour votre avis !'",
+        "double_soumission_bloquee": "message 'Avis déjà soumis'"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-46-01",
+      "task": "INT-46",
+      "title": "Performance - Dashboard avec 100+ jobs",
+      "type": "integration",
+      "preconditions": ["Base de données accessible"],
+      "steps": [
+        "Insérer 100 jobs sur la même date via script",
+        "Appeler GET /dashboard/summary",
+        "Vérifier le temps de réponse"
+      ],
+      "expected_result": {
+        "temps_reponse": "< 500ms pour 100 jobs",
+        "nb_requetes_sql": "<= 3 (pas de N+1)",
+        "index_utilises": "EXPLAIN ANALYZE montre des index scans"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-52-01",
+      "task": "INT-52",
+      "title": "Documentation utilisateur complète",
+      "type": "review",
+      "preconditions": ["docs/user-guide.md créé"],
+      "steps": [
+        "Lire le guide utilisateur",
+        "Vérifier que chaque section couvre une fonctionnalité",
+        "Vérifier la présence de captures d'écran"
+      ],
+      "expected_result": {
+        "sections_couvertes": ["Connexion", "Dashboard", "Clients", "Jobs", "Checklist", "Photos", "Matériaux", "Rapport", "Avis"],
+        "captures_presentes": "true (fichiers dans docs/images/)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-53-01",
+      "task": "INT-53",
+      "title": "Swagger/OpenAPI enrichi",
+      "type": "review",
+      "preconditions": ["Backend lancé"],
+      "steps": [
+        "Ouvrir /docs dans le navigateur",
+        "Vérifier que tous les endpoints ont summary + description",
+        "Vérifier que les tags sont organisés"
+      ],
+      "expected_result": {
+        "endpoints_avec_summary": "true (tous les endpoints)",
+        "tags_organises": "Auth, Clients, Jobs, Checklist, Photos, Matériaux, Rapports, Reviews, Dashboard",
+        "exemples_requete": "présents (optionnel)"
+      },
+      "actual_result": null
+    }
+  ]
+}

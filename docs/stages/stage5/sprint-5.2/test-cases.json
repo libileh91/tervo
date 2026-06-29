@@ -1,0 +1,114 @@
+{
+  "$schema": "Phase 5 - Sprint 5.2 Test Cases",
+  "sprint": "5.2",
+  "description": "Tests for PWA, dark mode, QR code, offline cache, security audit",
+  "test_cases": [
+    {
+      "id": "TC-INT-61-01",
+      "task": "INT-61",
+      "title": "PWA - manifest et service worker",
+      "type": "e2e",
+      "preconditions": ["Build production frontend", "Serveur HTTP (Nginx ou Vite preview)"],
+      "steps": [
+        "Ouvrir l'application",
+        "Vérifier le manifest.webmanifest",
+        "Vérifier l'enregistrement du service worker",
+        "Vérifier l'invite d'installation"
+      ],
+      "expected_result": {
+        "manifest_present": "true (GET /manifest.webmanifest → 200)",
+        "service_worker_enregistre": "true (navigator.serviceWorker.controller non null)",
+        "pwa_installable": "true (beforeinstallprompt event)",
+        "icones_presentes": "true (192x192 et 512x512)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-61-02",
+      "task": "INT-61",
+      "title": "PWA - page offline basique",
+      "type": "e2e",
+      "preconditions": ["Service worker actif", "Assets en cache"],
+      "steps": [
+        "Basculer en mode hors-ligne (DevTools)",
+        "Recharger la page"
+      ],
+      "expected_result": {
+        "page_offline_affichee": "true (pas d'écran blanc)",
+        "message_offline": "visible ('Vous êtes hors-ligne')"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-62-01",
+      "task": "INT-62",
+      "title": "Dark mode - bascule et persistance",
+      "type": "e2e",
+      "preconditions": ["Application lancée"],
+      "steps": [
+        "Activer le dark mode",
+        "Recharger la page"
+      ],
+      "expected_result": {
+        "dark_mode_actif": "true (classe .p-dark sur body)",
+        "persistance": "true (après rechargement, dark mode toujours actif)",
+        "icone_bascule": "true (pi-sun / pi-moon visible)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-63-01",
+      "task": "INT-63",
+      "title": "QR code - génération sur job terminé",
+      "type": "e2e",
+      "preconditions": ["Job terminé avec share_token", "Utilisateur connecté"],
+      "steps": [
+        "Naviguer vers un job terminé",
+        "Cliquer sur 'Afficher le QR code'",
+        "Scanner le QR code avec un téléphone"
+      ],
+      "expected_result": {
+        "qr_code_affiche": "true (Dialog overlay)",
+        "qr_code_scannable": "true (mène vers /review/{token})",
+        "bouton_copier_lien": "visible"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-64-01",
+      "task": "INT-64",
+      "title": "Cache offline - jobs consultés disponibles hors-ligne",
+      "type": "e2e",
+      "preconditions": ["Service worker actif"],
+      "steps": [
+        "Consulter un job (connecté)",
+        "Basculer en mode hors-ligne",
+        "Re-ouvrir le même job"
+      ],
+      "expected_result": {
+        "job_affiché_offline": "true (données du cache)",
+        "bandeau_hors_ligne": "visible",
+        "photos_thumbnail": "affiché ou placeholder"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-65-01",
+      "task": "INT-65",
+      "title": "Sécurité - CORS restreint",
+      "type": "review",
+      "preconditions": ["Code source accessible"],
+      "steps": [
+        "Vérifier le fichier main.py : allow_origins",
+        "Vérifier que SECRET_KEY est chargée depuis l'environnement",
+        "Vérifier l'absence de mots de passe en dur"
+      ],
+      "expected_result": {
+        "cors_restreint": "true (allow_origins pas en '*')",
+        "secret_key_env": "true (pas en dur dans le code)",
+        "pas_de_password_dur": "true (seed.py utilise des valeurs de démo, documentées)"
+      },
+      "actual_result": null
+    }
+  ]
+}
