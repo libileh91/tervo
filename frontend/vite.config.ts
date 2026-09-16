@@ -11,6 +11,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Autoriser l'accès via le tunnel Cloudflare (tervoapp.com)
+    allowedHosts: ["tervoapp.com", "api.tervoapp.com"],
     proxy: {
       "/api": {
         target: "http://localhost:8000",

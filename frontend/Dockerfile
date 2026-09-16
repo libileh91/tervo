@@ -15,7 +15,9 @@ COPY dist/ /usr/share/nginx/html
 # Remove default nginx config
 RUN rm /etc/nginx/conf.d/default.conf
 
-# Minimal nginx config — just serves static files, no proxy
+# Nginx config — serves static files only.
+# API routing is handled by Cloudflare Tunnel (api.tervoapp.com → backend).
+# For local dev, use `bun run dev` (Vite proxy) instead of the Docker image.
 RUN echo 'server { \
     listen 80; \
     server_name _; \

@@ -1,5 +1,5 @@
 /**
- * ResQ — Router.
+ * Tervo — Router.
  *
  * Route definitions + auth guard.
  */
@@ -12,7 +12,7 @@ const routes = [
     path: "/login",
     name: "Login",
     component: () => import("@/pages/LoginPage.vue"),
-    meta: { guest: true },
+    meta: { guest: true, noTransition: true },
   },
   {
     path: "/",

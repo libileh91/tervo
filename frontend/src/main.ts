@@ -1,5 +1,5 @@
 /**
- * ResQ — Application entry point.
+ * Tervo — Application entry point.
  */
 
 import { createApp } from "vue";

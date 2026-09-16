@@ -1,10 +1,12 @@
 /**
- * ResQ — API client.
+ * Tervo — API client.
  *
  * Axios-free HTTP client using fetch with JWT token injection.
  */
 
-const API_BASE = "/api/v1";
+const API_BASE = window.location.hostname === "tervoapp.com"
+  ? "https://api.tervoapp.com/api/v1"
+  : "/api/v1";
 
 interface ApiError {
   status: number;
@@ -28,8 +30,8 @@ async function request<T>(method: string, path: string, body?: unknown, token?: 
   if (!res.ok) {
     // Token expired → force logout + redirect
     if (res.status === 401 && token) {
-      localStorage.removeItem("resq_access_token");
-      localStorage.removeItem("resq_refresh_token");
+      localStorage.removeItem("tervo_access_token");
+      localStorage.removeItem("tervo_refresh_token");
       window.location.href = "/login";
       throw new Error("Session expirée");
     }
@@ -70,8 +72,8 @@ async function uploadFile<T>(path: string, formData: FormData, token?: string | 
 
   if (!res.ok) {
     if (res.status === 401 && token) {
-      localStorage.removeItem("resq_access_token");
-      localStorage.removeItem("resq_refresh_token");
+      localStorage.removeItem("tervo_access_token");
+      localStorage.removeItem("tervo_refresh_token");
       window.location.href = "/login";
       throw new Error("Session expirée");
     }
@@ -141,7 +143,17 @@ export interface DashboardSummary {
     started_at: string;
     elapsed_minutes: number;
   } | null;
+  overdue_jobs: {
+    id: number;
+    title: string;
+    priority: string;
+    scheduled_date: string;
+    days_overdue: number;
+    client_full_name: string;
+    client_address: string;
+  }[];
 }
+
 
 export const dashboardApi = {
   summary: (token: string) => api.get<DashboardSummary>("/dashboard/summary", token),

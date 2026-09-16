@@ -17,7 +17,7 @@
             <Message severity="error">
                 Impossible de charger le tableau de bord : {{ error?.message || "Erreur inconnue" }}
             </Message>
-            <Button label="Réessayer" icon="pi pi-refresh" @click="refetch" class="mt-2" />
+            <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch" class="mt-2" />
         </div>
 
         <!-- Data -->
@@ -38,15 +38,19 @@
                 </div>
             </div>
 
-            <!-- Aucun job -->
-            <div v-if="!dashboard.next_job && !dashboard.in_progress_job" class="empty-state">
+            <!-- Aucun job (ni planifié ni en cours) -->
+            <div v-if="dashboard.today.jobs_total === 0" class="empty-state">
                 <i class="pi pi-calendar-plus empty-icon" />
                 <p class="empty-text">Aucun job aujourd'hui</p>
-                <Button label="Nouveau job" icon="pi pi-plus" />
+                <Button label="Nouveau job" icon="pi pi-plus" fluid @click="goToNewJob" />
             </div>
 
             <!-- Carte Prochain job -->
-            <div v-if="dashboard.next_job" class="card next-job-card">
+            <div
+                v-if="dashboard.next_job"
+                class="card next-job-card clickable-card"
+                @click="router.push({ name: 'JobDetail', params: { id: dashboard.next_job!.id } })"
+            >
                 <div class="card-header">
                     <h2>Prochain job</h2>
                     <Chip
@@ -67,13 +71,17 @@
                     label="▶ Démarrer"
                     severity="success"
                     fluid
-                    @click="startJob(dashboard.next_job!.id)"
+                    @click.stop="startJob(dashboard.next_job!.id)"
                     :loading="startingJobId === dashboard.next_job.id"
                 />
             </div>
 
             <!-- Carte Job en cours -->
-            <div v-if="dashboard.in_progress_job" class="card in-progress-card">
+            <div
+                v-if="dashboard.in_progress_job"
+                class="card in-progress-card clickable-card"
+                @click="router.push({ name: 'JobDetail', params: { id: dashboard.in_progress_job!.id } })"
+            >
                 <div class="card-header">
                     <h2>Job en cours</h2>
                     <Chip label="En cours" severity="info" size="small" />
@@ -85,6 +93,48 @@
                     fluid
                     @click="router.push({ name: 'JobDetail', params: { id: dashboard.in_progress_job!.id } })"
                 />
+            </div>
+
+            <!-- Carte En retard -->
+            <div v-if="dashboard.overdue_jobs && dashboard.overdue_jobs.length > 0" class="card overdue-card">
+                <div class="card-header">
+                    <h2><i class="pi pi-exclamation-triangle" /> En retard</h2>
+                </div>
+                <div class="overdue-list">
+                    <div v-for="job in dashboard.overdue_jobs" :key="job.id" class="overdue-item">
+                        <div class="overdue-item-header">
+                            <h3 class="job-title">{{ job.title }}</h3>
+                            <Chip
+                                :label="'J-' + job.days_overdue"
+                                severity="warn"
+                                size="small"
+                            />
+                        </div>
+                        <div class="job-details">
+                            <p><i class="pi pi-user" /> {{ job.client_full_name }}</p>
+                            <p><i class="pi pi-map-marker" /> {{ job.client_address }}</p>
+                            <p><i class="pi pi-calendar" /> {{ job.scheduled_date }}</p>
+                        </div>
+                        <div class="overdue-item-actions">
+                            <Button
+                                label="▶ Démarrer"
+                                severity="success"
+                                size="small"
+                                fluid
+                                :loading="startingJobId === job.id"
+                                @click.stop="startJob(job.id)"
+                            />
+                            <Button
+                                label="❌ Annuler"
+                                severity="warn"
+                                size="small"
+                                fluid
+                                :loading="cancellingJobId === job.id"
+                                @click.stop="cancelJob(job.id)"
+                            />
+                        </div>
+                    </div>
+                </div>
             </div>
         </template>
     </div>
@@ -153,6 +203,34 @@ async function startJob(jobId: number) {
     } finally {
         startingJobId.value = null;
     }
+}
+
+// ── Cancel job ────────────────────────────────────────────
+
+const cancellingJobId = ref<number | null>(null);
+
+async function cancelJob(jobId: number) {
+    cancellingJobId.value = jobId;
+    try {
+        await api.put(`/jobs/${jobId}/cancel`, {}, auth.token);
+        toast.add({ severity: "success", summary: "Job annulé", life: 3000 });
+        refetch();
+    } catch (err: any) {
+        toast.add({
+            severity: "error",
+            summary: "Erreur",
+            detail: err.detail || "Impossible d'annuler le job",
+            life: 5000,
+        });
+    } finally {
+        cancellingJobId.value = null;
+    }
+}
+
+// ── Navigation ────────────────────────────────────────────
+
+function goToNewJob() {
+    router.push({ name: "Jobs", query: { newJob: "1" } });
 }
 </script>
 
@@ -273,6 +351,65 @@ async function startJob(jobId: number) {
 .empty-state {
     text-align: center;
     padding: 2rem 0;
+}
+
+.clickable-card {
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.15s;
+}
+
+.clickable-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.clickable-card:active {
+    transform: scale(0.99);
+}
+
+/* ── Overdue card ──────────────────────────── */
+.overdue-card {
+    border-left: 4px solid #f59e0b;
+    background: #fffbeb;
+}
+
+.overdue-card .card-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #d97706;
+}
+
+.overdue-card .card-header h2 i {
+    font-size: 1rem;
+}
+
+.overdue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.overdue-item {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #fde68a;
+}
+
+.overdue-item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.overdue-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.overdue-item-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
 }
 
 .empty-icon {

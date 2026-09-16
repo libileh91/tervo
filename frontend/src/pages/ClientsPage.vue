@@ -2,7 +2,7 @@
     <div class="clients-page">
         <div class="page-header">
             <h1>Clients</h1>
-            <Button label="Nouveau client" icon="pi pi-plus" size="small" @click="showNewDialog = true" />
+            <Button label="Nouveau client" icon="pi pi-plus" fluid @click="showNewDialog = true" />
         </div>
 
         <!-- Recherche -->
@@ -26,7 +26,7 @@
             <Message severity="error">
                 Impossible de charger les clients : {{ error?.message || "Erreur inconnue" }}
             </Message>
-            <Button label="Réessayer" icon="pi pi-refresh" @click="refetch" class="mt-2" />
+            <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch" class="mt-2" />
         </div>
 
         <!-- Liste -->
@@ -51,6 +51,7 @@
             <div v-if="data.items.length === 0" class="empty-state">
                 <i class="pi pi-users empty-icon" />
                 <p class="empty-text">{{ search ? "Aucun client trouvé" : "Aucun client" }}</p>
+                <Button label="Nouveau client" icon="pi pi-plus" fluid @click="showNewDialog = true" />
             </div>
         </template>
 
@@ -90,10 +91,11 @@
                     </div>
                 </div>
                 <div class="dialog-actions">
-                    <Button label="Annuler" severity="secondary" @click="showNewDialog = false" />
+                    <Button label="Annuler" severity="secondary" fluid @click="showNewDialog = false" />
                     <Button
                         type="submit"
                         label="Créer"
+                        fluid
                         :disabled="!meta.valid && meta.touched"
                         :loading="submitting"
                     />
@@ -216,8 +218,8 @@ const onSubmit = handleSubmit(async (values) => {
 }
 .page-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 .page-header h1 {
     font-size: 1.4rem;
@@ -284,7 +286,7 @@ const onSubmit = handleSubmit(async (values) => {
 
 .dialog-actions {
     display: flex;
-    justify-content: flex-end;
+    flex-direction: column;
     gap: 0.5rem;
     margin-top: 1rem;
 }

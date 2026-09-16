@@ -7,9 +7,12 @@
         </div>
 
         <!-- Error -->
-        <Message v-else-if="isError" severity="error">
-            Impossible de charger l'intervention : {{ error?.message || "Erreur inconnue" }}
-        </Message>
+        <div v-else-if="isError" class="error-state">
+            <Message severity="error">
+                Impossible de charger l'intervention : {{ error?.message || "Erreur inconnue" }}
+            </Message>
+            <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch" class="mt-2" />
+        </div>
 
         <template v-else-if="job">
             <!-- En-tête -->
@@ -38,6 +41,13 @@
                     fluid
                     :loading="actionLoading"
                     @click="handleStart"
+                />
+                <Button
+                    v-if="job.status === 'planifié'"
+                    label="❌ Annuler"
+                    severity="warn"
+                    fluid
+                    @click="showCancelDialog = true"
                 />
                 <Button
                     v-if="job.status === 'en_cours'"
@@ -309,12 +319,21 @@
             </TabView>
         </template>
 
+        <!-- Dialog annulation -->
+        <Dialog v-model:visible="showCancelDialog" header="Confirmer l'annulation" modal>
+            <p>Annuler cette intervention ? Cette action est réversible (vous pourrez la réactiver plus tard).</p>
+            <div class="dialog-actions">
+                <Button label="Non" severity="secondary" fluid @click="showCancelDialog = false" />
+                <Button label="Oui, annuler" severity="warn" fluid :loading="cancelLoading" @click="handleCancel" />
+            </div>
+        </Dialog>
+
         <!-- Dialog suppression -->
         <Dialog v-model:visible="showDeleteDialog" header="Confirmer la suppression" modal>
             <p>Supprimer cette intervention ? Cette action est irréversible.</p>
             <div class="dialog-actions">
-                <Button label="Annuler" severity="secondary" @click="showDeleteDialog = false" />
-                <Button label="Confirmer" severity="danger" :loading="actionLoading" @click="handleDelete" />
+                <Button label="Annuler" severity="secondary" fluid @click="showDeleteDialog = false" />
+                <Button label="Confirmer" severity="danger" fluid :loading="actionLoading" @click="handleDelete" />
             </div>
         </Dialog>
     </div>
@@ -352,7 +371,9 @@ const queryClient = useQueryClient();
 
 const jobId = Number(route.params.id);
 const showDeleteDialog = ref(false);
+const showCancelDialog = ref(false);
 const actionLoading = ref(false);
+const cancelLoading = ref(false);
 
 // ── Photos state ───────────────────────────────────────
 
@@ -375,6 +396,7 @@ const {
     isLoading,
     isError,
     error,
+    refetch,
 } = useQuery({
     queryKey: ["job", jobId],
     queryFn: () => jobsApi.getById(auth.token!, jobId),
@@ -555,6 +577,28 @@ async function handleComplete() {
         });
     } finally {
         actionLoading.value = false;
+    }
+}
+
+// ── Cancel job ─────────────────────────────────────────
+
+async function handleCancel() {
+    cancelLoading.value = true;
+    try {
+        await api.put(`/jobs/${jobId}/cancel`, {}, auth.token);
+        toast.add({ severity: "success", summary: "Job annulé", life: 3000 });
+        showCancelDialog.value = false;
+        queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch (err: any) {
+        toast.add({
+            severity: "error",
+            summary: "Erreur",
+            detail: err.detail || "Impossible d'annuler",
+            life: 5000,
+        });
+    } finally {
+        cancelLoading.value = false;
     }
 }
 
@@ -739,7 +783,7 @@ function formatDate(iso: string): string {
 
 .dialog-actions {
     display: flex;
-    justify-content: flex-end;
+    flex-direction: column;
     gap: 0.5rem;
     margin-top: 1rem;
 }

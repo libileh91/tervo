@@ -2,7 +2,7 @@
     <div class="inspection-page">
         <!-- Header -->
         <div class="header">
-            <Button icon="pi pi-arrow-left" text rounded @click="router.back()" />
+            <Button icon="pi pi-arrow-left" text rounded @click="router.push({ name: 'JobDetail', params: { id: jobId } })" />
             <h1>Inspection</h1>
         </div>
 
@@ -13,9 +13,12 @@
         </div>
 
         <!-- Error -->
-        <Message v-else-if="isError" severity="error">
-            Impossible de charger la checklist : {{ error?.message || "Erreur inconnue" }}
-        </Message>
+        <div v-else-if="isError" class="error-state">
+            <Message severity="error">
+                Impossible de charger la checklist : {{ error?.message || "Erreur inconnue" }}
+            </Message>
+            <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch" class="mt-2" />
+        </div>
 
         <!-- Job not started -->
         <Message v-else-if="job && job.status !== 'en_cours'" severity="warn">
@@ -172,6 +175,7 @@ const {
     isLoading,
     isError,
     error,
+    refetch,
 } = useQuery({
     queryKey: ["checklist", jobId],
     queryFn: () => checklistApi.getItems(auth.token!, jobId),
@@ -179,13 +183,18 @@ const {
 });
 
 // Initialiser l'état local via watcher
+// N'écrase PAS les modifications locales déjà faites par l'utilisateur
 watch(
     items,
     (newItems) => {
         if (newItems) {
             for (const item of newItems) {
-                localChecked.value[item.id] = item.checked;
-                localNotes.value[item.id] = item.note;
+                if (!(item.id in localChecked.value)) {
+                    localChecked.value[item.id] = item.checked;
+                }
+                if (!(item.id in localNotes.value)) {
+                    localNotes.value[item.id] = item.note;
+                }
             }
         }
     },

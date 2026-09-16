@@ -1,5 +1,5 @@
 /**
- * ResQ — Zod validation schemas for all forms.
+ * Tervo — Zod validation schemas for all forms.
  *
  * Uses Zod (v3) + VeeValidate for frontend form validation.
  * Messages are in French.

@@ -2,7 +2,7 @@
     <div class="login-page">
         <div class="login-card">
             <div class="login-header">
-                <h1 class="login-title">ResQ</h1>
+                <h1 class="login-title">MB Chauffage</h1>
                 <p class="login-subtitle">Connexion technicien</p>
             </div>
 
@@ -76,7 +76,7 @@ const { value: password } = useField<string>("password");
 const onSubmit = handleSubmit(async (values) => {
     try {
         await auth.login(values.username, values.password);
-        router.push("/");
+        router.push({ name: "Dashboard" });
     } catch (err: any) {
         toast.add({
             severity: "error",
@@ -90,7 +90,7 @@ const onSubmit = handleSubmit(async (values) => {
 
 <style scoped>
 .login-page {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;

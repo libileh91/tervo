@@ -8,9 +8,12 @@
     </div>
 
     <!-- Error -->
-    <Message v-else-if="isError" severity="error">
-      Impossible de charger le client : {{ error?.message || "Erreur inconnue" }}
-    </Message>
+    <div v-else-if="isError" class="error-state">
+      <Message severity="error">
+        Impossible de charger le client : {{ error?.message || "Erreur inconnue" }}
+      </Message>
+      <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetchClient" class="mt-2" />
+    </div>
 
     <template v-else-if="client">
       <!-- En-tête -->
@@ -78,6 +81,14 @@
           </DataTable>
         </div>
 
+        <!-- Jobs error -->
+        <div v-else-if="jobsError" class="error-state">
+          <Message severity="warn">
+            Erreur chargement historique : {{ jobsErrorObj?.message || "Erreur inconnue" }}
+          </Message>
+          <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetchJobs" class="mt-2" />
+        </div>
+
         <p v-else class="empty-text">Aucune intervention pour ce client.</p>
       </div>
     </template>
@@ -86,8 +97,8 @@
     <Dialog v-model:visible="showDeleteDialog" header="Confirmer la suppression" modal>
       <p>Supprimer ce client ? Toutes ses interventions seront également supprimées.</p>
       <div class="dialog-actions">
-        <Button label="Annuler" severity="secondary" @click="showDeleteDialog = false" />
-        <Button label="Confirmer" severity="danger" :loading="deleting" @click="handleDelete" />
+        <Button label="Annuler" severity="secondary" fluid @click="showDeleteDialog = false" />
+        <Button label="Confirmer" severity="danger" fluid :loading="deleting" @click="handleDelete" />
       </div>
     </Dialog>
   </div>
@@ -118,19 +129,31 @@ const clientId = Number(route.params.id);
 const showDeleteDialog = ref(false);
 const deleting = ref(false);
 
-// Client detail
-const { data: client, isLoading, isError, error } = useQuery({
-  queryKey: ["client", clientId],
-  queryFn: () => clientsApi.getById(auth.token!, clientId),
-  enabled: !!clientId,
-});
+  // Client detail
+  const {
+    data: client,
+    isLoading,
+    isError,
+    error,
+    refetch: refetchClient,
+  } = useQuery({
+    queryKey: ["client", clientId],
+    queryFn: () => clientsApi.getById(auth.token!, clientId),
+    enabled: !!clientId,
+  });
 
-// Job history
-const { data: jobsData, isLoading: jobsLoading } = useQuery({
-  queryKey: ["client-jobs", clientId],
-  queryFn: () => clientsApi.getJobs(auth.token!, clientId),
-  enabled: !!clientId,
-});
+  // Job history
+  const {
+    data: jobsData,
+    isLoading: jobsLoading,
+    isError: jobsError,
+    error: jobsErrorObj,
+    refetch: refetchJobs,
+  } = useQuery({
+    queryKey: ["client-jobs", clientId],
+    queryFn: () => clientsApi.getJobs(auth.token!, clientId),
+    enabled: !!clientId,
+  });
 
 // Delete
 async function handleDelete() {
@@ -167,7 +190,7 @@ async function handleDelete() {
 .actions { display: flex; flex-direction: column; gap: 0.5rem; }
 .loading-state { display: flex; flex-direction: column; gap: 0.5rem; }
 .empty-text { color: #9ca3af; text-align: center; padding: 1rem 0; }
-.dialog-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+.dialog-actions { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
 .mb-2 { margin-bottom: 0.5rem; }
 .mb-1 { margin-bottom: 0.25rem; }
 </style>

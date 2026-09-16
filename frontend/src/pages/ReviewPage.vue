@@ -17,6 +17,7 @@
                 <i class="pi pi-exclamation-circle" style="font-size: 3rem; color: #f97316" />
                 <h2>Ce lien n'est plus valable</h2>
                 <p>Le lien d'avis a expiré ou est invalide.</p>
+                <Button label="Réessayer" icon="pi pi-refresh" fluid @click="loadReviewData" class="mt-2" />
             </div>
 
             <!-- Données chargées -->
@@ -111,7 +112,9 @@ const submitting = ref(false);
 
 // ── Chargement des données ────────────────────────────
 
-onMounted(async () => {
+async function loadReviewData() {
+    isLoading.value = true;
+    isError.value = false;
     try {
         const res = await fetch(`/api/v1/review/${token}`);
         if (!res.ok) throw new Error("Not found");
@@ -121,7 +124,9 @@ onMounted(async () => {
     } finally {
         isLoading.value = false;
     }
-});
+}
+
+onMounted(loadReviewData);
 
 // ── Soumission ────────────────────────────────────────
 
@@ -169,7 +174,7 @@ function formatDate(iso: string): string {
 
 <style scoped>
 .review-page {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
