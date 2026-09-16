@@ -1,5 +1,5 @@
 """
-ResQ — Client Pydantic schemas.
+Tervo — Client Pydantic schemas.
 
 Request/response models for Client CRUD endpoints.
 """

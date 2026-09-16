@@ -1,5 +1,5 @@
 """
-ResQ — Job Pydantic schemas.
+Tervo — Job Pydantic schemas.
 
 Request/response models for Job CRUD + dashboard.
 """
@@ -203,6 +203,11 @@ class JobCompleteRequest(BaseModel):
     observations: str | None = None
 
 
+class JobCancelResponse(BaseModel):
+    id: int
+    status: str
+
+
 class JobCompleteResponse(BaseModel):
     id: int
     status: str
@@ -239,7 +244,18 @@ class InProgressJobRef(BaseModel):
     elapsed_minutes: int = 0
 
 
+class OverdueJobRef(BaseModel):
+    id: int
+    title: str
+    priority: str
+    scheduled_date: str  # ISO YYYY-MM-DD
+    days_overdue: int
+    client_full_name: str
+    client_address: str
+
+
 class DashboardSummaryResponse(BaseModel):
     today: TodaySummary
     next_job: NextJobRef | None = None
     in_progress_job: InProgressJobRef | None = None
+    overdue_jobs: list[OverdueJobRef] = []

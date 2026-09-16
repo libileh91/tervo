@@ -20,9 +20,9 @@ class TestDatabase:
 
         original_url = app.config.settings.DATABASE_URL
 
-        app.config.settings.DATABASE_URL = "sqlite:///./resq.db"
+        app.config.settings.DATABASE_URL = "sqlite:///./tervo.db"
         result = _get_async_database_url()
-        assert result == "sqlite+aiosqlite:///./resq.db"
+        assert result == "sqlite+aiosqlite:///./tervo.db"
 
         app.config.settings.DATABASE_URL = "sqlite:///./test.db"
         result = _get_async_database_url()

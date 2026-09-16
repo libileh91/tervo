@@ -1,5 +1,5 @@
 """
-ResQ — Client repository.
+Tervo — Client repository.
 
 Data access layer for the Client model.
 """

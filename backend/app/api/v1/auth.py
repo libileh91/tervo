@@ -1,5 +1,5 @@
 """
-ResQ — Auth API router.
+Tervo — Auth API router.
 
 Endpoints:
 - POST /auth/login     → authenticate, return JWT tokens

@@ -1,5 +1,5 @@
 """
-ResQ — Reports API router.
+Tervo — Reports API router.
 
 Endpoints:
 - GET /jobs/{job_id}/report/download → PDF report

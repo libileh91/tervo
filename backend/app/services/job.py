@@ -1,11 +1,11 @@
 """
-ResQ — Job Service.
+Tervo — Job Service.
 
 Business logic for job CRUD and specialized queries.
 """
 
 import uuid
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy import func, select, text
@@ -19,6 +19,7 @@ from app.repositories.review import ReviewRepository
 from app.schemas.job import (
     DashboardSummaryResponse,
     InProgressJobRef,
+    JobCancelResponse,
     JobCompleteRequest,
     JobCompleteResponse,
     JobCreate,
@@ -29,6 +30,7 @@ from app.schemas.job import (
     JobStartResponse,
     JobUpdate,
     NextJobRef,
+    OverdueJobRef,
     TodaySummary,
 )
 from app.services.checklist import ChecklistService
@@ -132,9 +134,23 @@ class JobService:
                 detail="Vous n'êtes pas assigné à ce job",
             )
 
-        # 3. Mettre à jour
+        # 3. Vérifier qu'il n'a pas déjà un job en cours
+        existing = await self.repo.db.execute(
+            select(Job.id).where(
+                Job.technician_id == current_user.id,
+                Job.status == JobStatus.EN_COURS,
+                Job.id != job_id,
+            ).limit(1)
+        )
+        if existing.scalar_one_or_none() is not None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Vous avez déjà une intervention en cours. Terminez-la d'abord.",
+            )
+
+        # 4. Mettre à jour
         job.status = JobStatus.EN_COURS
-        job.started_at = datetime.now(timezone.utc)
+        job.started_at = datetime.utcnow()
         await self.repo.db.commit()
         await self.repo.db.refresh(job)
 
@@ -142,6 +158,36 @@ class JobService:
             id=job.id,
             status=job.status.value,
             started_at=job.started_at,
+        )
+
+    # ── Workflow: cancel ────────────────────────────────────
+
+    async def cancel_job(self, job_id: int, current_user: User) -> JobCancelResponse:
+        """Cancel a job: status → annulé."""
+        job = await self._find_or_404(job_id)
+
+        # 1. Vérifier que le job est planifié
+        if job.status != JobStatus.PLANIFIE:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Le job doit être au statut 'planifié' pour être annulé",
+            )
+
+        # 2. Vérifier que le technicien est bien assigné
+        if job.technician_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Vous n'êtes pas assigné à ce job",
+            )
+
+        # 3. Mettre à jour
+        job.status = JobStatus.ANNULE
+        await self.repo.db.commit()
+        await self.repo.db.refresh(job)
+
+        return JobCancelResponse(
+            id=job.id,
+            status=job.status.value,
         )
 
     # ── Workflow: complete ─────────────────────────────────
@@ -181,7 +227,7 @@ class JobService:
         if body.observations is not None:
             job.observations = body.observations
         job.status = JobStatus.TERMINE
-        job.completed_at = datetime.now(timezone.utc)
+        job.completed_at = datetime.utcnow()
         await self.repo.db.commit()
         await self.repo.db.refresh(job)
 
@@ -258,12 +304,7 @@ class JobService:
         )
         jobs = list(today_jobs.scalars().all())
 
-        # Counters
-        jobs_total = len(jobs)
-        jobs_in_progress = sum(1 for j in jobs if j.status == JobStatus.EN_COURS)
-        jobs_completed = sum(1 for j in jobs if j.status == JobStatus.TERMINE)
-
-        # Next planned job
+        # Next planned job (parmi les jobs d'aujourd'hui)
         next_job = None
         for j in jobs:
             if j.status == JobStatus.PLANIFIE:
@@ -277,23 +318,65 @@ class JobService:
                 )
                 break
 
-        # In-progress job
+        # In-progress job (TOUS les jobs en cours, pas seulement aujourd'hui)
+        in_progress_result = await self.repo.db.execute(
+            select(Job)
+            .options(selectinload(Job.client))
+            .where(
+                Job.technician_id == current_user.id,
+                Job.status == JobStatus.EN_COURS,
+                Job.started_at.isnot(None),
+            )
+            .limit(1)
+        )
+        in_progress_job_row = in_progress_result.scalar_one_or_none()
+
         in_progress_job = None
-        for j in jobs:
-            if j.status == JobStatus.EN_COURS and j.started_at:
-                elapsed = int(
-                    (
-                        datetime.utcnow() - j.started_at.replace(tzinfo=None)
-                    ).total_seconds()
-                    // 60
-                )
-                in_progress_job = InProgressJobRef(
-                    id=j.id,
-                    title=j.title,
-                    started_at=j.started_at,
-                    elapsed_minutes=elapsed,
-                )
-                break
+        if in_progress_job_row:
+            elapsed = int(
+                (
+                    datetime.utcnow() - in_progress_job_row.started_at.replace(tzinfo=None)
+                ).total_seconds()
+                // 60
+            )
+            in_progress_job = InProgressJobRef(
+                id=in_progress_job_row.id,
+                title=in_progress_job_row.title,
+                started_at=in_progress_job_row.started_at,
+                elapsed_minutes=elapsed,
+            )
+
+        # Counters
+        # Total = jobs d'aujourd'hui + job en cours (même s'il n'est pas d'aujourd'hui)
+        jobs_total = len(jobs)
+        jobs_in_progress = sum(1 for j in jobs if j.status == JobStatus.EN_COURS)
+        if in_progress_job and not any(j.id == in_progress_job.id for j in jobs):
+            jobs_in_progress += 1
+            jobs_total += 1
+
+        # Terminés = tous les jobs terminés du technicien (toutes dates)
+        completed_result = await self.repo.db.execute(
+            select(func.count(Job.id)).where(
+                Job.technician_id == current_user.id,
+                Job.status == JobStatus.TERMINE,
+            )
+        )
+        jobs_completed = completed_result.scalar_one() or 0
+
+        # Overdue jobs (planifiés avec date < today)
+        overdue_jobs_raw = await self.repo.list_overdue(current_user.id)
+        overdue_jobs = [
+            OverdueJobRef(
+                id=j.id,
+                title=j.title,
+                priority=j.priority.value,
+                scheduled_date=j.scheduled_date.isoformat(),
+                days_overdue=(today - j.scheduled_date).days,
+                client_full_name=j.client.full_name,
+                client_address=j.client.address,
+            )
+            for j in overdue_jobs_raw
+        ]
 
         return DashboardSummaryResponse(
             today=TodaySummary(
@@ -304,6 +387,7 @@ class JobService:
             ),
             next_job=next_job,
             in_progress_job=in_progress_job,
+            overdue_jobs=overdue_jobs,
         )
 
     # ── Internal helpers ───────────────────────────────────

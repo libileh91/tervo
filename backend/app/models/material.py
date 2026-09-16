@@ -1,5 +1,5 @@
 """
-ResQ — Material model.
+Tervo — Material model.
 
 Represents a material/part used during an intervention.
 """

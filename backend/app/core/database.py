@@ -1,5 +1,5 @@
 """
-ResQ — Async database engine and session.
+Tervo — Async database engine and session.
 
 Uses aiosqlite for dev (SQLite async), PostgreSQL + asyncpg for prod.
 """

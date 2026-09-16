@@ -1,5 +1,5 @@
 """
-ResQ — Photo Repository.
+Tervo — Photo Repository.
 
 Data access layer for JobPhoto.
 """

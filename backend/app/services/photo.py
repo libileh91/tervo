@@ -1,5 +1,5 @@
 """
-ResQ — Photo Service.
+Tervo — Photo Service.
 
 Business logic for photo upload/delete with thumbnail generation.
 """

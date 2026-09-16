@@ -1,5 +1,5 @@
 """
-ResQ — FastAPI application entry point.
+Tervo — FastAPI application entry point.
 """
 
 from contextlib import asynccontextmanager

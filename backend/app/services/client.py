@@ -1,5 +1,5 @@
 """
-ResQ — Client service.
+Tervo — Client service.
 
 Business logic layer for client operations.
 """

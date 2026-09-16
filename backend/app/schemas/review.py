@@ -1,5 +1,5 @@
 """
-ResQ — Review Pydantic schemas.
+Tervo — Review Pydantic schemas.
 
 Request/response models for public review endpoints.
 """

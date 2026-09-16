@@ -1,5 +1,5 @@
 """
-ResQ — Checklist Service.
+Tervo — Checklist Service.
 
 Business logic for checklist operations.
 """

@@ -1,5 +1,5 @@
 """
-ResQ — SQLAlchemy declarative base.
+Tervo — SQLAlchemy declarative base.
 
 Every ORM model in this project inherits from this Base.
 """

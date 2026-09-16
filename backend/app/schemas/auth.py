@@ -1,5 +1,5 @@
 """
-ResQ — Auth Pydantic schemas.
+Tervo — Auth Pydantic schemas.
 
 Request/response models for authentication endpoints.
 """

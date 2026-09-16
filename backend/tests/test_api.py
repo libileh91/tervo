@@ -1,5 +1,5 @@
 """
-ResQ — API integration tests for Sprint 2.2.
+Tervo — API integration tests for Sprint 2.2.
 
 Tests for photos, materials, report, and review endpoints.
 
@@ -17,6 +17,10 @@ from pathlib import Path
 
 import httpx
 import pytest
+from httpx import ASGITransport
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
 from app.config import settings
 from app.core.database import get_db
 from app.core.security import create_access_token
@@ -29,13 +33,10 @@ from app.models.job_photo import JobPhoto
 from app.models.material import Material
 from app.models.review import Review
 from app.models.user import User
-from httpx import ASGITransport
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # ── Test database ────────────────────────────────────────
 
-TEST_DB_URL = "sqlite+aiosqlite:///./test_resq.db"
+TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"
 test_engine = create_async_engine(TEST_DB_URL, echo=False)
 TestSessionLocal = async_sessionmaker(
     test_engine, class_=AsyncSession, expire_on_commit=False

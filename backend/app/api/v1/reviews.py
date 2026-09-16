@@ -1,5 +1,5 @@
 """
-ResQ — Review API router.
+Tervo — Review API router.
 
 Endpoints:
 - GET  /review/{share_token}          → public, no auth (INT-32)

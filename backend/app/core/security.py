@@ -1,5 +1,5 @@
 """
-ResQ — Security utilities.
+Tervo — Security utilities.
 
 JWT token creation/verification and password hashing (bcrypt).
 """

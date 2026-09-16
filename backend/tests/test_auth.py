@@ -19,7 +19,7 @@ from app.main import app
 from app.models import Base
 from app.models.user import Role, User
 
-TEST_DB_URL = "sqlite+aiosqlite:///./test_resq.db"
+TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"
 test_engine = create_async_engine(TEST_DB_URL, echo=False)
 TestSessionLocal = async_sessionmaker(
     test_engine, class_=AsyncSession, expire_on_commit=False
@@ -63,7 +63,7 @@ async def test_user(db: AsyncSession) -> User:
     """Create a technician user with known password."""
     user = User(
         username="tech_login",
-        email="tech@resq.app",
+        email="tech@tervo.app",
         hashed_password=get_password_hash("secret123"),
         full_name="Tech Login",
         role=Role.TECHNICIAN,
@@ -111,7 +111,7 @@ class TestAuth:
         """Inactive user → 401."""
         user = User(
             username="inactive",
-            email="inactive@resq.app",
+            email="inactive@tervo.app",
             hashed_password=get_password_hash("pwd"),
             full_name="Inactive",
             role=Role.TECHNICIAN,
@@ -166,7 +166,7 @@ class TestAuth:
         assert resp.status_code == 200, resp.text
         data = resp.json()
         assert data["username"] == "tech_login"
-        assert data["email"] == "tech@resq.app"
+        assert data["email"] == "tech@tervo.app"
         assert data["role"] == "technician"
         assert data["is_active"] is True
 

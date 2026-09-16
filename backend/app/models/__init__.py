@@ -1,5 +1,5 @@
 """
-ResQ — SQLAlchemy models.
+Tervo — SQLAlchemy models.
 
 Import all models here so that Alembic's --autogenerate can discover them.
 """

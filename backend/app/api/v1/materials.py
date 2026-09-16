@@ -1,5 +1,5 @@
 """
-ResQ — Materials API router.
+Tervo — Materials API router.
 
 Endpoints:
 - GET    /jobs/{job_id}/materials              → list

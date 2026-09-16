@@ -1,5 +1,5 @@
 """
-ResQ — Dashboard API router.
+Tervo — Dashboard API router.
 
 Endpoints:
 - GET /dashboard/summary     → today's summary for the connected technician

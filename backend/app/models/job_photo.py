@@ -1,5 +1,5 @@
 """
-ResQ — JobPhoto model.
+Tervo — JobPhoto model.
 
 Represents a photo attached to a job (before/after).
 """

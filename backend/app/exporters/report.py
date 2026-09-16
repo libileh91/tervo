@@ -1,5 +1,5 @@
 """
-ResQ — ReportExporter.
+Tervo — ReportExporter.
 
 Generates a PDF report for a completed job using WeasyPrint + Jinja2.
 """

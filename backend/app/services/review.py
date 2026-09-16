@@ -1,5 +1,5 @@
 """
-ResQ — Review Service.
+Tervo — Review Service.
 
 Business logic for public review endpoints.
 """

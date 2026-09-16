@@ -1,5 +1,5 @@
 """
-ResQ — Review Repository.
+Tervo — Review Repository.
 
 Data access layer for Review.
 """

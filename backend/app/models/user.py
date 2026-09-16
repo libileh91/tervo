@@ -1,5 +1,5 @@
 """
-ResQ — User model.
+Tervo — User model.
 
 Represents a technician or admin who uses the application.
 """

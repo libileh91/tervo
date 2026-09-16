@@ -1,5 +1,5 @@
 """
-ResQ — Checklist Repository.
+Tervo — Checklist Repository.
 
 Data access layer for ChecklistItem.
 """
@@ -68,7 +68,7 @@ class ChecklistRepository:
         result = await self.db.execute(
             select(func.count(ChecklistItem.id)).where(
                 ChecklistItem.job_id == job_id,
-                ChecklistItem.checked == False, # ignore [invalid-argument-type]
+                ChecklistItem.checked == False,  # ignore [invalid-argument-type]
             )
         )
         return result.scalar_one()

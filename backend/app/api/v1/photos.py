@@ -1,5 +1,5 @@
 """
-ResQ — Photos API router.
+Tervo — Photos API router.
 
 Endpoints:
 - POST   /jobs/{job_id}/photos     → upload a photo (multipart)

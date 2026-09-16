@@ -1,5 +1,5 @@
 """
-ResQ — Review model.
+Tervo — Review model.
 
 Stores client reviews for completed jobs.
 Each job can have at most one review (job_id is UNIQUE).

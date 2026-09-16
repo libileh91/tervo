@@ -1,5 +1,5 @@
 """
-ResQ — Job Repository.
+Tervo — Job Repository.
 
 Hybrid: raw SQL for specialized queries + ORM for standard CRUD.
 """
@@ -96,6 +96,24 @@ class JobRepository:
     async def delete(self, job: Job) -> None:
         await self.db.delete(job)
         await self.db.commit()
+
+    # ── Dashboard: overdue jobs (INT-55) ───────────────────
+
+    async def list_overdue(self, technician_id: int) -> list[Job]:
+        """Return planifié jobs with scheduled_date < today for a technician, ordered by date ASC."""
+        today = func.current_date()
+        query = (
+            select(Job)
+            .options(selectinload(Job.client))
+            .where(
+                Job.technician_id == technician_id,
+                Job.status == "planifié",
+                Job.scheduled_date < today,
+            )
+            .order_by(Job.scheduled_date.asc())
+        )
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
 
     # ── Raw SQL (from INT-06) ──────────────────────────────
 

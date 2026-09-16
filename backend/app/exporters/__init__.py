@@ -1,5 +1,5 @@
 """
-ResQ — Exporters package.
+Tervo — Exporters package.
 
 - report.py      → ReportExporter (PDF generation via WeasyPrint)
 """

@@ -1,5 +1,5 @@
 """
-ResQ — Material Repository.
+Tervo — Material Repository.
 
 Data access layer for Material model.
 """

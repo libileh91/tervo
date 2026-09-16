@@ -1,5 +1,5 @@
 """
-ResQ — FastAPI dependencies.
+Tervo — FastAPI dependencies.
 
 Shared dependencies used across routes (auth guard, DB session, etc.).
 """

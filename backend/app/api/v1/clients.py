@@ -1,5 +1,5 @@
 """
-ResQ — Clients API router.
+Tervo — Clients API router.
 
 Endpoints:
 - GET    /clients        → list (paginated, searchable)

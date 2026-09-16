@@ -1,5 +1,5 @@
 """
-ResQ — Material Service.
+Tervo — Material Service.
 
 Business logic for material CRUD.
 """

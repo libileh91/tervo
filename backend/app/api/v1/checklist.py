@@ -1,5 +1,5 @@
 """
-ResQ — Checklist API router.
+Tervo — Checklist API router.
 
 Endpoints:
 - GET    /jobs/{job_id}/checklist         → list items

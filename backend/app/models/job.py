@@ -1,5 +1,5 @@
 """
-ResQ — Job model.
+Tervo — Job model.
 
 Represents an intervention / work order at a client site.
 """

@@ -1,5 +1,5 @@
 """
-ResQ — Client model.
+Tervo — Client model.
 
 Represents a customer / client site where interventions take place.
 """

@@ -1,5 +1,5 @@
 """
-ResQ — Jobs API router.
+Tervo — Jobs API router.
 
 Endpoints:
 - GET    /jobs              → list (paginated, filterable)
@@ -16,6 +16,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
 from app.schemas.job import (
+    JobCancelResponse,
     JobCompleteRequest,
     JobCompleteResponse,
     JobCreate,
@@ -87,6 +88,17 @@ async def start_job(
     """Start a job: status → en_cours, started_at = now."""
     service = JobService(db)
     return await service.start_job(job_id, current_user)
+
+
+@router.put("/{job_id}/cancel", response_model=JobCancelResponse)
+async def cancel_job(
+    job_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Cancel a job: status → annulé (only if currently 'planifié')."""
+    service = JobService(db)
+    return await service.cancel_job(job_id, current_user)
 
 
 @router.put("/{job_id}/complete", response_model=JobCompleteResponse)

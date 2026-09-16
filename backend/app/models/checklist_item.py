@@ -1,5 +1,5 @@
 """
-ResQ — ChecklistItem model.
+Tervo — ChecklistItem model.
 
 Represents a checklist item attached to a job (pre/post intervention).
 """

@@ -24,7 +24,7 @@ from app.models.client import Client
 from app.models.job import Job, JobStatus
 from app.models.user import Role, User
 
-TEST_DB_URL = "sqlite+aiosqlite:///./test_resq.db"
+TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"
 test_engine = create_async_engine(TEST_DB_URL, echo=False)
 TestSessionLocal = async_sessionmaker(
     test_engine, class_=AsyncSession, expire_on_commit=False
