@@ -10,7 +10,7 @@
       "type": "integration",
       "preconditions": ["Docker installé", "Dockerfile dans backend/"],
       "steps": [
-        "docker build -t resq-backend:test -f backend/Dockerfile backend/",
+        "docker build -t tervo-backend:test -f backend/Dockerfile backend/",
         "Vérifier la taille de l'image",
         "Lancer le container et vérifier que uvicorn répond"
       ],
@@ -49,8 +49,8 @@
       "type": "integration",
       "preconditions": [
         "docker compose -f deploy/docker-compose.yml up -d",
-        "resq_db créée",
-        "user lob a les droits sur resq_db"
+        "tervo_db créée",
+        "user lob a les droits sur tervo_db"
       ],
       "steps": [
         "Uploader une photo via API",

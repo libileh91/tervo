@@ -1,6 +1,6 @@
 # INT-48 — Dockerfile backend multi-stage (uv → deps → app)
 
-> **Objectif :** Créer un Dockerfile multi-stage optimisé pour le backend ResQ, utilisant `uv` au lieu de `pip`.
+> **Objectif :** Créer un Dockerfile multi-stage optimisé pour le backend Tervo, utilisant `uv` au lieu de `pip`.
 > **Date :** 25/06/2026
 
 ---
@@ -88,16 +88,16 @@ Dockerfile  .dockerignore
 ```bash
 # Build
 cd backend/
-docker build -t resq-backend:test -f Dockerfile .
+docker build -t tervo-backend:test -f Dockerfile .
 
 # Voir la taille
-docker images resq-backend:test
+docker images tervo-backend:test
 
 # Lancer
-docker run -d --name resq-test -p 8000:8000 resq-backend:test
+docker run -d --name tervo-test -p 8000:8000 tervo-backend:test
 
 # Vérifier les logs
-docker logs resq-test
+docker logs tervo-test
 
 # Tester l'API
 curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/docs
@@ -108,7 +108,7 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/v1/auth/login
 # → 405 = OK (POST attendu, pas GET, mais le routing fonctionne)
 
 # Nettoyer
-docker stop resq-test && docker rm resq-test
+docker stop tervo-test && docker rm tervo-test
 ```
 
 ---
@@ -128,7 +128,7 @@ docker stop resq-test && docker rm resq-test
 ## À noter pour la suite
 
 - **asyncpg** manquant : `pyproject.toml` a `aiosqlite` mais pas `asyncpg`. Pour PostgreSQL, il faudra ajouter `asyncpg` aux dépendances (INT-49 ou INT-50).
-- L'image est taguée `resq-backend:latest` pour le déploiement final via 1Panel.
+- L'image est taguée `tervo-backend:latest` pour le déploiement final via 1Panel.
 
 ---
 
@@ -140,7 +140,7 @@ docker stop resq-test && docker rm resq-test
 Voici la structure finale :
 
 ```
-resQ/
+tervo/
 ├── backend/
 │   ├── Dockerfile          ← INT-48 ✅ (reste ici, lié au build context)
 │   ├── .dockerignore       ← INT-48 ✅ (reste ici)

@@ -21,7 +21,13 @@
         "pas_de_scroll_horizontal": "true",
         "font_size_min_16px": "true (pas de zoom automatique iOS)"
       },
-      "actual_result": null
+      "actual_result": {
+        "bottom_nav_fixe": "✅ BottomNav: position: fixed; bottom: 0; left: 0; right: 0; height: 60px",
+        "safe_area_iphone": "✅ BottomNav: padding-bottom: env(safe-area-inset-bottom, 0) ; App.vue app-content: padding-bottom: calc(60px + 12px + env(safe-area-inset-bottom, 0px)) ; index.html: viewport-fit=cover",
+        "boutons_full_width": "✅ fluid ajouté sur tous les boutons avec label (Dashboard, Jobs, Clients, JobDetail, ClientDetail, Inspection, Profile, Login, Review) ; dialog-actions passés en flex-direction: column",
+        "pas_de_scroll_horizontal": "✅ box-sizing: border-box global sur *, *::before, *::after ; tous les champs en width: 100% via fluid",
+        "font_size_min_16px": "✅ Règle CSS globale : input, textarea, select, .p-inputtext, .p-password input, .p-datepicker input, .p-select-label, .p-inputtextarea { font-size: 16px !important; }"
+      }
     },
     {
       "id": "TC-INT-39-01",
@@ -40,7 +46,15 @@
         "job_detail_loading": "Skeleton visible",
         "client_detail_loading": "Skeleton visible"
       },
-      "actual_result": null
+      "actual_result": {
+        "dashboard_loading": "✅ Skeleton (3x: 80px, 80px, 80px)",
+        "jobs_loading": "✅ Skeleton (5x: 60px)",
+        "clients_loading": "✅ Skeleton (5x: 60px)",
+        "job_detail_loading": "✅ Skeleton (40px + 120px)",
+        "client_detail_loading": "✅ Skeleton (40px + 100px + 120px)",
+        "inspection_loading": "✅ Skeleton (40px + 3x 80px)",
+        "profile_loading": "✅ Skeleton (3x: 40px) — ajouté dans cette tâche"
+      }
     },
     {
       "id": "TC-INT-39-02",
@@ -58,7 +72,12 @@
         "jobs_empty": "message adapté + bouton 'Nouveau job'",
         "clients_empty": "message adapté + bouton 'Nouveau client'"
       },
-      "actual_result": null
+      "actual_result": {
+        "dashboard_empty": "✅ pi pi-calendar-plus + 'Aucun job aujourd'hui' + Bouton 'Nouveau job'",
+        "jobs_empty": "✅ pi pi-inbox + 'Aucune intervention trouvée' + Bouton 'Nouveau job'",
+        "clients_empty": "✅ pi pi-users + 'Aucun client'/'Aucun client trouvé' + Bouton 'Nouveau client' (ajouté)",
+        "client_detail_empty_jobs": "✅ 'Aucune intervention pour ce client.' — existant"
+      }
     },
     {
       "id": "TC-INT-39-03",
@@ -71,7 +90,17 @@
         "message_erreur": "visible et compréhensible",
         "bouton_reessayer": "visible et cliquable (appelle refetch())"
       },
-      "actual_result": null
+      "actual_result": {
+        "dashboard": "✅ Message severity=error + Bouton 'Réessayer' avec refetch()",
+        "jobs": "✅ Message severity=error + Bouton 'Réessayer' avec refetch()",
+        "clients": "✅ Message severity=error + Bouton 'Réessayer' avec refetch()",
+        "job_detail": "✅ Message severity=error + Bouton 'Réessayer' avec refetch() (ajouté)",
+        "client_detail": "✅ Message severity=error + Bouton 'Réessayer' avec refetchClient() (ajouté)",
+        "client_detail_jobs": "✅ Message severity=warn + Bouton 'Réessayer' avec refetchJobs() (ajouté)",
+        "inspection": "✅ Message severity=error + Bouton 'Réessayer' avec refetch() (ajouté)",
+        "profile": "✅ icône + 'Impossible de charger le profil' + Bouton 'Réessayer' avec auth.fetchUser() (ajouté)",
+        "review": "✅ Message + Bouton 'Réessayer' avec loadReviewData() (ajouté)"
+      }
     },
     {
       "id": "TC-INT-40-01",
@@ -110,7 +139,13 @@
         "job_créé": "true (requête POST /jobs réussie)",
         "redirection": "JobDetailPage du nouveau job"
       },
-      "actual_result": null
+      "actual_result": {
+        "champ_recherche_client": "✅ InputText avec v-model=clientSearchQuery, filtrage client-side sur 100 clients préchargés",
+        "selection_client_existant": "✅ Click sur résultat → selectedClient + Chip avec removable ; le champ de recherche disparaît",
+        "creation_inline_client": "✅ Bouton '➕ Nouveau client' si searchResults vide → champs (nom, téléphone, adresse)",
+        "workflow_2_etapes": "✅ Si nouveau client : clientsApi.create() → jobsApi.create() avec le created.id",
+        "reset_formulaire": "✅ watch(showNewDialog) reset tous les champs (search, selected, new client form)"
+      }
     },
     {
       "id": "TC-INT-42-01",
@@ -129,7 +164,14 @@
         "inspection_to_jobdetail": "retour vers /jobs/{id}",
         "noms_de_route_utilises": "true (pas de paths en dur)"
       },
-      "actual_result": null
+      "actual_result": {
+        "dashboard_prochain_job": "✅ next-job-card @click="router.push({ name: 'JobDetail', params: { id } })" avec class clickable-card",
+        "dashboard_job_en_cours": "✅ in-progress-card @click="router.push({ name: 'JobDetail', params: { id } })" avec class clickable-card",
+        "dashboard_demarrer_stop": "✅ @click.stop sur '▶ Démarrer' pour éviter propagation",
+        "jobdetail_checklist": "✅ { name: 'Inspection', params: { id } } — déjà fait",
+        "inspection_retour": "✅ @click="router.push({ name: 'JobDetail', params: { id: jobId } })" (remplace router.back())",
+        "noms_de_route": "✅ Audit complet (voir ci-dessous)"
+      }
     }
   ]
 }

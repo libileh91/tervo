@@ -1,4 +1,4 @@
-# Migration `pip` → `uv` (Astral)
+ # Migration `pip` → `uv` (Astral)
 
 ## Contexte
 
@@ -30,9 +30,9 @@ avec séparation propre des dépendances :
 
 ```toml
 [project]
-name = "resq-backend"
+name = "tervo-backend"
 version = "0.1.0"
-description = "ResQ — Backend API (FastAPI + SQLAlchemy)"
+description = "Tervo — Backend API (FastAPI + SQLAlchemy)"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.111.0",
@@ -89,7 +89,7 @@ Plus besoin — `pyproject.toml` + `uv.lock` font le même travail proprement.
 - Arborescence : `requirements.txt` → `pyproject.toml` + `uv.lock`
 - Setup : `python -m venv` + `pip install` → `uv venv` + `uv sync`
 
-### 7. Mise à jour des docs — `rename-siteflow-to-resq-venv.md`
+### 7. Mise à jour des docs — `rename-siteflow-to-tervo-venv.md`
 
 - Solution A : `python -m venv` + `pip install` → `uv venv` + `uv sync`
 - Solution B : ajout de `uv run uvicorn` comme alternative

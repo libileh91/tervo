@@ -1,6 +1,6 @@
-# Spécification des Endpoints API — ResQ
+# Spécification des Endpoints API — Tervo
 
-> **Objet :** API REST pour ResQ.
+> **Objet :** API REST pour Tervo.
 >
 > **Documents liés :** `specs/01-specs-fonctionnelle.md` (périmètre fonctionnel), `specs/02-spec-technique.md` (architecture tech)
 

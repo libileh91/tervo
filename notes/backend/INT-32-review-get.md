@@ -6,7 +6,7 @@ Endpoint **public** (sans authentification) permettant au client de consulter le
 infos d'un job via un lien unique partagé par le technicien.
 
 Le lien est généré automatiquement à la complétion du job (INT-34) sous la forme :
-`https://resq.app/review/{share_token}`.
+`https://tervo.app/review/{share_token}`.
 
 ---
 

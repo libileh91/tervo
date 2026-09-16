@@ -23,7 +23,7 @@ Phase 3 (First Deploy) ← dépend de Phase 1 + Phase 2 (code fonctionnel comple
 ## Critères de succès Phase 3
 
 - [ ] Application déployée via 1Panel accessible en `http://<IP>:8000`
-- [ ] PostgreSQL `resq_db` créée et connectée
+- [ ] PostgreSQL `tervo_db` créée et connectée
 - [ ] Uploads volume persistant monté
 - [ ] Seed données : admin + technicien + données demo
 - [ ] Dockerfile multi-stage (uv) opérationnel
@@ -40,11 +40,11 @@ Phase 3 (First Deploy) ← dépend de Phase 1 + Phase 2 (code fonctionnel comple
 | **1Panel** | Server manager, build Docker via UI |
 | **Reverse proxy** | Géré par 1Panel, pas de Traefik dans docker-compose |
 | **PostgreSQL** | Container existant `postgres:17.4`, port 5432, réseau `postgres_network` |
-| **Nouvelle DB** | `resq_db`, user `resq_user` |
+| **Nouvelle DB** | `tervo_db`, user `tervo_user` |
 | **Domaine** | Aucun — premier déploiement en IP:port |
 | **SSL** | Pas de SSL pour la première version |
-| **Build Docker** | `resq-backend:latest` (tag local, pas de registry) |
-| **Image tag** | `resq-backend:latest` |
+| **Build Docker** | `tervo-backend:latest` (tag local, pas de registry) |
+| **Image tag** | `tervo-backend:latest` |
 
 ---
 

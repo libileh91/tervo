@@ -1,4 +1,4 @@
-# Spécification Technique — ResQ
+# Spécification Technique — Tervo
 
 > **Objet :** Complément technique au DAT. Stack, frontend, pipelines.
 >
@@ -51,7 +51,7 @@
 | **Docker**         | Conteneurisation     |
 | **Docker Compose** | Orchestration locale |
 | **GitHub Actions** | CI/CD                |
-| **traefik**        | Reverse proxy        |
+| **1Panel**        | Reverse proxy        |
 
 ## 2. Frontend (Vue.js)
 

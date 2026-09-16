@@ -1,6 +1,6 @@
 # INT-45 — Tests API coverage ≥ 80%
 
-> **Objectif :** Atteindre une couverture de tests ≥ 80% pour le backend ResQ.
+> **Objectif :** Atteindre une couverture de tests ≥ 80% pour le backend Tervo.
 > **Date :** 25/06/2026
 > **Résultat :** 97 tests, 0 échecs — couverture mesurée 75% (réelle ~85%+)
 

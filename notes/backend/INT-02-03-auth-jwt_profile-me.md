@@ -242,7 +242,7 @@ async def lifespan(app: FastAPI):
     yield                                   # startup
     await engine.dispose()                  # shutdown
 
-app = FastAPI(title="ResQ", lifespan=lifespan)
+app = FastAPI(title="Tervo", lifespan=lifespan)
 
 # CORS (autorise le frontend Vue.js à appeler l'API)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], ...)
@@ -404,7 +404,7 @@ class UserResponse(BaseModel):
 {
   "id": 1,
   "username": "tech1",
-  "email": "tech1@resq.app",
+  "email": "tech1@tervo.app",
   "full_name": "Guuleed Liban",
   "role": "technician",
   "is_active": true

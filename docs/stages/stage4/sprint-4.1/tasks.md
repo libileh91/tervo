@@ -15,12 +15,12 @@ Afin de **travailler confortablement sur le terrain**.
 
 **Acceptance Criteria**
 
-- [ ] `App.vue` utilise `min-height: 100dvh` (dynamique viewport height pour mobile)
-- [ ] BottomNav fixe avec `padding-bottom: env(safe-area-inset-bottom)` (iPhone X+)
-- [ ] Toutes les pages ont un padding qui évite la superposition avec BottomNav
-- [ ] Tailles de police : minimum 16px (pour éviter le zoom automatique iOS)
-- [ ] Champs de formulaire : `width: 100%` avec `box-sizing: border-box`
-- [ ] PrimeVue `fluid` sur tous les boutons (full width sur mobile)
+- [x] `App.vue` utilise `min-height: 100dvh` (dynamique viewport height pour mobile)
+- [x] BottomNav fixe avec `padding-bottom: env(safe-area-inset-bottom)` (iPhone X+)
+- [x] Toutes les pages ont un padding qui évite la superposition avec BottomNav
+- [x] Tailles de police : minimum 16px (pour éviter le zoom automatique iOS)
+- [x] Champs de formulaire : `width: 100%` avec `box-sizing: border-box`
+- [x] PrimeVue `fluid` sur tous les boutons (full width sur mobile)
 - [ ] Testé sur : iPhone SE, iPhone 14, Android Galaxy S22 (viewport 375px - 430px)
 
 **Technical Notes**
@@ -41,18 +41,18 @@ Afin de **ne pas rester bloqué sur un écran vide ou une erreur silencieuse**.
 
 **Acceptance Criteria**
 
-- [ ] **Loading** : Skeleton PrimeVue sur toutes les pages qui chargent des données
-- [ ] **Empty** : Message + icône + action possible (ex: "Aucun job aujourd'hui" + "Nouveau job")
-- [ ] **Error** : Message d'erreur compréhensible + bouton "Réessayer" qui appelle `refetch()`
-- [ ] Audit des pages existantes pour vérifier les 3 états :
+- [x] **Loading** : Skeleton PrimeVue sur toutes les pages qui chargent des données
+- [x] **Empty** : Message + icône + action possible (ex: "Aucun job aujourd'hui" + "Nouveau job")
+- [x] **Error** : Message d'erreur compréhensible + bouton "Réessayer" qui appelle `refetch()`
+- [x] Audit des pages existantes pour vérifier les 3 états :
   - DashboardPage ✅ (déjà fait)
   - JobsPage ✅ (déjà fait)
-  - JobDetailPage ✅ (déjà fait)
-  - ClientsPage ✅ (déjà fait)
-  - ClientDetailPage ✅ (déjà fait)
-  - InspectionPage ⏳ (à vérifier)
-  - ProfilePage ⏳ (à ajouter)
-  - ReviewPage ⏳ (à vérifier)
+  - JobDetailPage ✅ (ajouté bouton Réessayer)
+  - ClientsPage ✅ (ajouté bouton action empty state)
+  - ClientDetailPage ✅ (ajouté Réessayer + jobs error)
+  - InspectionPage ✅ (ajouté Réessayer)
+  - ProfilePage ✅ (ajouté Loading/Empty/Error)
+  - ReviewPage ✅ (ajouté Réessayer)
 
 **Technical Notes**
 
@@ -71,10 +71,10 @@ Afin de **me sentir dans une application native**.
 
 **Acceptance Criteria**
 
-- [ ] Transition slide horizontale entre les pages (gauche/droite)
-- [ ] Transition fade sur les états loading → data
-- [ ] Durée : 200-300ms
-- [ ] Pas d'animation pour la page Login
+- [x] Transition slide horizontale entre les pages (gauche/droite)
+- [x] Transition fade sur les états loading → data
+- [x] Durée : 200-300ms
+- [x] Pas d'animation pour la page Login
 
 **Technical Notes**
 
@@ -94,11 +94,11 @@ Afin de **gagner du temps lors d'une intervention urgente**.
 
 **Acceptance Criteria**
 
-- [ ] Dans le formulaire "Nouveau job", ajouter un champ de recherche client
-- [ ] Si client existant : le sélectionner → champ désactivé
-- [ ] Si client inconnu : bouton "➕ Nouveau client" → affiche les champs inline (nom, téléphone, adresse)
-- [ ] À la soumission : créer le client + le job en un seul clic
-- [ ] Workflow : `POST /clients` (si nouveau) → `POST /jobs` avec le `client_id` retourné
+- [x] Dans le formulaire "Nouveau job", ajouter un champ de recherche client
+- [x] Si client existant : le sélectionner → champ désactivé
+- [x] Si client inconnu : bouton "➕ Nouveau client" → affiche les champs inline (nom, téléphone, adresse)
+- [x] À la soumission : créer le client + le job en un seul clic
+- [x] Workflow : `POST /clients` (si nouveau) → `POST /jobs` avec le `client_id` retourné
 
 **Technical Notes**
 
@@ -118,13 +118,13 @@ Afin de **réduire le nombre de clics pour les actions fréquentes**.
 
 **Acceptance Criteria**
 
-- [ ] Dashboard : clic sur "Prochain job" → `JobDetailPage`
-- [ ] Dashboard : clic sur "Job en cours" → `JobDetailPage`
-- [ ] Dashboard : clic sur "Terminer" → `JobDetailPage` (déjà fait)
-- [ ] JobDetailPage : bouton "📋 Checklist" → `InspectionPage` (déjà fait)
-- [ ] InspectionPage : bouton "← Retour" → `JobDetailPage`
-- [ ] JobDetailPage : bouton "← Retour" → `JobsPage`
-- [ ] Vérifier que toutes les navigations utilisent les `name` des routes, pas les paths en dur
+- [x] Dashboard : clic sur "Prochain job" → `JobDetailPage`
+- [x] Dashboard : clic sur "Job en cours" → `JobDetailPage`
+- [x] Dashboard : clic sur "Terminer" → `JobDetailPage` (déjà fait)
+- [x] JobDetailPage : bouton "📋 Checklist" → `InspectionPage` (déjà fait)
+- [x] InspectionPage : bouton "← Retour" → `JobDetailPage`
+- [x] JobDetailPage : bouton "← Retour" → `JobsPage`
+- [x] Vérifier que toutes les navigations utilisent les `name` des routes, pas les paths en dur
 
 **Technical Notes**
 

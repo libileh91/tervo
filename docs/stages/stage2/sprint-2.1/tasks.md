@@ -48,7 +48,7 @@ Afin de **documenter l'état de l'installation**.
 - [x] Retourne 201 : `{ id, category, file_url, thumbnail_url, taken_at }`
 - [x] Validation : job_id doit exister (404)
 - [x] Authentification requise + vérification d'assignation (403)
-- [x] Servir les fichiers via un endpoint dédié (StaticFiles) ou Traefik (P3)
+- [x] Servir les fichiers via un endpoint dédié (StaticFiles) ou 1Panel (P3)
 
 **Technical Notes**
 

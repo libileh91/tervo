@@ -1,4 +1,4 @@
-# Guide de test — ResQ
+# Guide de test — Tervo
 
 > **Objectif** : Lancer l'application complète (backend + frontend) et tester visuellement
 > **Stack** : FastAPI (backend) + Vue.js 3 / Vite (frontend) + Bun
@@ -86,7 +86,7 @@ Ouvrir http://localhost:5173
 → Redirigé vers /login (car pas de token)
 → Tu vois :
   ┌─────────────────────────┐
-  │      ResQ           │
+  │      Tervo           │
   │  Connexion technicien   │
   │                         │
   │  Identifiant            │

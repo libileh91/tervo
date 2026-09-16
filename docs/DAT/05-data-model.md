@@ -1,4 +1,4 @@
-# ResQ — Data Model
+# Tervo — Data Model
 
 ## 1. Vue d'ensemble
 

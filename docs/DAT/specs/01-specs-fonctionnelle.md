@@ -1,4 +1,4 @@
-# Spécification Fonctionnelle — ResQ
+# Spécification Fonctionnelle — Tervo
 
 > **Objet :** Application Web de gestion d'interventions pour techniciens CVC.
 >
@@ -613,7 +613,7 @@ Temps total hors intervention : < 2 minutes
 
 ```
 ┌──────────────────────────────┐
-│  ResQ                    │ ← TopBar (fixe)
+│  Tervo                   │ ← TopBar (fixe)
 ├──────────────────────────────┤
 │                              │
 │                              │

@@ -79,7 +79,7 @@ Afin de **ne pas avoir de lenteur en production**.
 **User Story**  
 En tant que **technicien**,  
 Je veux **un guide utilisateur clair pour utiliser l'application**  
-Afin de **prendre en main ResQ rapidement**.
+Afin de **prendre en main Tervo rapidement**.
 
 **Acceptance Criteria**
 - [ ] Document `docs/user-guide.md` avec :

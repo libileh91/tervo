@@ -1,4 +1,4 @@
-# ResQ — Architecture Technique (DAT)
+# Tervo — Architecture Technique (DAT)
 
 > Document d'Architecture Technique — vue complète du système.
 
@@ -19,35 +19,35 @@ Application Web **mobile-first** pour techniciens CVC :
 
 ## 2. Stack technique
 
-| Domaine      | Technologie       | Version   | Rôle                       |
-| ------------ | ----------------- | --------- | -------------------------- |
-| **Backend**  | Python            | 3.11+     | Langage                    |
-|              | FastAPI           | 0.111+    | Framework API REST         |
-|              | SQLAlchemy        | 2.0+      | ORM                        |
-|              | Pydantic          | 2.x       | Validation / sérialisation |
-|              | **Alembic**       | **1.13+** | **Migrations DB (dès J1)** |
-|              | SQLite            | intégré   | Dev                        |
-|              | PostgreSQL        | 16        | Production                 |
-|              | Uvicorn           | 0.30+     | Serveur ASGI               |
-|              | python-jose       | 3.3+      | JWT                        |
-|              | passlib           | 1.7+      | Hashage bcrypt             |
-|              | WeasyPrint        | —         | Génération PDF             |
-|              | Pillow            | 10.x      | Thumbnails photos          |
-|              | Pytest            | 8.x       | Tests                      |
-| **Frontend** | Vue.js            | 3.x       | Framework UI               |
+| Domaine      | Technologie       | Version   | Rôle                              |
+| ------------ | ----------------- | --------- | --------------------------------- |
+| **Backend**  | Python            | 3.11+     | Langage                           |
+|              | FastAPI           | 0.111+    | Framework API REST                |
+|              | SQLAlchemy        | 2.0+      | ORM                               |
+|              | Pydantic          | 2.x       | Validation / sérialisation        |
+|              | **Alembic**       | **1.13+** | **Migrations DB (dès J1)**        |
+|              | SQLite            | intégré   | Dev                               |
+|              | PostgreSQL        | 16        | Production                        |
+|              | Uvicorn           | 0.30+     | Serveur ASGI                      |
+|              | python-jose       | 3.3+      | JWT                               |
+|              | passlib           | 1.7+      | Hashage bcrypt                    |
+|              | WeasyPrint        | —         | Génération PDF                    |
+|              | Pillow            | 10.x      | Thumbnails photos                 |
+|              | Pytest            | 8.x       | Tests                             |
+| **Frontend** | Vue.js            | 3.x       | Framework UI                      |
 |              | **Bun**           | **1.2+**  | **Runtime JS (remplace Node.js)** |
-|              | TypeScript        | 5.x       | Typage                     |
-|              | Vue Router        | 4.x       | Routing                    |
-|              | Pinia             | 2.x       | Gestion d'état             |
-|              | Vue Query         | 5.x       | Cache serveur              |
-|              | PrimeVue          | 4.x       | Composants UI              |
-|              | PrimeFlex         | 3.x       | Styling                    |
-|              | VeeValidate + Zod | 4.x / 3.x | Formulaires                |
-|              | date-fns          | 3.x       | Dates                      |
-|              | Vite              | 6.x       | Bundler                    |
-| **DevOps**   | Docker + Compose  | —         | Conteneurisation           |
-|              | GitHub Actions    | —         | CI/CD                      |
-|              | Traefik           | —         | Reverse proxy + TLS        |
+|              | TypeScript        | 5.x       | Typage                            |
+|              | Vue Router        | 4.x       | Routing                           |
+|              | Pinia             | 2.x       | Gestion d'état                    |
+|              | Vue Query         | 5.x       | Cache serveur                     |
+|              | PrimeVue          | 4.x       | Composants UI                     |
+|              | PrimeFlex         | 3.x       | Styling                           |
+|              | VeeValidate + Zod | 4.x / 3.x | Formulaires                       |
+|              | date-fns          | 3.x       | Dates                             |
+|              | Vite              | 6.x       | Bundler                           |
+| **DevOps**   | Docker + Compose  | —         | Conteneurisation                  |
+|              | GitHub Actions    | —         | CI/CD                             |
+|              | 1Panel            | —         | Reverse proxy + TLS               |
 
 ---
 
@@ -235,7 +235,7 @@ FastAPI → Pillow thumbnail → stockage disque
 
 - Format : JPEG, PNG, max 10 Mo
 - Thumbnail : 300×300, généré côté serveur
-- Servi via Traefik (file server middleware)
+- Servi via 1Panel (file server middleware)
 
 ---
 

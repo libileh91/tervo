@@ -1,4 +1,4 @@
-  # Todos Frontend — ResQ
+  # Todos Frontend — Tervo
 
 > Fichier central des fonctionnalités frontend reportées.  
 > Scanné à chaque fin de tâche pour voir si des dépendances backend sont débloquées.

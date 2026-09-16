@@ -1,8 +1,15 @@
-# Renommer un projet cassé son venv — le cas `siteflow` → `resQ`
+# Renommer un dossier projet cassé son venv — les cas `siteflow` → `resQ` → `Tervo`
 
-## Le constat
+## Le constat (×2)
 
-Après avoir renommé le dossier `siteflow` → `resQ`, la commande habituelle ne fonctionne plus :
+Ce problème est arrivé **deux fois** sur ce projet :
+
+- `siteflow` → `resQ` (1er rename)
+- `resQ` → `Tervo` (2e rename)
+
+Dans les deux cas, le symptôme est le même :
+
+Après avoir renommé le dossier, la commande habituelle ne fonctionne plus :
 
 ```bash
 cd backend/
@@ -112,7 +119,7 @@ Les nouveaux shebabs pointeront vers le bon chemin :
 
 ```bash
 head -1 .venv/bin/uvicorn
-# → #!/home/lob/workspace/python/fastapi/resQ/backend/.venv/bin/python3
+# → #!/home/lob/workspace/python/fastapi/Tervo/backend/.venv/bin/python3
 #                                              ^^^
 ```
 
@@ -144,7 +151,7 @@ ls -la .venv/bin/python3
 
 # Vérifier que la DB existe au bon endroit
 ls -la *.db
-# → resq.db  (et PAS siteflow.db)
+# → tervo.db  (et PAS siteflow.db)
 
 # Vérifier que les dépendances sont installées
 uv pip list | grep aiosqlite
@@ -157,14 +164,14 @@ uv pip list | grep aiosqlite
 
 Les chemins absolus dans les shebangs des binaires du venv ne sont pas mis à jour automatiquement. C'est une limitation de `venv` (et de `virtualenv`). Le symlink `python3` reste valide car il pointe vers un chemin pyenv qui, lui, ne change pas — mais les scripts exécutables (`uvicorn`, `pip`, `pytest`, etc.) ont le chemin du projet écrit en dur.
 
-| Élément | Chemin absolu ? | Cassé par rename ? |
-|---------|----------------|-------------------|
-| Shebang de `uvicorn` | Oui → `siteflow/...` | ❌ Oui |
-| Symlink `python3` | Oui → `.pyenv/versions/3.12.0/...` | ✅ Non |
-| Fichier DB | `sqlite:///./resq.db` (relatif) | ✅ Non (relatif) |
-| `activate` | Non (utilise `DIR`/`VIRTUAL_ENV`) | ✅ Non |
-| Paquets `.venv/lib/` | Non (import Python) | ✅ Non |
+| Élément              | Chemin absolu ?                    | Cassé par rename ? |
+| -------------------- | ---------------------------------- | ------------------ |
+| Shebang de `uvicorn` | Oui → `siteflow/...`               | ❌ Oui             |
+| Symlink `python3`    | Oui → `.pyenv/versions/3.12.0/...` | ✅ Non             |
+| Fichier DB           | `sqlite:///./tervo.db` (relatif)   | ✅ Non (relatif)   |
+| `activate`           | Non (utilise `DIR`/`VIRTUAL_ENV`)  | ✅ Non             |
+| Paquets `.venv/lib/` | Non (import Python)                | ✅ Non             |
 
 ---
 
-*Note générée suite au rename SiteFlow → ResQ — Juin 2026*
+_Note mise à jour après les deux renames SiteFlow → ResQ → Tervo — Juillet 2026_

@@ -141,7 +141,7 @@ a341de379a02        ← add client table
 cd backend/
 .venv/bin/python -c "
 import sqlite3
-conn = sqlite3.connect('resq.db')
+conn = sqlite3.connect('tervo.db')
 cur = conn.execute(\"SELECT sql FROM sqlite_master WHERE type='table' AND name='job';\")
 print(cur.fetchone()[0])
 conn.close()

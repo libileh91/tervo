@@ -30,7 +30,7 @@ backend/
 ├── alembic.ini              # Fichier de configuration Alembic
 ├── pyproject.toml            # Dépendances Python (uv)
 ├── uv.lock                  # Lockfile généré par uv sync
-└── resq.db                  # Base SQLite (créée à la 1ère migration)
+└── tervo.db                  # Base SQLite (créée à la 1ère migration)
 ```
 
 ---
@@ -44,7 +44,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # ── Database ──
-    DATABASE_URL: str = "sqlite:///./resq.db"
+    DATABASE_URL: str = "sqlite:///./tervo.db"
     # NOTE: "sqlite://" (sync) pour Alembic
     #       "sqlite+aiosqlite://" (async) pour FastAPI
 
@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # ── App metadata ──
-    APP_NAME: str = "ResQ"
+    APP_NAME: str = "Tervo"
     APP_VERSION: str = "0.1.0"
     API_V1_PREFIX: str = "/api/v1"
 
@@ -189,7 +189,7 @@ cd backend/
 ```
 
 Résultat :
-- La base `resq.db` est créée
+- La base `tervo.db` est créée
 - La table `alembic_version` est créée avec la version `9b55bf942f2a`
 - Prochaines migrations s'enchaîneront : `9b55bf942f2a → ... → head`
 
@@ -214,14 +214,14 @@ Une fois Alembic en place, le cycle de vie d'une feature est :
 
 ## 7. Piège évité : SQLite sync vs async
 
-**Problème :** J'avais mis `DATABASE_URL = "sqlite+aiosqlite:///./resq.db"` (async).
+**Problème :** J'avais mis `DATABASE_URL = "sqlite+aiosqlite:///./tervo.db"` (async).
 
 **Erreur :** Alembic fonctionne en **synchrone** et ne peut pas utiliser `aiosqlite`. On obtenait :
 ```
 sqlalchemy.exc.MissingGreenlet: greenlet_spawn has not been called
 ```
 
-**Solution :** Utiliser `sqlite:///./resq.db` (sync) dans `DATABASE_URL`. L'engine async pour FastAPI sera configuré séparément dans `app/core/database.py` avec le préfixe `+aiosqlite`.
+**Solution :** Utiliser `sqlite:///./tervo.db` (sync) dans `DATABASE_URL`. L'engine async pour FastAPI sera configuré séparément dans `app/core/database.py` avec le préfixe `+aiosqlite`.
 
 ---
 
@@ -256,6 +256,6 @@ flowchart LR
     C --> E[alembic revision --autogenerate]
     E --> F[alembic/versions/<br/>migration.py]
     F --> G[alembic upgrade head]
-    G --> H[(resq.db<br/>+ alembic_version)]
+    G --> H[(tervo.db<br/>+ alembic_version)]
 ```
 

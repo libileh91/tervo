@@ -1,6 +1,6 @@
-# ResQ — Workflows & UX Patterns
+# Tervo — Workflows & UX Patterns
 
-> **Objet :** Workflows utilisateur pour ResQ.
+> **Objet :** Workflows utilisateur pour Tervo.
 >
 > **Documents liés :** `specs/01-specs-fonctionnelle.md`, `specs/03-api-spec.md`
 
@@ -174,7 +174,7 @@ Temps total hors intervention : < 2 minutes
 
 ```
 ┌──────────────────────────────┐
-│  ResQ                   │ ← TopBar (fixe)
+│  Tervo                  │ ← TopBar (fixe)
 ├──────────────────────────────┤
 │                              │
 │    CONTENU DE LA PAGE        │

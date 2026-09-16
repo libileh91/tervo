@@ -314,7 +314,7 @@
       "task": "INT-37",
       "title": "Tests API photos, matériaux, rapport, avis, intégration",
       "type": "api",
-      "preconditions": ["Base de données de test (test_resq.db)", "pytest + httpx.AsyncClient"],
+      "preconditions": ["Base de données de test (test_tervo.db)", "pytest + httpx.AsyncClient"],
       "steps": ["pytest tests/test_api.py -v", "pytest tests/test_api.py --cov=app --cov-report=term-missing"],
       "expected_result": {
         "tests_passed": 28,
@@ -332,7 +332,7 @@
         "failed": 0,
         "coverage": "65%",
         "coverage_target_atteint": true,
-        "notes": "pytest-asyncio + httpx.ASGITransport pour les tests async. Base de données test_resq.db isolée avec create_all/drop_all."
+        "notes": "pytest-asyncio + httpx.ASGITransport pour les tests async. Base de données test_tervo.db isolée avec create_all/drop_all."
       }
     }
   ]

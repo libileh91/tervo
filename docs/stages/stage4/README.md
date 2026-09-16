@@ -10,7 +10,8 @@
 |--------|---------|--------|---------------|
 | 4.1 | Semaine 5, Lun-Mer | INT-38 à INT-42 | 18 |
 | 4.2 | Semaine 5, Jeu-Ven | INT-43, INT-44, INT-46, INT-52, INT-53 | 21 |
-| **Total** | **5 jours** | **10 tâches** | **39 pts** |
+| 4.3 | Semaine 5, Ven | INT-45, INT-54, INT-55 | 8 |
+| **Total** | **5 jours** | **13 tâches** | **47 pts** |
 
 ---
 
@@ -20,6 +21,8 @@
 Sprint 4.1 (Frontend mobile) ← dépend de Phase 3 (déploiement OK)
     ↓
 Sprint 4.2 (Tests & Perf) ← dépend de Phase 3 + Sprint 4.1
+    ↓
+Sprint 4.3 (Jobs retards & annulation) ← dépend de Sprint 4.1 (Dashboard)
 ```
 
 ---

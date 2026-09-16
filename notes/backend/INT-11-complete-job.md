@@ -86,7 +86,7 @@ cd backend/
 .venv/bin/python -c "
 import asyncio, aiosqlite
 async def f():
-    db = await aiosqlite.connect('resq.db')
+    db = await aiosqlite.connect('tervo.db')
     await db.execute('UPDATE checklist_item SET checked=1 WHERE job_id=1')
     await db.commit()
     await db.close()

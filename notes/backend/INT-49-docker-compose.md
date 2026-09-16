@@ -35,7 +35,7 @@
 
 **Points clés :**
 - **1Panel Admin** (port `7410`) : interface web pour tout configurer — accessible uniquement en local
-- **1Panel Reverse Proxy** (ports `80` HTTP / `443` HTTPS) : expose les services ResQ publiquement
+- **1Panel Reverse Proxy** (ports `80` HTTP / `443` HTTPS) : expose les services Tervo publiquement
 - **Pas de Traefik** — 1Panel fait office de reverse proxy via son UI
 - Le backend expose son port `8000` **en interne** (dans docker-compose) ; 1Panel le relie à son proxy
 - Le frontend Nginx expose le port `80` **en interne** ; idem, 1Panel le relie
@@ -71,7 +71,7 @@ services:
     volumes:
       - uploads_data:/backend/uploads
     environment:
-      - DATABASE_URL=postgresql://${RESQ_DB_USER:-resq_user}:${RESQ_DB_PASSWORD:-changeme}@postgres:5432/${RESQ_DB_NAME:-resq_db}
+      - DATABASE_URL=postgresql://${TERVO_DB_USER:-tervo_user}:${TERVO_DB_PASSWORD:-changeme}@postgres:5432/${TERVO_DB_NAME:-tervo_db}
       - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
     networks:
       - postgres_network
@@ -157,7 +157,7 @@ docker compose -f deploy/docker-compose.yml config
 docker compose -f deploy/docker-compose.yml build --no-cache
 
 # Taille des images
-docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}" | grep resq
+docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}" | grep tervo
 ```
 
 ---
@@ -177,8 +177,8 @@ Pendant INT-49, j'ai identifié et corrigé un problème de INT-48 :
 
 | Image | Taille | Statut |
 |-------|--------|--------|
-| `resq-backend:test` | 260 MB | ✅ Build OK |
-| `resq-frontend:test` | 63.9 MB | ✅ Build OK |
+| `tervo-backend:test` | 260 MB | ✅ Build OK |
+| `tervo-frontend:test` | 63.9 MB | ✅ Build OK |
 | docker-compose config | — | ✅ Syntaxe valide |
 
 ---

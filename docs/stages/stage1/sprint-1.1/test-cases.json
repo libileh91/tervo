@@ -24,10 +24,10 @@
       },
       "actual_result": {
         "status": "success",
-        "alembic_version_table": "créée dans la base (resq.db)",
-        "migration_file": "présent dans alembic/versions/9b55bf942f2a_initial_empty_schema.py",
+        "alembic_version_table": "créée dans la base (tervo.db)",
+                "migration_file": "présent dans alembic/versions/9b55bf942f2a_initial_empty_schema.py",
         "upgrade_head": "OK (no error)",
-        "notes": "env.py configuré avec target_metadata=Base.metadata depuis app.models.base et DATABASE_URL depuis app.config.settings. Sync SQLite utilisé (sqlite:///./resq.db) car Alembic ne supporte pas aiosqlite."
+        "notes": "env.py configuré avec target_metadata=Base.metadata depuis app.models.base et DATABASE_URL depuis app.config.settings. Sync SQLite utilisé (sqlite:///./tervo.db) car Alembic ne supporte pas aiosqlite."
       }
     },
     {
@@ -207,7 +207,7 @@
         "body": {
           "id": 1,
           "username": "tech1",
-          "email": "tech1@resq.app",
+          "email": "tech1@tervo.app"
           "full_name": "Guuleed Liban",
           "role": "technician",
           "is_active": true

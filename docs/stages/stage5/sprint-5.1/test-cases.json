@@ -55,7 +55,7 @@
       "steps": [
         "POST /api/v1/admin/register",
         "Header: Authorization: Bearer <admin_token>",
-        "Body: { \"username\": \"newtech\", \"email\": \"new@resq.app\", \"password\": \"pass123\", \"full_name\": \"Nouveau Tech\" }"
+        "Body: { \"username\": \"newtech\", \"email\": \"new@tervo.app\", \"password\": \"pass123\", \"full_name\": \"Nouveau Tech\" }"
       ],
       "expected_result": {
         "status_code": 201,

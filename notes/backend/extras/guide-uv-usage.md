@@ -83,7 +83,7 @@ source .venv/bin/activate
 
 # Exécuter un fichier Python directement
 uv run python -c "from app.config import settings; print(settings.APP_NAME)"
-# → ResQ
+# → Tervo
 
 # Lancer Alembic (migrations)
 uv run alembic upgrade head
@@ -182,7 +182,7 @@ L'activation (`source .venv/bin/activate`) reste utile quand tu vas enchaîner 1
 
 ```toml
 [project]
-name = "resq-backend"
+name = "tervo-backend"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [

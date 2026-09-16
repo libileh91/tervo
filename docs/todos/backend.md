@@ -1,4 +1,4 @@
-# Todos Backend — ResQ
+# Todos Backend — Tervo
 
 > Fichier central des fonctionnalités backend reportées.  
 > Scanné à chaque fin de tâche pour voir si des dépendances sont débloquées.  
@@ -81,7 +81,7 @@
 
 ---
 
-## TD-B008 — Créer la base PostgreSQL `resq_db` sur le serveur
+## TD-B008 — Créer la base PostgreSQL `tervo_db` sur le serveur
 
 | Champ         | Valeur                                                          |
 | ------------- | --------------------------------------------------------------- |
@@ -89,8 +89,8 @@
 | **Dépend de** | Container PostgreSQL running sur le serveur (`postgres:17.4`)    |
 | **Fichiers**  | — (commande Docker exec)                                         |
 | **Action**    | Exécuter sur le serveur :                                        |
-|               | `docker exec -it postgres psql -U postgres -c "CREATE DATABASE resq_db;"` |
-|               | `docker exec -it postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE resq_db TO lob;"` |
+|               | `docker exec -it postgres psql -U postgres -c "CREATE DATABASE tervo_db;"` |
+|               | `docker exec -it postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE tervo_db TO lob;"` |
 | **Statut**    | ⏳ À faire dans INT-DPL                                          |
 
 ---
@@ -102,7 +102,7 @@
 | **Créé dans** | INT-50 (Sprint 3.1)                                             |
 | **Dépend de** | TD-B008                                                         |
 | **Fichiers**  | — (commande Docker exec)                                         |
-| **Action**    | Vérifier que `lob` a les droits sur `resq_db` :                  |
+| **Action**    | Vérifier que `lob` a les droits sur `tervo_db` :                  |
 |               | `docker exec -it postgres psql -U postgres -c "\l"`             |
-|               | `docker exec -it postgres psql -U lob -d resq_db -c "\dt"`      |
+|               | `docker exec -it postgres psql -U lob -d tervo_db -c "\dt"`      |
 | **Statut**    | ⏳ À faire dans INT-DPL (après TD-B008)                          |

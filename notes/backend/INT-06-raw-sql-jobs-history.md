@@ -225,7 +225,7 @@ asyncio.run(test_raw_sql())
 - Requêtes avec filtres dynamiques
 - Relations (client.jobs, job.technician)
 - Tests et refactoring (le typage aide)
-- **Ce qu'on fait dans ResQ pour la prod**
+- **Ce qu'on fait dans Tervo pour la prod**
 
 ### 🔬 Raw SQL pour :
 

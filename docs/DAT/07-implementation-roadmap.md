@@ -1,6 +1,6 @@
-# ResQ — Roadmap d'implémentation
+# Tervo — Roadmap d'implémentation
 
-> **Objet :** Plan de développement de ResQ.
+> **Objet :** Plan de développement de Tervo.
 >
 > **Documents liés :** `specs/02-spec-technique.md`, `specs/01-specs-fonctionnelle.md`
 
@@ -135,7 +135,7 @@ Sem 1-2 ✅          Sem 3 ✅             Sem 4               Sem 5            
 **Livrables Phase 3 :**
 
 - [ ] Application déployée via 1Panel accessible en IP:port
-- [ ] PostgreSQL `resq_db` créée et connectée
+- [ ] PostgreSQL `tervo_db` créée et connectée
 - [ ] Uploads volume persistant monté
 - [ ] Seed données : admin + technicien + données demo
 - [ ] Dockerfile multi-stage opérationnel

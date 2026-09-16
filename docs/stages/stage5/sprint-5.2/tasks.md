@@ -14,7 +14,7 @@ Afin d'**y accéder comme une app native, même sans réseau**.
 **Acceptance Criteria**
 - [ ] Service worker enregistré à l'initialisation de l'app (`main.ts`)
 - [ ] Manifeste `manifest.webmanifest` avec :
-  - `name: "ResQ"`, `short_name: "ResQ"`
+  - `name: "Tervo"`, `short_name: "Tervo"`
   - Icônes 192x192, 512x512
   - `start_url: "/"`, `display: "standalone"`
 - [ ] Cache des assets statiques (CSS, JS, fonts PrimeVue)
@@ -47,7 +47,7 @@ Afin de **ne pas fatiguer mes yeux**.
 
 **Technical Notes**
 - PrimeVue 4 : `darkModeSelector: '.p-dark'` dans la config `main.ts`
-- Stockage : `localStorage.setItem('resq_theme', 'dark'|'light')`
+- Stockage : `localStorage.setItem('tervo_theme', 'dark'|'light')`
 - CSS : variables CSS personnalisées pour les couleurs custom
 - `<i class="pi pi-sun" />` / `<i class="pi pi-moon" />` pour l'icône
 

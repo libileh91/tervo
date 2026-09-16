@@ -15,7 +15,7 @@ Tests d'intégration API pour les endpoints du Sprint 2.2. Utilise `pytest` +
 | `pytest-asyncio` | Support async (`asyncio_mode = auto`) |
 | `pytest-cov` | Couverture de code |
 | `httpx.AsyncClient` + `ASGITransport` | Appels HTTP sans serveur |
-| `SQLite` (test_resq.db) | Base de test isolée, tables créées/drop à chaque test |
+| `SQLite` (test_tervo.db) | Base de test isolée, tables créées/drop à chaque test |
 
 ---
 
@@ -44,7 +44,7 @@ TestIntegration     (3 tests)  — complete_job → review créé
 ### Test database isolée
 
 ```python
-TEST_DB_URL = "sqlite+aiosqlite:///./test_resq.db"
+TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"
 test_engine = create_async_engine(TEST_DB_URL, echo=False)
 
 # Dans la fixture client():

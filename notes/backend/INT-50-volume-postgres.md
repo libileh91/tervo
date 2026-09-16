@@ -48,7 +48,7 @@ volumes:
 
 ### Comment la connexion fonctionne
 
-- **docker-compose** déclare `DATABASE_URL=postgresql://lob:postgres@postgres:5432/resq_db`
+- **docker-compose** déclare `DATABASE_URL=postgresql://lob:postgres@postgres:5432/tervo_db`
 - **pydantic-settings** lit `DATABASE_URL` depuis l'env (override la valeur par défaut SQLite)
 3. **database.py** convertit automatiquement : `postgresql://` → `postgresql+asyncpg://`
 4. **Alembic** lit `settings.DATABASE_URL` et l'utilise pour les migrations
@@ -56,18 +56,18 @@ volumes:
 ### Commandes à exécuter sur le serveur (avant le 1er déploiement)
 
 ```bash
-# 1. Créer la base de données ResQ
-docker exec -it postgres psql -U postgres -c "CREATE DATABASE resq_db;"
+# 1. Créer la base de données Tervo
+docker exec -it postgres psql -U postgres -c "CREATE DATABASE tervo_db;"
 
 # 2. L'utilisateur 'lob' existe déjà dans le container PG (POSTGRES_USER=lob)
-#    Il faut juste lui donner les droits sur resq_db
-docker exec -it postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE resq_db TO lob;"
+#    Il faut juste lui donner les droits sur tervo_db
+docker exec -it postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE tervo_db TO lob;"
 
 # 3. Vérifier
 docker exec -it postgres psql -U postgres -c "\l"
 ```
 
-> ⚠️ Le mot de passe `postgres` est défini via la variable `${RESQ_DB_PASSWORD:-postgres}` dans docker-compose.
+> ⚠️ Le mot de passe `postgres` est défini via la variable `${TERVO_DB_PASSWORD:-postgres}` dans docker-compose.
 
 ---
 

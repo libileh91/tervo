@@ -1,0 +1,183 @@
+{
+  "$schema": "Phase 4 - Sprint 4.3 Test Cases",
+  "sprint": "4.3",
+  "description": "Tests for overdue jobs section and cancel endpoint",
+  "test_cases": [
+    {
+      "id": "TC-INT-54-01",
+      "task": "INT-54",
+      "title": "Cancel - annuler un job planifié",
+      "type": "api",
+      "preconditions": ["Job planifié existant (id=1)", "Token tech1"],
+      "steps": [
+        "PUT /api/v1/jobs/1/cancel avec token tech1",
+        "Vérifier la réponse"
+      ],
+      "expected_result": {
+        "status_code": 200,
+        "response": { "id": 1, "status": "annulé" }
+      },
+      "actual_result": {
+        "status_code": 200,
+        "response": {"id": 12, "status": "annulé"}
+      }
+    },
+    {
+      "id": "TC-INT-54-02",
+      "task": "INT-54",
+      "title": "Cancel - erreur si job déjà terminé",
+      "type": "api",
+      "preconditions": ["Job terminé (seed)", "Token tech1"],
+      "steps": [
+        "PUT /api/v1/jobs/14/cancel avec token tech1"
+      ],
+      "expected_result": {
+        "status_code": 400,
+        "detail": "Le job doit être au statut 'planifié' pour être annulé"
+      },
+      "actual_result": {
+        "status_code": 400,
+        "detail": "Le job doit être au statut 'planifié' pour être annulé"
+      }
+    },
+    {
+      "id": "TC-INT-54-03",
+      "task": "INT-54",
+      "title": "Cancel - erreur si technicien non assigné",
+      "type": "api",
+      "preconditions": ["Job planifié assigné à un autre technicien", "Token tech1"],
+      "steps": [
+        "PUT /api/v1/jobs/{other_tech_job_id}/cancel avec token tech1"
+      ],
+      "expected_result": {
+        "status_code": 403,
+        "detail": "Vous n'êtes pas assigné à ce job"
+      },
+      "actual_result": "Non testé (seed n'a qu'un technicien)"
+    },
+    {
+      "id": "TC-INT-54-04",
+      "task": "INT-54",
+      "title": "Cancel - erreur si job inexistant",
+      "type": "api",
+      "preconditions": ["Token tech1"],
+      "steps": [
+        "PUT /api/v1/jobs/99999/cancel avec token tech1"
+      ],
+      "expected_result": {
+        "status_code": 404,
+        "detail": "Job non trouvé"
+      },
+      "actual_result": {
+        "status_code": 404,
+        "detail": "Job non trouvé"
+      }
+    },
+    {
+      "id": "TC-INT-55-01",
+      "task": "INT-55",
+      "title": "Dashboard - overdue_jobs présent et filtré",
+      "type": "api",
+      "preconditions": ["Au moins 1 job planifié avec date < today pour tech1", "Token tech1"],
+      "steps": [
+        "GET /api/v1/dashboard/summary avec token tech1"
+      ],
+      "expected_result": {
+        "overdue_jobs_present": "true (tableau non vide)",
+        "overdue_jobs[0].days_overdue": "entier > 0",
+        "overdue_jobs[0].scheduled_date": "string ISO (YYYY-MM-DD)",
+        "overdue_jobs[0].client_full_name": "string non vide",
+        "tous_overdue": "true (tous les jobs ont scheduled_date < today)",
+        "trie_par_date_asc": "true (le plus vieux en premier)"
+      },
+      "actual_result": {
+        "overdue_jobs_present": "true — 1 job overdue (id=26, days_overdue=3)",
+        "overdue_jobs[0].days_overdue": "3 (entier)",
+        "overdue_jobs[0].scheduled_date": "2026-07-10 (ISO)",
+        "overdue_jobs[0].client_full_name": "Ahmed Cabdullahi",
+        "tous_overdue": "true",
+        "trie_par_date_asc": "true"
+      }
+    },
+    {
+      "id": "TC-INT-55-02",
+      "task": "INT-55",
+      "title": "Dashboard - backward compatible sans overdue",
+      "type": "api",
+      "preconditions": ["Aucun job en retard (seed frais)", "Token tech1"],
+      "steps": [
+        "Seed avec seulement jobs today/future",
+        "GET /api/v1/dashboard/summary"
+      ],
+      "expected_result": {
+        "overdue_jobs": "[] (tableau vide)",
+        "today_present": "true",
+        "next_job_fonctionne": "true",
+        "in_progress_job_fonctionne": "true"
+      },
+      "actual_result": {
+              "overdue_jobs": "[] (tableau vide)",
+              "today_present": "true",
+              "next_job_fonctionne": "true",
+              "in_progress_job_fonctionne": "true"
+            }
+          },
+          {
+            "id": "TC-INT-45-01",
+      "task": "INT-45",
+      "title": "Frontend - carte En retard dans Dashboard",
+      "type": "e2e",
+      "preconditions": ["Seed avec job en retard pour tech1", "Navigateur sur Dashboard"],
+      "steps": [
+        "Ouvrir le Dashboard connecté en tech1",
+        "Observer la présence de la carte En retard"
+      ],
+      "expected_result": {
+        "carte_visible": "true (section avec icône pi-exclamation-triangle)",
+        "job_retard_affiche": "titre + client + jours de retard + priorité",
+        "bouton_demarrer": "visible",
+        "bouton_annuler": "visible",
+        "couleur_orangée": "true (fond ou bordure warning)"
+      },
+      "actual_result": "Non testé (nécessite navigateur)"
+          },
+          {
+            "id": "TC-INT-45-02",
+      "task": "INT-45",
+      "title": "Frontend - annuler un job depuis JobDetailPage",
+      "type": "e2e",
+      "preconditions": ["Job planifié", "Navigateur sur JobDetailPage"],
+      "steps": [
+        "Ouvrir un job planifié",
+        "Cliquer sur le bouton Annuler",
+        "Confirmer dans le Dialog",
+        "Vérifier le toast de succès"
+      ],
+      "expected_result": {
+        "bouton_annuler_visible": "true",
+        "dialog_confirmation": "visible",
+        "toast_succès": "'Job annulé' ou message similaire",
+        "status_job": "devient 'annulé' (re-fetch ou mutation locale)"
+      },
+      "actual_result": "Non testé (nécessite navigateur)"
+          },
+          {
+            "id": "TC-INT-45-03",
+      "task": "INT-45",
+      "title": "Frontend - annuler depuis le Dashboard",
+      "type": "e2e",
+      "preconditions": ["Job en retard dans le Dashboard", "Navigateur sur Dashboard"],
+      "steps": [
+        "Cliquer sur '❌ Annuler' dans la carte En retard",
+        "Confirmer",
+        "Vérifier le toast"
+      ],
+      "expected_result": {
+        "cancel_initié": "true (bouton cliqué)",
+        "toast_succès": "true",
+        "carte_rafraîchie": "true (le job disparaît de la section En retard)"
+      },
+      "actual_result": "Non testé (nécessite navigateur)"
+    }
+  ]
+}
