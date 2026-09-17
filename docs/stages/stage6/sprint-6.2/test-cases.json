@@ -1,0 +1,185 @@
+{
+  "$schema": "Stage 6 - Sprint 6.2 Test Cases",
+  "sprint": "6.2",
+  "description": "Import Excel : normalisation, fuzzy matching, 2 passes, transactions, idempotence",
+  "test_cases": [
+    {
+      "id": "TC-INT-72-01",
+      "task": "INT-72",
+      "title": "FormatDetector - mapping sur 3 formats différents",
+      "type": "unit",
+      "preconditions": ["3 fixtures Excel : format 2010, 2018, 2024"],
+      "steps": [
+        "Charger chaque fixture",
+        "Appeler FormatDetector.detect(df)",
+        "Comparer le mapping retourné"
+      ],
+      "expected_result": {
+        "format_2010_full_name": "'Nom Client' → full_name",
+        "format_2018_phone": "'Tel' → phone",
+        "format_2024_address": "'Adresse' → address",
+        "score_confiance": ">= 0.8 pour chaque colonne détectée"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-73-01",
+      "task": "INT-73",
+      "title": "Normalizer - noms et téléphones",
+      "type": "unit",
+      "preconditions": ["Package importers.normalizer"],
+      "steps": [
+        "normalize_name(' Élodie  DUPONT ')",
+        "normalize_name('JEAN-PIERRE DUPONT')",
+        "normalize_phone('06 12 34 56 78')",
+        "normalize_phone('+33 6.12.34.56.78')"
+      ],
+      "expected_result": {
+        "normalize_name_1": "'elodie dupont'",
+        "normalize_name_2": "'jean-pierre dupont'",
+        "normalize_phone_1": "'0612345678'",
+        "normalize_phone_2": "'0612345678'",
+        "accents_supprimes": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-74-01",
+      "task": "INT-74",
+      "title": "Matcher - trois zones de décision",
+      "type": "unit",
+      "preconditions": ["Package importers.matcher"],
+      "steps": [
+        "Matcher 'Jean Dupont' 0612345678 vs 'Jean DUPONT' 0612345678",
+        "Matcher 'Jean Dupont' vs 'J. Dupont' 0612345678",
+        "Matcher 'Jean Dupont' vs 'Marie Martin' 0698765432"
+      ],
+      "expected_result": {
+        "cas_exact_decision": "auto (score >= 95)",
+        "cas_proche_decision": "human_review (80 <= score < 95)",
+        "cas_distinct_decision": "new_client (score < 80)",
+        "seuils_configurables": "true",
+        "rapidfuzz_utilise": "true (pas difflib)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-75-01",
+      "task": "INT-75",
+      "title": "Validators - lignes invalides rejetées sans bloquer",
+      "type": "integration",
+      "preconditions": ["Fixture avec 10 lignes valides + 2 invalides"],
+      "steps": [
+        "Lancer la validation",
+        "Vérifier le nombre de lignes valides",
+        "Vérifier les erreurs collectées"
+      ],
+      "expected_result": {
+        "lignes_valides": 10,
+        "lignes_erreurs": 2,
+        "erreurs_structure": "row, column, value, error",
+        "import_non_bloque": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-76-01",
+      "task": "INT-76",
+      "title": "Idempotence - double import du même fichier",
+      "type": "integration",
+      "preconditions": ["Base vide", "Un fichier Excel de 100 lignes"],
+      "steps": [
+        "Importer le fichier → noter le résultat",
+        "Réimporter exactement le même fichier",
+        "Comparer les comptages en base"
+      ],
+      "expected_result": {
+        "premier_import_clients_crees": 100,
+        "deuxieme_import_clients_crees": 0,
+        "deuxieme_import_status": "skipped (hash identique)",
+        "import_batches_total": 1,
+        "sha256_calcule": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-77-01",
+      "task": "INT-77",
+      "title": "Jobs orphelins - tracés, pas ignorés",
+      "type": "integration",
+      "preconditions": ["Fixture avec 1 job dont le client est inconnu"],
+      "steps": [
+        "Lancer l'import",
+        "Vérifier la table jobs",
+        "Vérifier la table import_errors"
+      ],
+      "expected_result": {
+        "job_insere_dans_jobs": "false",
+        "present_dans_import_errors": "true",
+        "import_error_status": "ORPHAN",
+        "original_client_name_conserve": "true",
+        "reason_renseignee": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-78-01",
+      "task": "INT-78",
+      "title": "Transactions - rollback par batch",
+      "type": "integration",
+      "preconditions": ["1000 lignes, erreur simulée au batch 2"],
+      "steps": [
+        "Lancer l'import avec batch_size=500",
+        "Provoquer une erreur au batch 2",
+        "Vérifier l'état de la base"
+      ],
+      "expected_result": {
+        "batch_1_commite": "true (500 clients en base)",
+        "batch_2_rollback": "true (0 insertion)",
+        "import_batch_status": "partial",
+        "pas_de_transaction_geante": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-78-02",
+      "task": "INT-78",
+      "title": "Deux passes - clients puis jobs",
+      "type": "integration",
+      "preconditions": ["Fixture avec jobs référençant des clients par nom"],
+      "steps": [
+        "Lancer l'import complet",
+        "Vérifier que les clients existent avant les jobs",
+        "Vérifier les FK job.client_id"
+      ],
+      "expected_result": {
+        "passe_1_clients_executee": "true",
+        "passe_2_jobs_executee": "true",
+        "tous_les_jobs_ont_client_id": "true",
+        "aucune_fk_violation": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-79-01",
+      "task": "INT-79",
+      "title": "API import - preview / validate / execute",
+      "type": "api",
+      "preconditions": ["Utilisateur admin authentifié"],
+      "steps": [
+        "POST /api/v1/admin/import/preview (multipart)",
+        "POST /api/v1/admin/import/validate",
+        "POST /api/v1/admin/import/execute",
+        "GET /api/v1/admin/import/batches/{id}/errors"
+      ],
+      "expected_result": {
+        "preview_retourne": "10 lignes + mapping",
+        "validate_retourne": "prets, doublons, erreurs",
+        "execute_retourne": "rapport complet",
+        "errors_retourne": "liste des anomalies",
+        "auth_admin_requise": "true (401 sinon)"
+      },
+      "actual_result": null
+    }
+  ]
+}

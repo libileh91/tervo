@@ -1,0 +1,122 @@
+{
+  "$schema": "Stage 6 - Sprint 6.1 Test Cases",
+  "sprint": "6.1",
+  "description": "Corrections architecture : ports sécurisés, healthchecks, firewall, versions, CI/CD",
+  "test_cases": [
+    {
+      "id": "TC-INT-66-01",
+      "task": "INT-66",
+      "title": "Ports - services non exposés publiquement",
+      "type": "integration",
+      "preconditions": ["docker compose up -d", "Services démarrés"],
+      "steps": [
+        "Inspecter les ports publiés : docker compose ps",
+        "Depuis une autre machine : curl http://<IP_VPS>:8000 → doit échouer",
+        "Depuis le VPS : curl http://127.0.0.1:8000/health → doit répondre"
+      ],
+      "expected_result": {
+        "backend_bind": "127.0.0.1:8000 (pas 0.0.0.0)",
+        "frontend_bind": "127.0.0.1:3000 (pas 0.0.0.0)",
+        "postgres_port_publie": "aucun",
+        "acces_externe_direct": "refusé",
+        "acces_loopback": "accepté"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-67-01",
+      "task": "INT-67",
+      "title": "Healthcheck - le backend attend PostgreSQL",
+      "type": "integration",
+      "preconditions": ["docker compose down -v (volumes supprimés)"],
+      "steps": [
+        "docker compose up -d",
+        "Observer immédiatement : docker compose ps",
+        "Attendre et re-observer"
+      ],
+      "expected_result": {
+        "postgres_status_initial": "starting",
+        "backend_status_initial": "created ou waiting",
+        "postgres_status_final": "healthy",
+        "backend_demarre_apres_healthy": "true",
+        "aucune_erreur_connexion_pg_au_demarrage": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-67-02",
+      "task": "INT-67",
+      "title": "Healthcheck - détection d'une base non prête",
+      "type": "integration",
+      "preconditions": ["PostgreSQL arrêté manuellement"],
+      "steps": [
+        "docker stop <postgres_container>",
+        "docker compose up -d backend"
+      ],
+      "expected_result": {
+        "postgres_unhealthy": "true",
+        "backend_ne_demarre_pas": "true",
+        "message_attente_healthcheck": "visible dans docker compose ps"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-68-01",
+      "task": "INT-68",
+      "title": "Firewall - 1Panel non exposé",
+      "type": "security",
+      "preconditions": ["ufw activé"],
+      "steps": [
+        "Depuis l'extérieur : curl http://<IP_VPS>:7410 → doit échouer",
+        "Tunnel SSH : ssh -L 7410:localhost:7410 user@vps",
+        "Depuis le tunnel : curl http://localhost:7410 → doit répondre"
+      ],
+      "expected_result": {
+        "ports_publics": [22, 80, 443],
+        "port_7410_externe": "refusé",
+        "port_7410_via_tunnel": "accessible",
+        "coherence_dat": "true (pas de mention contradictoire)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-69-01",
+      "task": "INT-69",
+      "title": "Versions - DAT sans versions figées",
+      "type": "documentation",
+      "preconditions": ["Audit des fichiers DAT"],
+      "steps": [
+        "Grep des versions dans docs/DAT/MBchauffage-DAT/",
+        "Vérifier pyproject.toml, package.json, docker-compose.yml"
+      ],
+      "expected_result": {
+        "dat_sans_versions_exactes": "true (Python 3.11+, FastAPI, PostgreSQL)",
+        "pyproject_versions_exactes": "true",
+        "docker_compose_versions_exactes": "true (postgres:17, etc.)",
+        "principe_documente": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-70-01",
+      "task": "INT-70",
+      "title": "CI/CD - un seul build d'image",
+      "type": "e2e",
+      "preconditions": ["Push sur main"],
+      "steps": [
+        "Pousser un commit sur main",
+        "Observer le workflow GitHub Actions",
+        "Observer le déploiement sur le VPS",
+        "Vérifier qu'il n'y a pas de double build"
+      ],
+      "expected_result": {
+        "github_actions_tests": "exécutés",
+        "github_actions_build": "absent (simplifié)",
+        "vps_build": "exécuté une seule fois",
+        "duree_pipeline": "réduite vs avant",
+        "evolution_ghcr_documentee": "true"
+      },
+      "actual_result": null
+    }
+  ]
+}

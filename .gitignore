@@ -22,3 +22,7 @@ uploads/*
 !uploads/.gitkeep
 backend/uploads/*
 !backend/uploads/.gitkeep
+
+# others
+.zed
+.qodo

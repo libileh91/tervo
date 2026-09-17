@@ -1,23 +1,57 @@
-# Tervo — Docker Compose (production).
+# Tervo — Docker Compose (stack complète).
 #
-# Orchestre le backend (FastAPI + uvicorn) et le frontend (Nginx static).
+# Services : PostgreSQL + backend (FastAPI) + frontend (Nginx static).
 # Le reverse proxy est géré par 1Panel — pas de Traefik.
-# Se connecte au réseau PostgreSQL existant (postgres_postgres_network).
 #
-# Usage:
+# Sécurité réseau :
+#   - backend et frontend écoutent sur 127.0.0.1 (loopback) uniquement
+#   - PostgreSQL ne publie aucun port
+#   - tout le trafic public passe par le reverse proxy 1Panel en HTTPS
+#
+#   Internet → 1Panel OpenResty (80/443) → 127.0.0.1:PORT → service
+#
+# Démarrage :
 #   docker compose -f deploy/docker-compose.yml up -d
 #   docker compose -f deploy/docker-compose.yml down
 
 name: tervo
 
 services:
+  # ── PostgreSQL ───────────────────────────────────────
+  postgres:
+    image: postgres:17.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${TERVO_DB_NAME:-tervo_db}
+      POSTGRES_USER: ${TERVO_DB_USER:-lob}
+      POSTGRES_PASSWORD: ${TERVO_DB_PASSWORD:-password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    # Aucun port publié : PostgreSQL n'est joignable que dans le réseau Docker.
+    # Accès admin ponctuel : docker exec -it tervo-postgres-1 psql -U lob -d tervo_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+    networks:
+      - tervo_network
+    # pg_isready : retourne 0 seulement si PostgreSQL accepte les connexions.
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${TERVO_DB_USER:-lob} -d ${TERVO_DB_NAME:-tervo_db}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   # ── Backend API ──────────────────────────────────────
   backend:
     build:
       context: ../backend
       dockerfile: Dockerfile
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      # 127.0.0.1 = accessible uniquement depuis l'hôte (pas depuis Internet)
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
     volumes:
       - uploads_data:/app/uploads
     environment:
@@ -27,8 +61,13 @@ services:
       - API_V1_PREFIX=/api/v1
       - UPLOAD_DIR=/app/uploads
     networks:
-      - postgres_network
-      - 1panel-network # Ajouter le reseau 1Panel
+      - tervo_network
+      - 1panel-network # pour que le reverse proxy 1Panel joigne le backend
+    # depends_on + condition : le backend ne démarre qu'une fois PostgreSQL
+    # réellement prêt (et non simplement "démarré").
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -49,19 +88,22 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
     ports:
-      - "${FRONTEND_PORT:-3000}:80"
+      # 127.0.0.1 = accessible uniquement depuis l'hôte (pas depuis Internet)
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:80"
     networks:
-      - postgres_network
-      - 1panel-network # Ajouté le reseaux 1Panel
+      - tervo_network
+      - 1panel-network # pour que le reverse proxy 1Panel joigne le frontend
+    depends_on:
+      - backend
     restart: unless-stopped
 
 volumes:
+  postgres_data:
   uploads_data:
 
 networks:
-  postgres_network:
-    external: true
-    name: postgres_postgres_network
+  tervo_network:
+    driver: bridge
   1panel-network:
     external: true
     name: 1panel-network

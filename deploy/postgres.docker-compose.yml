@@ -1,3 +1,14 @@
+# Tervo — PostgreSQL autonome (option "PG partagé").
+#
+# Ce fichier lance PostgreSQL SEUL, sur son propre réseau.
+#
+# Cas d'usage : plusieurs applications partagent la même instance PostgreSQL.
+# Pour la stack Tervo complète (recommandé), utiliser `docker-compose.yml`
+# qui embarque déjà PostgreSQL avec les healthchecks et dépendances.
+#
+# Démarrage :
+#   docker compose -f deploy/postgres.docker-compose.yml up -d
+
 services:
   postgres:
     image: postgres:17.4
@@ -8,8 +19,13 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-lob}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       PGDATA: /var/lib/postgresql/data/pgdata
-    ports:
-      - "5432:5432"
+    # Aucun port publié sur l'hôte : PostgreSQL n'est accessible que dans
+    # le réseau Docker `postgres_network`, via le nom de service `postgres`.
+    #
+    # Pour un accès administrateur ponctuel depuis l'hôte :
+    #   docker exec -it postgres psql -U lob -d tervo_db
+    #
+    # (Ne jamais publier 5432 sur 0.0.0.0 — la base serait exposée à Internet.)
     volumes:
       - postgres_data:/var/lib/postgresql/data/pgdata
       - ./init:/docker-entrypoint-initdb.d
@@ -17,11 +33,11 @@ services:
     networks:
       - postgres_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lob} -d ${POSTGRES_DB:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     command: |
       postgres
       -c shared_preload_libraries=pg_stat_statements

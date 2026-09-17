@@ -106,3 +106,19 @@
 |               | `docker exec -it postgres psql -U postgres -c "\l"`             |
 |               | `docker exec -it postgres psql -U lob -d tervo_db -c "\dt"`      |
 | **Statut**    | ⏳ À faire dans INT-DPL (après TD-B008)                          |
+
+---
+
+## TD-B010 — PostgreSQL embarqué : migration des données existantes
+
+| Champ         | Valeur                                                          |
+| ------------- | --------------------------------------------------------------- |
+| **Créé dans** | INT-67 (Sprint 6.1 — consolidation du compose)                  |
+| **Dépend de** | Sprint 6.4 (INT-87, déploiement VPS)                            |
+| **Fichiers**  | `deploy/docker-compose.yml`, `deploy/postgres.docker-compose.yml` |
+| **Action**    | Le compose principal embarque désormais son propre service `postgres` (conteneur `tervo-postgres-1`, volume `postgres_data`). L'ancien conteneur partagé `postgres` (compose `postgres.docker-compose.yml`) contient les données actuelles (`tervo_db`). |
+|               | **Décider** : (a) migrer les données de `postgres` vers `tervo-postgres-1`, ou (b) conserver le PG partagé et retirer le service embarqué. |
+|               | Migration si option (a) :                                          |
+|               | `docker exec postgres pg_dump -U lob tervo_db \| gzip > tervo_db.sql.gz` |
+|               | `gunzip -c tervo_db.sql.gz \| docker exec -i tervo-postgres-1 psql -U lob -d tervo_db` |
+| **Statut**    | ⏳ À traiter dans INT-87 (Sprint 6.4)                            |

@@ -1,0 +1,150 @@
+{
+  "$schema": "Stage 6 - Sprint 6.4 Test Cases",
+  "sprint": "6.4",
+  "description": "Déploiement VPS : provisioning, sécurité, Docker, reverse proxy, SSL, CI/CD",
+  "test_cases": [
+    {
+      "id": "TC-INT-85-01",
+      "task": "INT-85",
+      "title": "VPS - accès sécurisé par clé SSH",
+      "type": "security",
+      "preconditions": ["VPS provisionné", "Clé SSH configurée"],
+      "steps": [
+        "ssh user@vps (avec clé) → doit fonctionner",
+        "ssh user@vps -o PreferredAuthentications=password → doit échouer",
+        "ssh root@vps → doit échouer",
+        "sudo ufw status"
+      ],
+      "expected_result": {
+        "acces_par_cle": "ok",
+        "acces_par_mot_de_passe": "refusé",
+        "acces_root_direct": "refusé",
+        "ufw_actif": "true",
+        "ports_ouverts": [22, 80, 443],
+        "fail2ban_actif": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-86-01",
+      "task": "INT-86",
+      "title": "1Panel - non exposé publiquement",
+      "type": "security",
+      "preconditions": ["1Panel installé"],
+      "steps": [
+        "Depuis l'extérieur : curl http://<IP_VPS>:7410 → doit échouer",
+        "ssh -L 7410:localhost:7410 user@vps",
+        "curl http://localhost:7410 → doit répondre"
+      ],
+      "expected_result": {
+        "port_7410_externe": "refusé",
+        "port_7410_tunnel_ssh": "accessible",
+        "reseau_1panel_network": "créé",
+        "docker_accessible_sans_sudo": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-87-01",
+      "task": "INT-87",
+      "title": "Compose prod - services healthy, PG non exposé",
+      "type": "integration",
+      "preconditions": ["docker compose up -d"],
+      "steps": [
+        "docker compose ps",
+        "docker compose port postgres 5432 → doit être vide",
+        "Observe les binds : docker compose ps --format json"
+      ],
+      "expected_result": {
+        "backend_bind": "127.0.0.1:8000",
+        "frontend_bind": "127.0.0.1:3000",
+        "postgres_port_publie": "aucun",
+        "postgres_status": "healthy",
+        "backend_status": "healthy",
+        "backend_demarre_apres_pg": "true",
+        "volumes_crees": ["postgres_data", "uploads_data"]
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-88-01",
+      "task": "INT-88",
+      "title": "HTTPS - SSL Let's Encrypt actif",
+      "type": "e2e",
+      "preconditions": ["DNS propagé", "Sites 1Panel créés"],
+      "steps": [
+        "curl -I https://tervo.<domaine>",
+        "curl -I https://api.tervo.<domaine>/docs",
+        "Vérifier le certificat : openssl s_client"
+      ],
+      "expected_result": {
+        "frontend_https_200": "true",
+        "api_https_200": "true",
+        "certificat_letsencrypt": "valide",
+        "renouvellement_auto": "configuré",
+        "redirect_http_vers_https": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-89-01",
+      "task": "INT-89",
+      "title": "Déploiement complet - parcours fonctionnel",
+      "type": "e2e",
+      "preconditions": ["Services déployés", "Migrations + seed exécutés"],
+      "steps": [
+        "curl https://tervo.<domaine> → frontend",
+        "POST https://api.tervo.<domaine>/api/v1/auth/login (tech1/password123)",
+        "GET /api/v1/dashboard/summary avec le token",
+        "POST une photo sur un job"
+      ],
+      "expected_result": {
+        "frontend_200": "true",
+        "login_200_token_recu": "true",
+        "dashboard_200": "true",
+        "upload_photo_201": "true",
+        "donnees_seed_presentes": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-89-02",
+      "task": "INT-89",
+      "title": "CI/CD - déploiement automatique",
+      "type": "e2e",
+      "preconditions": ["Secrets GitHub configurés", "Workflow en place"],
+      "steps": [
+        "Pousser un commit sur main",
+        "Observer GitHub Actions",
+        "Vérifier le redéploiement sur le VPS"
+      ],
+      "expected_result": {
+        "tests_executes_ci": "true",
+        "build_unique": "true",
+        "ssh_deploiement": "réussi",
+        "app_mise_a_jour": "true",
+        "zero_double_build": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-90-01",
+      "task": "INT-90",
+      "title": "Documentation - procédure rejouable",
+      "type": "documentation",
+      "preconditions": ["Déploiement terminé"],
+      "steps": [
+        "Relire notes/backend/deploy/vps-deploy.md",
+        "Vérifier que chaque commande est copiable"
+      ],
+      "expected_result": {
+        "prerequis_listes": "true",
+        "commandes_copiables": "true",
+        "erreurs_rencontrees_documentees": "true",
+        "schema_final_present": "true",
+        "diff_tunnel_vs_letsencrypt": "true"
+      },
+      "actual_result": null
+    }
+  ]
+}
