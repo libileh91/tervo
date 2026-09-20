@@ -16,14 +16,41 @@
 #   Il s'active en définissant la variable de dépôt DEPLOY_ENABLED = 'true'
 #   (Settings → Secrets and variables → Actions → Variables).
 #   À activer quand le VPS est provisionné et les secrets en place (Stage 6.4).
+#
+# Optimisations (20/09/2026) :
+#   1. paths-ignore  — un changement purement documentaire (docs/, notes/,
+#                      *.md) ne déclenche pas le pipeline : rien à tester.
+#   2. concurrency   — un nouveau push annule le run obsolète d'une même
+#                      branche. Sur main, le run en cours n'est PAS annulé
+#                      (un déploiement ne doit pas être coupé à mi-chemin) :
+#                      les pushes suivants sont mis en file d'attente.
+#
+# ⚠️ Si une protection de branche exige ces checks, un run sauté (paths-ignore)
+#    peut laisser le check en attente et bloquer le merge. Ce n'est pas le cas
+#    ici (push direct sur main), mais c'est à garder en tête si on ajoute des
+#    règles de protection plus tard.
 
 name: CI/CD
 
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "notes/**"
+      - "**/*.md"
+      - ".gitignore"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "notes/**"
+      - "**/*.md"
+      - ".gitignore"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   # ── Backend : tests ─────────────────────────────────────
