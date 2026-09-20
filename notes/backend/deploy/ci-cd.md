@@ -129,6 +129,50 @@ jobs:
 
 ---
 
+## Optimisations du pipeline
+
+Deux optimisations réduisent la consommation de minutes **sans jamais réduire la couverture de tests** sur du code.
+
+### 1. `paths-ignore` — ne pas tester ce qui n'est pas testable
+
+```yaml
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "notes/**"
+      - "**/*.md"
+      - ".gitignore"
+```
+
+Un changement **purement documentaire** (DAT, notes, README) ne déclenche pas le pipeline : il n'y a rien à compiler ni à tester.
+
+**Comportement :** le filtre s'applique au **push entier**, pas fichier par fichier. Si un push contient du code **et** de la doc, le pipeline tourne (comportement correct).
+
+⚠️ **Limite à connaître :** si une protection de branche exige ces checks, un run sauté laisse le check « en attente » et peut bloquer le merge. Ce n'est pas le cas ici (push direct sur `main`), mais à garder en tête si on ajoute des règles plus tard.
+
+### 2. `concurrency` — annuler les runs obsolètes
+
+```yaml
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+```
+
+**Le groupe** est `workflow + branche` : deux runs de la même branche ne tournent jamais en parallèle.
+
+**`cancel-in-progress` est conditionnel** — c'est le point intéressant :
+
+| Branche | Comportement | Pourquoi |
+|---------|--------------|----------|
+| `main` | Le run en cours **n'est pas annulé** (mise en file d'attente) | Un **déploiement** ne doit pas être coupé à mi-chemin |
+| Autres branches / PR | Le run obsolète est **annulé** | Seul le dernier commit compte |
+
+Écrire `cancel-in-progress: true` partout serait une erreur : un push rapide pendant un déploiement tuerait le déploiement en plein vol, laissant le serveur dans un état intermédiaire.
+
+---
+
 ## Tests backend : SQLite
 
 Les tests utilisent une base **SQLite** (`sqlite+aiosqlite:///./test_tervo.db`), pas PostgreSQL.
@@ -162,6 +206,7 @@ Les tests utilisent une base **SQLite** (`sqlite+aiosqlite:///./test_tervo.db`),
 | Déployer depuis une PR | Déploiements non maîtrisés |
 | Oublier `--frozen` / `--frozen-lockfile` | Dépendances non déterministes |
 | Oublier les migrations | L'application tourne sur un schéma obsolète |
+| `cancel-in-progress: true` sur `main` | Un déploiement en cours est tué à mi-chemin |
 
 ---
 
