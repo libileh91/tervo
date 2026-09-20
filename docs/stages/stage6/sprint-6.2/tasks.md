@@ -16,19 +16,23 @@ Je veux **isoler la logique d'import dans un package dédié**,
 Afin de **rendre l'architecture lisible et défendable**.
 
 **Acceptance Criteria**
-- [ ] Package `backend/app/importers/` créé avec :
+- [x] Package `backend/app/importers/` créé avec :
   - `excel_reader.py` — lecture pandas/openpyxl
   - `format_detector.py` — détection du format et mapping des colonnes
   - `normalizer.py` — normalisation des valeurs
   - `validators.py` — validation des lignes
   - `matcher.py` — fuzzy matching clients
   - `report.py` — génération du rapport d'import
-- [ ] `services/import_service.py` **orchestre** le pipeline (ne contient pas la logique bas niveau)
-- [ ] Flux documenté : `ExcelReader → FormatDetector → Normalizer → Validator → Matcher → ImportService → Repository`
+- [x] `services/import_service.py` **orchestre** le pipeline (ne contient pas la logique bas niveau)
+- [x] Flux documenté : `ExcelReader → FormatDetector → Normalizer → Validator → Matcher → ImportService → Repository`
 
 **Technical Notes**
 - Fichier : `backend/app/importers/` (nouveau package)
 - **Rappel entretien :** « J'ai séparé le pipeline d'import du service métier — chaque étape a une responsabilité unique, ce qui la rend testable indépendamment. »
+- **Implémenté à ce stade :** la structure, les interfaces et les objets de valeur. Les algorithmes (INT-72 → INT-78) sont des squelettes marqués `Todo: INT-XX`.
+- **Contrat testé :** `tests/test_importers_structure.py` vérifie par AST que `app/importers` n'importe ni FastAPI, ni SQLAlchemy, ni les modèles/repositories/API.
+- **Dépendances ajoutées :** `pandas`, `openpyxl`, `rapidfuzz` (`uv add` → `pyproject.toml` + `uv.lock`).
+- **Note :** `notes/backend/import/architecture-pipeline.md`
 
 ---
 

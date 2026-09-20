@@ -31,6 +31,11 @@ dependencies = [
     # PDF — intervention reports
     "weasyprint>=60.0",
     "Jinja2>=3.1.0",
+
+    # Excel import — lecture des fichiers + rapprochement clients
+    "pandas>=3.0.6",
+    "openpyxl>=3.1.5",
+    "rapidfuzz>=3.14.6",
 ]
 
 [dependency-groups]
