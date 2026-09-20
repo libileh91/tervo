@@ -2,7 +2,7 @@
 
 > **Projet :** Tervo (nom conservé — pas de rebranding)
 > **Objectif :** rendre Tervo défendable en entretien, **déployé sur un VPS**.
-> **Focus :** Architecture corrigée (`Todo_Fix.md`), CI/CD, migration Excel (pandas + fuzzy), catalogue produits, déploiement VPS.
+> **Focus :** Architecture corrigée (`annexes/revue-architecture.md`), CI/CD, migration Excel (pandas + fuzzy), catalogue produits, déploiement VPS.
 > **Hors périmètre :** Module financier complet, stock, fournisseurs, Paperless, Go.
 > **Contrainte :** 7h/jour, pas de Go.
 
@@ -12,7 +12,7 @@
 
 Tervo est un socle d'application CVC (interventions, clients, checklists, photos, rapports, avis) déjà fonctionnel. Ce stage l'étend avec :
 
-1. Les **corrections d'architecture** issues de la revue `Todo_Fix.md`
+1. Les **corrections d'architecture** issues de la revue (`docs/DAT/annexes/revue-architecture.md`)
 2. Le **cœur du sujet** : la migration de 20 ans d'Excel vers PostgreSQL
 3. Une **identité fonctionnelle** : catalogue produits & exposition en salle
 4. Le **déploiement réel sur un VPS** (domaine + SSL + CI/CD)
@@ -58,7 +58,7 @@ Sprint 6.1 (Corrections)          ← indépendant, à faire en premier
 
 ---
 
-## Référence : corrections du `Todo_Fix.md`
+## Référence : corrections de la revue d'architecture
 
 | # | Correction | Sprint |
 |---|-----------|--------|
@@ -174,8 +174,8 @@ Tervo
 ---
 
 **Documents liés :**
-- `docs/DAT/MBchauffage-DAT/Todo_Fix.md` (corrections à appliquer)
-- `docs/DAT/MBchauffage-DAT/00-show-room.md` (catalogue, exposition)
-- `docs/DAT/MBchauffage-DAT/04-architecture.md`
-- `docs/DAT/MBchauffage-DAT/05-data-model.md`
+- `docs/DAT/annexes/revue-architecture.md` (corrections d'architecture)
+- `docs/DAT/08-module-catalogue.md` (catalogue, exposition)
+- `docs/DAT/04-architecture.md`
+- `docs/DAT/05-data-model.md`
 - `notes/backend/deploy/` (procédures de déploiement existantes)

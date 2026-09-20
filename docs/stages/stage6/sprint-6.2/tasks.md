@@ -2,7 +2,7 @@
 
 > **Durée :** 6 jours (7h/j) | **Points :** 39 | **Tâches :** INT-71 à INT-80
 >
-> **Référence :** `docs/DAT/MBchauffage-DAT/Todo_Fix.md` §6 à §12, §23
+> **Référence :** `docs/DAT/annexes/revue-architecture.md` §6 à §12, §23
 >
 > **C'est le cœur du projet.** Tout l'argumentaire d'entretien repose sur ce sprint.
 

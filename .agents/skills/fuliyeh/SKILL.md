@@ -24,19 +24,34 @@ Tu bosses en mode **feu-vert** : je valide chaque étape avant que tu passes à 
 ### Identité
 
 - **Nom du projet : Tervo** — nom conservé, pas de rebranding (ni « MB Chauffage », ni « ShowRoom »)
-- **DAT actif d'évolution** : `docs/DAT/MBchauffage-DAT/` (DAT d'origine : `docs/DAT/`)
+- **DAT unique** : `docs/DAT/` (voir structure ci-dessous)
 - **Sprint en cours** : `docs/stages/stage6/` (Import Excel, Catalogue, Déploiement VPS, Présentation)
 
-### Deux DAT coexistent
+### DAT unique
 
-| DAT | Rôle |
-|-----|------|
-| `docs/DAT/*.md` | Architecture d'origine (Tervo MVP) |
-| `docs/DAT/MBchauffage-DAT/*.md` | DAT d'évolution (cible pro, VPS, import Excel) |
+Depuis le 17/09/2026, **un seul DAT** : `docs/DAT/`
+
+```
+docs/DAT/
+├── 00-sommaire.md                     → sommaire + synthèse + ordre de lecture
+├── 04-architecture.md                 → archi, décisions, infra, import, sécurité
+├── 05-data-model.md                   → schéma relationnel complet
+├── 06-workflows.md                    → parcours utilisateurs, UX
+├── 07-implementation-roadmap.md       → stages, sprints, risques
+├── 08-module-catalogue.md             → catalogue produits & exposition
+├── specs/
+│   ├── 01-specs-fonctionnelle.md      → périmètre, personas, user stories
+│   ├── 02-spec-technique.md           → stack, frontend, infra, CI/CD
+│   └── 03-api-spec.md                 → endpoints REST
+└── annexes/
+    └── revue-architecture.md          → revue d'architecture + corrections
+```
+
+> ⚠️ L'ancien dossier `docs/DAT/MBchauffage-DAT/` **n'existe plus** — son contenu a été fusionné dans `docs/DAT/`. Ne pas recréer de second DAT.
 
 ### Document de revue de référence
 
-`docs/DAT/MBchauffage-DAT/Todo_Fix.md` — revue exigeante de l'architecture à appliquer :
+`docs/DAT/annexes/revue-architecture.md` — revue exigeante de l'architecture (corrections intégrées dans le DAT) :
 
 - Ports `127.0.0.1` (pas d'exposition publique)
 - Healthchecks (`depends_on` ≠ readiness)
@@ -69,8 +84,8 @@ Le projet sert aussi à **préparer un entretien** (profil backend Java/Go). Don
 
 ### 1.1 Analyser le contexte avant chaque sprint
 
-- **Architecture & data model** : `docs/DAT/` et `docs/DAT/MBchauffage-DAT/`
-- **Revue à appliquer** : `docs/DAT/MBchauffage-DAT/Todo_Fix.md`
+- **Architecture & data model** : `docs/DAT/` (DAT unique, sommaire dans `00-sommaire.md`)
+- **Revue à appliquer** : `docs/DAT/annexes/revue-architecture.md`
 - **Avancement backend/frontend** : `notes/`, `docs/todos/`
 - **Dépendances inter-tâches** : une tâche aval peut nécessiter une rétro-modification d'une tâche amont déjà terminée
 - **Tests existants** : `docs/stages/…/test-cases.json`
@@ -275,8 +290,11 @@ Tervo/
 │   ├── docker-compose.yml           → backend + frontend
 │   └── postgres.docker-compose.yml  → PostgreSQL
 ├── docs/
-│   ├── DAT/                         → architecture d'origine
-│   │   └── MBchauffage-DAT/         → DAT d'évolution
+│   ├── DAT/                         → DAT unique
+│   │   ├── 00-sommaire.md
+│   │   ├── 04-architecture.md … 08-module-catalogue.md
+│   │   ├── specs/ (01, 02, 03)
+│   │   └── annexes/revue-architecture.md
 │   └── stages/                      → sprints tasks + tests
 ├── notes/                           → pédagogie
 └── .github/workflows/               → CI/CD

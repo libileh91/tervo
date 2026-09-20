@@ -2,7 +2,7 @@
 
 > **Durée :** 1.5 jour (7h/j) | **Points :** 8 | **Tâches :** INT-91 à INT-93
 >
-> **Référence :** `docs/DAT/MBchauffage-DAT/Todo_Fix.md` §25
+> **Référence :** `docs/DAT/annexes/revue-architecture.md` §25
 >
 > **Objectif :** transformer le travail technique en **discours défendable**.
 
@@ -86,7 +86,7 @@ Afin de **rester crédible**.
 
 **Technical Notes**
 - Fichier : `notes/interview/perimetre-credibilite.md`
-- **Pitch recommandé (Todo_Fix §25) :**
+- **Pitch recommandé (revue d'architecture §25) :**
   > « Tervo est un projet métier que j'ai conçu pour digitaliser une entreprise CVC. Mon socle reste le backend et l'architecture, mais j'ai volontairement élargi le périmètre : FastAPI côté backend, PostgreSQL, Docker Compose et une première approche CI/CD et déploiement VPS. Le principal sujet technique était la migration de plus de 20 ans d'historique Excel vers une base relationnelle, avec normalisation, détection de doublons, fuzzy matching, validation et import en deux passes. »
 
 ---

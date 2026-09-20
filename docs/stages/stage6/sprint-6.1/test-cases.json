@@ -86,7 +86,7 @@
       "type": "documentation",
       "preconditions": ["Audit des fichiers DAT"],
       "steps": [
-        "Grep des versions dans docs/DAT/MBchauffage-DAT/",
+        "Grep des versions dans docs/DAT/",
         "Vérifier pyproject.toml, package.json, docker-compose.yml"
       ],
       "expected_result": {

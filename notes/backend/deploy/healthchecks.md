@@ -1,7 +1,7 @@
 # INT-67 — Healthchecks : `depends_on` ≠ readiness
 
 > **Stage 6 / Sprint 6.1** | Points : 3 | Statut : ✅
-> **Référence :** `Todo_Fix.md` §4
+> **Référence :** `docs/DAT/annexes/revue-architecture.md` §4
 
 ---
 

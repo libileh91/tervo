@@ -239,4 +239,5 @@ docker compose up -d
 
 ---
 
-> **Document lié :** `docs/DAT/MBchauffage-DAT/04-architecture.md`
+> **Document lié :** `docs/DAT/04-architecture.md`
+> **Statut :** hors périmètre actuel — documenté comme évolution possible (phase 2)

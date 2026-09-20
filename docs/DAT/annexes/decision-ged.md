@@ -1,13 +1,14 @@
-# Paperless-ngx vs Papra — Choix GED pour MB Chauffage
+# Décision — Choix d'une GED (Paperless-ngx vs Papra)
 
 > **Date :** 13/07/2026
-> **Contexte :** Sélection d'une solution de GED (Gestion Électronique de Documents) pour MB Chauffage.
-> **Projet :** MB Chauffage — entreprise CVC avec 20+ ans d'archives papier et Excel.
+> **Contexte :** Sélection d'une solution de GED (Gestion Électronique de Documents) pour Tervo.
+> **Projet :** Tervo — entreprise CVC avec 20+ ans d'archives papier et Excel.
 > **Type de document :** Proof of Technology (PoT) — comparaison de deux technologies existantes face aux besoins métier, pas un Proof of Concept.
+> **Statut :** **hors périmètre actuel** — décision documentée pour mémoire. Aucune GED n'est déployée dans le Stage 6.
 
 ---
 
-## 1. Contexte MB Chauffage
+## 1. Contexte
 
 ### Le problème
 
@@ -115,7 +116,7 @@ Papra est un nouveau venu (première release ~2024/2025). Par sa propre descript
 | **Version actuelle** | 3.x (stable, releases régulières) | 26.x (102 releases en 1 an — rythme intense) |
 | **Auteur principal** |       Équipe de mainteneurs       |       Corentin Thomasset (1 personne)        |
 
-### 3.2 Matching avec les besoins MB Chauffage
+### 3.2 Matching avec les besoins métier
 
 | Besoin MB Chauffage                | Paperless-ngx                                                                            | Papra                                                                                                  | Gagnant          |
 | ---------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------- |
@@ -254,7 +255,7 @@ L'admin upload 5000 scans de 2005 à 2025
 ## 5. Verdict
 
 ```diff
-+  Paperless-ngx est le choix pour MB Chauffage
++  Paperless-ngx est le choix retenu
 ```
 
 | La raison #1          | Le problème qu'elle résout                                              |
@@ -282,7 +283,7 @@ Paperless-ngx règle le problème **une fois les documents dans le système** �
 
 ---
 
-## 7. Impact sur l'architecture MB Chauffage
+## 7. Impact sur l'architecture
 
 ### Si Paperless est choisi (recommandé)
 

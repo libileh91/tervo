@@ -2,7 +2,11 @@ GO. J’ai repris le DAT disponible **ligne par ligne**, et je vais être assez 
 
 Le document est déjà bien structuré. En revanche, il y a quelques incohérences techniques importantes et surtout plusieurs endroits où le DAT présente comme acquis des éléments que tu ne devrais pas présenter comme de l’expérience réelle.
 
-## 1. Verdict global
+## Revue d'architecture — Corrections appliquées
+
+> **Objet :** Revue exigeante de l'architecture Tervo, avec les corrections à appliquer.
+> **Rôle :** annexe de référence. Les corrections décrites ici sont **intégrées** dans les autres documents du DAT (port, healthchecks, CI/CD, idempotence, fuzzy, transactions).
+> **Usage :** support de préparation — chaque section peut devenir une question d'architecture.
 
 Je garderais l’architecture générale :
 
@@ -67,8 +71,7 @@ Or les deux stacks sont sur **le même VPS**.
 Le DAT représente pourtant :
 
 ```text
-api.mbchauffage.com  → localhost:8000
-docs.mbchauffage.com → localhost:8000
+api.tervo.com  → 127.0.0.1:8000
 ```
 
 C'est impossible tel quel.
@@ -94,7 +97,7 @@ webserver:
 Puis :
 
 ```text
-api.mbchauffage.com
+api.tervo.com
         ↓
 1Panel
         ↓
@@ -106,13 +109,13 @@ FastAPI
 et :
 
 ```text
-docs.mbchauffage.com
+docs.tervo.com
         ↓
 1Panel
         ↓
 127.0.0.1:8001
         ↓
-Paperless
+(service annexe, ex. GED)
 ```
 
 Encore mieux : **ne pas exposer les ports applicatifs publiquement**. Les binder sur `127.0.0.1` limite l'accès à l'hôte et force le trafic externe à passer par le reverse proxy.
@@ -132,9 +135,9 @@ Actuellement tu raisonnes comme :
 ```text
 browser
    │
-   ├── mbchauffage.com:3000
+   ├── tervo.com:3000
    │
-   └── api.mbchauffage.com:8000
+   └── api.tervo.com:8000
 ```
 
 C'est acceptable, mais les ports `3000` et `8000` ne devraient pas être des ports publics.
@@ -149,11 +152,11 @@ Internet
     │
   1Panel
     │
-    ├── mbchauffage.com ──► frontend:80
+    ├── tervo.com ──► frontend:80
     │
-    ├── api.mbchauffage.com ──► backend:8000
+    ├── api.tervo.com ──► backend:8000
     │
-    └── docs.mbchauffage.com ──► paperless:8000
+    └── docs.tervo.com ──► service annexe:8000
 ```
 
 Avec les containers accessibles uniquement via Docker/localhost.
@@ -187,7 +190,7 @@ Par exemple :
 postgres:
   image: postgres:17
   healthcheck:
-    test: ["CMD-SHELL", "pg_isready -U mbchauffage -d mbchauffage_db"]
+    test: ["CMD-SHELL", "pg_isready -U tervo -d tervo_db"]
     interval: 10s
     timeout: 5s
     retries: 5
@@ -1024,7 +1027,7 @@ est cohérente et très facile à rapprocher de ton expérience Java.
 
 Tu peux même l'expliquer :
 
-| MB Chauffage   | Java/Spring      |
+| Tervo          | Java/Spring      |
 | -------------- | ---------------- |
 | FastAPI Router | Controller       |
 | Pydantic       | DTO / validation |
@@ -1093,7 +1096,7 @@ Cela rend ton architecture beaucoup plus facile à défendre.
 
 # 24. Architecture finale que je recommande
 
-Pour MB Chauffage, je partirais finalement sur :
+Pour Tervo, je partirais finalement sur :
 
 ```text
                          INTERNET
@@ -1241,7 +1244,7 @@ Je ne le présenterais **pas** comme :
 
 Je le présenterais plutôt comme :
 
-> **« MB Chauffage est un projet métier que j'ai conçu pour digitaliser une entreprise CVC. Mon socle reste le backend et l'architecture Java, mais j'ai volontairement élargi le périmètre sur ce projet : FastAPI côté backend, PostgreSQL, Docker Compose et une première approche CI/CD et déploiement VPS. Le principal sujet technique était la migration de plus de 20 ans d'historique Excel vers une base relationnelle, avec normalisation, détection de doublons, fuzzy matching, validation et import en deux passes. »**
+> **« Tervo est un projet métier que j'ai conçu pour digitaliser une entreprise CVC. Mon socle reste le backend et l'architecture Java, mais j'ai volontairement élargi le périmètre sur ce projet : FastAPI côté backend, PostgreSQL, Docker Compose et une première approche CI/CD et déploiement VPS. Le principal sujet technique était la migration de plus de 20 ans d'historique Excel vers une base relationnelle, avec normalisation, détection de doublons, fuzzy matching, validation et import en deux passes. »**
 
 Ça colle beaucoup mieux à ton vrai profil.
 

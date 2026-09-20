@@ -122,3 +122,16 @@
 |               | `docker exec postgres pg_dump -U lob tervo_db \| gzip > tervo_db.sql.gz` |
 |               | `gunzip -c tervo_db.sql.gz \| docker exec -i tervo-postgres-1 psql -U lob -d tervo_db` |
 | **Statut**    | ⏳ À traiter dans INT-87 (Sprint 6.4)                            |
+
+---
+
+## TD-B011 — Tests contre PostgreSQL dans la CI
+
+| Champ         | Valeur                                                          |
+| ------------- | --------------------------------------------------------------- |
+| **Créé dans** | INT-70 (Sprint 6.1 — CI/CD)                                     |
+| **Dépend de** | Aucune (évolution identifiée, non bloquante)                    |
+| **Fichiers**  | `.github/workflows/ci.yml`, `backend/tests/`                    |
+| **Action**    | Les tests utilisent SQLite (`sqlite+aiosqlite:///./test_tervo.db`). Envisager un service PostgreSQL dans la CI pour détecter les écarts de dialecte (enums, contraintes `CHECK`, colonnes générées, index). |
+|               | Piste : ajouter un service `postgres` au job `backend-tests` et surcharger `DATABASE_URL`. |
+| **Statut**    | ⏳ Évolution — à planifier si des bugs spécifiques PostgreSQL apparaissent |

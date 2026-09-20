@@ -2,7 +2,7 @@
 
 > **Durée :** 2.5 jours (7h/j) | **Points :** 11 | **Tâches :** INT-81 à INT-84
 >
-> **Référence :** `docs/DAT/MBchauffage-DAT/00-show-room.md` §4.1, §4.2
+> **Référence :** `docs/DAT/08-module-catalogue.md` §4.1, §4.2
 >
 > **Approche :** **backend-first**. Le modèle métier et les API d'abord, le frontend minimal ensuite.
 

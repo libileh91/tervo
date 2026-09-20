@@ -1,124 +1,248 @@
-# Spécification Technique — Tervo
+# Tervo — Spécification Technique
 
-> **Objet :** Complément technique au DAT. Stack, frontend, pipelines.
+> **Objet :** Complément technique au DAT. Stack détaillée, frontend, infrastructure, CI/CD.
 >
-> **Document principal :** `04-architecture.md` (DAT complet : archi, flux, PDF, photos, sécurité, déploiement).
+> **Document principal :** `04-architecture.md` (archi, décisions, flux, sécurité).
 >
-> **Document fonctionnel associé :** `01-specs-fonctionnelle.md`
+> **Document fonctionnel :** `specs/01-specs-fonctionnelle.md`
 
 ---
 
 ## 1. Stack technique
 
+> Les versions exactes vivent dans `pyproject.toml`, `package.json` et `docker-compose.yml` — pas dans le DAT.
+
 ### Backend
 
-| Technologie                | Version   | Rôle                       |
-| -------------------------- | --------- | -------------------------- |
-| **Python**                 | 3.11+     | Langage principal          |
-| **FastAPI**                | 0.111+    | Framework API REST         |
-| **SQLAlchemy**             | 2.0+      | ORM                        |
-| **Pydantic**               | 2.x       | Validation / sérialisation |
-| **Alembic**                | 1.13+     | Migrations DB              |
-| **SQLite**                 | (intégré) | Phase 1 dev                |
-| **PostgreSQL**             | 16        | Phase 2 prod               |
-| **Uvicorn**                | 0.30+     | Serveur ASGI               |
-| **python-jose**            | 3.3+      | JWT                        |
-| **passlib**                | 1.7+      | Hashage bcrypt             |
-| **ReportLab / WeasyPrint** | —         | Génération PDF             |
-| **Pillow**                 | 10.x      | Thumbnails photos          |
-| **Pytest**                 | 8.x       | Tests                      |
+| Technologie | Rôle |
+|-------------|------|
+| Python 3.11+ | Langage |
+| FastAPI | Framework API REST |
+| SQLAlchemy 2.x | ORM (async) |
+| Pydantic | Validation / sérialisation |
+| Alembic | Migrations DB |
+| PostgreSQL | Base de données |
+| Uvicorn | Serveur ASGI |
+| python-jose | JWT |
+| passlib | Hashage bcrypt |
+| WeasyPrint | Génération PDF |
+| Pillow | Thumbnails photos |
+| pandas + openpyxl | Lecture Excel |
+| rapidfuzz | Fuzzy matching |
+| Pytest | Tests |
 
 ### Frontend
 
-| Technologie              | Version   | Rôle                           |
-| ------------------------ | --------- | ------------------------------ |
-| **Bun**                  | 1.2+      | Runtime JS (remplace Node.js)  |
-| **Vue.js**               | 3.x       | Framework UI (Composition API) |
-| **TypeScript**           | 5.x       | Typage                         |
-| **Vue Router**           | 4.x       | Routing SPA                    |
-| **Pinia**                | 2.x       | Gestion d'état                 |
-| **Vue Query (TanStack)** | 5.x       | Cache serveur                  |
-| **PrimeVue**             | 4.x       | Composants UI                  |
-| **PrimeFlex**            | 3.x       | Styling utilitaire             |
-| **VeeValidate + Zod**    | 4.x / 3.x | Formulaires + validation       |
-| **date-fns**             | 3.x       | Manipulation dates             |
-| **Vite**                 | 6.x       | Bundler / dev server           |
+| Technologie | Rôle |
+|-------------|------|
+| Vue.js 3 | Framework UI (Composition API) |
+| TypeScript | Typage |
+| Vite | Bundler / dev server |
+| Vue Router | Routing SPA |
+| Pinia | État client |
+| Vue Query (TanStack) | État serveur (cache, refetch) |
+| PrimeVue | Composants UI |
+| VeeValidate + Zod | Formulaires + validation |
+| date-fns | Manipulation des dates |
 
 ### DevOps
 
-| Technologie        | Rôle                 |
-| ------------------ | -------------------- |
-| **Docker**         | Conteneurisation     |
-| **Docker Compose** | Orchestration locale |
-| **GitHub Actions** | CI/CD                |
-| **1Panel**        | Reverse proxy        |
+| Technologie | Rôle |
+|-------------|------|
+| Docker + Compose | Conteneurisation + orchestration |
+| 1Panel | Reverse proxy (OpenResty), SSL, admin |
+| GitHub Actions | CI/CD |
+| pg_dump | Backups PostgreSQL |
+
+---
 
 ## 2. Frontend (Vue.js)
 
-### Arbre de routes
+### 2.1 Arbre de routes
 
 ```
-/login                       → LoginPage
+/login                       → LoginPage              (public, sans nav)
 /                            → DashboardPage
 
 /clients                     → ClientListPage
-/clients/new                 → ClientCreatePage
 /clients/:id                 → ClientDetailPage
-/clients/:id/edit            → ClientEditPage
 
 /jobs                        → JobListPage
-/jobs/new                    → JobCreatePage
 /jobs/:id                    → JobDetailPage
 /jobs/:id/inspection         → InspectionPage
 /jobs/:id/report             → ReportPreviewPage
 
-/review/:token              → ReviewPage (public)
+/produits                    → ProduitsPage           (catalogue)
+/produits/:id                → ProduitDetailPage
+/showroom                    → ShowroomPage           (exposition en salle)
+
+/profile                     → ProfilePage
+
+/review/:token               → ReviewPage             (public, sans auth)
 ```
 
-### Gestion d'état
+**Routes *phase 2* (non implémentées) :** `/devis`, `/factures`, `/bilans`,
+`/admin/import`, `/admin/users`.
 
-| Store (Pinia) | Usage                                 |
-| ------------- | ------------------------------------- |
-| `authStore`   | Connexion, token, utilisateur courant |
-| `jobStore`    | Jobs du jour, job courant             |
+### 2.2 Gestion d'état
 
-Cache serveur via **Vue Query** (`@tanstack/vue-query`) : staleTime 10s pour les jobs du jour, 30s pour les clients.
+| Store (Pinia) | Usage |
+|---------------|-------|
+| `authStore` | Connexion, token, utilisateur courant, rôle |
 
-### Composants graphiques
+**Cache serveur** via Vue Query : `staleTime` court pour les données du jour, plus long pour les référentiels.
 
-| Composant                      | Bibliothèque                  |
-| ------------------------------ | ----------------------------- |
-| DataTable, Form, Input, Button | PrimeVue                      |
-| Dialog (confirmation)          | PrimeVue                      |
-| Toast (notifications)          | PrimeVue Toast                |
-| FileUpload (photos)            | PrimeVue                      |
-| Rating (étoiles)               | PrimeVue                      |
-| Bottom navigation              | Composant custom              |
-| PDF preview                    | `<iframe>` ou `vue-pdf-embed` |
+> **Distinction à connaître :** Pinia = état **client** (session, préférences). Vue Query = état **serveur** (données de l'API, cache, invalidation). Ne pas mélanger les deux.
 
-### Navigation mobile
+### 2.3 Composants
 
-Bottom navbar fixe avec 4 onglets : Accueil, Jobs, Clients, Profil.
+| Composant | Bibliothèque |
+|-----------|--------------|
+| DataTable, Form, Input, Button, Dialog | PrimeVue |
+| Toast (notifications) | PrimeVue |
+| FileUpload (photos) | PrimeVue |
+| Rating (étoiles) | PrimeVue |
+| Skeleton (chargement) | PrimeVue |
+| Bottom navigation | Composant custom |
+
+### 2.4 Navigation mobile
+
+Bottom navbar fixe, 4 onglets : Accueil, Interventions, Clients, Profil
+(+ Catalogue selon la version).
+
+### 2.5 États d'écran
+
+Toute page qui charge des données implémente **3 états** :
+
+| État | Affichage |
+|------|-----------|
+| **Loading** | Skeleton |
+| **Empty** | Message + icône + action |
+| **Error** | Message clair + bouton « Réessayer » (`refetch()`) |
 
 ---
 
-## 3. CI/CD (GitHub Actions)
+## 3. Infrastructure technique
+
+### 3.1 `deploy/docker-compose.yml`
+
+> Les tags d'image (`postgres:17.4`) sont **illustratifs** : la source de vérité reste le fichier `deploy/docker-compose.yml` du dépôt.
 
 ```yaml
-name: CI
+name: tervo
 
-on: [push, pull_request]
+services:
+  postgres:
+    image: postgres:17.4
+    environment:
+      POSTGRES_DB: ${TERVO_DB_NAME:-tervo_db}
+      POSTGRES_USER: ${TERVO_DB_USER:-lob}
+      POSTGRES_PASSWORD: ${TERVO_DB_PASSWORD:-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+    networks: [tervo_network]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TERVO_DB_USER:-lob} -d ${TERVO_DB_NAME:-tervo_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # Aucun port publié
+
+  backend:
+    build: { context: ../backend, dockerfile: Dockerfile }
+    ports: ["127.0.0.1:${BACKEND_PORT:-8000}:8000"]
+    volumes: [uploads_data:/app/uploads]
+    environment:
+      - DATABASE_URL=postgresql://${TERVO_DB_USER:-lob}:${TERVO_DB_PASSWORD:-password}@postgres:5432/${TERVO_DB_NAME:-tervo_db}
+      - SECRET_KEY=${SECRET_KEY}
+    networks: [tervo_network, 1panel-network]
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  frontend:
+    build: { context: ../frontend, dockerfile: Dockerfile }
+    ports: ["127.0.0.1:${FRONTEND_PORT:-3000}:80"]
+    networks: [tervo_network, 1panel-network]
+
+volumes:
+  postgres_data:
+  uploads_data:
+
+networks:
+  tervo_network: { driver: bridge }
+  1panel-network: { external: true, name: 1panel-network }
+```
+
+**Trois points non négociables :**
+
+1. `127.0.0.1:PORT` — jamais `0.0.0.0`
+2. `postgres` sans `ports:` — accessible seulement dans le réseau Docker
+3. `condition: service_healthy` — le backend attend une base **réellement** prête
+
+### 3.2 Logique de déploiement
+
+```bash
+# Build + déploiement (sur le VPS)
+git pull
+docker compose -f deploy/docker-compose.yml up -d --build
+
+# Migrations + seed
+docker exec tervo-backend-1 alembic upgrade head
+docker exec tervo-backend-1 python -m app.seed
+```
+
+### 3.3 Configuration 1Panel
+
+```
+Websites → Create Website → Reverse Proxy
+
+Site 1 : tervo.com
+  Proxy Address : http://127.0.0.1:3000
+  HTTPS → Let's Encrypt → Enable
+
+Site 2 : api.tervo.com
+  Proxy Address : http://127.0.0.1:8000
+  HTTPS → Let's Encrypt → Enable
+```
+
+---
+
+## 4. CI/CD (GitHub Actions)
+
+### 4.1 Principe : un seul build
+
+```
+push main
+   │
+   ▼
+GitHub Actions
+   ├── tests (pytest + postgres service)
+   └── SSH vers le VPS
+          └── git pull → docker compose up -d --build
+```
+
+> ⚠️ **Ne pas builder dans GitHub Actions puis à nouveau sur le VPS.** Le premier build serait inutilisé. Voir `annexes/revue-architecture.md` §5.
+
+### 4.2 Workflow
+
+```yaml
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
 
 jobs:
-  test-backend:
+  test:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        image: postgres:17
         env:
-          POSTGRES_DB: hvac_test
-          POSTGRES_USER: hvac_user
-          POSTGRES_PASSWORD: password
+          POSTGRES_DB: tervo_test
+          POSTGRES_USER: tervo
+          POSTGRES_PASSWORD: test
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -126,94 +250,95 @@ jobs:
       - run: uv sync --frozen
       - run: uv run pytest backend/tests/ --cov=app
 
-  test-frontend:
+  deploy:
+    needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: "20" }
-      - run: npm ci
-        working-directory: frontend
-      - run: npm run test
-        working-directory: frontend
-      - run: npm run build
-        working-directory: frontend
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/tervo
+            git pull
+            docker compose -f deploy/docker-compose.yml up -d --build
 ```
+
+### 4.3 Évolution possible (non implémentée)
+
+```
+GitHub Actions → build → push GHCR → VPS → docker compose pull → up -d
+```
+
+À présenter comme **évolution**, pas comme acquis.
 
 ---
 
-## 4. Modèle de données
+## 5. Backups
 
-Cf. `05-data-model.md` pour le schéma complet.
+### 5.1 Script quotidien
 
-### Modèle SQLAlchemy (exemple)
+```bash
+#!/bin/bash
+DATE=$(date +%Y%m%d)
+BACKUP_DIR=/var/backups/tervo
+BUCKET=s3://tervo-backups/daily/$(date +%Y/%m)
 
-```python
-# models/job.py
-from sqlalchemy import Column, Integer, String, Text, Date, Time, DateTime, ForeignKey, Enum
-from sqlalchemy.orm import relationship
-from .base import Base
-import enum
+mkdir -p "$BACKUP_DIR"
 
-class JobStatus(str, enum.Enum):
-    PLANIFIE = "planifié"
-    EN_COURS = "en_cours"
-    TERMINE = "terminé"
-    ANNULE = "annulé"
+# Base de données
+docker exec tervo-postgres-1 pg_dump -U tervo tervo_db | gzip > "$BACKUP_DIR/tervo_${DATE}.sql.gz"
 
-class Priority(str, enum.Enum):
-    BASSE = "basse"
-    NORMALE = "normale"
-    HAUTE = "haute"
-    URGENTE = "urgente"
+# Fichiers (versionnés, pas miroir)
+tar czf "$BACKUP_DIR/uploads_${DATE}.tar.gz" -C /var/lib/docker/volumes/tervo_uploads_data _data
 
-class Job(Base):
-    __tablename__ = "job"
+# Envoi distant
+s3cmd put "$BACKUP_DIR/tervo_${DATE}.sql.gz" "$BUCKET/"
+s3cmd put "$BACKUP_DIR/uploads_${DATE}.tar.gz" "$BUCKET/"
 
-    id = Column(Integer, primary_key=True)
-    client_id = Column(Integer, ForeignKey("client.id"), nullable=False)
-    technician_id = Column(Integer, ForeignKey("user.id"))
-    title = Column(String(255), nullable=False)
-    description = Column(Text)
-    status = Column(Enum(JobStatus), default=JobStatus.PLANIFIE)
-    priority = Column(Enum(Priority), default=Priority.NORMALE)
-    scheduled_date = Column(Date, nullable=False)
-    scheduled_start_time = Column(Time)
-    scheduled_end_time = Column(Time)
-    started_at = Column(DateTime)
-    completed_at = Column(DateTime)
-    observations = Column(Text)
-
-    client = relationship("Client", back_populates="jobs")
-    technician = relationship("User", back_populates="jobs")
-    checklist_items = relationship("ChecklistItem", back_populates="job", cascade="all, delete-orphan")
-    photos = relationship("JobPhoto", back_populates="job", cascade="all, delete-orphan")
-    materials = relationship("Material", back_populates="job", cascade="all, delete-orphan")
-    review = relationship("Review", back_populates="job", uselist=False, cascade="all, delete-orphan")
+# Rétention : 30 jours
+find "$BACKUP_DIR" -name "*.gz" -mtime +30 -delete
 ```
 
-Rappel des entités : `client`, `user`, `job`, `checklist_item`, `job_photo`, `material`, `review`.
+### 5.2 Test de restauration mensuel
+
+Le test doit vérifier **plus que le nombre de tables** :
+
+```
+restore dans une base temporaire
+   ↓
+vérifier le schéma
+   ↓
+vérifier les tables attendues
+   ↓
+vérifier les volumétries (row counts)
+   ↓
+vérifier quelques contraintes
+   ↓
+exécuter une requête applicative réelle
+   ↓
+OK
+```
+
+> Un dump qui restaure 15 tables peut contenir des données corrompues ou incomplètes.
 
 ---
 
-## 5. API REST
+## 6. Conventions
 
-Base URL : `/api/v1/`
+| Sujet | Convention |
+|-------|-----------|
+| Préfixe API | `/api/v1/` |
+| Nommage DB | `snake_case` (tables et colonnes) |
+| Nommage Python | `snake_case` (fonctions), `PascalCase` (classes) |
+| Structure backend | Router → Service → Repository |
+| Erreurs API | Codes HTTP standards + message explicite |
+| Secrets | `.env`, jamais commité |
 
-| Groupe    | Endpoints                                                                                        |
-| --------- | ------------------------------------------------------------------------------------------------ |
-| Auth      | `POST /login`, `POST /refresh`, `GET /me`, `PUT /me`                                             |
-| Clients   | `GET/POST /clients`, `GET/PUT/DELETE /clients/{id}`, `GET /clients/{id}/jobs`                    |
-| Jobs      | `GET/POST /jobs`, `GET/PUT/DELETE /jobs/{id}`, `PUT /jobs/{id}/start`, `PUT /jobs/{id}/complete` |
-| Checklist | `GET /jobs/{id}/checklist`, `PUT /jobs/{id}/checklist/{id}`, `PUT /jobs/{id}/checklist/batch`    |
-| Photos    | `POST /jobs/{id}/photos`, `DELETE /jobs/{id}/photos/{id}`                                        |
-| Matériaux | `GET/POST /jobs/{id}/materials`, `PUT/DELETE /jobs/{id}/materials/{id}`                          |
-| Rapports  | `GET /jobs/{id}/report/download`                                                                 |
-| Reviews   | `GET /review/{token}` (public), `POST /review/{token}/submit` (public)                           |
-| Dashboard | `GET /dashboard/summary`                                                                         |
+---
 
-Spécification détaillée : `03-api-spec.md`
-
-> **Document mis à jour le 03/06/2026**
-> **Version :** 3.0 (Refonte MVP)
-> **DAT :** `04-architecture.md`
+> **Document principal :** `04-architecture.md`
+> **API :** `specs/03-api-spec.md`
+> **Revue d'architecture :** `annexes/revue-architecture.md`

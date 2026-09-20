@@ -1,8 +1,7 @@
-# 8. Module ShowRoom — MB Chauffage
+# 08 — Module Catalogue produits & exposition
 
-> **Objet :** Extension fonctionnelle et technique du DAT MB Chauffage — module Showroom pour clients particuliers.
-> **Origine :** concept porté par Badi.
-> **Complète :** `01-specs-fonctionnelle.md` (périmètre, personas), `05-data-model.md` (nouvelles entités), `04-architecture.md` (note technique §10).
+> **Objet :** Extension fonctionnelle du DAT Tervo — catalogue produits et exposition en salle (showroom).
+> **Complète :** `specs/01-specs-fonctionnelle.md` (périmètre, personas), `05-data-model.md` (entités), `04-architecture.md` (architecture).
 
 ---
 
@@ -23,7 +22,7 @@
 
 ## 1. Vision & positionnement
 
-MB Chauffage dispose déjà d'un outil terrain (techniciens) et d'un module financier (devis/factures) pour des clients déjà engagés dans une démarche de devis. Le **Showroom** cible un public différent : le particulier qui n'a pas encore de devis en tête et veut **voir, toucher, comparer** avant de se décider — climatisation, chaudières, PAC, etc.
+Tervo dispose déjà d'un outil terrain (techniciens) et, à terme, d'un module financier (devis/factures) pour des clients déjà engagés dans une démarche de devis. Le **catalogue / showroom** cible un public différent : le particulier qui n'a pas encore de devis en tête et veut **voir, toucher, comparer** avant de se décider — climatisation, chaudières, PAC, etc.
 
 Objectif : transformer une visite showroom en devis qualifié, puis suivre le produit vendu sur tout son cycle de vie — installation → garantie → maintenance — en réutilisant les modules Jobs, Devis et Avis client déjà existants plutôt qu'en les dupliquant.
 
@@ -40,7 +39,7 @@ Objectif : transformer une visite showroom en devis qualifié, puis suivre le pr
 | **SAV / Garanties & Contrats**| P1       | Garantie constructeur, extension, contrats d'entretien              |
 | **Visites Showroom**          | P2       | Traçabilité des passages en showroom, taux de transformation        |
 
-> ⚠️ **Le module Stock était explicitement exclu du MVP** (cf. `01-specs-fonctionnelle.md` §2, "Hors périmètre MVP"). Le Showroom le rend nécessaire : on ne peut pas exposer et vendre un produit sans savoir ce qu'il reste en stock. C'est un changement de périmètre assumé, pas un oubli.
+> ⚠️ **Le module Stock était explicitement exclu du MVP** (cf. `specs/01-specs-fonctionnelle.md` §2, "Hors périmètre MVP"). Le catalogue le rend nécessaire : on ne peut pas exposer et vendre un produit sans savoir ce qu'il reste en stock. C'est un changement de périmètre assumé, pas un oubli.
 
 ---
 
@@ -236,14 +235,14 @@ Ce parcours ne crée aucun nouveau module de facturation ou d'intervention : il 
 
 ---
 
-## 10. Note d'architecture — faut-il ajouter du Go ?
+## 10. Note d'architecture — découpage du module Stock
 
 Le stack actuel (Python/FastAPI + Vue.js) reste le socle : Clients, Jobs, Devis, Factures, Avis restent en Python — ce sont des CRUD classiques avec beaucoup de logique métier partagée, pas d'intérêt à les réécrire.
 
-Le module **Stock** est le seul candidat raisonnable pour un service Go séparé :
+Le module **Stock** est le seul candidat raisonnable pour un service séparé :
 
-- Frontière nette : le Stock ne touche presque rien du reste (juste `produit_id` et `job_id` en référence), donc un microservice indépendant ne casse pas le monolithe existant.
-- Réutilise tes acquis Go réels (Chi, Gorm/SqlC, JWT) plutôt qu'un apprentissage from scratch.
-- Donne un vrai argument d'architecture polyglotte en entretien (pas juste "j'ai fait du Go sur un projet perso").
+- Frontière nette : le Stock ne touche presque rien du reste (juste `produit_id` et `job_id` en référence), donc un service indépendant ne casse pas le monolithe existant.
+- **Décision actuelle : hors périmètre.** Le Stock reste dans le monolithe Python s'il est implémenté.
+- Un service séparé (autre langage) reste une option si le besoin de scalabilité ou d'isolation se confirme.
 
-Détail dans ma réponse ci-dessous — je n'ai pas figé ce choix dans la doc, c'est encore une décision ouverte.
+> Ce choix est **documenté comme option**, pas acté. Voir `07-implementation-roadmap.md` §8.

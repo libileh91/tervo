@@ -1,7 +1,7 @@
 # INT-66 — Sécuriser les ports Docker (bind `127.0.0.1`)
 
 > **Stage 6 / Sprint 6.1** | Points : 3 | Statut : ✅
-> **Référence :** `Todo_Fix.md` §2 et §3
+> **Référence :** `docs/DAT/annexes/revue-architecture.md` §2 et §3
 
 ---
 

@@ -2,7 +2,7 @@
 
 > **Durée :** 2 jours (7h/j) | **Points :** 16 | **Tâches :** INT-85 à INT-90
 >
-> **Référence :** `docs/DAT/MBchauffage-DAT/04-architecture.md` §5, `Todo_Fix.md` §2, §4, §5, §17, §20
+> **Référence :** `docs/DAT/04-architecture.md` §5, `docs/DAT/annexes/revue-architecture.md` §2, §4, §5, §17, §20
 >
 > **Prérequis :** Sprint 6.1 terminé (ports, healthchecks, CI/CD prêts).
 

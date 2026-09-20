@@ -2,7 +2,7 @@
 
 > **Durée :** 2 jours (7h/j) | **Points :** 10 | **Tâches :** INT-66 à INT-70
 >
-> **Référence :** `docs/DAT/MBchauffage-DAT/Todo_Fix.md` §2 à §6, §16, §19, §20
+> **Référence :** `docs/DAT/annexes/revue-architecture.md` §2 à §6, §16, §19, §20
 
 ---
 
@@ -59,11 +59,11 @@ Je veux **une politique de ports cohérente et documentée**,
 Afin de **ne pas exposer l'administration (1Panel) publiquement**.
 
 **Acceptance Criteria**
-- [ ] Décision figée : ports publics = **22, 80, 443**
-- [ ] `7410` (1Panel) **non exposé publiquement**
-- [ ] Procédure documentée : accès 1Panel via tunnel SSH (`ssh -L 7410:localhost:7410`)
-- [ ] Alternative documentée : restriction firewall à une IP admin connue
-- [ ] Suppression des mentions contradictoires dans le DAT (`7410` exposé vs non exposé)
+- [x] Décision figée : ports publics = **22, 80, 443**
+- [x] `7410` (1Panel) **non exposé publiquement**
+- [x] Procédure documentée : accès 1Panel via tunnel SSH (`ssh -L 7410:localhost:7410`)
+- [x] Alternative documentée : restriction firewall à une IP admin connue
+- [x] Suppression des mentions contradictoires dans le DAT (`7410` exposé vs non exposé)
 
 **Technical Notes**
 - Fichier : `notes/backend/deploy/firewall.md` (nouveau)
@@ -80,13 +80,13 @@ Je veux **que le DAT décrive l'architecture sans figer des versions précises**
 Afin d'**éviter que la doc vieillisse**.
 
 **Acceptance Criteria**
-- [ ] DAT : `Python 3.11+`, `FastAPI`, `SQLAlchemy 2.x`, `PostgreSQL` (sans `0.111+`, `17`, etc.)
-- [ ] Versions exactes conservées dans : `pyproject.toml`, `package.json`, `docker-compose.yml`
-- [ ] Principe documenté : « Le DAT décrit l'architecture ; le lockfile décrit l'état exact des dépendances. »
-- [ ] Audit des fichiers DAT pour retirer les versions figées
+- [x] DAT : `Python 3.11+`, `FastAPI`, `SQLAlchemy 2.x`, `PostgreSQL` (sans `0.111+`, `17`, etc.)
+- [x] Versions exactes conservées dans : `pyproject.toml`, `package.json` (`vue ^3.5.40`, `vite ^6.0.0`), `docker-compose.yml` (`postgres:17.4`)
+- [x] Principe documenté : « Le DAT décrit l'architecture ; le lockfile décrit l'état exact des dépendances. » (`00-sommaire.md`, `specs/02` §1)
+- [x] Audit des fichiers DAT pour retirer les versions figées (fusion DAT du 17/09)
 
 **Technical Notes**
-- Fichiers : `docs/DAT/MBchauffage-DAT/04-architecture.md`, `specs/02-spec-technique.md`
+- Fichiers : `docs/DAT/04-architecture.md`, `specs/02-spec-technique.md`
 - **Rappel entretien :** c'est un excellent point de maturité — séparer la doc d'architecture de l'état des dépendances.
 
 ---
@@ -99,11 +99,12 @@ Je veux **un pipeline CI/CD cohérent**,
 Afin de **ne pas builder les images deux fois inutilement**.
 
 **Acceptance Criteria**
-- [ ] Diagnostic documenté : le pipeline actuel build dans GitHub Actions **puis** sur le VPS
-- [ ] Correction : GitHub Actions fait les **tests**, puis SSH → `git pull` → `docker compose build` → `up -d`
-- [ ] Le build GitHub Actions redondant est supprimé
-- [ ] Évolution documentée (non implémentée) : build → push **GHCR** → `docker compose pull` sur le VPS
-- [ ] Note pédagogique : pourquoi le double build est incohérent
+- [x] Diagnostic documenté : le pipeline décrit buildait dans GitHub Actions **puis** sur le VPS (double build inutile, sans registry intermédiaire)
+- [x] Correction implémentée : GitHub Actions fait les **tests**, puis SSH → `git pull` → `docker compose up -d --build` → `alembic upgrade head`
+- [x] Aucun build d'image dans GitHub Actions (le dossier `.github/` était vide — le workflow créé ne contient pas ce build redondant)
+- [x] Évolution documentée (non implémentée) : build → push **GHCR** → `docker compose pull` sur le VPS
+- [x] Note pédagogique : `notes/backend/deploy/ci-cd.md`
+- [x] Validation : YAML parsé, 97 tests backend OK, `bun run build` OK
 
 **Technical Notes**
 - Fichier : `.github/workflows/ci.yml`

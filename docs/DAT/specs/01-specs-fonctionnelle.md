@@ -1,27 +1,29 @@
-# Spécification Fonctionnelle — Tervo
+# Tervo — Spécification Fonctionnelle
 
-> **Objet :** Application Web de gestion d'interventions pour techniciens CVC.
+> **Objet :** Périmètre fonctionnel, personas, modules et user stories de Tervo.
 >
-> **Acteur principal :** le technicien sur le terrain.
->
-> **Documents liés :** `02-spec-technique.md`
+> **Documents liés :** `04-architecture.md`, `05-data-model.md`, `06-workflows.md`
 
 ---
 
 ## Sommaire
 
-1. [Vision produit](#1-vision-produit)
-2. [Périmètre MVP](#2-périmètre-mvp)
-3. [Personas](#3-personas)
-4. [Fiches clients](#4-fiches-clients)
-5. [Jobs / Interventions](#5-jobs--interventions)
-6. [Formulaire d'inspection](#6-formulaire-dinspection)
-7. [Photos avant/après](#7-photos-avantaprès)
-8. [Rapport post-intervention](#8-rapport-post-intervention)
-9. [Avis / Review client](#9-avis--review-client)
-10. [User stories](#10-user-stories)
-11. [Workflows](#11-workflows)
-12. [Maquettes fonctionnelles](#12-maquettes-fonctionnelles)
+1. Vision produit
+2. Périmètre
+3. Personas
+4. Fiches clients
+5. Jobs / Interventions
+6. Formulaire d'inspection
+7. Photos avant/après
+8. Rapport post-intervention
+9. Avis / Review client
+10. Catalogue produits & exposition
+11. Devis et Factures *(phase 2)*
+12. Bilans *(phase 2)*
+13. Import de l'historique Excel
+14. Administration
+15. User stories
+16. Workflows
 
 ---
 
@@ -30,106 +32,97 @@
 Application **mobile-first** permettant aux techniciens CVC de gérer leurs interventions quotidiennes :
 
 - Retrouver les clients et leur historique avant d'intervenir
-- Suivre les jobs avec un workflow de statuts clair
+- Suivre les interventions avec un workflow de statuts clair
 - Standardiser les inspections avec des checklists
 - Capturer des photos avant/après
 - Générer un rapport d'intervention professionnel
-- Recueillir l'avis du client avec un lien de partage
+- Recueillir l'avis du client via un lien de partage
+- Présenter un catalogue produits et gérer l'exposition en salle
 
-L'application remplace le carnet papier + l'appareil photo + l'envoi de rapport par email.
+L'application remplace le carnet papier, l'appareil photo et l'envoi de rapport par email.
 
 ---
 
-## 2. Périmètre MVP
+## 2. Périmètre
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                    APP INTERVENTIONS CVC (MVP)               │
-├────────────┬───────────┬─────────────┬───────────┬───────────┤
-│  CLIENTS   │   JOBS    │ INSPECTION  │  RAPPORT  │   AVIS    │
-├────────────┼───────────┼─────────────┼───────────┼───────────┤
-│ • Création │ • CRUD    │ • Checklist │ • Généré  │ • Note 1-5│
-│ • Fiche    │ • Statuts │   pré/post  │   auto    │ • Commen- │
-│ • Historiq.│ • Planning│ • Notes     │ • PDF     │   taire   │
-│ • Recherche│ • Liste   │ • Photos    │ • Matériaux│ • Lien   │
-└────────────┴───────────┴─────────────┴───────────┴───────────┘
-```
+### Modules
 
-### Fonctionnalités détaillées
+| Module | Priorité | Description |
+|--------|:--------:|-------------|
+| **Clients** | P0 | Fiches, recherche, historique |
+| **Interventions** | P0 | CRUD, statuts, planning |
+| **Inspection** | P0 | Checklists pré/post, notes |
+| **Photos** | P0 | Avant/après, thumbnails |
+| **Rapport** | P0 | PDF automatique |
+| **Avis client** | P0 | Note + commentaire via lien public |
+| **Catalogue produits** | P1 | Fiches produits, exposition en salle |
+| **Import Excel** | P1 | Migration de l'historique |
+| **Administration** | P2 | Utilisateurs, logs |
+| **Devis / Factures** | P2 | Gestion commerciale |
+| **Stock** | P2 | Quantités, mouvements |
+| **Fournisseurs / SAV** | P2 | Contrats, garanties |
 
-**Module CLIENTS**
+### Hors périmètre actuel
 
-| ID     | Fonctionnalité                                         | Priorité |
-| ------ | ------------------------------------------------------ | -------- |
-| CLI-01 | Création fiche client (nom, téléphone, adresse, email) | P1       |
-| CLI-02 | Liste paginée + recherche (nom, téléphone, adresse)    | P1       |
-| CLI-03 | Fiche détail client (infos + historique des jobs)      | P1       |
-| CLI-04 | Modification fiche client                              | P1       |
-
-**Module JOBS**
-
-| ID     | Fonctionnalité                                          | Priorité |
-| ------ | ------------------------------------------------------- | -------- |
-| JOB-01 | Création d'un job (client, date, description, priorité) | P1       |
-| JOB-02 | Liste des jobs avec filtres (statut, date, technicien)  | P1       |
-| JOB-03 | Fiche détail job (infos, photos, checklist, rapport)    | P1       |
-| JOB-04 | Workflow de statuts : planifié → en cours → terminé     | P1       |
-| JOB-05 | Modification fiche job                                  | P1       |
-
-**Module INSPECTION**
-
-| ID     | Fonctionnalité                              | Priorité |
-| ------ | ------------------------------------------- | -------- |
-| INS-01 | Checklist pré-intervention (état des lieux) | P1       |
-| INS-02 | Checklist post-intervention (vérifications) | P1       |
-| INS-03 | Notes libres par item de checklist          | P1       |
-| INS-04 | Photos avant intervention                   | P1       |
-| INS-05 | Photos après intervention                   | P1       |
-
-**Module RAPPORT**
-
-| ID     | Fonctionnalité                          | Priorité |
-| ------ | --------------------------------------- | -------- |
-| RPT-01 | Génération rapport PDF automatique      | P1       |
-| RPT-02 | Observations générales                  | P1       |
-| RPT-03 | Matériaux utilisés (nom, quantité)      | P1       |
-| RPT-04 | Durée de l'intervention (calculée auto) | P1       |
-| RPT-05 | Signature client (P2)                   | P2       |
-
-**Module AVIS**
-
-| ID     | Fonctionnalité                        | Priorité |
-| ------ | ------------------------------------- | -------- |
-| AVI-01 | Note 1 à 5 étoiles                    | P1       |
-| AVI-02 | Commentaire client                    | P1       |
-| AVI-03 | Lien de partage unique (URL publique) | P1       |
-| AVI-04 | Vue avis sur fiche client             | P1       |
+- Comptabilité complète (intégration EBP/Sage)
+- Gestion RH / plannings avancés
+- Portail client autonome
+- Application native iOS/Android (PWA suffisante)
+- GED documentaire avec OCR
 
 ---
 
 ## 3. Personas
 
-### Technicien CVC (acteur unique du MVP)
+### 3.1 Technicien CVC (acteur principal)
 
-| Attribut     | Valeur                                                                        |
-| ------------ | ----------------------------------------------------------------------------- |
-| Expérience   | 2-10 ans en CVC                                                               |
-| Tech-savvy   | Variable (moyen)                                                              |
-| Équipement   | Smartphone (4G) + parfois tablette                                            |
-| Contexte     | Sur le terrain, parfois en sous-sol sans réseau                               |
-| Tâches       | Interventions, dépannage, maintenance, installation                           |
-| Besoin       | Rapidité, simplicité, pas de double saisie                                    |
-| Frustrations | Papier qui se perd, photos sur le téléphone perso, rapports à refaire le soir |
+| Attribut | Valeur |
+|----------|--------|
+| Expérience | 2-20 ans en CVC |
+| Tech-savvy | Variable (moyen) |
+| Équipement | Smartphone (4G) + parfois tablette |
+| Contexte | Terrain, parfois en sous-sol sans réseau |
+| Besoins | Rapidité, simplicité, pas de double saisie |
+| Frustrations | Papier perdu, photos sur téléphone perso, rapport à refaire le soir |
 
 **Journée type :**
 
-1. Le matin : regarde les jobs planifiés du jour
-2. Arrivé chez le client : ouvre la fiche client, consulte l'historique
-3. Avant intervention : prend des photos, fait la checklist pré
+1. Le matin : consulte les interventions planifiées du jour
+2. Arrivé chez le client : ouvre la fiche, consulte l'historique
+3. Avant intervention : photos + checklist pré
 4. Pendant : note les matériaux utilisés
-5. Après : prend des photos, checklist post, observations
-6. En partant : montre le rapport au client, envoie le lien d'avis
-7. Le soir : vérifie que tous les jobs sont bien terminés
+5. Après : photos, checklist post, observations
+6. En partant : montre le rapport, envoie le lien d'avis
+7. Le soir : vérifie que tout est terminé
+
+### 3.2 Comptable / Gérant *(phase 2)*
+
+| Attribut | Valeur |
+|----------|--------|
+| Tech-savvy | Faible à moyen |
+| Équipement | PC de bureau |
+| Besoins | Devis, facturation, bilans, suivi des paiements |
+| Frustrations | Fichiers éparpillés, pas de vue consolidée |
+
+### 3.3 Vendeur / Responsable showroom
+
+| Attribut | Valeur |
+|----------|--------|
+| Équipement | Tablette ou PC en showroom |
+| Besoins | Présenter le catalogue, guider le client, essais |
+
+### 3.4 Client particulier (visiteur showroom)
+
+| Attribut | Valeur |
+|----------|--------|
+| Situation | Pas encore de devis, vient comparer sur place |
+| Besoins | Voir, essayer, comparer les tarifs |
+
+### 3.5 Admin technique
+
+| Attribut | Valeur |
+|----------|--------|
+| Besoins | Import de données, gestion des utilisateurs, supervision |
 
 ---
 
@@ -137,44 +130,40 @@ L'application remplace le carnet papier + l'appareil photo + l'envoi de rapport 
 
 ### Champs
 
-| Champ       | Type  | Requis | Description                                |
-| ----------- | ----- | ------ | ------------------------------------------ |
-| Nom complet | texte | ✓      | Nom du client (ou entreprise)              |
-| Téléphone   | texte | ✓      | Portable de préférence                     |
-| Email       | email | —      | Pour envoi rapport/avis                    |
-| Adresse     | texte | ✓      | Numéro, rue                                |
-| Code postal | texte | ✓      |                                            |
-| Ville       | texte | ✓      |                                            |
-| Notes       | texte | —      | Infos complémentaires (code porte, étage…) |
+| Champ | Type | Requis | Description |
+|-------|------|:------:|-------------|
+| Nom complet | texte | ✓ | Nom du client (ou entreprise) |
+| Téléphone | texte | ✓ | Portable de préférence |
+| Email | email | — | Envoi rapport / avis |
+| Adresse | texte | ✓ | Numéro, rue |
+| Code postal | texte | ✓ | |
+| Ville | texte | ✓ | |
+| Notes | texte | — | Code porte, étage, remarques |
 
 ### Comportement
 
 - Recherche rapide par nom, téléphone, adresse
-- Depuis la fiche client : voir tous les jobs passés (historique)
-- Un clic → créer un nouveau job pour ce client
+- Historique des interventions depuis la fiche
+- Un clic → créer une nouvelle intervention pour ce client
 
-### Maquette fiche client
+### Maquette
 
 ```
 ┌──────────────────────────────────────┐
 │  ← Clients        M. DUPONT         │
 │                    ✏️ Modifier       │
 ├──────────────────────────────────────┤
-│                                      │
 │  📞 06 12 34 56 78                   │
 │  ✉️  dupont@email.fr                 │
 │  📍 12 rue de Paris, 75001 Paris    │
 │  📝 Code porte B4, 3e étage         │
-│                                      │
 ├──────────────────────────────────────┤
 │  HISTORIQUE (3 interventions)        │
-│                                      │
 │  15/05/2026  Panne clim    ✅        │
 │  02/03/2026  Maintenance   ✅        │
 │  10/12/2025  Installation  ✅        │
-│                                      │
 ├──────────────────────────────────────┤
-│  [+ Nouveau job]                     │
+│  [+ Nouvelle intervention]           │
 └──────────────────────────────────────┘
 ```
 
@@ -184,64 +173,33 @@ L'application remplace le carnet papier + l'appareil photo + l'envoi de rapport 
 
 ### Champs
 
-| Champ              | Type  | Requis | Description                    |
-| ------------------ | ----- | ------ | ------------------------------ |
-| Client             | FK    | ✓      | Client concerné                |
-| Titre              | texte | ✓      | Ex: "Panne clim salon"         |
-| Description        | texte | —      | Description détaillée          |
-| Statut             | enum  | ✓      | planifié, en_cours, terminé    |
-| Priorité           | enum  | —      | basse, normale, haute, urgente |
-| Date planifiée     | date  | ✓      | Quand le job doit être fait    |
-| Heure début prévue | heure | —      | Créneau                        |
-| Heure fin prévue   | heure | —      | Créneau                        |
+| Champ | Type | Requis | Description |
+|-------|------|:------:|-------------|
+| Client | FK | ✓ | Client concerné |
+| Titre | texte | ✓ | Ex : « Panne clim salon » |
+| Description | texte | — | Description détaillée |
+| Statut | enum | ✓ | planifié, en_cours, terminé, annulé |
+| Priorité | enum | — | basse, normale, haute, urgente |
+| Date planifiée | date | ✓ | Quand l'intervention doit être faite |
+| Heure début / fin prévues | heure | — | Créneau |
 
 ### Workflow de statuts
 
 ```
-┌──────────┐      ┌───────────┐      ┌──────────┐
-│ PLANIFIÉ │ ───→ │ EN COURS  │ ───→ │ TERMINÉ  │
-└──────────┘      └───────────┘      └──────────┘
-                       │
-                       │ (annulation)
-                       ▼
-                  ┌──────────┐
-                  │ ANNULÉ   │
-                  └──────────┘
+planifié ──► en_cours ──► terminé
+    │            │
+    └────────────┴──► annulé
 ```
 
-- **Planifié** : le job est créé, en attente
-- **En cours** : le technicien est sur place (déclenche le timer)
-- **Terminé** : intervention finie, rapport généré
-- **Annulé** : intervention annulée (ne pas supprimer, garder trace)
+**Règles :**
+- Passage `planifié → terminé` interdit (il faut démarrer)
+- `started_at` renseigné automatiquement au démarrage
+- `completed_at` renseigné automatiquement à la clôture
+- Clôture impossible sans checklist complète + photos avant/après
 
-### Liste des jobs (vue planning)
+### Liste des interventions
 
-```
-┌──────────────────────────────────────────┐
-│  Jobs > Aujourd'hui (15/05/2026)         │
-│                                          │
-│  Filtres : [Tous statuts ▾] [Date ▾]    │
-│                                          │
-│  ┌────────────────────────────────────┐  │
-│  │ 🔴 HAUTE  14:00-16:00              │  │
-│  │ Panne clim — M. DUPONT             │  │
-│  │ 12 rue de Paris, 75001 Paris       │  │
-│  │ [▶ Démarrer]                       │  │
-│  ├────────────────────────────────────┤  │
-│  │ 🟡 NORMALE  10:00-12:00            │  │
-│  │ Maintenance — M. MARTIN            │  │
-│  │ 5 av. des Lilas, 69002 Lyon        │  │
-│  │ [▶ Démarrer]                       │  │
-│  ├────────────────────────────────────┤  │
-│  │ 🟢 BASSE  09:00-10:00              │  │
-│  │ Diagnostic — Sté BATI-PRO         │  │
-│  │ 28 rue du Commerce, 33000 Bordeaux │  │
-│  │ [Terminé ✅]                       │  │
-│  └────────────────────────────────────┘  │
-│                                          │
-│  [+ Nouveau job]                         │
-└──────────────────────────────────────────┘
-```
+Filtres : statut, date, technicien. Tri par date. Pagination.
 
 ---
 
@@ -249,55 +207,38 @@ L'application remplace le carnet papier + l'appareil photo + l'envoi de rapport 
 
 ### Checklist pré-intervention
 
-Liste d'items à vérifier avant de commencer le travail :
-
-| Item                           | Type         | Obligatoire |
-| ------------------------------ | ------------ | ----------- |
-| État général de l'installation | ✅/❌ + note | ✓           |
-| Équipement sous tension coupé  | ✅/❌ + note | ✓           |
-| Zone de travail sécurisée      | ✅/❌ + note | ✓           |
-| Accès dégagé                   | ✅/❌ + note | —           |
-| Photo avant (min. 1)           | 📷           | ✓           |
+| Item | Exemple de note |
+|------|-----------------|
+| État général de l'installation | « RAS, installation propre » |
+| Équipement hors tension | « Disjoncteur coupé » |
+| Zone de travail sécurisée | « OK » |
+| Accès dégagé | |
 
 ### Checklist post-intervention
 
-| Item                       | Type         | Obligatoire |
-| -------------------------- | ------------ | ----------- |
-| Installation fonctionnelle | ✅/❌ + note | ✓           |
-| Nettoyage zone effectué    | ✅/❌ + note | ✓           |
-| Pièces remplacées notées   | ✅/❌ + note | —           |
-| Photo après (min. 1)       | 📷           | ✓           |
-| Explication client faite   | ✅/❌ + note | ✓           |
+| Item | Exemple de note |
+|------|-----------------|
+| Installation fonctionnelle | « Climatisation OK » |
+| Nettoyage effectué | « Zone propre » |
+| Explication client faite | « Client satisfait » |
 
-### Maquette checklist
+### Maquette
 
 ```
 ┌──────────────────────────────────────┐
-│  Inspection > Job #42                │
-│                                      │
-│  [PRÉ-INTERVENTION]                  │
-│                                      │
-│  ☑ État général                     │
-│    [RAS, installation propre____]   │
-│                                      │
-│  ☑ Équipement hors tension          │
-│    [Disjoncteur coupé__________]    │
-│                                      │
-│  ☑ Zone sécurisée                   │
-│    [OK_________________________]    │
-│                                      │
-│  ☑ Accès dégagé                     │
-│    [______________________________]  │
-│                                      │
-│  Photos avant (2)                    │
-│  ┌──────┐ ┌──────┐                  │
-│  │      │ │      │                  │
-│  └──────┘ └──────┘                  │
-│  [+ Ajouter photo]                   │
-│                                      │
-│  [POST-INTERVENTION]  ▾              │
+│  ← Inspection — Panne clim           │
+│  [ Pré ]  [ Post ]                   │
+├──────────────────────────────────────┤
+│  ☑ État général                      │
+│     [RAS, installation propre_____]  │
+│  ☑ Équipement hors tension           │
+│     [Disjoncteur coupé___________]   │
+│  ☐ Zone sécurisée                    │
+│     [____________________________]   │
 └──────────────────────────────────────┘
 ```
+
+**Règles :** les items pré et post sont créés automatiquement à la création de l'intervention. Une intervention ne peut être terminée que si tous les items sont cochés.
 
 ---
 
@@ -305,18 +246,15 @@ Liste d'items à vérifier avant de commencer le travail :
 
 ### Comportement
 
-- Capture directe depuis l'appareil photo du smartphone
-- Upload automatique vers le serveur
-- Tag automatique : `avant` ou `après`
-- Affichage côte à côte dans le rapport PDF
-- Horodatage automatique
+- Upload depuis l'appareil photo du téléphone
+- Catégorie forcée selon l'onglet actif (avant / après)
+- Thumbnail généré côté serveur
+- Minimum : 1 photo avant + 1 photo après pour clôturer
 
-### Spécifications techniques
-
-- Format : JPEG, max 5 Mo par photo
-- Stockage : système de fichiers ou S3-compatible
-- Miniatures générées pour les listes
-- Photos associées au job (pas au client directement)
+| Format | JPEG, PNG |
+|--------|-----------|
+| Taille | limitée (validation serveur) |
+| Stockage | volume Docker + chemin en base |
 
 ---
 
@@ -324,72 +262,25 @@ Liste d'items à vérifier avant de commencer le travail :
 
 ### Contenu généré automatiquement
 
-Le rapport PDF inclut :
+| Section | Contenu |
+|---------|---------|
+| En-tête | Logo, coordonnées, numéro de rapport |
+| Client | Nom, adresse, téléphone |
+| Intervention | Titre, date, heure début/fin, durée |
+| Checklist | Items pré et post avec notes |
+| Photos | Avant / après |
+| Matériaux | Nom, quantité |
+| Observations | Texte libre du technicien |
+| Pied de page | Mention légale, page X/Y |
 
-```
-┌─────────────────────────────────────────┐
-│  RAPPORT D'INTERVENTION                 │
-│  Job #42 — Panne clim                   │
-├─────────────────────────────────────────┤
-│  CLIENT                                 │
-│  M. Dupont                              │
-│  12 rue de Paris, 75001 Paris           │
-│  📞 06 12 34 56 78                      │
-├─────────────────────────────────────────┤
-│  INTERVENTION                           │
-│  Date : 15/05/2026                      │
-│  Heure début : 14:05                    │
-│  Heure fin : 15:45                      │
-│  Durée : 1h40                           │
-│  Technicien : Guuleed Liban             │
-├─────────────────────────────────────────┤
-│  MATÉRIAUX UTILISÉS                     │
-│  • Filtre à air HEPA — 1 unité          │
-│  • Gaz R410A — 0.5 kg                   │
-│  • Joint silicone — 1 tube              │
-├─────────────────────────────────────────┤
-│  OBSERVATIONS                           │
-│  Filtre complètement encrassé.          │
-│  Recharge gaz nécessaire.               │
-│  Fonctionnement OK après intervention.  │
-├─────────────────────────────────────────┤
-│  PHOTOS AVANT/APRÈS                     │
-│  [photo1] [photo2]  [photo3] [photo4]   │
-├─────────────────────────────────────────┤
-│  CHECKLIST                              │
-│  Pré : tout OK                          │
-│  Post : tout OK                         │
-│  Signature client : _____________       │
-└─────────────────────────────────────────┘
-```
+### Champs saisis
 
-### Champs du rapport
+| Champ | Type | Description |
+|-------|------|-------------|
+| Observations | texte | Commentaire général |
+| Matériaux | liste | Nom + quantité (texte libre) |
 
-| Champ               | Source                        |
-| ------------------- | ----------------------------- |
-| Client              | Fiche client                  |
-| Date, heures, durée | Job (timer auto)              |
-| Technicien          | Utilisateur connecté          |
-| Matériaux           | Saisie par le technicien      |
-| Observations        | Saisie libre                  |
-| Photos              | Upload pendant l'intervention |
-| Checklist           | Formulaire d'inspection       |
-
-### Saisie des matériaux
-
-```
-┌──────────────────────────────────────────┐
-│  Matériaux utilisés                      │
-│                                          │
-│  Filtre à air HEPA     [1]  [✕]         │
-│  Gaz R410A             [0.5][✕]         │
-│  Joint silicone        [1]  [✕]         │
-│                                          │
-│  [+ Ajouter un matériau]                 │
-└──────────────────────────────────────────┘
-```
-
-Chaque matériau : nom libre + quantité (nombre ou texte).
+> **Signature client** (P2) — non implémentée.
 
 ---
 
@@ -397,239 +288,168 @@ Chaque matériau : nom libre + quantité (nombre ou texte).
 
 ### Workflow
 
-```
-1. Job terminé → bouton "Partager avis"
-2. Génération d'un lien unique et court
-3. Le technicien envoie le lien au client (SMS, email, QR code)
-4. Le client ouvre le lien → page publique
-5. Le client donne une note (1-5 ⭐) + commentaire
-6. L'avis est rattaché au job et au client
-```
-
-### Page publique d'avis
-
-```
-┌──────────────────────────────────────┐
-│         Votre avis compte !          │
-│                                      │
-│  Intervention du 15/05/2026          │
-│  Technicien : Guuleed Liban          │
-│                                      │
-│  Quelle note donneriez-vous ?        │
-│  ☆ ☆ ☆ ☆ ☆   (4/5)                  │
-│                                      │
-│  Un commentaire ?                    │
-│  ┌────────────────────────────────┐  │
-│  │ Travail propre et rapide !     │  │
-│  │ Merci au technicien.           │  │
-│  └────────────────────────────────┘  │
-│                                      │
-│  Nom (optionnel) : [M. Dupont____]   │
-│                                      │
-│           [Envoyer mon avis]         │
-└──────────────────────────────────────┘
-```
+1. À la clôture, un `share_token` unique est généré
+2. Le technicien copie le lien `/review/{token}` et l'envoie (SMS/email)
+3. Le client ouvre le lien (sans authentification)
+4. Il note de 1 à 5 étoiles et laisse un commentaire
+5. L'avis apparaît sur la fiche client
 
 ### Spécifications
 
-- Pas d'authentification requise (lien unique = accès)
-- Lien valide 30 jours après la fin du job
-- Un avis par job maximum
-- Affichage de la moyenne + derniers avis sur la fiche client
+| Élément | Valeur |
+|---------|--------|
+| Authentification | aucune (endpoint public) |
+| Token | UUID unique |
+| Validité | 30 jours |
+| Unicité | un seul avis par intervention |
+| Sécurité | token non devinable, vérification de validité |
 
 ---
 
-## 10. User stories
+## 10. Catalogue produits & exposition
 
-```
-En tant que technicien,
-Je veux consulter la fiche d'un client avant d'arriver,
-Afin de connaître son adresse, son code de porte
-et l'historique de ses interventions passées.
+**Détail complet :** `08-module-catalogue.md`
 
-Critères d'acceptation :
-- Recherche rapide par nom ou téléphone
-- Affichage de l'adresse en évidence (pour le GPS)
-- Notes visibles (code porte, étage...)
-- Historique des jobs dans l'ordre chronologique inverse
-```
+| Fonctionnalité | Priorité |
+|----------------|:--------:|
+| Fiche produit (référence, catégorie, marque, prix, photo) | P1 |
+| Liste + filtres (catégorie, statut) + recherche | P1 |
+| Exposition en salle (emplacement, essai, vendable) | P1 |
+| Vue « showroom » par emplacement | P1 |
 
-```
-En tant que technicien,
-Je veux démarrer un job d'un simple clic,
-Afin de déclencher le chronomètre et passer en statut "en cours".
+**Distinctions de modélisation :**
 
-Critères d'acceptation :
-- Bouton "Démarrer" depuis la liste ou la fiche job
-- Le statut passe à "en cours"
-- L'heure de début est enregistrée automatiquement
-```
-
-```
-En tant que technicien,
-Je veux prendre des photos avant et après mon intervention,
-Afin de documenter l'état de l'installation et justifier mon travail.
-
-Critères d'acceptation :
-- Appareil photo natif du smartphone
-- Upload automatique (pas de manipulation)
-- Tag avant/après automatique selon l'étape
-- Photos visibles dans le rapport final
-```
-
-```
-En tant que technicien,
-Je veux remplir une checklist rapide,
-Afin de ne rien oublier et de standardiser mes interventions.
-
-Critères d'acceptation :
-- Liste de points à cocher (✅/❌)
-- Note possible par point
-- Pas de scroll infini (5-6 items max par section)
-```
-
-```
-En tant que technicien,
-Je veux générer un rapport PDF en un clic à la fin du job,
-Afin de le remettre au client ou de l'archiver.
-
-Critères d'acceptation :
-- Rapport inclut toutes les infos du job
-- Photos intégrées
-- Checklist résumée
-- Téléchargement / partage direct
-```
-
-```
-En tant que technicien,
-Je veux envoyer un lien d'avis au client après l'intervention,
-Afin de recueillir sa satisfaction et valoriser mon travail.
-
-Critères d'acceptation :
-- Génération d'un lien unique
-- Page publique simple (note + commentaire)
-- Avis visible sur la fiche client
-```
+- `statut` (cycle de vie produit : en exposition, en stock, discontinué) ≠ **exposition** (présence en salle)
+- `disponible_essai` (essai physique) ≠ `vendable_showroom` (peut être vendu)
 
 ---
 
-## 11. Workflows
+## 11. Devis et Factures *(phase 2)*
 
-### Workflow complet : une intervention de A à Z
+### Devis
 
-```
-1. MATIN — CONSULTATION DU PLANNING
-─────────────────────────────────────
-Ouvrir l'app → Jobs → Filtre "Aujourd'hui"
-→ Voir les 3 jobs du jour avec adresses
-→ Cliquer sur le 1er → fiche client → voir notes
-→ GPS → se rendre chez le client
+| Champ | Description |
+|-------|-------------|
+| `numero` | Auto — DEV-AAAA-NNNNN |
+| `statut` | brouillon, envoyé, accepté, refusé, expiré |
+| Lignes | description, quantité, unité, prix unitaire HT |
+| Totaux | HT, TVA, TTC |
 
-2. ARRIVÉE — DÉMARRAGE
-─────────────────────────
-Sur place → ouvrir le job → [▶ Démarrer]
-→ Statut passe à "en cours" → timer lancé
-→ Checklist pré-intervention :
-  ☑ État général OK, ☑ Hors tension, ☑ Zone sécurisée
-→ Photos avant (2 photos, appareil photo natif)
+Workflow : brouillon → envoyé → accepté / refusé / expiré.
 
-3. PENDANT — SAISIE MATÉRIAUX
-───────────────────────────────
-→ Ajouter les matériaux au fur et à mesure
-  • Filtre HEPA x1
-  • Gaz R410A x0.5
+### Factures
 
-4. FIN — CLÔTURE
-───────────────────
-→ Checklist post-intervention :
-  ☑ Installation OK, ☑ Nettoyage fait, ☑ Explication client
-→ Photos après (2 photos)
-→ Observations : "Filtre encrassé remplacé, recharge gaz."
-→ [Terminer le job] → timer stop → durée calculée
+| Champ | Description |
+|-------|-------------|
+| `numero` | Auto — FAC-AAAA-NNNNN |
+| `statut` | en_attente, payée, retard, annulée |
+| `date_echeance` | + 30 jours |
+| `date_paiement`, `mode_paiement` | suivi du règlement |
 
-5. RAPPORT + AVIS
-───────────────────
-→ [📄 Rapport PDF] → génération automatique
-→ Montrer au client ou envoyer par email
-→ [⭐ Demander un avis] → lien généré
-→ SMS au client : "Merci ! Donnez votre avis : https://..."
-→ Job terminé ✅
-```
-
-### Workflow : le technicien en mode urgence
-
-```
-1. Appel du client → recherche rapide par téléphone
-2. Client inconnu → [+ Nouveau client] → saisie express (nom + tél + adresse)
-3. [+ Nouveau job] → priorité "urgente", titre, description
-4. [▶ Démarrer] immédiatement
-5. Intervention → checklist + photos
-6. [Terminer] → rapport généré
-7. Lien avis envoyé
-
-Temps total hors intervention : < 2 minutes
-```
+**Positionnement :** gestion commerciale **simplifiée**. Ce n'est pas un logiciel comptable.
 
 ---
 
-## 12. Maquettes fonctionnelles
+## 12. Bilans *(phase 2)*
 
-### Dashboard / Accueil
+Indicateurs calculés **à la demande** : nombre d'interventions, devis émis/acceptés,
+factures émises/payées, total facturé HT/TTC, encaissé, impayé, panier moyen, délai de paiement moyen.
 
-```
-┌──────────────────────────────────────┐
-│  Bonjour, Jean !                     │
-│                        📅 15/05/2026 │
-├──────────────────────────────────────┤
-│                                      │
-│  AUJOURD'HUI                         │
-│  ┌────────────────────────────────┐  │
-│  │ 📋 3 jobs planifiés             │  │
-│  │ ▶  1 en cours                   │  │
-│  │ ✅ 2 terminés                    │  │
-│  └────────────────────────────────┘  │
-│                                      │
-│  PROCHAIN JOB                        │
-│  ┌────────────────────────────────┐  │
-│  │ 🔴 HAUTE  14:00                 │  │
-│  │ Panne clim — M. DUPONT          │  │
-│  │ 12 rue de Paris, 75001 Paris    │  │
-│  │ 📞 06 12 34 56 78              │  │
-│  │              [▶ Démarrer]       │  │
-│  └────────────────────────────────┘  │
-│                                      │
-│  ┌────────────────────────────────┐  │
-│  │ 🟡 NORMALE  10:00 (en cours)   │  │
-│  │ Maintenance — M. MARTIN         │  │
-│  │ ⏱  1h12 écoulées               │  │
-│  │              [Terminer]         │  │
-│  └────────────────────────────────┘  │
-├──────────────────────────────────────┤
-│  [+ Nouveau job]  [📁 Clients]       │
-└──────────────────────────────────────┘
-```
-
-### Navigation (mobile-first)
-
-```
-┌──────────────────────────────┐
-│  Tervo                   │ ← TopBar (fixe)
-├──────────────────────────────┤
-│                              │
-│                              │
-│    CONTENU DE LA PAGE        │
-│                              │
-│                              │
-│                              │
-│                              │
-├──────────────────────────────┤
-│  🏠     📋     📁     👤     │ ← Bottom nav
-│ Accueil Jobs  Clients Profil │
-└──────────────────────────────┘
-```
+> Pas de cron mensuel prématuré : les bilans sont des requêtes d'agrégation. Une table de snapshot sera introduite si le volume le justifie.
 
 ---
 
-> **Document créé le 03/06/2026**
-> **Version :** 3.0 (Refonte MVP)
-> **Document technique associé :** `02-spec-technique.md`
+## 13. Import de l'historique Excel
+
+### Fonctionnalités
+
+- Upload de fichiers `.xlsx` / `.xls`
+- Détection automatique du mapping des colonnes (surchargeable)
+- Preview des lignes avant import
+- Validation complète (doublons, erreurs, champs manquants)
+- Résolution des doublons clients (fuzzy matching)
+- Import en **2 passes** (clients → interventions)
+- Rapport détaillé post-import
+- **Idempotent** : ré-exécutable sans doublon
+
+### Règles d'import
+
+| Règle | Détail |
+|-------|--------|
+| Doublon client | Score de similarité (≥ 95 auto, 80-95 validation humaine) |
+| Job sans client identifiable | → `import_error` avec statut `ORPHAN` (jamais ignoré) |
+| Champs obligatoires manquants | Ligne rejetée + loggée |
+| Atomicité | Transaction **par batch**, pas globale |
+| Idempotence | Hash SHA-256 du fichier |
+
+Détail : `06-workflows.md` §3 et `05-data-model.md` §5.
+
+---
+
+## 14. Administration
+
+| Fonctionnalité | Description |
+|----------------|-------------|
+| Gestion utilisateurs | Créer / modifier / désactiver des comptes |
+| Logs d'import | Historique des imports + anomalies |
+| Supervision des backups | Dernier backup, taille, statut |
+| Backups manuels | Déclenchement à la demande |
+
+---
+
+## 15. User stories
+
+### 15.1 Technicien
+
+| # | User story | Priorité |
+|---|------------|:--------:|
+| US-01 | Consulter mon planning du jour | P0 |
+| US-02 | Créer une intervention urgente (client existant ou nouveau) | P0 |
+| US-03 | Prendre des photos avant/après | P0 |
+| US-04 | Générer un rapport d'intervention | P0 |
+| US-05 | Envoyer un lien d'avis au client | P0 |
+
+### 15.2 Vendeur / Showroom
+
+| # | User story | Priorité |
+|---|------------|:--------:|
+| US-06 | Consulter le catalogue produits | P1 |
+| US-07 | Voir quels produits sont exposés et essayables | P1 |
+
+### 15.3 Comptable / Gérant *(phase 2)*
+
+| # | User story | Priorité |
+|---|------------|:--------:|
+| US-08 | Créer un devis | P2 |
+| US-09 | Transformer un devis en facture | P2 |
+| US-10 | Suivre les paiements | P2 |
+| US-11 | Consulter les bilans | P2 |
+
+### 15.4 Admin
+
+| # | User story | Priorité |
+|---|------------|:--------:|
+| US-12 | Importer l'historique Excel | P1 |
+| US-13 | Traiter les anomalies d'import | P1 |
+| US-14 | Gérer les utilisateurs | P2 |
+
+---
+
+## 16. Workflows
+
+Le détail des parcours est dans `06-workflows.md` :
+
+1. Intervention de A à Z (5 phases)
+2. Intervention urgente (express)
+3. Consultation de l'historique client
+4. Import de l'historique Excel
+5. Parcours showroom
+6. Backup & restore
+7. Déploiement
+
+---
+
+> **Sommaire :** `00-sommaire.md`
+> **Workflows détaillés :** `06-workflows.md`
+> **Modèle de données :** `05-data-model.md`
+> **Module catalogue :** `08-module-catalogue.md`
