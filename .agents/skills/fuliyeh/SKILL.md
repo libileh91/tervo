@@ -19,62 +19,90 @@ Tu bosses en mode **feu-vert** : je valide chaque étape avant que tu passes à 
 
 ---
 
-## 📌 Contexte projet (mis à jour — Stage 6)
+## 📌 Contexte projet (mis à jour — Tervo v2)
 
 ### Identité
 
 - **Nom du projet : Tervo** — nom conservé, pas de rebranding (ni « MB Chauffage », ni « ShowRoom »)
-- **DAT unique** : `docs/DAT/` (voir structure ci-dessous)
-- **Sprint en cours** : `docs/stages/stage6/` (Import Excel, Catalogue, Déploiement VPS, Présentation)
+- **DAT unique** : `docs/DAT/new/` (refonte en cours — voir structure ci-dessous)
+- **Sprint en cours** : `docs/stages/stage6/sprint-6.2-v2/` (Tervo v2 : cœur métier + migration Excel)
+- **Branche de travail DAT** : `chore/rewrite-dat`
+
+### Modèle métier (verrouillé)
+
+Le domaine passe de `clients + jobs` à une chaîne complète :
+
+```text
+① Chaîne physique     —  Client ──► Site ──► Équipement ──► Intervention
+② Chaîne commerciale  —  Produit ──► Vente ──► SaleLine ──► Installation ──► Équipement
+                         + Showroom (prospection)
+```
+
+**Décisions verrouillées :**
+- Identifiants **entiers auto-incrémentés** (pas d'UUID)
+- `job` → **`Intervention`** (+ `under_warranty`)
+- `Equipment` **sans** `PLANNED` — `ACTIVE / OUT_OF_SERVICE / REPLACED / RETIRED`
+- `SaleLine 1 → N Installation` · `Installation 1 → 0..1 Equipment`
+- `Installation.status` : `SCHEDULED / IN_PROGRESS / COMPLETED / CANCELLED`
+- `replaced_by_id` (ancien → nouveau) · `Report` versionné V1 · `ShowroomVisit.client_id` nullable · `Quote` hors V1
 
 ### DAT unique
 
-Depuis le 17/09/2026, **un seul DAT** : `docs/DAT/`
+Depuis la refonte, **un seul DAT** (en réécriture dans `docs/DAT/new/`) :
 
-```
-docs/DAT/
+```text
+docs/DAT/new/
 ├── 00-sommaire.md                     → sommaire + synthèse + ordre de lecture
-├── 04-architecture.md                 → archi, décisions, infra, import, sécurité
-├── 05-data-model.md                   → schéma relationnel complet
-├── 06-workflows.md                    → parcours utilisateurs, UX
-├── 07-implementation-roadmap.md       → stages, sprints, risques
-├── 08-module-catalogue.md             → catalogue produits & exposition
-├── specs/
-│   ├── 01-specs-fonctionnelle.md      → périmètre, personas, user stories
-│   ├── 02-spec-technique.md           → stack, frontend, infra, CI/CD
-│   └── 03-api-spec.md                 → endpoints REST
-└── annexes/
-    └── revue-architecture.md          → revue d'architecture + corrections
+├── 00-revue/                          → vue d'ensemble + lots (01-04) + migration (05)
+├── 01-fonctionnel/
+│   ├── 01-specifications.md           → périmètre, personas
+│   ├── 02-modele-metier.md            → Client/Site/Produit/Équipement/Intervention
+│   └── 03-workflows.md                → parcours utilisateurs, priorités
+├── 02-techniques/
+│   ├── 01-architecture.md             → archi, décisions, infra, pipeline d'import
+│   ├── 02-data-model.md               → schéma relationnel + entités techniques de migration
+│   ├── 03-api.md                      → endpoints REST
+│   └── 04-securite.md                 → sécurité (rôles ADMIN/MANAGER/TECHNICIAN/COMMERCIAL)
+├── 03-modules/
+│   ├── catalogues.md                  → catalogue produits
+│   ├── interventions.md               → module terrain
+│   └── showroom.md                    → showroom / suivi commercial
+└── 04-roadmap/
+    └── implementation.md              → phases + migration remontée (position 09)
 ```
 
-> ⚠️ L'ancien dossier `docs/DAT/MBchauffage-DAT/` **n'existe plus** — son contenu a été fusionné dans `docs/DAT/`. Ne pas recréer de second DAT.
+> ⚠️ **L'ancien DAT (`docs/DAT/` : 04-architecture, 05-data-model, 06-workflows, …) est périmé** —
+> il décrit l'ancien modèle `clients + jobs`. La référence est désormais `docs/DAT/new/`.
+> Ne pas recréer de second DAT.
 
-### Document de revue de référence
+### La migration : différenciateur transverse
 
-`docs/DAT/annexes/revue-architecture.md` — revue exigeante de l'architecture (corrections intégrées dans le DAT) :
+La migration de **20 ans d'Excel** est le **sujet technique central**. Elle est **remontée**
+(juste après le cœur physique, pas en phase finale) et cible :
 
-- Ports `127.0.0.1` (pas d'exposition publique)
-- Healthchecks (`depends_on` ≠ readiness)
-- CI/CD sans double build
-- Idempotence import (SHA-256 + ImportBatch)
-- Fuzzy matching : normalisation + 3 zones (95/80)
-- Jobs orphelins → `import_errors` (pas ignorés)
-- Transaction **par batch**
-- Séparation `importers/` vs `services/`
+```text
+Client ──► Site ──► Équipement ──► Intervention   (+ Product pour le catalogue)
+```
+
+Mécanismes : normalisation → fuzzy matching (3 zones 95/80) → validation → **2 passes** →
+transaction par batch → idempotence **SHA-256** + `ImportBatch` → orphelins tracés
+(`ImportError`, jamais ignorés). Le modèle est **migration-aware** dès le départ
+(`installation_id` / `equipment_id` nullable, provenance).
 
 ### Hors périmètre (acté)
 
 - ❌ Go / microservice Stock
-- ❌ Module financier complet
+- ❌ Module financier complet (facturation, paiement, compta)
 - ❌ Paperless-ngx (documenté comme phase 2)
-- ❌ Stock, fournisseurs, SAV complet
+- ❌ Stock, fournisseurs, achats, contrats avancés, KPI
+- ❌ `Quote` (devis) hors modèle V1 — suivi via `QUOTE_REQUESTED` / `QUOTE_SENT`
 
 ### Règle de crédibilité (entretien)
 
 Le projet sert aussi à **préparer un entretien** (profil backend Java/Go). Donc :
 
 - **Ne jamais survendre** : Vue/TypeScript, GitHub Actions, VPS, 1Panel, architecture distribuée
-- Le différenciateur réel = **la migration Excel** (pandas, fuzzy, 2 passes, transactions)
+- Le différenciateur réel = **la migration Excel** (pandas, fuzzy, 2 passes, transactions, modèle multi-niveaux)
 - Formulation frontend : « Ce n'est pas mon domaine principal, j'ai utilisé Vue/TS pour compléter. Mon cœur reste le backend et l'architecture. »
 - Le DAT décrit l'**architecture** ; les versions exactes vivent dans `pyproject.toml` / `package.json`.
 
@@ -84,8 +112,8 @@ Le projet sert aussi à **préparer un entretien** (profil backend Java/Go). Don
 
 ### 1.1 Analyser le contexte avant chaque sprint
 
-- **Architecture & data model** : `docs/DAT/` (DAT unique, sommaire dans `00-sommaire.md`)
-- **Revue à appliquer** : `docs/DAT/annexes/revue-architecture.md`
+- **Architecture & data model** : `docs/DAT/new/` (DAT unique, sommaire dans `00-sommaire.md`)
+- **Revue à appliquer** : `docs/DAT/new/00-revue/` (vue d'ensemble + lots) + `02-techniques/02-data-model.md`
 - **Avancement backend/frontend** : `notes/`, `docs/todos/`
 - **Dépendances inter-tâches** : une tâche aval peut nécessiter une rétro-modification d'une tâche amont déjà terminée
 - **Tests existants** : `docs/stages/…/test-cases.json`
@@ -277,7 +305,7 @@ Tervo/
 │   │   ├── schemas/      → Pydantic validation
 │   │   ├── services/     → business logic
 │   │   ├── repositories/ → DB queries
-│   │   └── importers/    → pipeline Excel (Stage 6.2, à créer)
+│   │   └── importers/    → pipeline Excel (INT-71 fait, retarget v2 en cours)
 │   ├── alembic/          → migrations
 │   ├── tests/
 │   └── seed.py
@@ -290,11 +318,12 @@ Tervo/
 │   ├── docker-compose.yml           → backend + frontend
 │   └── postgres.docker-compose.yml  → PostgreSQL
 ├── docs/
-│   ├── DAT/                         → DAT unique
-│   │   ├── 00-sommaire.md
-│   │   ├── 04-architecture.md … 08-module-catalogue.md
-│   │   ├── specs/ (01, 02, 03)
-│   │   └── annexes/revue-architecture.md
+│   ├── DAT/
+│   │   ├── new/                     → DAT refondu (référence v2)
+│   │   │   ├── 00-sommaire.md + 00-revue/ (vue d'ensemble + lots)
+│   │   │   ├── 01-fonctionnel/ · 02-techniques/
+│   │   │   └── 03-modules/ · 04-roadmap/
+│   │   └── (ancien DAT périmé — à supprimer)
 │   └── stages/                      → sprints tasks + tests
 ├── notes/                           → pédagogie
 └── .github/workflows/               → CI/CD

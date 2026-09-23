@@ -1,5 +1,14 @@
 # Sprint 6.2 : Import Excel — pandas + fuzzy + pipeline (6 jours)
 
+> ⚠️ **GELÉ — remplacé par [`sprint-6.2-v2/`](../sprint-6.2-v2/tasks.md).**
+> Ce sprint décrivait l'import sur l'ancien modèle `clients + jobs`. Suite à la refonte du
+> DAT (Tervo v2 : `Client → Site → Equipment → Intervention` + `Product → Sale →
+> Installation`), il est remplacé par le sprint v2.
+>
+> **Seul INT-71 est conservé** : le package `app/importers/` (structure du pipeline) est
+> réutilisé tel quel — seuls le vocabulaire et les cibles changent. INT-72 → INT-80 sont
+> **obsolètes** (ciblage `clients + jobs`).
+
 > **Durée :** 6 jours (7h/j) | **Points :** 39 | **Tâches :** INT-71 à INT-80
 >
 > **Référence :** `docs/DAT/annexes/revue-architecture.md` §6 à §12, §23
