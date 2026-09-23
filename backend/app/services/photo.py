@@ -31,7 +31,7 @@ class PhotoService:
         self.repo = PhotoRepository(db)
         self.db = db
 
-    async def upload_photo(self, job_id: int, file: UploadFile, category: str) -> dict:
+    async def upload_photo(self, intervention_id: int, file: UploadFile, category: str) -> dict:
         """Upload a photo, generate thumbnail, save to DB."""
 
         # Validate content type
@@ -102,7 +102,7 @@ class PhotoService:
         # Save to DB
         photo = await self.repo.create(
             {
-                "job_id": job_id,
+                "intervention_id": intervention_id,
                 "category": category,
                 "file_path": str(file_path),
                 "thumbnail_path": str(thumb_path),

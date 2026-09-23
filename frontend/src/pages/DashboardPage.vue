@@ -25,95 +25,95 @@
             <!-- Compteurs -->
             <div class="counters">
                 <div class="counter-card">
-                    <span class="counter-value">{{ dashboard.today.jobs_total }}</span>
+                    <span class="counter-value">{{ dashboard.today.interventions_total }}</span>
                     <span class="counter-label">Total</span>
                 </div>
                 <div class="counter-card in-progress">
-                    <span class="counter-value">{{ dashboard.today.jobs_in_progress }}</span>
+                    <span class="counter-value">{{ dashboard.today.interventions_in_progress }}</span>
                     <span class="counter-label">En cours</span>
                 </div>
                 <div class="counter-card completed">
-                    <span class="counter-value">{{ dashboard.today.jobs_completed }}</span>
+                    <span class="counter-value">{{ dashboard.today.interventions_completed }}</span>
                     <span class="counter-label">Terminés</span>
                 </div>
             </div>
 
-            <!-- Aucun job (ni planifié ni en cours) -->
-            <div v-if="dashboard.today.jobs_total === 0" class="empty-state">
+            <!-- Aucun intervention (ni planifié ni en cours) -->
+            <div v-if="dashboard.today.interventions_total === 0" class="empty-state">
                 <i class="pi pi-calendar-plus empty-icon" />
-                <p class="empty-text">Aucun job aujourd'hui</p>
-                <Button label="Nouveau job" icon="pi pi-plus" fluid @click="goToNewJob" />
+                <p class="empty-text">Aucun intervention aujourd'hui</p>
+                <Button label="Nouveau intervention" icon="pi pi-plus" fluid @click="goToNewIntervention" />
             </div>
 
-            <!-- Carte Prochain job -->
+            <!-- Carte Prochain intervention -->
             <div
-                v-if="dashboard.next_job"
-                class="card next-job-card clickable-card"
-                @click="router.push({ name: 'JobDetail', params: { id: dashboard.next_job!.id } })"
+                v-if="dashboard.next_intervention"
+                class="card next-intervention-card clickable-card"
+                @click="router.push({ name: 'InterventionDetail', params: { id: dashboard.next_intervention!.id } })"
             >
                 <div class="card-header">
-                    <h2>Prochain job</h2>
+                    <h2>Prochain intervention</h2>
                     <Chip
-                        :label="dashboard.next_job.priority"
-                        :severity="prioritySeverity(dashboard.next_job.priority)"
+                        :label="dashboard.next_intervention.priority"
+                        :severity="prioritySeverity(dashboard.next_intervention.priority)"
                         size="small"
                     />
                 </div>
-                <h3 class="job-title">{{ dashboard.next_job.title }}</h3>
-                <div class="job-details">
-                    <p><i class="pi pi-user" /> {{ dashboard.next_job.client_full_name }}</p>
-                    <p><i class="pi pi-map-marker" /> {{ dashboard.next_job.client_address }}</p>
-                    <p v-if="dashboard.next_job.scheduled_start_time">
-                        <i class="pi pi-clock" /> {{ dashboard.next_job.scheduled_start_time }}
+                <h3 class="intervention-title">{{ dashboard.next_intervention.title }}</h3>
+                <div class="intervention-details">
+                    <p><i class="pi pi-user" /> {{ dashboard.next_intervention.client_full_name }}</p>
+                    <p><i class="pi pi-map-marker" /> {{ dashboard.next_intervention.client_address }}</p>
+                    <p v-if="dashboard.next_intervention.scheduled_start_time">
+                        <i class="pi pi-clock" /> {{ dashboard.next_intervention.scheduled_start_time }}
                     </p>
                 </div>
                 <Button
                     label="▶ Démarrer"
                     severity="success"
                     fluid
-                    @click.stop="startJob(dashboard.next_job!.id)"
-                    :loading="startingJobId === dashboard.next_job.id"
+                    @click.stop="startIntervention(dashboard.next_intervention!.id)"
+                    :loading="startingInterventionId === dashboard.next_intervention.id"
                 />
             </div>
 
-            <!-- Carte Job en cours -->
+            <!-- Carte Intervention en cours -->
             <div
-                v-if="dashboard.in_progress_job"
+                v-if="dashboard.in_progress_intervention"
                 class="card in-progress-card clickable-card"
-                @click="router.push({ name: 'JobDetail', params: { id: dashboard.in_progress_job!.id } })"
+                @click="router.push({ name: 'InterventionDetail', params: { id: dashboard.in_progress_intervention!.id } })"
             >
                 <div class="card-header">
-                    <h2>Job en cours</h2>
+                    <h2>Intervention en cours</h2>
                     <Chip label="En cours" severity="info" size="small" />
                 </div>
-                <h3 class="job-title">{{ dashboard.in_progress_job.title }}</h3>
+                <h3 class="intervention-title">{{ dashboard.in_progress_intervention.title }}</h3>
                 <Button
                     label="Terminer"
                     severity="danger"
                     fluid
-                    @click="router.push({ name: 'JobDetail', params: { id: dashboard.in_progress_job!.id } })"
+                    @click="router.push({ name: 'InterventionDetail', params: { id: dashboard.in_progress_intervention!.id } })"
                 />
             </div>
 
             <!-- Carte En retard -->
-            <div v-if="dashboard.overdue_jobs && dashboard.overdue_jobs.length > 0" class="card overdue-card">
+            <div v-if="dashboard.overdue_interventions && dashboard.overdue_interventions.length > 0" class="card overdue-card">
                 <div class="card-header">
                     <h2><i class="pi pi-exclamation-triangle" /> En retard</h2>
                 </div>
                 <div class="overdue-list">
-                    <div v-for="job in dashboard.overdue_jobs" :key="job.id" class="overdue-item">
+                    <div v-for="intervention in dashboard.overdue_interventions" :key="intervention.id" class="overdue-item">
                         <div class="overdue-item-header">
-                            <h3 class="job-title">{{ job.title }}</h3>
+                            <h3 class="intervention-title">{{ intervention.title }}</h3>
                             <Chip
-                                :label="'J-' + job.days_overdue"
+                                :label="'J-' + intervention.days_overdue"
                                 severity="warn"
                                 size="small"
                             />
                         </div>
-                        <div class="job-details">
-                            <p><i class="pi pi-user" /> {{ job.client_full_name }}</p>
-                            <p><i class="pi pi-map-marker" /> {{ job.client_address }}</p>
-                            <p><i class="pi pi-calendar" /> {{ job.scheduled_date }}</p>
+                        <div class="intervention-details">
+                            <p><i class="pi pi-user" /> {{ intervention.client_full_name }}</p>
+                            <p><i class="pi pi-map-marker" /> {{ intervention.client_address }}</p>
+                            <p><i class="pi pi-calendar" /> {{ intervention.scheduled_date }}</p>
                         </div>
                         <div class="overdue-item-actions">
                             <Button
@@ -121,16 +121,16 @@
                                 severity="success"
                                 size="small"
                                 fluid
-                                :loading="startingJobId === job.id"
-                                @click.stop="startJob(job.id)"
+                                :loading="startingInterventionId === intervention.id"
+                                @click.stop="startIntervention(intervention.id)"
                             />
                             <Button
                                 label="❌ Annuler"
                                 severity="warn"
                                 size="small"
                                 fluid
-                                :loading="cancellingJobId === job.id"
-                                @click.stop="cancelJob(job.id)"
+                                :loading="cancellingInterventionId === intervention.id"
+                                @click.stop="cancelIntervention(intervention.id)"
                             />
                         </div>
                     </div>
@@ -183,54 +183,54 @@ const todayDate = computed(() => {
     });
 });
 
-// ── Start job ─────────────────────────────────────────────
+// ── Start intervention ─────────────────────────────────────────────
 
-const startingJobId = ref<number | null>(null);
+const startingInterventionId = ref<number | null>(null);
 
-async function startJob(jobId: number) {
-    startingJobId.value = jobId;
+async function startIntervention(interventionId: number) {
+    startingInterventionId.value = interventionId;
     try {
-        await api.put(`/jobs/${jobId}/start`, {}, auth.token);
-        toast.add({ severity: "success", summary: "Job démarré", life: 3000 });
+        await api.put(`/interventions/${interventionId}/start`, {}, auth.token);
+        toast.add({ severity: "success", summary: "Intervention démarré", life: 3000 });
         refetch();
     } catch (err: any) {
         toast.add({
             severity: "error",
             summary: "Erreur",
-            detail: err.detail || "Impossible de démarrer le job",
+            detail: err.detail || "Impossible de démarrer le intervention",
             life: 5000,
         });
     } finally {
-        startingJobId.value = null;
+        startingInterventionId.value = null;
     }
 }
 
-// ── Cancel job ────────────────────────────────────────────
+// ── Cancel intervention ────────────────────────────────────────────
 
-const cancellingJobId = ref<number | null>(null);
+const cancellingInterventionId = ref<number | null>(null);
 
-async function cancelJob(jobId: number) {
-    cancellingJobId.value = jobId;
+async function cancelIntervention(interventionId: number) {
+    cancellingInterventionId.value = interventionId;
     try {
-        await api.put(`/jobs/${jobId}/cancel`, {}, auth.token);
-        toast.add({ severity: "success", summary: "Job annulé", life: 3000 });
+        await api.put(`/interventions/${interventionId}/cancel`, {}, auth.token);
+        toast.add({ severity: "success", summary: "Intervention annulé", life: 3000 });
         refetch();
     } catch (err: any) {
         toast.add({
             severity: "error",
             summary: "Erreur",
-            detail: err.detail || "Impossible d'annuler le job",
+            detail: err.detail || "Impossible d'annuler le intervention",
             life: 5000,
         });
     } finally {
-        cancellingJobId.value = null;
+        cancellingInterventionId.value = null;
     }
 }
 
 // ── Navigation ────────────────────────────────────────────
 
-function goToNewJob() {
-    router.push({ name: "Jobs", query: { newJob: "1" } });
+function goToNewIntervention() {
+    router.push({ name: "Interventions", query: { newIntervention: "1" } });
 }
 </script>
 
@@ -312,19 +312,19 @@ function goToNewJob() {
     margin: 0;
 }
 
-.job-title {
+.intervention-title {
     font-size: 1.1rem;
     font-weight: 700;
     margin: 0;
 }
 
-.job-details {
+.intervention-details {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
 }
 
-.job-details p {
+.intervention-details p {
     margin: 0;
     font-size: 0.85rem;
     color: #4b5563;

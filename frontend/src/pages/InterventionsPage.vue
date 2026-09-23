@@ -1,8 +1,8 @@
 <template>
-    <div class="jobs-page">
+    <div class="interventions-page">
         <div class="page-header">
             <h1>Interventions</h1>
-            <Button label="Nouveau job" icon="pi pi-plus" fluid @click="showNewDialog = true" />
+            <Button label="Nouveau intervention" icon="pi pi-plus" fluid @click="showNewDialog = true" />
         </div>
 
         <!-- Filtres -->
@@ -59,7 +59,7 @@
                 stripedRows
                 size="small"
                 @row-click="goToDetail"
-                class="job-table"
+                class="intervention-table"
             >
                 <Column field="title" header="Titre" sortable />
                 <Column header="Client">
@@ -69,7 +69,7 @@
                 </Column>
                 <Column header="Statut">
                     <template #body="{ data: row }">
-                        <Chip :label="row.status" :severity="statusSeverity(row.status)" size="small" />
+                        <Chip :label="statusLabel(row.status)" :severity="statusSeverity(row.status)" size="small" />
                     </template>
                 </Column>
                 <Column field="priority" header="Priorité">
@@ -88,13 +88,13 @@
             <div v-if="data.items.length === 0" class="empty-state">
                 <i class="pi pi-inbox empty-icon" />
                 <p class="empty-text">Aucune intervention trouvée</p>
-                <Button label="Nouveau job" icon="pi pi-plus" fluid @click="showNewDialog = true" />
+                <Button label="Nouveau intervention" icon="pi pi-plus" fluid @click="showNewDialog = true" />
                             </div>
                         </template>
 
-                        <!-- Nouveau job Dialog -->
+                        <!-- Nouveau intervention Dialog -->
         <Dialog v-model:visible="showNewDialog" header="Nouvelle intervention" modal :style="{ width: '450px' }">
-            <form @submit.prevent="onSubmitJob">
+            <form @submit.prevent="onSubmitIntervention">
                 <!-- Client : recherche ou sélectionné -->
                 <div class="field">
                     <label>Client</label>
@@ -168,13 +168,13 @@
 
                 <div class="field">
                     <label for="jtitle">Titre</label>
-                    <InputText id="jtitle" v-model="newJobTitle" placeholder="Ex: Depannage chaudiere" fluid />
+                    <InputText id="jtitle" v-model="newInterventionTitle" placeholder="Ex: Depannage chaudiere" fluid />
                 </div>
                 <div class="field">
                     <label for="jdesc">Description</label>
                     <Textarea
                         id="jdesc"
-                        v-model="newJobDescription"
+                        v-model="newInterventionDescription"
                         placeholder="Details (optionnel)"
                         fluid
                         rows="3"
@@ -184,7 +184,7 @@
                     <label for="jdate">Date</label>
                     <DatePicker
                         id="jdate"
-                        v-model="newJobDate"
+                        v-model="newInterventionDate"
                         dateFormat="dd/mm/yy"
                         placeholder="Sélectionner une date"
                         fluid
@@ -194,7 +194,7 @@
                     <label for="jpriority">Priorité</label>
                     <Select
                         id="jpriority"
-                        v-model="newJobPriority"
+                        v-model="newInterventionPriority"
                         :options="priorityOptions"
                         optionLabel="label"
                         optionValue="value"
@@ -204,7 +204,7 @@
                 </div>
                 <div class="dialog-actions">
                     <Button label="Annuler" severity="secondary" fluid @click="showNewDialog = false" />
-                    <Button type="submit" label="Créer" fluid :loading="jobSubmitting" />
+                    <Button type="submit" label="Créer" fluid :loading="interventionSubmitting" />
                 </div>
             </form>
         </Dialog>
@@ -224,7 +224,7 @@ import Chip from "primevue/chip";
 import Skeleton from "primevue/skeleton";
 import Message from "primevue/message";
 import { useAuthStore } from "@/stores/auth";
-import { jobsApi, clientsApi, statusSeverity, prioritySeverity, priorityLabel } from "@/api/client";
+import { interventionsApi, clientsApi, statusSeverity, statusLabel, prioritySeverity, priorityLabel } from "@/api/client";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
@@ -245,10 +245,10 @@ const pageSize = 25;
 const showNewDialog = ref(false);
 
 const statusOptions = [
-    { label: "Planifié", value: "planifié" },
-    { label: "En cours", value: "en_cours" },
-    { label: "Terminé", value: "terminé" },
-    { label: "Annulé", value: "annulé" },
+    { label: "Planifié", value: "PLANNED" },
+    { label: "En cours", value: "IN_PROGRESS" },
+    { label: "Terminé", value: "COMPLETED" },
+    { label: "Annulé", value: "CANCELLED" },
 ];
 
 const hasActiveFilters = computed(() => filterStatus.value || filterDate.value);
@@ -281,9 +281,9 @@ function clearFilters() {
 // ── Query ────────────────────────────────────────────────
 
 const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["jobs", filterStatus, dateString, page],
+    queryKey: ["interventions", filterStatus, dateString, page],
     queryFn: () =>
-        jobsApi.list(auth.token!, {
+        interventionsApi.list(auth.token!, {
             status: filterStatus.value || undefined,
             date: dateString.value,
             page: page.value,
@@ -292,17 +292,17 @@ const { data, isLoading, isError, error, refetch } = useQuery({
     keepPreviousData: true,
 });
 
-// ── Nouveau job Dialog ────────────────────────────────
+// ── Nouveau intervention Dialog ────────────────────────────────
 
 const clientsList = ref<{ id: number; full_name: string; phone: string }[]>([]);
 const clientsLoading = ref(false);
-const jobSubmitting = ref(false);
+const interventionSubmitting = ref(false);
 
 // Form fields
-const newJobTitle = ref("");
-const newJobDescription = ref("");
-const newJobDate = ref<Date | null>(null);
-const newJobPriority = ref("normale");
+const newInterventionTitle = ref("");
+const newInterventionDescription = ref("");
+const newInterventionDate = ref<Date | null>(null);
+const newInterventionPriority = ref("normale");
 
 // Client search & selection
 const clientSearchQuery = ref("");
@@ -353,10 +353,10 @@ watch(showNewDialog, async (open) => {
             }
         }
         // Reset form
-        newJobTitle.value = "";
-        newJobDescription.value = "";
-        newJobDate.value = null;
-        newJobPriority.value = "normale";
+        newInterventionTitle.value = "";
+        newInterventionDescription.value = "";
+        newInterventionDate.value = null;
+        newInterventionPriority.value = "normale";
         clientSearchQuery.value = "";
         selectedClient.value = null;
         showNewClientForm.value = false;
@@ -373,7 +373,7 @@ const priorityOptions = [
     { label: "Urgente", value: "urgente" },
 ];
 
-async function onSubmitJob() {
+async function onSubmitIntervention() {
     // Déterminer le client_id (existant ou nouveau)
     let clientId: number;
 
@@ -381,7 +381,7 @@ async function onSubmitJob() {
         clientId = selectedClient.value.id;
     } else if (showNewClientForm.value && newClientName.value.trim()) {
         // Étape 1 : créer le client
-        jobSubmitting.value = true;
+        interventionSubmitting.value = true;
         try {
             const created = await clientsApi.create(auth.token!, {
                 full_name: newClientName.value.trim(),
@@ -399,7 +399,7 @@ async function onSubmitJob() {
                 detail: err.detail || "Impossible de créer le client",
                 life: 5000,
             });
-            jobSubmitting.value = false;
+            interventionSubmitting.value = false;
             return;
         }
     } else {
@@ -412,35 +412,35 @@ async function onSubmitJob() {
         return;
     }
 
-    // Étape 2 : créer le job
-    const title = newJobTitle.value.trim() || newJobDescription.value.trim().slice(0, 80) || "Intervention";
-    const dateStr = newJobDate.value
-        ? newJobDate.value instanceof Date
-            ? `${newJobDate.value.getFullYear()}-${String(newJobDate.value.getMonth() + 1).padStart(2, "0")}-${String(newJobDate.value.getDate()).padStart(2, "0")}`
-            : newJobDate.value
+    // Étape 2 : créer le intervention
+    const title = newInterventionTitle.value.trim() || newInterventionDescription.value.trim().slice(0, 80) || "Intervention";
+    const dateStr = newInterventionDate.value
+        ? newInterventionDate.value instanceof Date
+            ? `${newInterventionDate.value.getFullYear()}-${String(newInterventionDate.value.getMonth() + 1).padStart(2, "0")}-${String(newInterventionDate.value.getDate()).padStart(2, "0")}`
+            : newInterventionDate.value
         : new Date().toISOString().split("T")[0];
 
-    jobSubmitting.value = true;
+    interventionSubmitting.value = true;
     try {
-        const newJob = await jobsApi.create(auth.token!, {
+        const newIntervention = await interventionsApi.create(auth.token!, {
             client_id: clientId,
             title,
-            description: newJobDescription.value || undefined,
+            description: newInterventionDescription.value || undefined,
             scheduled_date: dateStr,
-            priority: newJobPriority.value,
+            priority: newInterventionPriority.value,
         });
-        toast.add({ severity: "success", summary: "Job créé", detail: newJob.title, life: 3000 });
+        toast.add({ severity: "success", summary: "Intervention créé", detail: newIntervention.title, life: 3000 });
         showNewDialog.value = false;
         refetch();
     } catch (err: any) {
         toast.add({
             severity: "error",
             summary: "Erreur",
-            detail: err.detail || "Impossible de créer le job",
+            detail: err.detail || "Impossible de créer le intervention",
             life: 5000,
         });
     } finally {
-        jobSubmitting.value = false;
+        interventionSubmitting.value = false;
     }
 }
 
@@ -454,7 +454,7 @@ function onPage(event: { page: number }) {
 // ── Navigation ──────────────────────────────────────────
 
 function goToDetail(event: { data: { id: number } }) {
-    router.push({ name: "JobDetail", params: { id: event.data.id } });
+    router.push({ name: "InterventionDetail", params: { id: event.data.id } });
 }
 
 // Watch route changes to sync filters (e.g. browser back/forward)
@@ -463,11 +463,11 @@ watch(
     (q) => {
         filterStatus.value = (q.status as string) || null;
         filterDate.value = q.date ? new Date(q.date as string) : null;
-        // Open new job dialog when navigated from Dashboard "Nouveau job"
-        if (q.newJob === "1") {
+        // Open new intervention dialog when navigated from Dashboard "Nouveau intervention"
+        if (q.newIntervention === "1") {
             showNewDialog.value = true;
             // Clean query param to avoid re-opening on back navigation
-            router.replace({ query: { ...q, newJob: undefined } });
+            router.replace({ query: { ...q, newIntervention: undefined } });
         }
     },
     { immediate: true },
@@ -475,7 +475,7 @@ watch(
 </script>
 
 <style scoped>
-.jobs-page {
+.interventions-page {
     padding: 1rem;
     display: flex;
     flex-direction: column;
@@ -510,7 +510,7 @@ watch(
     min-width: 0;
 }
 
-.job-table {
+.intervention-table {
     width: 100%;
 }
 

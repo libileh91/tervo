@@ -45,10 +45,10 @@ class ClientResponse(BaseModel):
 
 
 class ClientDetailResponse(ClientResponse):
-    """Extended response with job statistics."""
+    """Extended response with intervention statistics."""
 
-    jobs_count: int = 0
-    last_job_date: date | None = None
+    interventions_count: int = 0
+    last_intervention_date: date | None = None
 
 
 class ClientListResponse(BaseModel):

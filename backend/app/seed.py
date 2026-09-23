@@ -18,7 +18,7 @@ from app.core.database import async_session, engine
 from app.core.security import get_password_hash
 from app.models.base import Base
 from app.models.client import Client
-from app.models.job import Job, JobStatus, Priority
+from app.models.intervention import Intervention, InterventionStatus, Priority
 from app.models.user import Role, User
 
 
@@ -33,9 +33,9 @@ async def seed():
         for table in [
             "review",
             "material",
-            "job_photo",
+            "intervention_photo",
             "checklist_item",
-            "job",
+            "intervention",
             "client",
             '"user"',  # quoted: reserved keyword in PostgreSQL
         ]:
@@ -153,40 +153,40 @@ async def seed():
         for c in clients_data:
             print(f"     - {c.full_name} ({c.city})")
 
-        # ── 4. Jobs ────────────────────────────────────────────
-        print("📋 Creating jobs…")
+        # ── 4. Interventions ──────────────────────────────────
+        print("📋 Creating interventions…")
         today = date.today()
 
-        jobs_data = [
-            # ── Jobs aujourd'hui ────────────────────────────
-            Job(
+        interventions_data = [
+            # ── Interventions aujourd'hui ────────────────────
+            Intervention(
                 client_id=clients_data[0].id,
                 technician_id=tech1.id,
                 title="Installation climatisation réversible",
                 description="Installation clim réversible 80m² - 3 splits + unité extérieure",
-                status=JobStatus.PLANIFIE,
+                status=InterventionStatus.PLANNED,
                 priority=Priority.HAUTE,
                 scheduled_date=today,
                 scheduled_start_time=time(9, 0),
                 scheduled_end_time=time(12, 0),
             ),
-            Job(
+            Intervention(
                 client_id=clients_data[3].id,
                 technician_id=tech1.id,
                 title="Dépannage chaudière gaz",
                 description="Chaudière gaz Viessmann qui ne s'allume plus - code erreur F4",
-                status=JobStatus.PLANIFIE,
+                status=InterventionStatus.PLANNED,
                 priority=Priority.URGENTE,
                 scheduled_date=today,
                 scheduled_start_time=time(14, 0),
                 scheduled_end_time=time(16, 0),
             ),
-            Job(
+            Intervention(
                 client_id=clients_data[5].id,
                 technician_id=tech1.id,
                 title="Maintenance chaudière collective",
                 description="Entretien annuel chaudière collective immeuble 12 logements",
-                status=JobStatus.TERMINE,
+                status=InterventionStatus.COMPLETED,
                 priority=Priority.NORMALE,
                 scheduled_date=today - timedelta(days=1),
                 scheduled_start_time=time(8, 0),
@@ -194,13 +194,13 @@ async def seed():
                 started_at=datetime.combine(today - timedelta(days=1), time(8, 10)),
                 completed_at=datetime.combine(today - timedelta(days=1), time(11, 45)),
             ),
-            # ── Jobs passés (terminés) ──────────────────────
-            Job(
+            # ── Interventions passées (terminées) ──────────────
+            Intervention(
                 client_id=clients_data[1].id,
                 technician_id=tech1.id,
                 title="Dépannage urgence fuite gaz",
                 description="Fuite sur raccord chaudière - intervention rapide",
-                status=JobStatus.TERMINE,
+                status=InterventionStatus.COMPLETED,
                 priority=Priority.URGENTE,
                 scheduled_date=today - timedelta(days=2),
                 scheduled_start_time=time(18, 0),
@@ -208,49 +208,49 @@ async def seed():
                 started_at=datetime.combine(today - timedelta(days=2), time(18, 15)),
                 completed_at=datetime.combine(today - timedelta(days=2), time(19, 45)),
             ),
-            # ── Jobs à venir ────────────────────────────────
-            Job(
+            # ── Interventions à venir ──────────────────────────
+            Intervention(
                 client_id=clients_data[2].id,
                 technician_id=tech1.id,
                 title="Remplacement chauffe-eau",
                 description="Remplacement chauffe-eau électrique 200L - cumulus usé",
-                status=JobStatus.PLANIFIE,
+                status=InterventionStatus.PLANNED,
                 priority=Priority.NORMALE,
                 scheduled_date=today + timedelta(days=1),
                 scheduled_start_time=time(8, 0),
                 scheduled_end_time=time(11, 0),
             ),
-            Job(
+            Intervention(
                 client_id=clients_data[4].id,
                 technician_id=tech1.id,
                 title="Installation pompe à chaleur",
                 description="PAC air-eau pour maison individuelle 120m²",
-                status=JobStatus.PLANIFIE,
+                status=InterventionStatus.PLANNED,
                 priority=Priority.NORMALE,
                 scheduled_date=today + timedelta(days=3),
                 scheduled_start_time=time(9, 0),
                 scheduled_end_time=time(17, 0),
             ),
-            Job(
+            Intervention(
                 client_id=clients_data[6].id,
                 technician_id=tech1.id,
                 title="Dépannage climatisation Cagdheer",
                 description="Climatisation centrale qui ne refroidit plus - local serveurs",
-                status=JobStatus.PLANIFIE,
+                status=InterventionStatus.PLANNED,
                 priority=Priority.HAUTE,
                 scheduled_date=today + timedelta(days=2),
                 scheduled_start_time=time(13, 0),
                 scheduled_end_time=time(15, 0),
             ),
         ]
-        for j in jobs_data:
-            session.add(j)
+        for i in interventions_data:
+            session.add(i)
 
         await session.commit()
 
-        print(f"  ✅ {len(jobs_data)} jobs created")
-        for j in jobs_data:
-            print(f"     - [{j.status.value}] {j.title} — {j.client.full_name}")
+        print(f"  ✅ {len(interventions_data)} interventions created")
+        for i in interventions_data:
+            print(f"     - [{i.status.value}] {i.title} — {i.client.full_name}")
 
         print("\n🎉 Seed complete!")
 

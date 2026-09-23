@@ -21,7 +21,7 @@
         <Button icon="pi pi-arrow-left" text rounded @click="router.push({ name: 'Clients' })" />
         <div class="header-info">
           <h1>{{ client.full_name }}</h1>
-          <Chip :label="`${client.jobs_count} intervention(s)`" severity="info" size="small" />
+          <Chip :label="`${client.interventions_count} intervention(s)`" severity="info" size="small" />
         </div>
       </div>
 
@@ -53,25 +53,25 @@
 
       <!-- Actions -->
       <div class="actions">
-        <Button label="+ Nouveau job" icon="pi pi-plus" severity="success" fluid />
+        <Button label="+ Nouveau intervention" icon="pi pi-plus" severity="success" fluid />
         <Button label="Modifier" icon="pi pi-pencil" severity="info" fluid />
         <Button label="Supprimer" icon="pi pi-trash" severity="danger" fluid @click="showDeleteDialog = true" />
       </div>
 
-      <!-- Historique des jobs -->
+      <!-- Historique des interventions -->
       <div class="card">
         <h2 class="section-title">Historique des interventions</h2>
 
-        <div v-if="jobsLoading" class="loading-state">
+        <div v-if="interventionsLoading" class="loading-state">
           <Skeleton height="40px" v-for="i in 3" :key="i" class="mb-1" />
         </div>
 
-        <div v-else-if="jobsData && jobsData.items.length > 0">
-          <DataTable :value="jobsData.items" stripedRows size="small">
+        <div v-else-if="interventionsData && interventionsData.items.length > 0">
+          <DataTable :value="interventionsData.items" stripedRows size="small">
             <Column field="title" header="Titre" />
             <Column header="Statut">
               <template #body="{ data: row }">
-                <Chip :label="row.status" :severity="statusSeverity(row.status)" size="small" />
+                <Chip :label="statusLabel(row.status)" :severity="statusSeverity(row.status)" size="small" />
               </template>
             </Column>
             <Column header="Technicien">
@@ -81,12 +81,12 @@
           </DataTable>
         </div>
 
-        <!-- Jobs error -->
-        <div v-else-if="jobsError" class="error-state">
+        <!-- Interventions error -->
+        <div v-else-if="interventionsError" class="error-state">
           <Message severity="warn">
-            Erreur chargement historique : {{ jobsErrorObj?.message || "Erreur inconnue" }}
+            Erreur chargement historique : {{ interventionsErrorObj?.message || "Erreur inconnue" }}
           </Message>
-          <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetchJobs" class="mt-2" />
+          <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetchInterventions" class="mt-2" />
         </div>
 
         <p v-else class="empty-text">Aucune intervention pour ce client.</p>
@@ -117,7 +117,7 @@ import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 import Dialog from "primevue/dialog";
 import { useAuthStore } from "@/stores/auth";
-import { clientsApi, statusSeverity } from "@/api/client";
+import { clientsApi, statusSeverity, statusLabel } from "@/api/client";
 
 const router = useRouter();
 const route = useRoute();
@@ -142,16 +142,16 @@ const deleting = ref(false);
     enabled: !!clientId,
   });
 
-  // Job history
+  // Intervention history
   const {
-    data: jobsData,
-    isLoading: jobsLoading,
-    isError: jobsError,
-    error: jobsErrorObj,
-    refetch: refetchJobs,
+    data: interventionsData,
+    isLoading: interventionsLoading,
+    isError: interventionsError,
+    error: interventionsErrorObj,
+    refetch: refetchInterventions,
   } = useQuery({
-    queryKey: ["client-jobs", clientId],
-    queryFn: () => clientsApi.getJobs(auth.token!, clientId),
+    queryKey: ["client-interventions", clientId],
+    queryFn: () => clientsApi.getInterventions(auth.token!, clientId),
     enabled: !!clientId,
   });
 

@@ -11,8 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
-from app.schemas.job import DashboardSummaryResponse
-from app.services.job import JobService
+from app.schemas.intervention import DashboardSummaryResponse
+from app.services.intervention import InterventionService
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -23,5 +23,5 @@ async def dashboard_summary(
     db: AsyncSession = Depends(get_db),
 ):
     """Get today's dashboard summary for the connected technician."""
-    service = JobService(db)
+    service = InterventionService(db)
     return await service.get_dashboard_summary(current_user)

@@ -10,7 +10,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.job import Job
+from app.models.intervention import Intervention
 from app.repositories.client import ClientRepository
 from app.schemas.client import (
     ClientCreate,
@@ -51,24 +51,24 @@ class ClientService:
         )
 
     async def get_client(self, client_id: int) -> ClientDetailResponse:
-        """Get a single client by ID with job stats (real DB queries)."""
+        """Get a single client by ID with intervention stats (real DB queries)."""
         client = await self._find_or_404(client_id)
 
-        # Query real job stats via ORM
+        # Query real intervention stats via ORM
         stats_query = select(
-            func.count(Job.id),
-            func.max(Job.created_at),
-        ).where(Job.client_id == client_id)
+            func.count(Intervention.id),
+            func.max(Intervention.created_at),
+        ).where(Intervention.client_id == client_id)
         result = await self.repo.db.execute(stats_query)
         row = result.fetchone()
-        jobs_count = row[0] if row else 0
-        last_job_date = row[1].date() if row and row[1] else None
+        interventions_count = row[0] if row else 0
+        last_intervention_date = row[1].date() if row and row[1] else None
 
         return ClientDetailResponse(
             **{  # type: ignore
                 **client.__dict__,
-                "jobs_count": jobs_count,
-                "last_job_date": last_job_date,
+                "interventions_count": interventions_count,
+                "last_intervention_date": last_intervention_date,
             }
         )
 

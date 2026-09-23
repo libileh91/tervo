@@ -9,8 +9,8 @@ from pydantic import BaseModel, Field
 # ── Public schemas (INT-32) ────────────────────────────────
 
 
-class ReviewJobInfo(BaseModel):
-    """Job info exposed publicly via review link."""
+class ReviewInterventionInfo(BaseModel):
+    """Intervention info exposed publicly via review link."""
 
     title: str
     completed_at: str | None = None
@@ -25,7 +25,7 @@ class ReviewTechnicianInfo(BaseModel):
 class ReviewPublicResponse(BaseModel):
     """Response for GET /review/{share_token} (public, no auth)."""
 
-    job: ReviewJobInfo
+    intervention: ReviewInterventionInfo
     technician: ReviewTechnicianInfo
     already_reviewed: bool
 

@@ -54,18 +54,18 @@ class ReviewService:
     async def get_review_by_token(self, token: str) -> dict:
         """Get review data by share_token. Public (no auth).
 
-        Returns job info + technician + already_reviewed status.
+        Returns intervention info + technician + already_reviewed status.
         """
         review = await self._get_valid_review(token)
 
-        job = review.job
-        technician = job.technician
+        intervention = review.intervention
+        technician = intervention.technician
 
         return {
-            "job": {
-                "title": job.title,
-                "completed_at": job.completed_at.isoformat()
-                if job.completed_at
+            "intervention": {
+                "title": intervention.title,
+                "completed_at": intervention.completed_at.isoformat()
+                if intervention.completed_at
                 else None,
             },
             "technician": {

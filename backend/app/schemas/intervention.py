@@ -1,7 +1,7 @@
 """
-Tervo — Job Pydantic schemas.
+Tervo — Intervention Pydantic schemas.
 
-Request/response models for Job CRUD + dashboard.
+Request/response models for Intervention CRUD + dashboard.
 """
 
 from __future__ import annotations
@@ -13,11 +13,11 @@ from pydantic import BaseModel, Field
 # ── Enums (matching the DB model) ─────────────────────────
 
 
-class JobStatusEnum(str):
-    PLANIFIE = "planifié"
-    EN_COURS = "en_cours"
-    TERMINE = "terminé"
-    ANNULE = "annulé"
+class InterventionStatusEnum(str):
+    PLANNED = "PLANNED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
 
 class PriorityEnum(str):
@@ -30,7 +30,7 @@ class PriorityEnum(str):
 # ── CRUD Schemas ──────────────────────────────────────────
 
 
-class JobCreate(BaseModel):
+class InterventionCreate(BaseModel):
     client_id: int
     title: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
@@ -40,7 +40,7 @@ class JobCreate(BaseModel):
     scheduled_end_time: str | None = None
 
 
-class JobUpdate(BaseModel):
+class InterventionUpdate(BaseModel):
     title: str | None = Field(None, min_length=1, max_length=255)
     description: str | None = None
     priority: str | None = None
@@ -127,7 +127,7 @@ class MaterialUpdate(BaseModel):
 
 class MaterialResponse(BaseModel):
     id: int
-    job_id: int
+    intervention_id: int
     name: str
     quantity: str | None = None
     position: int
@@ -135,10 +135,10 @@ class MaterialResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ── Job response (with all relations) ────────────────────────
+# ── Intervention response (with all relations) ──────────────
 
 
-class JobResponse(BaseModel):
+class InterventionResponse(BaseModel):
     id: int
     client_id: int
     technician_id: int | None = None
@@ -146,6 +146,7 @@ class JobResponse(BaseModel):
     description: str | None = None
     status: str
     priority: str
+    under_warranty: bool = False
     scheduled_date: date
     scheduled_start_time: time | None = None
     scheduled_end_time: time | None = None
@@ -163,8 +164,8 @@ class JobResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class JobListResponse(BaseModel):
-    items: list[JobResponse]
+class InterventionListResponse(BaseModel):
+    items: list[InterventionResponse]
     total: int
     page: int
     page_size: int
@@ -174,7 +175,7 @@ class JobListResponse(BaseModel):
 # ── History (from INT-06) ─────────────────────────────────
 
 
-class JobHistoryItem(BaseModel):
+class InterventionHistoryItem(BaseModel):
     id: int
     title: str
     status: str
@@ -182,8 +183,8 @@ class JobHistoryItem(BaseModel):
     technician_name: str | None = None
 
 
-class JobHistoryResponse(BaseModel):
-    items: list[JobHistoryItem]
+class InterventionHistoryResponse(BaseModel):
+    items: list[InterventionHistoryItem]
     total: int
     page: int
     page_size: int
@@ -193,22 +194,22 @@ class JobHistoryResponse(BaseModel):
 # ── Workflow schemas (INT-10, INT-11) ────────────────────
 
 
-class JobStartResponse(BaseModel):
+class InterventionStartResponse(BaseModel):
     id: int
     status: str
     started_at: datetime
 
 
-class JobCompleteRequest(BaseModel):
+class InterventionCompleteRequest(BaseModel):
     observations: str | None = None
 
 
-class JobCancelResponse(BaseModel):
+class InterventionCancelResponse(BaseModel):
     id: int
     status: str
 
 
-class JobCompleteResponse(BaseModel):
+class InterventionCompleteResponse(BaseModel):
     id: int
     status: str
     completed_at: datetime
@@ -223,12 +224,12 @@ class JobCompleteResponse(BaseModel):
 
 class TodaySummary(BaseModel):
     date: date | str
-    jobs_total: int = 0
-    jobs_in_progress: int = 0
-    jobs_completed: int = 0
+    interventions_total: int = 0
+    interventions_in_progress: int = 0
+    interventions_completed: int = 0
 
 
-class NextJobRef(BaseModel):
+class NextInterventionRef(BaseModel):
     id: int
     title: str
     priority: str
@@ -237,14 +238,14 @@ class NextJobRef(BaseModel):
     scheduled_start_time: time | None = None
 
 
-class InProgressJobRef(BaseModel):
+class InProgressInterventionRef(BaseModel):
     id: int
     title: str
     started_at: datetime
     elapsed_minutes: int = 0
 
 
-class OverdueJobRef(BaseModel):
+class OverdueInterventionRef(BaseModel):
     id: int
     title: str
     priority: str
@@ -256,6 +257,6 @@ class OverdueJobRef(BaseModel):
 
 class DashboardSummaryResponse(BaseModel):
     today: TodaySummary
-    next_job: NextJobRef | None = None
-    in_progress_job: InProgressJobRef | None = None
-    overdue_jobs: list[OverdueJobRef] = []
+    next_intervention: NextInterventionRef | None = None
+    in_progress_intervention: InProgressInterventionRef | None = None
+    overdue_interventions: list[OverdueInterventionRef] = []

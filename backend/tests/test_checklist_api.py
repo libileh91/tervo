@@ -21,7 +21,7 @@ from app.main import app
 from app.models import Base
 from app.models.checklist_item import ChecklistItem
 from app.models.client import Client
-from app.models.job import Job, JobStatus
+from app.models.intervention import Intervention, InterventionStatus
 from app.models.user import Role, User
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"
@@ -99,15 +99,15 @@ async def client_fixture(db: AsyncSession) -> Client:
 
 
 @pytest.fixture
-async def job_with_checklist(
+async def intervention_with_checklist(
     db: AsyncSession, tech_user: User, client_fixture: Client
-) -> Job:
-    """Job with 3 pre + 2 post checklist items."""
-    j = Job(
+) -> Intervention:
+    """Intervention with 3 pre + 2 post checklist items."""
+    j = Intervention(
         client_id=client_fixture.id,
         technician_id=tech_user.id,
-        title="Checklist Job",
-        status=JobStatus.EN_COURS,
+        title="Checklist Intervention",
+        status=InterventionStatus.IN_PROGRESS,
         scheduled_date=date.today(),
         started_at=datetime.now(timezone.utc),
     )
@@ -124,7 +124,7 @@ async def job_with_checklist(
         ("post_intervention", "Client informé", 1),
     ]:
         items.append(
-            ChecklistItem(job_id=j.id, category=cat, label=label, position=pos)
+            ChecklistItem(intervention_id=j.id, category=cat, label=label, position=pos)
         )
         db.add(items[-1])
     await db.commit()
@@ -135,12 +135,12 @@ async def job_with_checklist(
 
 
 class TestChecklistAPI:
-    """Tests for /jobs/{id}/checklist endpoints."""
+    """Tests for /interventions/{id}/checklist endpoints."""
 
-    async def test_get_checklist(self, client, auth_header, job_with_checklist):
-        """GET /jobs/{id}/checklist → 200 + 5 items."""
+    async def test_get_checklist(self, client, auth_header, intervention_with_checklist):
+        """GET /interventions/{id}/checklist → 200 + 5 items."""
         resp = await client.get(
-            f"/api/v1/jobs/{job_with_checklist.id}/checklist",
+            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist",
             headers=auth_header,
         )
         assert resp.status_code == 200, resp.text
@@ -148,17 +148,17 @@ class TestChecklistAPI:
         assert len(data) == 5
 
     async def test_get_checklist_not_found(self, client, auth_header):
-        """GET /jobs/99999/checklist → 404."""
-        resp = await client.get("/api/v1/jobs/99999/checklist", headers=auth_header)
+        """GET /interventions/99999/checklist → 404."""
+        resp = await client.get("/api/v1/interventions/99999/checklist", headers=auth_header)
         assert resp.status_code == 404
 
-    async def test_get_checklist_no_auth(self, client, job_with_checklist):
+    async def test_get_checklist_no_auth(self, client, intervention_with_checklist):
         """No auth → 401."""
-        resp = await client.get(f"/api/v1/jobs/{job_with_checklist.id}/checklist")
+        resp = await client.get(f"/api/v1/interventions/{intervention_with_checklist.id}/checklist")
         assert resp.status_code == 401
 
     async def test_update_item(
-        self, client, auth_header, job_with_checklist, db: AsyncSession
+        self, client, auth_header, intervention_with_checklist, db: AsyncSession
     ):
         """PUT single item → 200."""
         # Fetch the first checklist item
@@ -168,12 +168,12 @@ class TestChecklistAPI:
 
         result = await db.execute(
             select(ChecklistItem)
-            .where(ChecklistItem.job_id == job_with_checklist.id)
+            .where(ChecklistItem.intervention_id == intervention_with_checklist.id)
             .limit(1)
         )
         item = result.scalar_one()
         resp = await client.put(
-            f"/api/v1/jobs/{job_with_checklist.id}/checklist/{item.id}",
+            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist/{item.id}",
             json={"checked": True, "note": "OK"},
             headers=auth_header,
         )
@@ -182,17 +182,17 @@ class TestChecklistAPI:
         assert data["checked"] is True
         assert data["note"] == "OK"
 
-    async def test_update_item_not_found(self, client, auth_header, job_with_checklist):
+    async def test_update_item_not_found(self, client, auth_header, intervention_with_checklist):
         """PUT non-existent item → 404."""
         resp = await client.put(
-            f"/api/v1/jobs/{job_with_checklist.id}/checklist/99999",
+            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist/99999",
             json={"checked": True},
             headers=auth_header,
         )
         assert resp.status_code == 404
 
     async def test_batch_update(
-        self, client, auth_header, job_with_checklist, db: AsyncSession
+        self, client, auth_header, intervention_with_checklist, db: AsyncSession
     ):
         """PUT batch → 200."""
         from sqlalchemy import select
@@ -201,7 +201,7 @@ class TestChecklistAPI:
 
         result = await db.execute(
             select(ChecklistItem)
-            .where(ChecklistItem.job_id == job_with_checklist.id)
+            .where(ChecklistItem.intervention_id == intervention_with_checklist.id)
             .limit(3)
         )
         items = list(result.scalars().all())
@@ -210,7 +210,7 @@ class TestChecklistAPI:
             for i, item in enumerate(items)
         ]
         resp = await client.put(
-            f"/api/v1/jobs/{job_with_checklist.id}/checklist/batch",
+            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist/batch",
             json={"items": payload},
             headers=auth_header,
         )
@@ -218,10 +218,10 @@ class TestChecklistAPI:
         data = resp.json()
         assert data["updated"] == 3
 
-    async def test_batch_update_empty(self, client, auth_header, job_with_checklist):
+    async def test_batch_update_empty(self, client, auth_header, intervention_with_checklist):
         """Empty batch → 200 + updated=0."""
         resp = await client.put(
-            f"/api/v1/jobs/{job_with_checklist.id}/checklist/batch",
+            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist/batch",
             json={"items": []},
             headers=auth_header,
         )
@@ -229,12 +229,12 @@ class TestChecklistAPI:
         assert resp.json()["updated"] == 0
 
     async def test_complete_without_checklist(
-        self, client, auth_header, job_with_checklist, db
+        self, client, auth_header, intervention_with_checklist, db
     ):
         """Complete with unchecked items → 400."""
         # All items are unchecked by default
         resp = await client.put(
-            f"/api/v1/jobs/{job_with_checklist.id}/complete",
+            f"/api/v1/interventions/{intervention_with_checklist.id}/complete",
             json={},
             headers=auth_header,
         )

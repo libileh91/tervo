@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<title>Rapport d'intervention {{ job.title }}</title>
+<title>Rapport d'intervention {{ intervention.title }}</title>
 <style>
   @page { size: A4; margin: 2cm 1.5cm;
     @bottom-center { content: "Page " counter(page) " / " counter(pages); font-size: 9px; color: #888; }
@@ -37,10 +37,10 @@
 
 <div class="header">
   <div>
-    <h1>{{ job.title }}</h1>
+    <h1>{{ intervention.title }}</h1>
     <div class="header-meta">
-      <span>Ref: {{ job.id }}</span>
-      <span>Statut: {{ job.status_label }}</span>
+      <span>Ref: {{ intervention.id }}</span>
+      <span>Statut: {{ intervention.status_label }}</span>
     </div>
   </div>
   <div class="header-right">
@@ -61,9 +61,9 @@
   <div class="info-block">
     <strong>Technicien</strong>
     <span>{{ technician.full_name }}</span><br>
-    <span>Intervention le {{ job.scheduled_date }}</span><br>
-    {% if job.scheduled_start_time %}
-    <span>Creneau: {{ job.scheduled_start_time }}{% if job.scheduled_end_time %} - {{ job.scheduled_end_time }}{% endif %}</span>
+    <span>Intervention le {{ intervention.scheduled_date }}</span><br>
+    {% if intervention.scheduled_start_time %}
+    <span>Creneau: {{ intervention.scheduled_start_time }}{% if intervention.scheduled_end_time %} - {{ intervention.scheduled_end_time }}{% endif %}</span>
     {% endif %}
   </div>
 </div>
@@ -131,9 +131,9 @@
 </table>
 {% endif %}
 
-{% if job.observations %}
+{% if intervention.observations %}
 <h2>Observations</h2>
-<div class="observations">{{ job.observations }}</div>
+<div class="observations">{{ intervention.observations }}</div>
 {% endif %}
 
 <div class="signature-line">
@@ -141,7 +141,7 @@
   <div class="signature-box"><div class="line">Signature du client</div></div>
 </div>
 
-<div class="footer">ResQ - Rapport #{{ job.id }} - {{ generated_at }}</div>
+<div class="footer">ResQ - Rapport #{{ intervention.id }} - {{ generated_at }}</div>
 
 </body>
 </html>

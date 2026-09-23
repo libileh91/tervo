@@ -62,9 +62,9 @@ export const clientCreateSchema = clientSchema.required({
 
 export type ClientCreateForm = z.infer<typeof clientCreateSchema>;
 
-// ── Job ──────────────────────────────────────────────────
+// ── Intervention ──────────────────────────────────────────────────
 
-export const jobSchema = z.object({
+export const interventionSchema = z.object({
   client_id: z
     .number({ message: requiredMsg, invalid_type_error: requiredMsg })
     .int()
@@ -82,7 +82,7 @@ export const jobSchema = z.object({
   priority: z.enum(["basse", "normale", "haute", "urgente"]).optional().default("normale"),
 });
 
-export type JobForm = z.infer<typeof jobSchema>;
+export type InterventionForm = z.infer<typeof interventionSchema>;
 
 // ── Material ─────────────────────────────────────────────
 

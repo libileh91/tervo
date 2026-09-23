@@ -22,7 +22,7 @@ from app.core.security import create_access_token
 from app.main import app
 from app.models import Base
 from app.models.client import Client
-from app.models.job import Job, JobStatus
+from app.models.intervention import Intervention, InterventionStatus
 from app.models.user import Role, User
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"
@@ -200,7 +200,7 @@ class TestClients:
     async def test_client_history(
         self, client, auth_header, db: AsyncSession, tech_user
     ):
-        """GET /clients/{id}/jobs → 200 + list."""
+        """GET /clients/{id}/interventions → 200 + list."""
         c = Client(full_name="History", phone="0644444444", address="addr")
         db.add(c)
         await db.commit()
@@ -208,17 +208,17 @@ class TestClients:
 
         for i in range(2):
             db.add(
-                Job(
+                Intervention(
                     client_id=c.id,
                     technician_id=tech_user.id,
-                    title=f"Job {i}",
-                    status=JobStatus.PLANIFIE,
+                    title=f"Intervention {i}",
+                    status=InterventionStatus.PLANNED,
                     scheduled_date=date.today(),
                 )
             )
         await db.commit()
 
-        resp = await client.get(f"/api/v1/clients/{c.id}/jobs", headers=auth_header)
+        resp = await client.get(f"/api/v1/clients/{c.id}/interventions", headers=auth_header)
         assert resp.status_code == 200, resp.text
         data = resp.json()
         assert len(data) >= 2

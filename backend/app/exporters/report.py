@@ -1,7 +1,7 @@
 """
 Tervo — ReportExporter.
 
-Generates a PDF report for a completed job using WeasyPrint + Jinja2.
+Generates a PDF report for a completed intervention using WeasyPrint + Jinja2.
 """
 
 import base64
@@ -10,12 +10,11 @@ from pathlib import Path
 
 from jinja2 import Template
 
-from app.models.job import Job
-from app.schemas.job import JobResponse
+from app.models.intervention import Intervention
 
 
 class ReportExporter:
-    """Generates a PDF report for a completed job."""
+    """Generates a PDF report for a completed intervention."""
 
     def __init__(self):
         template_path = Path(__file__).resolve().parent / "report_template.html"
@@ -37,13 +36,13 @@ class ReportExporter:
         )
         return f"data:image/{mime};base64,{b64}"
 
-    def generate_pdf(self, job: Job) -> bytes:
+    def generate_pdf(self, intervention: Intervention) -> bytes:
         """
-        Generate a PDF report for a job.
+        Generate a PDF report for an intervention.
 
         Parameters
         ----------
-        job : Job
+        intervention : Intervention
             Fully loaded ORM instance (client, technician,
             checklist_items, photos, materials must be eager-loaded).
 
@@ -55,7 +54,7 @@ class ReportExporter:
         # Group checklist items
         pre_items = []
         post_items = []
-        for item in job.checklist_items or []:
+        for item in intervention.checklist_items or []:
             entry = {"label": item.label, "checked": item.checked, "note": item.note}
             if item.category == "pre_intervention":
                 pre_items.append(entry)
@@ -65,7 +64,7 @@ class ReportExporter:
         # Embed photos as base64
         avant_photos = []
         apres_photos = []
-        for photo in job.photos or []:
+        for photo in intervention.photos or []:
             uri = self._embed_photo(photo.file_path)
             if uri:
                 if photo.category == "avant":
@@ -75,35 +74,39 @@ class ReportExporter:
 
         # Materials
         materials_list = []
-        for mat in job.materials or []:
+        for mat in intervention.materials or []:
             materials_list.append({"name": mat.name, "quantity": mat.quantity})
 
         # Status label for display
         status_labels = {
-            "planifie": "Planifie",
-            "en_cours": "En cours",
-            "termine": "Termine",
-            "annule": "Annule",
+            "PLANNED": "Planifiée",
+            "IN_PROGRESS": "En cours",
+            "COMPLETED": "Terminée",
+            "CANCELLED": "Annulée",
         }
 
         # Client data
-        client = job.client
-        technician = job.technician
+        client = intervention.client
+        technician = intervention.technician
 
         ctx = {
-            "job": {
-                "id": job.id,
-                "title": job.title,
-                "status": job.status,
-                "status_label": status_labels.get(job.status, job.status),
-                "scheduled_date": str(job.scheduled_date) if job.scheduled_date else "",
-                "scheduled_start_time": str(job.scheduled_start_time)
-                if job.scheduled_start_time
+            "intervention": {
+                "id": intervention.id,
+                "title": intervention.title,
+                "status": intervention.status.value,
+                "status_label": status_labels.get(
+                    intervention.status.value, intervention.status.value
+                ),
+                "scheduled_date": str(intervention.scheduled_date)
+                if intervention.scheduled_date
                 else "",
-                "scheduled_end_time": str(job.scheduled_end_time)
-                if job.scheduled_end_time
+                "scheduled_start_time": str(intervention.scheduled_start_time)
+                if intervention.scheduled_start_time
                 else "",
-                "observations": job.observations or "",
+                "scheduled_end_time": str(intervention.scheduled_end_time)
+                if intervention.scheduled_end_time
+                else "",
+                "observations": intervention.observations or "",
             },
             "client": {
                 "full_name": client.full_name if client else "",

@@ -1,12 +1,13 @@
 """
-Tervo — Job model.
+Tervo — Intervention model.
 
-Represents an intervention / work order at a client site.
+Represents a field intervention (work order) at a client site.
 """
 
 import enum
 
 from sqlalchemy import (
+    Boolean,
     Column,
     Date,
     DateTime,
@@ -23,11 +24,11 @@ from sqlalchemy.orm import relationship
 from app.models.base import Base
 
 
-class JobStatus(str, enum.Enum):
-    PLANIFIE = "planifié"
-    EN_COURS = "en_cours"
-    TERMINE = "terminé"
-    ANNULE = "annulé"
+class InterventionStatus(str, enum.Enum):
+    PLANNED = "PLANNED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
 
 
 class Priority(str, enum.Enum):
@@ -37,8 +38,8 @@ class Priority(str, enum.Enum):
     URGENTE = "urgente"
 
 
-class Job(Base):
-    __tablename__ = "job"
+class Intervention(Base):
+    __tablename__ = "intervention"
 
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(
@@ -50,8 +51,8 @@ class Job(Base):
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     status = Column(
-        Enum(JobStatus, values_callable=lambda x: [e.value for e in x]),
-        default=JobStatus.PLANIFIE,
+        Enum(InterventionStatus, values_callable=lambda x: [e.value for e in x]),
+        default=InterventionStatus.PLANNED,
         nullable=False,
         index=True,
     )
@@ -61,6 +62,7 @@ class Job(Base):
         nullable=False,
         index=True,
     )
+    under_warranty = Column(Boolean, default=False, nullable=False)
     scheduled_date = Column(Date, nullable=False, index=True)
     scheduled_start_time = Column(Time, nullable=True)
     scheduled_end_time = Column(Time, nullable=True)
@@ -73,24 +75,25 @@ class Job(Base):
     )
 
     # ── Relationships ───────────────────────────────────────
-    client = relationship("Client", backref="jobs")
-    technician = relationship("User", backref="jobs")
-    # Forward: checklist_items is active (model exists)
+    client = relationship("Client", backref="interventions")
+    technician = relationship("User", backref="interventions")
     checklist_items = relationship(
-        "ChecklistItem", back_populates="job", cascade="all, delete-orphan"
+        "ChecklistItem", back_populates="intervention", cascade="all, delete-orphan"
     )
-    # Photos and Materials — models now exist (Phase 2)
     photos = relationship(
-        "JobPhoto", back_populates="job", cascade="all, delete-orphan"
+        "InterventionPhoto",
+        back_populates="intervention",
+        cascade="all, delete-orphan",
     )
     materials = relationship(
-        "Material", back_populates="job", cascade="all, delete-orphan"
+        "Material", back_populates="intervention", cascade="all, delete-orphan"
     )
     review = relationship(
-        "Review", back_populates="job", uselist=False, cascade="all, delete-orphan"
+        "Review", back_populates="intervention", uselist=False, cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:
         return (
-            f"<Job(id={self.id}, title='{self.title}', status='{self.status.value}')>"
+            f"<Intervention(id={self.id}, title='{self.title}', "
+            f"status='{self.status.value}')>"
         )

@@ -20,7 +20,7 @@ from app.main import app
 from app.models import Base
 from app.models.checklist_item import ChecklistItem
 from app.models.client import Client
-from app.models.job import Job, JobStatus
+from app.models.intervention import Intervention, InterventionStatus
 from app.models.user import Role, User
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"
@@ -124,14 +124,14 @@ async def client_fixture(db: AsyncSession) -> Client:
 
 
 @pytest.fixture
-async def job_planifie(
+async def intervention_planned(
     db: AsyncSession, tech_user: User, client_fixture: Client
-) -> Job:
-    j = Job(
+) -> Intervention:
+    j = Intervention(
         client_id=client_fixture.id,
         technician_id=tech_user.id,
         title="Extra Planifié",
-        status=JobStatus.PLANIFIE,
+        status=InterventionStatus.PLANNED,
         scheduled_date=date.today(),
     )
     db.add(j)
@@ -141,14 +141,14 @@ async def job_planifie(
 
 
 @pytest.fixture
-async def job_en_cours(
+async def intervention_in_progress(
     db: AsyncSession, tech_user: User, client_fixture: Client
-) -> Job:
-    j = Job(
+) -> Intervention:
+    j = Intervention(
         client_id=client_fixture.id,
         technician_id=tech_user.id,
         title="Extra En Cours",
-        status=JobStatus.EN_COURS,
+        status=InterventionStatus.IN_PROGRESS,
         scheduled_date=date.today(),
         started_at=datetime.now(timezone.utc),
     )
@@ -159,12 +159,12 @@ async def job_en_cours(
 
 
 @pytest.fixture
-async def job_termine(db: AsyncSession, tech_user: User, client_fixture: Client) -> Job:
-    j = Job(
+async def intervention_completed(db: AsyncSession, tech_user: User, client_fixture: Client) -> Intervention:
+    j = Intervention(
         client_id=client_fixture.id,
         technician_id=tech_user.id,
         title="Extra Terminé",
-        status=JobStatus.TERMINE,
+        status=InterventionStatus.COMPLETED,
         scheduled_date=date.today(),
         started_at=datetime.now(timezone.utc) - timedelta(hours=2),
         completed_at=datetime.now(timezone.utc),
@@ -179,53 +179,53 @@ class TestMaterialsExtra:
     """Covers missing lines in materials API: 403 on PUT/DELETE, 404 on PUT/DELETE."""
 
     async def test_update_material_wrong_tech(
-        self, client, other_auth_header, job_en_cours, db: AsyncSession
+        self, client, other_auth_header, intervention_in_progress, db: AsyncSession
     ):
         """PUT material with wrong tech → 403."""
         from app.models.material import Material
 
-        mat = Material(job_id=job_en_cours.id, name="Test", quantity="1")
+        mat = Material(intervention_id=intervention_in_progress.id, name="Test", quantity="1")
         db.add(mat)
         await db.commit()
         await db.refresh(mat)
 
         resp = await client.put(
-            f"/api/v1/jobs/{job_en_cours.id}/materials/{mat.id}",
+            f"/api/v1/interventions/{intervention_in_progress.id}/materials/{mat.id}",
             json={"quantity": "2"},
             headers=other_auth_header,
         )
         assert resp.status_code == 403
 
     async def test_delete_material_wrong_tech(
-        self, client, other_auth_header, job_en_cours, db: AsyncSession
+        self, client, other_auth_header, intervention_in_progress, db: AsyncSession
     ):
         """DELETE material with wrong tech → 403."""
         from app.models.material import Material
 
-        mat = Material(job_id=job_en_cours.id, name="Test", quantity="1")
+        mat = Material(intervention_id=intervention_in_progress.id, name="Test", quantity="1")
         db.add(mat)
         await db.commit()
         await db.refresh(mat)
 
         resp = await client.delete(
-            f"/api/v1/jobs/{job_en_cours.id}/materials/{mat.id}",
+            f"/api/v1/interventions/{intervention_in_progress.id}/materials/{mat.id}",
             headers=other_auth_header,
         )
         assert resp.status_code == 403
 
-    async def test_update_material_not_found(self, client, auth_header, job_en_cours):
+    async def test_update_material_not_found(self, client, auth_header, intervention_in_progress):
         """PUT material 99999 → 404."""
         resp = await client.put(
-            f"/api/v1/jobs/{job_en_cours.id}/materials/99999",
+            f"/api/v1/interventions/{intervention_in_progress.id}/materials/99999",
             json={"quantity": "2"},
             headers=auth_header,
         )
         assert resp.status_code == 404
 
-    async def test_delete_material_not_found(self, client, auth_header, job_en_cours):
+    async def test_delete_material_not_found(self, client, auth_header, intervention_in_progress):
         """DELETE material 99999 → 404."""
         resp = await client.delete(
-            f"/api/v1/jobs/{job_en_cours.id}/materials/99999",
+            f"/api/v1/interventions/{intervention_in_progress.id}/materials/99999",
             headers=auth_header,
         )
         assert resp.status_code == 404
@@ -234,50 +234,50 @@ class TestMaterialsExtra:
 class TestReportsExtra:
     """Covers missing lines in reports API: 403, 404."""
 
-    async def test_report_wrong_tech(self, client, other_auth_header, job_termine):
+    async def test_report_wrong_tech(self, client, other_auth_header, intervention_completed):
         """Download report with wrong tech → 403."""
         resp = await client.get(
-            f"/api/v1/jobs/{job_termine.id}/report/download",
+            f"/api/v1/interventions/{intervention_completed.id}/report/download",
             headers=other_auth_header,
         )
         assert resp.status_code == 403
 
     async def test_report_not_found(self, client, auth_header):
-        """Download report for non-existent job → 404."""
+        """Download report for non-existent intervention → 404."""
         resp = await client.get(
-            "/api/v1/jobs/99999/report/download",
+            "/api/v1/interventions/99999/report/download",
             headers=auth_header,
         )
         assert resp.status_code == 404
 
 
-class TestJobsExtra:
-    """Covers uncovered complete_job paths: no checklist, already completed."""
+class TestInterventionsExtra:
+    """Covers uncovered complete_intervention paths: no checklist, already completed."""
 
-    async def test_start_job_wrong_status(self, client, auth_header, job_termine):
-        """Start already terminated job → 400."""
+    async def test_start_intervention_wrong_status(self, client, auth_header, intervention_completed):
+        """Start already terminated intervention → 400."""
         resp = await client.put(
-            f"/api/v1/jobs/{job_termine.id}/start",
+            f"/api/v1/interventions/{intervention_completed.id}/start",
             headers=auth_header,
         )
         assert resp.status_code == 400
 
-    async def test_complete_job_without_checklist(
-        self, client, auth_header, job_en_cours, db
+    async def test_complete_intervention_without_checklist(
+        self, client, auth_header, intervention_in_progress, db
     ):
         """Complete without adding checklist items → should succeed (no checklist = ok)."""
         resp = await client.put(
-            f"/api/v1/jobs/{job_en_cours.id}/complete",
+            f"/api/v1/interventions/{intervention_in_progress.id}/complete",
             json={},
             headers=auth_header,
         )
         # No checklist items → no validation → should succeed
         assert resp.status_code == 200
 
-    async def test_complete_already_terminated(self, client, auth_header, job_termine):
-        """Complete already terminated job → 400."""
+    async def test_complete_already_terminated(self, client, auth_header, intervention_completed):
+        """Complete already terminated intervention → 400."""
         resp = await client.put(
-            f"/api/v1/jobs/{job_termine.id}/complete",
+            f"/api/v1/interventions/{intervention_completed.id}/complete",
             json={},
             headers=auth_header,
         )
@@ -288,11 +288,11 @@ class TestChecklistExtra:
     """Covers missing lines in checklist API: 403, 404."""
 
     async def test_update_checklist_wrong_tech(
-        self, client, other_auth_header, job_en_cours, db: AsyncSession
+        self, client, other_auth_header, intervention_in_progress, db: AsyncSession
     ):
         """Update checklist with wrong tech → 403."""
         item = ChecklistItem(
-            job_id=job_en_cours.id,
+            intervention_id=intervention_in_progress.id,
             category="pre_intervention",
             label="Test",
             position=0,
@@ -302,18 +302,18 @@ class TestChecklistExtra:
         await db.refresh(item)
 
         resp = await client.put(
-            f"/api/v1/jobs/{job_en_cours.id}/checklist/{item.id}",
+            f"/api/v1/interventions/{intervention_in_progress.id}/checklist/{item.id}",
             json={"checked": True},
             headers=other_auth_header,
         )
         assert resp.status_code == 403
 
     async def test_batch_update_wrong_tech(
-        self, client, other_auth_header, job_en_cours
+        self, client, other_auth_header, intervention_in_progress
     ):
         """Batch update with wrong tech → 403."""
         resp = await client.put(
-            f"/api/v1/jobs/{job_en_cours.id}/checklist/batch",
+            f"/api/v1/interventions/{intervention_in_progress.id}/checklist/batch",
             json={"items": []},
             headers=other_auth_header,
         )
@@ -324,11 +324,11 @@ class TestPhotosExtra:
     """Covers missing lines: photo delete by wrong tech, delete not found."""
 
     async def test_delete_photo_wrong_tech(
-        self, client, other_auth_header, job_en_cours
+        self, client, other_auth_header, intervention_in_progress
     ):
         """Delete photo with wrong tech → 403."""
         resp = await client.delete(
-            f"/api/v1/jobs/{job_en_cours.id}/photos/1",
+            f"/api/v1/interventions/{intervention_in_progress.id}/photos/1",
             headers=other_auth_header,
         )
         assert resp.status_code == 403

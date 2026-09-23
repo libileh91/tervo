@@ -2,7 +2,7 @@
     <div class="inspection-page">
         <!-- Header -->
         <div class="header">
-            <Button icon="pi pi-arrow-left" text rounded @click="router.push({ name: 'JobDetail', params: { id: jobId } })" />
+            <Button icon="pi pi-arrow-left" text rounded @click="router.push({ name: 'InterventionDetail', params: { id: interventionId } })" />
             <h1>Inspection</h1>
         </div>
 
@@ -20,9 +20,9 @@
             <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch" class="mt-2" />
         </div>
 
-        <!-- Job not started -->
-        <Message v-else-if="job && job.status !== 'en_cours'" severity="warn">
-            Démarrez le job d'abord pour accéder à la checklist.
+        <!-- Intervention not started -->
+        <Message v-else-if="intervention && intervention.status !== 'IN_PROGRESS'" severity="warn">
+            Démarrez le intervention d'abord pour accéder à la checklist.
         </Message>
 
         <template v-else-if="items">
@@ -142,7 +142,7 @@ import InputText from "primevue/inputtext";
 import Skeleton from "primevue/skeleton";
 import Message from "primevue/message";
 import { useAuthStore } from "@/stores/auth";
-import { api, checklistApi, jobsApi, type ChecklistItemRef } from "@/api/client";
+import { api, checklistApi, interventionsApi, type ChecklistItemRef } from "@/api/client";
 
 const router = useRouter();
 const route = useRoute();
@@ -150,7 +150,7 @@ const auth = useAuthStore();
 const toast = useToast();
 const queryClient = useQueryClient();
 
-const jobId = Number(route.params.id);
+const interventionId = Number(route.params.id);
 const saving = ref(false);
 const completing = ref(false);
 
@@ -160,12 +160,12 @@ const localChecked = ref<Record<number, boolean>>({});
 const localNotes = ref<Record<number, string | null>>({});
 const dirtyItems = ref<Set<number>>(new Set());
 
-// ── Fetch job (to check status) ─────────────────────────
+// ── Fetch intervention (to check status) ─────────────────────────
 
-const { data: job } = useQuery({
-    queryKey: ["job", jobId],
-    queryFn: () => jobsApi.getById(auth.token!, jobId),
-    enabled: !!jobId,
+const { data: intervention } = useQuery({
+    queryKey: ["intervention", interventionId],
+    queryFn: () => interventionsApi.getById(auth.token!, interventionId),
+    enabled: !!interventionId,
 });
 
 // ── Fetch checklist items ───────────────────────────────
@@ -177,9 +177,9 @@ const {
     error,
     refetch,
 } = useQuery({
-    queryKey: ["checklist", jobId],
-    queryFn: () => checklistApi.getItems(auth.token!, jobId),
-    enabled: !!jobId,
+    queryKey: ["checklist", interventionId],
+    queryFn: () => checklistApi.getItems(auth.token!, interventionId),
+    enabled: !!interventionId,
 });
 
 // Initialiser l'état local via watcher
@@ -217,7 +217,7 @@ async function addCustomItem() {
     if (!newItemLabel.value.trim()) return;
     try {
         await api.post(
-            `/jobs/${jobId}/checklist`,
+            `/interventions/${interventionId}/checklist`,
             {
                 label: newItemLabel.value.trim(),
                 category: "post_intervention",
@@ -225,7 +225,7 @@ async function addCustomItem() {
             auth.token,
         );
         newItemLabel.value = "";
-        queryClient.invalidateQueries({ queryKey: ["checklist", jobId] });
+        queryClient.invalidateQueries({ queryKey: ["checklist", interventionId] });
     } catch (err: any) {
         toast.add({
             severity: "error",
@@ -243,20 +243,20 @@ const allChecked = computed(() => {
     return items.value.every((i: ChecklistItemRef) => localChecked.value[i.id] ?? i.checked);
 });
 
-// ── Complete job ────────────────────────────────────────
+// ── Complete intervention ────────────────────────────────────────
 
 async function handleComplete() {
     completing.value = true;
     try {
-        await api.put(`/jobs/${jobId}/complete`, { observations: null }, auth.token);
+        await api.put(`/interventions/${interventionId}/complete`, { observations: null }, auth.token);
         toast.add({ severity: "success", summary: "Intervention terminee", life: 3000 });
 
-        // Muter le cache job directement
-        const cachedJob = queryClient.getQueryData(["job", jobId]) as any;
-        if (cachedJob) {
-            queryClient.setQueryData(["job", jobId], {
-                ...cachedJob,
-                status: "termine",
+        // Muter le cache intervention directement
+        const cachedIntervention = queryClient.getQueryData(["intervention", interventionId]) as any;
+        if (cachedIntervention) {
+            queryClient.setQueryData(["intervention", interventionId], {
+                ...cachedIntervention,
+                status: "COMPLETED",
                 completed_at: new Date().toISOString(),
             });
         }
@@ -268,15 +268,15 @@ async function handleComplete() {
                 ...cachedDash,
                 today: {
                     ...cachedDash.today,
-                    jobs_in_progress: Math.max(0, (cachedDash.today.jobs_in_progress || 1) - 1),
-                    jobs_completed: (cachedDash.today.jobs_completed || 0) + 1,
+                    interventions_in_progress: Math.max(0, (cachedDash.today.interventions_in_progress || 1) - 1),
+                    interventions_completed: (cachedDash.today.interventions_completed || 0) + 1,
                 },
-                in_progress_job: null,
+                in_progress_intervention: null,
             });
         }
 
-        // Naviguer vers le detail du job
-        router.replace({ name: "JobDetail", params: { id: jobId } });
+        // Naviguer vers le detail du intervention
+        router.replace({ name: "InterventionDetail", params: { id: interventionId } });
     } catch (err: any) {
         toast.add({
             severity: "error",
@@ -317,11 +317,11 @@ async function handleSave() {
 
     saving.value = true;
     try {
-        await checklistApi.batchUpdate(auth.token!, jobId, batch);
+        await checklistApi.batchUpdate(auth.token!, interventionId, batch);
         dirtyItems.value.clear();
         toast.add({ severity: "success", summary: "Checklist sauvegardée", life: 3000 });
-        queryClient.invalidateQueries({ queryKey: ["checklist", jobId] });
-        queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+        queryClient.invalidateQueries({ queryKey: ["checklist", interventionId] });
+        queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
     } catch (err: any) {
         toast.add({
             severity: "error",

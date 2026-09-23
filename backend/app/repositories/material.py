@@ -16,10 +16,10 @@ class MaterialRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def list_by_job(self, job_id: int) -> list[Material]:
+    async def list_by_intervention(self, intervention_id: int) -> list[Material]:
         result = await self.db.execute(
             select(Material)
-            .where(Material.job_id == job_id)
+            .where(Material.intervention_id == intervention_id)
             .order_by(Material.position.asc())
         )
         return list(result.scalars().all())

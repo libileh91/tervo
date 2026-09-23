@@ -20,7 +20,7 @@ const route = useRoute()
 
 const tabs = [
   { to: '/', icon: 'pi pi-home', label: 'Accueil' },
-  { to: '/jobs', icon: 'pi pi-list', label: 'Interventions' },
+  { to: '/interventions', icon: 'pi pi-list', label: 'Interventions' },
   { to: '/clients', icon: 'pi pi-users', label: 'Clients' },
   { to: '/profile', icon: 'pi pi-user', label: 'Profil' },
 ]

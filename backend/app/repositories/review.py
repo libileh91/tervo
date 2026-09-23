@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.job import Job
+from app.models.intervention import Intervention
 from app.models.review import Review
 
 
@@ -19,11 +19,11 @@ class ReviewRepository:
         self.db = db
 
     async def get_by_token(self, token: str) -> Review | None:
-        """Fetch a review by its share_token, with job + technician eager-loaded."""
+        """Fetch a review by its share_token, with intervention + technician eager-loaded."""
         result = await self.db.execute(
             select(Review)
             .options(
-                selectinload(Review.job).selectinload(Job.technician),
+                selectinload(Review.intervention).selectinload(Intervention.technician),
             )
             .where(Review.share_token == token)
         )

@@ -28,8 +28,8 @@ from app.main import app
 from app.models import Base
 from app.models.checklist_item import ChecklistItem
 from app.models.client import Client
-from app.models.job import Job, JobStatus
-from app.models.job_photo import JobPhoto
+from app.models.intervention import Intervention, InterventionStatus
+from app.models.intervention_photo import InterventionPhoto
 from app.models.material import Material
 from app.models.review import Review
 from app.models.user import User
@@ -102,7 +102,7 @@ async def tech_user(db: AsyncSession) -> User:
 
 @pytest.fixture
 async def other_tech_user(db: AsyncSession) -> User:
-    """Another technician user (not assigned to jobs, for 403 tests)."""
+    """Another technician user (not assigned to interventions, for 403 tests)."""
     user = User(
         username="other_tech",
         email="other@test.com",
@@ -159,15 +159,15 @@ async def client_fixture(db: AsyncSession) -> Client:
 
 
 @pytest.fixture
-async def job_planifie(
+async def intervention_planned(
     db: AsyncSession, tech_user: User, client_fixture: Client
-) -> Job:
-    """Create a planifié job."""
-    j = Job(
+) -> Intervention:
+    """Create a planifié intervention."""
+    j = Intervention(
         client_id=client_fixture.id,
         technician_id=tech_user.id,
-        title="Test Job Planifié",
-        status=JobStatus.PLANIFIE,
+        title="Test Intervention Planifié",
+        status=InterventionStatus.PLANNED,
         scheduled_date=date.today(),
     )
     db.add(j)
@@ -177,15 +177,15 @@ async def job_planifie(
 
 
 @pytest.fixture
-async def job_en_cours(
+async def intervention_in_progress(
     db: AsyncSession, tech_user: User, client_fixture: Client
-) -> Job:
-    """Create a job en_cours with checklist items."""
-    j = Job(
+) -> Intervention:
+    """Create a intervention en_cours with checklist items."""
+    j = Intervention(
         client_id=client_fixture.id,
         technician_id=tech_user.id,
-        title="Test Job En Cours",
-        status=JobStatus.EN_COURS,
+        title="Test Intervention En Cours",
+        status=InterventionStatus.IN_PROGRESS,
         scheduled_date=date.today(),
         started_at=datetime.now(timezone.utc),
     )
@@ -201,7 +201,7 @@ async def job_en_cours(
         ]
     ):
         item = ChecklistItem(
-            job_id=j.id, category=cat, label=label, checked=True, position=i
+            intervention_id=j.id, category=cat, label=label, checked=True, position=i
         )
         db.add(item)
     await db.commit()
@@ -210,13 +210,13 @@ async def job_en_cours(
 
 
 @pytest.fixture
-async def job_termine(db: AsyncSession, tech_user: User, client_fixture: Client) -> Job:
-    """Create a terminé job with photo, material, and review."""
-    j = Job(
+async def intervention_completed(db: AsyncSession, tech_user: User, client_fixture: Client) -> Intervention:
+    """Create a terminé intervention with photo, material, and review."""
+    j = Intervention(
         client_id=client_fixture.id,
         technician_id=tech_user.id,
-        title="Test Job Terminé",
-        status=JobStatus.TERMINE,
+        title="Test Intervention Terminé",
+        status=InterventionStatus.COMPLETED,
         scheduled_date=date.today(),
         started_at=datetime.now(timezone.utc) - timedelta(hours=2),
         completed_at=datetime.now(timezone.utc),
@@ -236,12 +236,12 @@ class TestPhotos:
     """Tests pour INT-23 (upload) et INT-24 (delete)."""
 
     async def test_upload_photo_success(
-        self, client, auth_header, job_en_cours, test_photo_bytes
+        self, client, auth_header, intervention_in_progress, test_photo_bytes
     ):
         """Upload valide → 201."""
         files = {"file": ("test.jpg", io.BytesIO(test_photo_bytes), "image/jpeg")}
         resp = await client.post(
-            f"/api/v1/jobs/{job_en_cours.id}/photos",
+            f"/api/v1/interventions/{intervention_in_progress.id}/photos",
             data={"category": "avant"},
             files=files,
             headers=auth_header,
@@ -252,35 +252,35 @@ class TestPhotos:
         assert "file_url" in data
         assert "thumbnail_url" in data
 
-    async def test_upload_photo_invalid_format(self, client, auth_header, job_en_cours):
+    async def test_upload_photo_invalid_format(self, client, auth_header, intervention_in_progress):
         """Format non supporté → 400."""
         file_content = io.BytesIO(b"fake gif data")
         files = {"file": ("test.gif", file_content, "image/gif")}
         resp = await client.post(
-            f"/api/v1/jobs/{job_en_cours.id}/photos",
+            f"/api/v1/interventions/{intervention_in_progress.id}/photos",
             data={"category": "avant"},
             files=files,
             headers=auth_header,
         )
         assert resp.status_code == 400, resp.text
 
-    async def test_upload_photo_no_auth(self, client, job_en_cours, test_photo_bytes):
+    async def test_upload_photo_no_auth(self, client, intervention_in_progress, test_photo_bytes):
         """Sans token → 401."""
         files = {"file": ("test.jpg", io.BytesIO(test_photo_bytes), "image/jpeg")}
         resp = await client.post(
-            f"/api/v1/jobs/{job_en_cours.id}/photos",
+            f"/api/v1/interventions/{intervention_in_progress.id}/photos",
             data={"category": "avant"},
             files=files,
         )
         assert resp.status_code == 401
 
     async def test_upload_photo_wrong_assignation(
-        self, client, job_en_cours, other_auth_header, test_photo_bytes
+        self, client, intervention_in_progress, other_auth_header, test_photo_bytes
     ):
         """Autre technicien → 403."""
         files = {"file": ("test.jpg", io.BytesIO(test_photo_bytes), "image/jpeg")}
         resp = await client.post(
-            f"/api/v1/jobs/{job_en_cours.id}/photos",
+            f"/api/v1/interventions/{intervention_in_progress.id}/photos",
             data={"category": "avant"},
             files=files,
             headers=other_auth_header,
@@ -288,13 +288,13 @@ class TestPhotos:
         assert resp.status_code == 403
 
     async def test_delete_photo(
-        self, client, auth_header, job_en_cours, test_photo_bytes
+        self, client, auth_header, intervention_in_progress, test_photo_bytes
     ):
         """Suppression → 204."""
         # Upload first
         files = {"file": ("test.jpg", io.BytesIO(test_photo_bytes), "image/jpeg")}
         upload_resp = await client.post(
-            f"/api/v1/jobs/{job_en_cours.id}/photos",
+            f"/api/v1/interventions/{intervention_in_progress.id}/photos",
             data={"category": "après"},
             files=files,
             headers=auth_header,
@@ -303,26 +303,26 @@ class TestPhotos:
 
         # Delete
         resp = await client.delete(
-            f"/api/v1/jobs/{job_en_cours.id}/photos/{photo_id}",
+            f"/api/v1/interventions/{intervention_in_progress.id}/photos/{photo_id}",
             headers=auth_header,
         )
         assert resp.status_code == 204
 
-    async def test_delete_photo_not_found(self, client, auth_header, job_en_cours):
+    async def test_delete_photo_not_found(self, client, auth_header, intervention_in_progress):
         """Photo inexistante → 404."""
         resp = await client.delete(
-            f"/api/v1/jobs/{job_en_cours.id}/photos/99999",
+            f"/api/v1/interventions/{intervention_in_progress.id}/photos/99999",
             headers=auth_header,
         )
         assert resp.status_code == 404
 
     async def test_delete_photo_twice(
-        self, client, auth_header, job_en_cours, test_photo_bytes
+        self, client, auth_header, intervention_in_progress, test_photo_bytes
     ):
         """Double suppression → 404."""
         files = {"file": ("test.jpg", io.BytesIO(test_photo_bytes), "image/jpeg")}
         upload_resp = await client.post(
-            f"/api/v1/jobs/{job_en_cours.id}/photos",
+            f"/api/v1/interventions/{intervention_in_progress.id}/photos",
             data={"category": "après"},
             files=files,
             headers=auth_header,
@@ -331,12 +331,12 @@ class TestPhotos:
 
         # First delete
         await client.delete(
-            f"/api/v1/jobs/{job_en_cours.id}/photos/{photo_id}",
+            f"/api/v1/interventions/{intervention_in_progress.id}/photos/{photo_id}",
             headers=auth_header,
         )
         # Second delete
         resp = await client.delete(
-            f"/api/v1/jobs/{job_en_cours.id}/photos/{photo_id}",
+            f"/api/v1/interventions/{intervention_in_progress.id}/photos/{photo_id}",
             headers=auth_header,
         )
         assert resp.status_code == 404
@@ -350,10 +350,10 @@ class TestPhotos:
 class TestMaterials:
     """Tests pour INT-26 (CRUD matériaux)."""
 
-    async def test_create_material(self, client, auth_header, job_en_cours):
+    async def test_create_material(self, client, auth_header, intervention_in_progress):
         """Ajout → 201."""
         resp = await client.post(
-            f"/api/v1/jobs/{job_en_cours.id}/materials",
+            f"/api/v1/interventions/{intervention_in_progress.id}/materials",
             json={"name": "Filtre HEPA", "quantity": "2"},
             headers=auth_header,
         )
@@ -362,16 +362,16 @@ class TestMaterials:
         assert data["name"] == "Filtre HEPA"
         assert data["quantity"] == "2"
 
-    async def test_list_materials(self, client, auth_header, job_en_cours):
+    async def test_list_materials(self, client, auth_header, intervention_in_progress):
         """Liste → 200."""
         # Add one
         await client.post(
-            f"/api/v1/jobs/{job_en_cours.id}/materials",
+            f"/api/v1/interventions/{intervention_in_progress.id}/materials",
             json={"name": "Vis", "quantity": "10"},
             headers=auth_header,
         )
         resp = await client.get(
-            f"/api/v1/jobs/{job_en_cours.id}/materials",
+            f"/api/v1/interventions/{intervention_in_progress.id}/materials",
             headers=auth_header,
         )
         assert resp.status_code == 200
@@ -379,41 +379,41 @@ class TestMaterials:
         assert isinstance(data, list)
         assert len(data) >= 1
 
-    async def test_update_material(self, client, auth_header, job_en_cours):
+    async def test_update_material(self, client, auth_header, intervention_in_progress):
         """Modification → 200."""
         created = await client.post(
-            f"/api/v1/jobs/{job_en_cours.id}/materials",
+            f"/api/v1/interventions/{intervention_in_progress.id}/materials",
             json={"name": "Câble", "quantity": "5m"},
             headers=auth_header,
         )
         mat_id = created.json()["id"]
 
         resp = await client.put(
-            f"/api/v1/jobs/{job_en_cours.id}/materials/{mat_id}",
+            f"/api/v1/interventions/{intervention_in_progress.id}/materials/{mat_id}",
             json={"quantity": "10m"},
             headers=auth_header,
         )
         assert resp.status_code == 200
         assert resp.json()["quantity"] == "10m"
 
-    async def test_delete_material(self, client, auth_header, job_en_cours):
+    async def test_delete_material(self, client, auth_header, intervention_in_progress):
         """Suppression → 204."""
         created = await client.post(
-            f"/api/v1/jobs/{job_en_cours.id}/materials",
+            f"/api/v1/interventions/{intervention_in_progress.id}/materials",
             json={"name": "Joint", "quantity": "1"},
             headers=auth_header,
         )
         mat_id = created.json()["id"]
 
         resp = await client.delete(
-            f"/api/v1/jobs/{job_en_cours.id}/materials/{mat_id}",
+            f"/api/v1/interventions/{intervention_in_progress.id}/materials/{mat_id}",
             headers=auth_header,
         )
         assert resp.status_code == 204
 
-    async def test_materials_no_auth(self, client, job_en_cours):
+    async def test_materials_no_auth(self, client, intervention_in_progress):
         """Sans auth → 401."""
-        resp = await client.get(f"/api/v1/jobs/{job_en_cours.id}/materials")
+        resp = await client.get(f"/api/v1/interventions/{intervention_in_progress.id}/materials")
         assert resp.status_code == 401
 
 
@@ -425,10 +425,10 @@ class TestMaterials:
 class TestReport:
     """Tests pour INT-30 (download rapport)."""
 
-    async def test_report_download_terminated(self, client, auth_header, job_termine):
-        """Job terminé → 200 + PDF."""
+    async def test_report_download_terminated(self, client, auth_header, intervention_completed):
+        """Intervention terminé → 200 + PDF."""
         resp = await client.get(
-            f"/api/v1/jobs/{job_termine.id}/report/download",
+            f"/api/v1/interventions/{intervention_completed.id}/report/download",
             headers=auth_header,
         )
         assert resp.status_code == 200, resp.text
@@ -437,27 +437,27 @@ class TestReport:
         assert len(resp.content) > 0
 
     async def test_report_download_not_terminated(
-        self, client, auth_header, job_en_cours
+        self, client, auth_header, intervention_in_progress
     ):
-        """Job non terminé → 400."""
+        """Intervention non terminé → 400."""
         resp = await client.get(
-            f"/api/v1/jobs/{job_en_cours.id}/report/download",
+            f"/api/v1/interventions/{intervention_in_progress.id}/report/download",
             headers=auth_header,
         )
         assert resp.status_code == 400
-        assert "terminé" in resp.json()["detail"]
+        assert "terminée" in resp.json()["detail"]
 
     async def test_report_download_not_found(self, client, auth_header):
-        """Job inexistant → 404."""
+        """Intervention inexistant → 404."""
         resp = await client.get(
-            "/api/v1/jobs/99999/report/download",
+            "/api/v1/interventions/99999/report/download",
             headers=auth_header,
         )
         assert resp.status_code == 404
 
-    async def test_report_download_no_auth(self, client, job_termine):
+    async def test_report_download_no_auth(self, client, intervention_completed):
         """Sans auth → 401."""
-        resp = await client.get(f"/api/v1/jobs/{job_termine.id}/report/download")
+        resp = await client.get(f"/api/v1/interventions/{intervention_completed.id}/report/download")
         assert resp.status_code == 401
 
 
@@ -470,10 +470,10 @@ class TestReview:
     """Tests pour INT-32 (GET review) et INT-33 (POST submit)."""
 
     @pytest.fixture
-    async def review_valide(self, db: AsyncSession, job_termine: Job) -> Review:
+    async def review_valide(self, db: AsyncSession, intervention_completed: Intervention) -> Review:
         """Create a valid, unsubmitted review."""
         r = Review(
-            job_id=job_termine.id,
+            intervention_id=intervention_completed.id,
             rating=5,
             share_token=uuid.uuid4().hex,
             share_token_expires_at=datetime.now(timezone.utc) + timedelta(days=30),
@@ -484,10 +484,10 @@ class TestReview:
         return r
 
     @pytest.fixture
-    async def review_expired(self, db: AsyncSession, job_planifie: Job) -> Review:
+    async def review_expired(self, db: AsyncSession, intervention_planned: Intervention) -> Review:
         """Create an expired review."""
         r = Review(
-            job_id=job_planifie.id,
+            intervention_id=intervention_planned.id,
             rating=5,
             share_token=uuid.uuid4().hex,
             share_token_expires_at=datetime.now(timezone.utc) - timedelta(days=1),
@@ -498,11 +498,11 @@ class TestReview:
         return r
 
     async def test_get_review_valid(self, client, review_valide):
-        """Token valide → 200 + infos job."""
+        """Token valide → 200 + infos intervention."""
         resp = await client.get(f"/api/v1/review/{review_valide.share_token}")
         assert resp.status_code == 200, resp.text
         data = resp.json()
-        assert "job" in data
+        assert "intervention" in data
         assert "technician" in data
         assert data["already_reviewed"] is False
 
@@ -576,18 +576,18 @@ class TestReview:
 
 
 class TestIntegration:
-    """Tests d'intégration : complete_job → création review."""
+    """Tests d'intégration : complete_intervention → création review."""
 
-    async def test_complete_job_creates_review(self, client, auth_header, job_en_cours):
-        """Compléter un job crée un Review avec share_token."""
+    async def test_complete_intervention_creates_review(self, client, auth_header, intervention_in_progress):
+        """Compléter un intervention crée un Review avec share_token."""
         resp = await client.put(
-            f"/api/v1/jobs/{job_en_cours.id}/complete",
+            f"/api/v1/interventions/{intervention_in_progress.id}/complete",
             json={"observations": "Test"},
             headers=auth_header,
         )
         assert resp.status_code == 200, resp.text
         data = resp.json()
-        assert data["status"] == "terminé"
+        assert data["status"] == "COMPLETED"
         assert data["review_share_token"] is not None
         assert data["review_share_url"] is not None
         assert data["report_url"] is not None
@@ -596,27 +596,27 @@ class TestIntegration:
         # Vérifier que le review existe en base
         async with TestSessionLocal() as db:
             result = await db.execute(
-                select(Review).where(Review.job_id == job_en_cours.id)
+                select(Review).where(Review.intervention_id == intervention_in_progress.id)
             )
             review = result.scalar_one_or_none()
             assert review is not None
             assert review.share_token == data["review_share_token"]
 
-    async def test_complete_job_not_en_cours(self, client, auth_header, job_planifie):
-        """Job planifié → 400."""
+    async def test_complete_intervention_not_in_progress(self, client, auth_header, intervention_planned):
+        """Intervention planifié → 400."""
         resp = await client.put(
-            f"/api/v1/jobs/{job_planifie.id}/complete",
+            f"/api/v1/interventions/{intervention_planned.id}/complete",
             json={},
             headers=auth_header,
         )
         assert resp.status_code == 400
 
-    async def test_complete_job_wrong_technician(
-        self, client, job_en_cours, other_auth_header
+    async def test_complete_intervention_wrong_technician(
+        self, client, intervention_in_progress, other_auth_header
     ):
         """Mauvais technicien → 403."""
         resp = await client.put(
-            f"/api/v1/jobs/{job_en_cours.id}/complete",
+            f"/api/v1/interventions/{intervention_in_progress.id}/complete",
             json={},
             headers=other_auth_header,
         )

@@ -42,7 +42,7 @@ from app.api.v1.auth import router as auth_router  # noqa: E402
 from app.api.v1.checklist import router as checklist_router  # noqa: E402
 from app.api.v1.clients import router as clients_router  # noqa: E402
 from app.api.v1.dashboard import router as dashboard_router  # noqa: E402
-from app.api.v1.jobs import router as jobs_router  # noqa: E402
+from app.api.v1.interventions import router as interventions_router  # noqa: E402
 from app.api.v1.materials import router as materials_router  # noqa: E402
 from app.api.v1.photos import router as photos_router  # noqa: E402
 from app.api.v1.reports import router as reports_router  # noqa: E402
@@ -50,7 +50,7 @@ from app.api.v1.reviews import router as reviews_router  # noqa: E402
 
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
 app.include_router(clients_router, prefix=settings.API_V1_PREFIX)
-app.include_router(jobs_router, prefix=settings.API_V1_PREFIX)
+app.include_router(interventions_router, prefix=settings.API_V1_PREFIX)
 app.include_router(dashboard_router, prefix=settings.API_V1_PREFIX)
 app.include_router(checklist_router, prefix=settings.API_V1_PREFIX)
 app.include_router(photos_router, prefix=settings.API_V1_PREFIX)

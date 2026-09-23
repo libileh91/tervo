@@ -22,11 +22,11 @@
 
             <!-- Données chargées -->
             <template v-else-if="reviewData">
-                <!-- Infos job -->
-                <div class="job-info">
-                    <p class="job-title">{{ reviewData.job.title }}</p>
-                    <p class="job-meta">Réalisée le {{ formatDate(reviewData.job.completed_at) }}</p>
-                    <p class="job-meta" v-if="reviewData.technician.full_name">
+                <!-- Infos intervention -->
+                <div class="intervention-info">
+                    <p class="intervention-title">{{ reviewData.intervention.title }}</p>
+                    <p class="intervention-meta">Réalisée le {{ formatDate(reviewData.intervention.completed_at) }}</p>
+                    <p class="intervention-meta" v-if="reviewData.technician.full_name">
                         Par {{ reviewData.technician.full_name }}
                     </p>
                 </div>
@@ -100,7 +100,7 @@ const token = route.params.token as string;
 const isLoading = ref(true);
 const isError = ref(false);
 const reviewData = ref<{
-    job: { title: string; completed_at: string };
+    intervention: { title: string; completed_at: string };
     technician: { full_name: string | null };
     already_reviewed: boolean;
 } | null>(null);
@@ -231,21 +231,21 @@ function formatDate(iso: string): string {
     font-size: 0.9rem;
 }
 
-/* ── Job info ─────────────────────────── */
-.job-info {
+/* ── Intervention info ─────────────────────────── */
+.intervention-info {
     background: #f9fafb;
     border-radius: 12px;
     padding: 1rem 1.25rem;
     margin-bottom: 1.5rem;
 }
 
-.job-title {
+.intervention-title {
     font-weight: 600;
     font-size: 1.05rem;
     margin-bottom: 0.25rem;
 }
 
-.job-meta {
+.intervention-meta {
     color: #6b7280;
     font-size: 0.85rem;
     margin: 0.1rem 0;

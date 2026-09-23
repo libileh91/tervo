@@ -4,7 +4,7 @@ Tervo — Clients API router.
 Endpoints:
 - GET    /clients        → list (paginated, searchable)
 - POST   /clients        → create
-- GET    /clients/{id}   → detail (with jobs_count, last_job_date)
+- GET    /clients/{id}   → detail (with interventions_count, last_intervention_date)
 - PUT    /clients/{id}   → update
 - DELETE /clients/{id}   → delete
 """
@@ -22,9 +22,9 @@ from app.schemas.client import (
     ClientResponse,
     ClientUpdate,
 )
-from app.schemas.job import JobHistoryResponse
+from app.schemas.intervention import InterventionHistoryResponse
 from app.services.client import ClientService
-from app.services.job import JobService
+from app.services.intervention import InterventionService
 
 router = APIRouter(prefix="/clients", tags=["clients"])
 
@@ -59,7 +59,7 @@ async def get_client(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get a single client by ID with job statistics."""
+    """Get a single client by ID with intervention statistics."""
     service = ClientService(db)
     return await service.get_client(client_id)
 
@@ -76,17 +76,17 @@ async def update_client(
     return await service.update_client(client_id, body)
 
 
-@router.get("/{client_id}/jobs", response_model=JobHistoryResponse)
-async def get_client_jobs(
+@router.get("/{client_id}/interventions", response_model=InterventionHistoryResponse)
+async def get_client_interventions(
     client_id: int,
     page: int = 1,
     page_size: int = 50,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get paginated job history for a client (raw SQL demo)."""
-    service = JobService(db)
-    return await service.get_client_jobs(client_id, page, page_size)
+    """Get paginated intervention history for a client (raw SQL demo)."""
+    service = InterventionService(db)
+    return await service.get_client_interventions(client_id, page, page_size)
 
 
 @router.delete("/{client_id}", status_code=status.HTTP_204_NO_CONTENT)

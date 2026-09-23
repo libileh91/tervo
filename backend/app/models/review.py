@@ -1,8 +1,8 @@
 """
 Tervo — Review model.
 
-Stores client reviews for completed jobs.
-Each job can have at most one review (job_id is UNIQUE).
+Stores client reviews for completed interventions.
+Each intervention can have at most one review (intervention_id is UNIQUE).
 """
 
 from datetime import datetime
@@ -26,11 +26,11 @@ class Review(Base):
     __tablename__ = "review"
 
     id = Column(Integer, primary_key=True, index=True)
-    job_id = Column(
+    intervention_id = Column(
         Integer,
-        ForeignKey("job.id", ondelete="CASCADE"),
+        ForeignKey("intervention.id", ondelete="CASCADE"),
         nullable=False,
-        unique=True,  # un seul avis par job
+        unique=True,  # un seul avis par intervention
         index=True,
     )
     rating = Column(Integer, nullable=False)  # 1-5
@@ -42,7 +42,7 @@ class Review(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
 
     # ── Relationships ───────────────────────────────────────
-    job = relationship("Job", back_populates="review")
+    intervention = relationship("Intervention", back_populates="review")
 
     def __repr__(self) -> str:
-        return f"<Review(id={self.id}, job_id={self.job_id}, rating={self.rating})>"
+        return f"<Review(id={self.id}, intervention_id={self.intervention_id}, rating={self.rating})>"

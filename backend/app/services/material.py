@@ -8,7 +8,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.material import MaterialRepository
-from app.schemas.job import MaterialCreate, MaterialResponse
+from app.schemas.intervention import MaterialCreate, MaterialResponse
 
 
 class MaterialService:
@@ -17,17 +17,17 @@ class MaterialService:
     def __init__(self, db: AsyncSession):
         self.repo = MaterialRepository(db)
 
-    async def list_materials(self, job_id: int) -> list[MaterialResponse]:
-        materials = await self.repo.list_by_job(job_id)
+    async def list_materials(self, intervention_id: int) -> list[MaterialResponse]:
+        materials = await self.repo.list_by_intervention(intervention_id)
         return [MaterialResponse.model_validate(m) for m in materials]
 
     async def create_material(
-        self, job_id: int, data: MaterialCreate
+        self, intervention_id: int, data: MaterialCreate
     ) -> MaterialResponse:
         create_data = data.model_dump()
-        create_data["job_id"] = job_id
+        create_data["intervention_id"] = intervention_id
         # Auto-assign next position
-        existing = await self.repo.list_by_job(job_id)
+        existing = await self.repo.list_by_intervention(intervention_id)
         create_data["position"] = len(existing)
         material = await self.repo.create(create_data)
         return MaterialResponse.model_validate(material)

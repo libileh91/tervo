@@ -52,12 +52,13 @@ Je veux **aligner le nom de l'entité terrain sur le vocabulaire métier**,
 Afin de **rendre le code cohérent avec le DAT v2 et défendable en entretien**.
 
 **Acceptance Criteria**
-- [ ] Modèle `Job` → `Intervention` ; `JobStatus` → `InterventionStatus` ; table `job` → `intervention`
-- [ ] Ajout `site_id` (requis) et `equipment_id` (nullable)
-- [ ] Ajout `under_warranty: boolean` (défaut `false`)
-- [ ] Renommage propagé : schemas, service, repository, API, seed, frontend, tests
-- [ ] Migration Alembic idempotente (rename table + colonnes)
-- [ ] Tous les tests existants passent (114 → adaptés)
+- [x] Modèle `Job` → `Intervention` ; `JobStatus` → `InterventionStatus` ; table `job` → `intervention`
+- [x] Enum `InterventionStatus` en anglais (`PLANNED / IN_PROGRESS / COMPLETED / CANCELLED`)
+- [x] Ajout `under_warranty: boolean` (défaut `false`)
+- [x] Renommage propagé : schemas, service, repository, API (`/interventions`), seed, frontend, tests
+- [x] Migration Alembic idempotente (rename table + colonnes FK + enum)
+- [x] Tous les tests existants passent (114 adaptés)
+- [ ] `site_id` (requis) + `equipment_id` (nullable) → **reporté** à INT-95 / INT-97
 
 **Technical Notes**
 - Renommage mécanique **une fois, tôt** — le plus tard serait plus cher

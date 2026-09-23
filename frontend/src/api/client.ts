@@ -125,11 +125,11 @@ export const authApi = {
 export interface DashboardSummary {
   today: {
     date: string;
-    jobs_total: number;
-    jobs_in_progress: number;
-    jobs_completed: number;
+    interventions_total: number;
+    interventions_in_progress: number;
+    interventions_completed: number;
   };
-  next_job: {
+  next_intervention: {
     id: number;
     title: string;
     priority: string;
@@ -137,13 +137,13 @@ export interface DashboardSummary {
     client_address: string;
     scheduled_start_time: string | null;
   } | null;
-  in_progress_job: {
+  in_progress_intervention: {
     id: number;
     title: string;
     started_at: string;
     elapsed_minutes: number;
   } | null;
-  overdue_jobs: {
+  overdue_interventions: {
     id: number;
     title: string;
     priority: string;
@@ -221,8 +221,8 @@ export interface ClientDetailResponse {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  jobs_count: number;
-  last_job_date: string | null;
+  interventions_count: number;
+  last_intervention_date: string | null;
 }
 
 export interface ClientCreateRequest {
@@ -245,7 +245,7 @@ export interface ClientUpdateRequest {
   notes?: string;
 }
 
-export interface JobHistoryItem {
+export interface InterventionHistoryItem {
   id: number;
   title: string;
   status: string;
@@ -253,8 +253,8 @@ export interface JobHistoryItem {
   technician_name: string | null;
 }
 
-export interface JobHistoryResponse {
-  items: JobHistoryItem[];
+export interface InterventionHistoryResponse {
+  items: InterventionHistoryItem[];
   total: number;
   page: number;
   page_size: number;
@@ -276,7 +276,7 @@ export const clientsApi = {
   update: (token: string, id: number, data: Partial<ClientUpdateRequest>) =>
     api.put<ClientListItem>(`/clients/${id}`, data, token),
   delete: (token: string, id: number) => api.delete<void>(`/clients/${id}`, token),
-  getJobs: (token: string, id: number) => api.get<JobHistoryResponse>(`/clients/${id}/jobs`, token),
+  getInterventions: (token: string, id: number) => api.get<InterventionHistoryResponse>(`/clients/${id}/interventions`, token),
 };
 
 // ── Photos API (INT-27) ────────────────────────────────────
@@ -290,47 +290,47 @@ export interface PhotoResponse {
 }
 
 export const photosApi = {
-  upload: (token: string, jobId: number, file: File, category: string) => {
+  upload: (token: string, interventionId: number, file: File, category: string) => {
     const fd = new FormData();
     fd.append("file", file);
     fd.append("category", category);
-    return api.upload<PhotoResponse>(`/jobs/${jobId}/photos`, fd, token);
+    return api.upload<PhotoResponse>(`/interventions/${interventionId}/photos`, fd, token);
   },
-  delete: (token: string, jobId: number, photoId: number) =>
-    api.delete<void>(`/jobs/${jobId}/photos/${photoId}`, token),
+  delete: (token: string, interventionId: number, photoId: number) =>
+    api.delete<void>(`/interventions/${interventionId}/photos/${photoId}`, token),
 };
 
 // ── Materials API (INT-28) — préparé pour l'onglet Matériaux ──
 
 export interface MaterialItem {
   id: number;
-  job_id: number;
+  intervention_id: number;
   name: string;
   quantity: string | null;
   position: number;
 }
 
 export const materialsApi = {
-  list: (token: string, jobId: number) => api.get<MaterialItem[]>(`/jobs/${jobId}/materials`, token),
-  add: (token: string, jobId: number, data: { name: string; quantity?: string }) =>
-    api.post<MaterialItem>(`/jobs/${jobId}/materials`, data, token),
-  update: (token: string, jobId: number, materialId: number, data: { name?: string; quantity?: string }) =>
-    api.put<MaterialItem>(`/jobs/${jobId}/materials/${materialId}`, data, token),
-  remove: (token: string, jobId: number, materialId: number) =>
-    api.delete<void>(`/jobs/${jobId}/materials/${materialId}`, token),
+  list: (token: string, interventionId: number) => api.get<MaterialItem[]>(`/interventions/${interventionId}/materials`, token),
+  add: (token: string, interventionId: number, data: { name: string; quantity?: string }) =>
+    api.post<MaterialItem>(`/interventions/${interventionId}/materials`, data, token),
+  update: (token: string, interventionId: number, materialId: number, data: { name?: string; quantity?: string }) =>
+    api.put<MaterialItem>(`/interventions/${interventionId}/materials/${materialId}`, data, token),
+  remove: (token: string, interventionId: number, materialId: number) =>
+    api.delete<void>(`/interventions/${interventionId}/materials/${materialId}`, token),
 };
 
 // ── Checklist API (INT-20) ───────────────────────────────────
 
 export const checklistApi = {
-  getItems: (token: string, jobId: number) => api.get<ChecklistItemRef[]>(`/jobs/${jobId}/checklist`, token),
-  batchUpdate: (token: string, jobId: number, items: { id: number; checked?: boolean; note?: string | null }[]) =>
-    api.put<{ updated: number }>(`/jobs/${jobId}/checklist/batch`, { items }, token),
+  getItems: (token: string, interventionId: number) => api.get<ChecklistItemRef[]>(`/interventions/${interventionId}/checklist`, token),
+  batchUpdate: (token: string, interventionId: number, items: { id: number; checked?: boolean; note?: string | null }[]) =>
+    api.put<{ updated: number }>(`/interventions/${interventionId}/checklist/batch`, { items }, token),
 };
 
-// ── Job types ───────────────────────────────────────────────
+// ── Intervention types ───────────────────────────────────────────────
 
-export interface JobListItem {
+export interface InterventionListItem {
   id: number;
   title: string;
   status: string;
@@ -340,15 +340,15 @@ export interface JobListItem {
   technician: { id: number; full_name: string | null } | null;
 }
 
-export interface JobListResponse {
-  items: JobListItem[];
+export interface InterventionListResponse {
+  items: InterventionListItem[];
   total: number;
   page: number;
   page_size: number;
   pages: number;
 }
 
-export const jobsApi = {
+export const interventionsApi = {
   list: (token: string, params?: { status?: string; date?: string; page?: number; page_size?: number }) => {
     const query = new URLSearchParams();
     if (params?.status) query.set("status", params.status);
@@ -356,10 +356,10 @@ export const jobsApi = {
     if (params?.page) query.set("page", String(params.page));
     if (params?.page_size) query.set("page_size", String(params.page_size));
     const qs = query.toString();
-    return api.get<JobListResponse>(`/jobs${qs ? "?" + qs : ""}`, token);
+    return api.get<InterventionListResponse>(`/interventions${qs ? "?" + qs : ""}`, token);
   },
-  getById: (token: string, id: number) => api.get<JobDetailResponse>(`/jobs/${id}`, token),
-  create: (token: string, data: Partial<JobCreateRequest>) => api.post<JobDetailResponse>("/jobs", data, token),
+  getById: (token: string, id: number) => api.get<InterventionDetailResponse>(`/interventions/${id}`, token),
+  create: (token: string, data: Partial<InterventionCreateRequest>) => api.post<InterventionDetailResponse>("/interventions", data, token),
 };
 
 export interface ChecklistItemRef {
@@ -371,7 +371,7 @@ export interface ChecklistItemRef {
   position: number;
 }
 
-export interface JobDetailResponse {
+export interface InterventionDetailResponse {
   id: number;
   title: string;
   description: string | null;
@@ -390,7 +390,7 @@ export interface JobDetailResponse {
   checklist_items: ChecklistItemRef[];
 }
 
-export interface JobCreateRequest {
+export interface InterventionCreateRequest {
   client_id: number;
   title: string;
   description?: string;
@@ -404,15 +404,30 @@ export interface JobCreateRequest {
 
 export function statusSeverity(s: string): "success" | "info" | "warn" | "danger" | "contrast" {
   switch (s) {
-    case "terminé":
+    case "COMPLETED":
       return "success";
-    case "en_cours":
+    case "IN_PROGRESS":
       return "info";
-    case "planifié":
+    case "PLANNED":
       return "warn";
-    case "annulé":
+    case "CANCELLED":
       return "danger";
     default:
       return "contrast";
+  }
+}
+
+export function statusLabel(s: string): string {
+  switch (s) {
+    case "COMPLETED":
+      return "Terminée";
+    case "IN_PROGRESS":
+      return "En cours";
+    case "PLANNED":
+      return "Planifiée";
+    case "CANCELLED":
+      return "Annulée";
+    default:
+      return s;
   }
 }

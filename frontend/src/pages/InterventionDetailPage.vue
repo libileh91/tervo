@@ -14,20 +14,20 @@
             <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch" class="mt-2" />
         </div>
 
-        <template v-else-if="job">
+        <template v-else-if="intervention">
             <!-- En-tête -->
             <div class="header">
-                <Button icon="pi pi-arrow-left" text rounded @click="router.push({ name: 'Jobs' })" />
+                <Button icon="pi pi-arrow-left" text rounded @click="router.push({ name: 'Interventions' })" />
                 <div class="header-info">
-                    <h1>{{ job.title }}</h1>
+                    <h1>{{ intervention.title }}</h1>
                     <div class="header-chips">
-                        <Chip :label="job.status" :severity="statusSeverity(job.status)" size="small" />
+                        <Chip :label="statusLabel(intervention.status)" :severity="statusSeverity(intervention.status)" size="small" />
                         <Chip
-                            :label="priorityLabel(job.priority)"
-                            :severity="prioritySeverity(job.priority)"
+                            :label="priorityLabel(intervention.priority)"
+                            :severity="prioritySeverity(intervention.priority)"
                             size="small"
                         />
-                        <Chip :label="job.client?.full_name || '—'" severity="contrast" size="small" />
+                        <Chip :label="intervention.client?.full_name || '—'" severity="contrast" size="small" />
                     </div>
                 </div>
             </div>
@@ -35,7 +35,7 @@
             <!-- Actions -->
             <div class="actions">
                 <Button
-                    v-if="job.status === 'planifié'"
+                    v-if="intervention.status === 'PLANNED'"
                     label="▶ Démarrer"
                     severity="success"
                     fluid
@@ -43,21 +43,21 @@
                     @click="handleStart"
                 />
                 <Button
-                    v-if="job.status === 'planifié'"
+                    v-if="intervention.status === 'PLANNED'"
                     label="❌ Annuler"
                     severity="warn"
                     fluid
                     @click="showCancelDialog = true"
                 />
                 <Button
-                    v-if="job.status === 'en_cours'"
+                    v-if="intervention.status === 'IN_PROGRESS'"
                     label="📋 Checklist"
                     severity="info"
                     fluid
-                    @click="router.push({ name: 'Inspection', params: { id: job.id } })"
+                    @click="router.push({ name: 'Inspection', params: { id: intervention.id } })"
                 />
                 <Button
-                    v-if="job.status === 'en_cours'"
+                    v-if="intervention.status === 'IN_PROGRESS'"
                     label="✅ Terminer"
                     severity="danger"
                     fluid
@@ -65,7 +65,7 @@
                     @click="handleComplete"
                 />
                 <Button
-                    v-if="job.status === 'planifié' || job.status === 'annulé'"
+                    v-if="intervention.status === 'PLANNED' || intervention.status === 'CANCELLED'"
                     label="Supprimer"
                     severity="secondary"
                     fluid
@@ -79,42 +79,42 @@
                     <div class="info-grid">
                         <div class="info-field">
                             <label>Client</label>
-                            <p>{{ job.client?.full_name || "—" }}</p>
+                            <p>{{ intervention.client?.full_name || "—" }}</p>
                         </div>
                         <div class="info-field">
                             <label>Adresse</label>
-                            <p>{{ job.client?.address || "—" }}</p>
+                            <p>{{ intervention.client?.address || "—" }}</p>
                         </div>
                         <div class="info-field">
                             <label>Technicien</label>
-                            <p>{{ job.technician?.full_name || "Non assigné" }}</p>
+                            <p>{{ intervention.technician?.full_name || "Non assigné" }}</p>
                         </div>
                         <div class="info-field">
                             <label>Date planifiée</label>
-                            <p>{{ job.scheduled_date }}</p>
+                            <p>{{ intervention.scheduled_date }}</p>
                         </div>
-                        <div class="info-field" v-if="job.scheduled_start_time">
+                        <div class="info-field" v-if="intervention.scheduled_start_time">
                             <label>Créneau</label>
                             <p>
-                                {{ job.scheduled_start_time
-                                }}{{ job.scheduled_end_time ? ` - ${job.scheduled_end_time}` : "" }}
+                                {{ intervention.scheduled_start_time
+                                }}{{ intervention.scheduled_end_time ? ` - ${intervention.scheduled_end_time}` : "" }}
                             </p>
                         </div>
-                        <div class="info-field" v-if="job.started_at">
+                        <div class="info-field" v-if="intervention.started_at">
                             <label>Démarré le</label>
-                            <p>{{ formatDate(job.started_at) }}</p>
+                            <p>{{ formatDate(intervention.started_at) }}</p>
                         </div>
-                        <div class="info-field" v-if="job.completed_at">
+                        <div class="info-field" v-if="intervention.completed_at">
                             <label>Terminé le</label>
-                            <p>{{ formatDate(job.completed_at) }}</p>
+                            <p>{{ formatDate(intervention.completed_at) }}</p>
                         </div>
-                        <div class="info-field" v-if="job.description">
+                        <div class="info-field" v-if="intervention.description">
                             <label>Description</label>
-                            <p>{{ job.description }}</p>
+                            <p>{{ intervention.description }}</p>
                         </div>
-                        <div class="info-field" v-if="job.observations">
+                        <div class="info-field" v-if="intervention.observations">
                             <label>Observations</label>
-                            <p>{{ job.observations }}</p>
+                            <p>{{ intervention.observations }}</p>
                         </div>
                     </div>
                 </TabPanel>
@@ -209,7 +209,7 @@
                             </div>
                         </div>
 
-                        <p v-if="!job.photos || job.photos.length === 0" class="empty-photos">
+                        <p v-if="!intervention.photos || intervention.photos.length === 0" class="empty-photos">
                             Aucune photo pour l'instant.
                         </p>
 
@@ -284,7 +284,7 @@
                 </TabPanel>
 
                 <TabPanel header="Rapport">
-                    <div v-if="job.status !== 'terminé'" class="placeholder-tab">
+                    <div v-if="intervention.status !== 'COMPLETED'" class="placeholder-tab">
                         <i class="pi pi-lock" />
                         <span>Rapport disponible après complétion</span>
                     </div>
@@ -355,10 +355,11 @@ import Dialog from "primevue/dialog";
 import { useAuthStore } from "@/stores/auth";
 import {
     api,
-    jobsApi,
+    interventionsApi,
     materialsApi,
     photosApi,
     statusSeverity,
+    statusLabel,
     prioritySeverity,
     priorityLabel,
 } from "@/api/client";
@@ -369,7 +370,7 @@ const auth = useAuthStore();
 const toast = useToast();
 const queryClient = useQueryClient();
 
-const jobId = Number(route.params.id);
+const interventionId = Number(route.params.id);
 const showDeleteDialog = ref(false);
 const showCancelDialog = ref(false);
 const actionLoading = ref(false);
@@ -389,25 +390,25 @@ function openPreview(fileUrl: string) {
     showPreview.value = true;
 }
 
-// ── Fetch job detail ────────────────────────────────────
+// ── Fetch intervention detail ────────────────────────────────────
 
 const {
-    data: job,
+    data: intervention,
     isLoading,
     isError,
     error,
     refetch,
 } = useQuery({
-    queryKey: ["job", jobId],
-    queryFn: () => jobsApi.getById(auth.token!, jobId),
-    enabled: !!jobId,
+    queryKey: ["intervention", interventionId],
+    queryFn: () => interventionsApi.getById(auth.token!, interventionId),
+    enabled: !!interventionId,
 });
 
 // ── Computed photos by category ────────────────────────
 
-const avantPhotos = computed(() => (job.value?.photos || []).filter((p: any) => p.category === "avant"));
+const avantPhotos = computed(() => (intervention.value?.photos || []).filter((p: any) => p.category === "avant"));
 
-const apresPhotos = computed(() => (job.value?.photos || []).filter((p: any) => p.category === "après"));
+const apresPhotos = computed(() => (intervention.value?.photos || []).filter((p: any) => p.category === "après"));
 
 // ── Materials state ───────────────────────────────────────
 
@@ -421,9 +422,9 @@ const materials = ref<MaterialRow[]>([]);
 const loadingMaterials = ref(false);
 let tempIdCounter = 0;
 
-// Charger les matériaux quand le job est chargé
+// Charger les matériaux quand le intervention est chargé
 watch(
-    () => job.value?.materials,
+    () => intervention.value?.materials,
     (mats) => {
         if (mats) {
             materials.value = mats.map((m: any) => ({
@@ -447,13 +448,13 @@ function markEdited(mat: MaterialRow) {
 
 async function addMaterial(mat: MaterialRow) {
     try {
-        const created = await materialsApi.add(auth.token!, jobId, {
+        const created = await materialsApi.add(auth.token!, interventionId, {
             name: mat.name,
             quantity: mat.quantity || undefined,
         });
         mat.id = created.id;
         toast.add({ severity: "success", summary: "Matériau ajouté", life: 2000 });
-        queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+        queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
     } catch (err: any) {
         toast.add({ severity: "error", summary: "Erreur", detail: err.detail || "Erreur", life: 4000 });
     }
@@ -461,12 +462,12 @@ async function addMaterial(mat: MaterialRow) {
 
 async function updateMaterial(mat: MaterialRow) {
     try {
-        await materialsApi.update(auth.token!, jobId, mat.id, {
+        await materialsApi.update(auth.token!, interventionId, mat.id, {
             name: mat.name,
             quantity: mat.quantity || undefined,
         });
         toast.add({ severity: "success", summary: "Matériau mis à jour", life: 2000 });
-        queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+        queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
     } catch (err: any) {
         toast.add({ severity: "error", summary: "Erreur", detail: err.detail || "Erreur", life: 4000 });
     }
@@ -474,10 +475,10 @@ async function updateMaterial(mat: MaterialRow) {
 
 async function deleteMaterial(materialId: number) {
     try {
-        await materialsApi.remove(auth.token!, jobId, materialId);
+        await materialsApi.remove(auth.token!, interventionId, materialId);
         materials.value = materials.value.filter((m) => m.id !== materialId);
         toast.add({ severity: "success", summary: "Matériau supprimé", life: 2000 });
-        queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+        queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
     } catch (err: any) {
         toast.add({ severity: "error", summary: "Erreur", detail: err.detail || "Erreur", life: 4000 });
     }
@@ -504,9 +505,9 @@ async function onFileSelected(event: Event) {
 
     uploading.value = true;
     try {
-        await photosApi.upload(auth.token!, jobId, file, uploadCategory.value);
+        await photosApi.upload(auth.token!, interventionId, file, uploadCategory.value);
         toast.add({ severity: "success", summary: "Photo ajoutée", life: 3000 });
-        queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+        queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
     } catch (err: any) {
         toast.add({
             severity: "error",
@@ -524,9 +525,9 @@ async function onFileSelected(event: Event) {
 
 async function deletePhoto(photoId: number) {
     try {
-        await photosApi.delete(auth.token!, jobId, photoId);
+        await photosApi.delete(auth.token!, interventionId, photoId);
         toast.add({ severity: "success", summary: "Photo supprimée", life: 3000 });
-        queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+        queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
     } catch (err: any) {
         toast.add({
             severity: "error",
@@ -537,15 +538,15 @@ async function deletePhoto(photoId: number) {
     }
 }
 
-// ── Start job ───────────────────────────────────────────
+// ── Start intervention ───────────────────────────────────────────
 
 async function handleStart() {
     actionLoading.value = true;
     try {
-        await api.put(`/jobs/${jobId}/start`, {}, auth.token);
-        toast.add({ severity: "success", summary: "Job demarre", life: 3000 });
-        queryClient.invalidateQueries({ queryKey: ["job", jobId] });
-        queryClient.invalidateQueries({ queryKey: ["jobs"] });
+        await api.put(`/interventions/${interventionId}/start`, {}, auth.token);
+        toast.add({ severity: "success", summary: "Intervention demarre", life: 3000 });
+        queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
+        queryClient.invalidateQueries({ queryKey: ["interventions"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (err: any) {
         toast.add({
@@ -562,12 +563,12 @@ async function handleStart() {
 async function handleComplete() {
     actionLoading.value = true;
     try {
-        await api.put(`/jobs/${jobId}/complete`, { observations: null }, auth.token);
+        await api.put(`/interventions/${interventionId}/complete`, { observations: null }, auth.token);
         toast.add({ severity: "success", summary: "Intervention terminee", life: 3000 });
-        // Muter directement le job affiche
-        job.value = { ...job.value!, status: "termine" as any, completed_at: new Date().toISOString() as any };
+        // Muter directement le intervention affiche
+        intervention.value = { ...intervention.value!, status: "COMPLETED" as any, completed_at: new Date().toISOString() as any };
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-        queryClient.invalidateQueries({ queryKey: ["jobs"] });
+        queryClient.invalidateQueries({ queryKey: ["interventions"] });
     } catch (err: any) {
         toast.add({
             severity: "error",
@@ -580,15 +581,15 @@ async function handleComplete() {
     }
 }
 
-// ── Cancel job ─────────────────────────────────────────
+// ── Cancel intervention ─────────────────────────────────────────
 
 async function handleCancel() {
     cancelLoading.value = true;
     try {
-        await api.put(`/jobs/${jobId}/cancel`, {}, auth.token);
-        toast.add({ severity: "success", summary: "Job annulé", life: 3000 });
+        await api.put(`/interventions/${interventionId}/cancel`, {}, auth.token);
+        toast.add({ severity: "success", summary: "Intervention annulé", life: 3000 });
         showCancelDialog.value = false;
-        queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+        queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (err: any) {
         toast.add({
@@ -602,15 +603,15 @@ async function handleCancel() {
     }
 }
 
-// ── Delete job ──────────────────────────────────────────
+// ── Delete intervention ──────────────────────────────────────────
 
 async function handleDelete() {
     actionLoading.value = true;
     try {
-        await api.delete(`/jobs/${jobId}`, auth.token);
-        toast.add({ severity: "success", summary: "Job supprimé", life: 3000 });
+        await api.delete(`/interventions/${interventionId}`, auth.token);
+        toast.add({ severity: "success", summary: "Intervention supprimé", life: 3000 });
         showDeleteDialog.value = false;
-        router.push({ name: "Jobs" });
+        router.push({ name: "Interventions" });
     } catch (err: any) {
         toast.add({
             severity: "error",
@@ -633,14 +634,14 @@ const reportBlobUrl = ref<string | null>(null);
 
 /** Télécharge le PDF avec le token d'auth et crée une blob URL pour l'iframe. */
 async function loadReport() {
-    if (!job.value || job.value.status !== "terminé") return;
+    if (!intervention.value || intervention.value.status !== "COMPLETED") return;
 
     reportLoading.value = true;
     reportError.value = false;
     reportBlobUrl.value = null;
 
     try {
-        const response = await fetch(`/api/v1/jobs/${jobId}/report/download`, {
+        const response = await fetch(`/api/v1/interventions/${interventionId}/report/download`, {
             headers: { Authorization: `Bearer ${auth.token}` },
         });
 
@@ -657,11 +658,11 @@ async function loadReport() {
 
 /** Télécharger le PDF via blob + anchor temporaire */
 async function downloadReport() {
-    if (!job.value || job.value.status !== "terminé") return;
+    if (!intervention.value || intervention.value.status !== "COMPLETED") return;
 
     reportLoading.value = true;
     try {
-        const response = await fetch(`/api/v1/jobs/${jobId}/report/download`, {
+        const response = await fetch(`/api/v1/interventions/${interventionId}/report/download`, {
             headers: { Authorization: `Bearer ${auth.token}` },
         });
         if (!response.ok) throw new Error();
@@ -670,7 +671,7 @@ async function downloadReport() {
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement("a");
         anchor.href = url;
-        anchor.download = `rapport-intervention-${jobId}.pdf`;
+        anchor.download = `rapport-intervention-${interventionId}.pdf`;
         anchor.click();
         URL.revokeObjectURL(url);
     } catch {
@@ -685,11 +686,11 @@ async function downloadReport() {
     }
 }
 
-/** Charger le rapport quand le job est terminé */
+/** Charger le rapport quand le intervention est terminé */
 watch(
-    () => job.value?.status,
+    () => intervention.value?.status,
     (status) => {
-        if (status === "terminé") {
+        if (status === "COMPLETED") {
             loadReport();
         } else {
             reportBlobUrl.value = null;

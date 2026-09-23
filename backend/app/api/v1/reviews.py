@@ -31,7 +31,7 @@ async def get_review_by_token(
 ):
     """Aucune authentification requise.
 
-    Retourne les infos du job (titre, date complétion) + technicien +
+    Retourne les infos de l'intervention (titre, date complétion) + technicien +
     already_reviewed.
     """
     service = ReviewService(db)

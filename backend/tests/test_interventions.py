@@ -1,11 +1,11 @@
 """
-Tests for Job endpoints (INT-09, INT-10, INT-11, INT-12).
+Tests for Intervention endpoints (INT-09, INT-10, INT-11, INT-12).
 
-Covers: CRUD jobs, start, complete, dashboard, filters.
+Covers: CRUD interventions, start, complete, dashboard, filters.
 
 Run:
     cd backend/
-    uv run pytest tests/test_jobs.py -v --cov=app --cov-report=term-missing
+    uv run pytest tests/test_interventions.py -v --cov=app --cov-report=term-missing
 """
 
 from datetime import date, datetime, timedelta, timezone
@@ -22,7 +22,7 @@ from app.main import app
 from app.models import Base
 from app.models.checklist_item import ChecklistItem
 from app.models.client import Client
-from app.models.job import Job, JobStatus
+from app.models.intervention import Intervention, InterventionStatus
 from app.models.user import Role, User
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"
@@ -67,10 +67,10 @@ async def db():
 @pytest.fixture
 async def tech_user(db: AsyncSession) -> User:
     user = User(
-        username="tech_jobs",
+        username="tech_interventions",
         email="tech@test.com",
         hashed_password="dummy",
-        full_name="Tech Jobs",
+        full_name="Tech Interventions",
         role=Role.TECHNICIAN,
         is_active=True,
     )
@@ -83,7 +83,7 @@ async def tech_user(db: AsyncSession) -> User:
 @pytest.fixture
 async def other_tech(db: AsyncSession) -> User:
     user = User(
-        username="other_tech_jobs",
+        username="other_tech_interventions",
         email="other@test.com",
         hashed_password="dummy",
         full_name="Other Tech",
@@ -118,22 +118,22 @@ def other_auth_header(other_token: str) -> dict:
 
 @pytest.fixture
 async def client_fixture(db: AsyncSession) -> Client:
-    c = Client(full_name="Job Test Client", phone="0600000000", address="1 rue Test")
+    c = Client(full_name="Intervention Test Client", phone="0600000000", address="1 rue Test")
     db.add(c)
     await db.commit()
     await db.refresh(c)
     return c
 
 
-class TestJobs:
-    """Tests for /jobs/* endpoints."""
+class TestInterventions:
+    """Tests for /interventions/* endpoints."""
 
-    async def test_create_job(
+    async def test_create_intervention(
         self, client, auth_header, client_fixture, db: AsyncSession
     ):
-        """POST /jobs → 201."""
+        """POST /interventions → 201."""
         resp = await client.post(
-            "/api/v1/jobs",
+            "/api/v1/interventions",
             json={
                 "client_id": client_fixture.id,
                 "title": "Nouvelle intervention",
@@ -146,63 +146,63 @@ class TestJobs:
         assert resp.status_code == 201, resp.text
         data = resp.json()
         assert data["title"] == "Nouvelle intervention"
-        assert data["status"] == "planifié"
+        assert data["status"] == "PLANNED"
         assert data["priority"] == "haute"
 
-    async def test_list_jobs(
+    async def test_list_interventions(
         self, client, auth_header, client_fixture, db: AsyncSession, tech_user
     ):
-        """GET /jobs → 200 + list."""
+        """GET /interventions → 200 + list."""
         for i in range(2):
             db.add(
-                Job(
+                Intervention(
                     client_id=client_fixture.id,
                     technician_id=tech_user.id,
-                    title=f"Job {i}",
-                    status=JobStatus.PLANIFIE,
+                    title=f"Intervention {i}",
+                    status=InterventionStatus.PLANNED,
                     scheduled_date=date.today(),
                 )
             )
         await db.commit()
 
-        resp = await client.get("/api/v1/jobs", headers=auth_header)
+        resp = await client.get("/api/v1/interventions", headers=auth_header)
         assert resp.status_code == 200
         data = resp.json()
         assert len(data) >= 2
 
-    async def test_get_job_by_id(
+    async def test_get_intervention_by_id(
         self, client, auth_header, client_fixture, db: AsyncSession, tech_user
     ):
-        """GET /jobs/{id} → 200."""
-        j = Job(
+        """GET /interventions/{id} → 200."""
+        j = Intervention(
             client_id=client_fixture.id,
             technician_id=tech_user.id,
-            title="Detail Job",
-            status=JobStatus.PLANIFIE,
+            title="Detail Intervention",
+            status=InterventionStatus.PLANNED,
             scheduled_date=date.today(),
         )
         db.add(j)
         await db.commit()
         await db.refresh(j)
 
-        resp = await client.get(f"/api/v1/jobs/{j.id}", headers=auth_header)
+        resp = await client.get(f"/api/v1/interventions/{j.id}", headers=auth_header)
         assert resp.status_code == 200
-        assert resp.json()["title"] == "Detail Job"
+        assert resp.json()["title"] == "Detail Intervention"
 
-    async def test_get_job_not_found(self, client, auth_header):
-        """GET /jobs/99999 → 404."""
-        resp = await client.get("/api/v1/jobs/99999", headers=auth_header)
+    async def test_get_intervention_not_found(self, client, auth_header):
+        """GET /interventions/99999 → 404."""
+        resp = await client.get("/api/v1/interventions/99999", headers=auth_header)
         assert resp.status_code == 404
 
-    async def test_update_job(
+    async def test_update_intervention(
         self, client, auth_header, client_fixture, db: AsyncSession, tech_user
     ):
-        """PUT /jobs/{id} → 200."""
-        j = Job(
+        """PUT /interventions/{id} → 200."""
+        j = Intervention(
             client_id=client_fixture.id,
             technician_id=tech_user.id,
             title="Old Title",
-            status=JobStatus.PLANIFIE,
+            status=InterventionStatus.PLANNED,
             scheduled_date=date.today(),
         )
         db.add(j)
@@ -210,40 +210,40 @@ class TestJobs:
         await db.refresh(j)
 
         resp = await client.put(
-            f"/api/v1/jobs/{j.id}",
+            f"/api/v1/interventions/{j.id}",
             json={"title": "New Title"},
             headers=auth_header,
         )
         assert resp.status_code == 200
         assert resp.json()["title"] == "New Title"
 
-    async def test_delete_job(
+    async def test_delete_intervention(
         self, client, auth_header, client_fixture, db: AsyncSession, tech_user
     ):
-        """DELETE /jobs/{id} → 204."""
-        j = Job(
+        """DELETE /interventions/{id} → 204."""
+        j = Intervention(
             client_id=client_fixture.id,
             technician_id=tech_user.id,
             title="To Delete",
-            status=JobStatus.PLANIFIE,
+            status=InterventionStatus.PLANNED,
             scheduled_date=date.today(),
         )
         db.add(j)
         await db.commit()
         await db.refresh(j)
 
-        resp = await client.delete(f"/api/v1/jobs/{j.id}", headers=auth_header)
+        resp = await client.delete(f"/api/v1/interventions/{j.id}", headers=auth_header)
         assert resp.status_code == 204
 
-    async def test_start_job(
+    async def test_start_intervention(
         self, client, auth_header, client_fixture, db: AsyncSession, tech_user
     ):
-        """PUT /jobs/{id}/start → 200 + status en_cours."""
-        j = Job(
+        """PUT /interventions/{id}/start → 200 + status IN_PROGRESS."""
+        j = Intervention(
             client_id=client_fixture.id,
             technician_id=tech_user.id,
             title="Startable",
-            status=JobStatus.PLANIFIE,
+            status=InterventionStatus.PLANNED,
             scheduled_date=date.today(),
         )
         db.add(j)
@@ -251,21 +251,21 @@ class TestJobs:
         await db.refresh(j)
 
         resp = await client.put(
-            f"/api/v1/jobs/{j.id}/start",
+            f"/api/v1/interventions/{j.id}/start",
             headers=auth_header,
         )
         assert resp.status_code == 200, resp.text
-        assert resp.json()["status"] == "en_cours"
+        assert resp.json()["status"] == "IN_PROGRESS"
 
-    async def test_start_job_already_started(
+    async def test_start_intervention_already_started(
         self, client, auth_header, client_fixture, db: AsyncSession, tech_user
     ):
-        """PUT /jobs/{id}/start on already started → 400."""
-        j = Job(
+        """PUT /interventions/{id}/start on already started → 400."""
+        j = Intervention(
             client_id=client_fixture.id,
             technician_id=tech_user.id,
             title="Already Started",
-            status=JobStatus.EN_COURS,
+            status=InterventionStatus.IN_PROGRESS,
             scheduled_date=date.today(),
             started_at=datetime.now(timezone.utc),
         )
@@ -274,20 +274,20 @@ class TestJobs:
         await db.refresh(j)
 
         resp = await client.put(
-            f"/api/v1/jobs/{j.id}/start",
+            f"/api/v1/interventions/{j.id}/start",
             headers=auth_header,
         )
         assert resp.status_code == 400
 
-    async def test_complete_job(
+    async def test_complete_intervention(
         self, client, auth_header, client_fixture, db: AsyncSession, tech_user
     ):
-        """PUT /jobs/{id}/complete with checked checklist → 200."""
-        j = Job(
+        """PUT /interventions/{id}/complete with checked checklist → 200."""
+        j = Intervention(
             client_id=client_fixture.id,
             technician_id=tech_user.id,
             title="Completable",
-            status=JobStatus.EN_COURS,
+            status=InterventionStatus.IN_PROGRESS,
             scheduled_date=date.today(),
             started_at=datetime.now(timezone.utc),
         )
@@ -302,31 +302,31 @@ class TestJobs:
         ]:
             db.add(
                 ChecklistItem(
-                    job_id=j.id, category=cat, label=label, checked=True, position=0
+                    intervention_id=j.id, category=cat, label=label, checked=True, position=0
                 )
             )
         await db.commit()
 
         resp = await client.put(
-            f"/api/v1/jobs/{j.id}/complete",
+            f"/api/v1/interventions/{j.id}/complete",
             json={"observations": "Done!"},
             headers=auth_header,
         )
         assert resp.status_code == 200, resp.text
         data = resp.json()
-        assert data["status"] == "terminé"
+        assert data["status"] == "COMPLETED"
         assert "review_share_token" in data
         assert "report_url" in data
 
-    async def test_complete_job_not_en_cours(
+    async def test_complete_intervention_not_in_progress(
         self, client, auth_header, client_fixture, db: AsyncSession, tech_user
     ):
-        """PUT /jobs/{id}/complete on planifié → 400."""
-        j = Job(
+        """PUT /interventions/{id}/complete on PLANNED → 400."""
+        j = Intervention(
             client_id=client_fixture.id,
             technician_id=tech_user.id,
-            title="Planifié",
-            status=JobStatus.PLANIFIE,
+            title="Planifiée",
+            status=InterventionStatus.PLANNED,
             scheduled_date=date.today(),
         )
         db.add(j)
@@ -334,7 +334,7 @@ class TestJobs:
         await db.refresh(j)
 
         resp = await client.put(
-            f"/api/v1/jobs/{j.id}/complete",
+            f"/api/v1/interventions/{j.id}/complete",
             json={},
             headers=auth_header,
         )
@@ -344,11 +344,11 @@ class TestJobs:
         self, client, other_auth_header, client_fixture, db: AsyncSession, tech_user
     ):
         """Wrong tech → 403."""
-        j = Job(
+        j = Intervention(
             client_id=client_fixture.id,
             technician_id=tech_user.id,
             title="Not Yours",
-            status=JobStatus.PLANIFIE,
+            status=InterventionStatus.PLANNED,
             scheduled_date=date.today(),
         )
         db.add(j)
@@ -356,25 +356,25 @@ class TestJobs:
         await db.refresh(j)
 
         resp = await client.put(
-            f"/api/v1/jobs/{j.id}/start",
+            f"/api/v1/interventions/{j.id}/start",
             headers=other_auth_header,
         )
         assert resp.status_code == 403
 
     async def test_no_auth(self, client, client_fixture, db: AsyncSession, tech_user):
         """No auth → 401."""
-        j = Job(
+        j = Intervention(
             client_id=client_fixture.id,
             technician_id=tech_user.id,
             title="No Auth",
-            status=JobStatus.PLANIFIE,
+            status=InterventionStatus.PLANNED,
             scheduled_date=date.today(),
         )
         db.add(j)
         await db.commit()
         await db.refresh(j)
 
-        resp = await client.put(f"/api/v1/jobs/{j.id}/start")
+        resp = await client.put(f"/api/v1/interventions/{j.id}/start")
         assert resp.status_code == 401
 
 
@@ -382,24 +382,24 @@ class TestDashboard:
     """Tests for /dashboard/summary endpoint (INT-12)."""
 
     async def test_dashboard_empty(self, client, auth_header):
-        """No jobs today → empty summary."""
+        """No interventions today → empty summary."""
         resp = await client.get("/api/v1/dashboard/summary", headers=auth_header)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["today"]["jobs_total"] == 0
-        assert data["next_job"] is None
+        assert data["today"]["interventions_total"] == 0
+        assert data["next_intervention"] is None
 
-    async def test_dashboard_with_jobs(
+    async def test_dashboard_with_interventions(
         self, client, auth_header, client_fixture, db: AsyncSession, tech_user
     ):
-        """Jobs today → summary with counts."""
+        """Interventions today → summary with counts."""
         for i in range(2):
             db.add(
-                Job(
+                Intervention(
                     client_id=client_fixture.id,
                     technician_id=tech_user.id,
-                    title=f"Job {i}",
-                    status=JobStatus.PLANIFIE,
+                    title=f"Intervention {i}",
+                    status=InterventionStatus.PLANNED,
                     scheduled_date=date.today(),
                 )
             )
@@ -408,5 +408,5 @@ class TestDashboard:
         resp = await client.get("/api/v1/dashboard/summary", headers=auth_header)
         assert resp.status_code == 200
         data = resp.json()
-        assert data["today"]["jobs_total"] == 2
-        assert data["next_job"] is not None
+        assert data["today"]["interventions_total"] == 2
+        assert data["next_intervention"] is not None
