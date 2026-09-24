@@ -154,6 +154,10 @@ Migration / Import historique
 PostgreSQL  (ImportBatch / ImportRecord / ImportError)
 ```
 
+Lecture V1 : `.xlsx` et `.csv`, multi-feuilles, en-tête détecté ou choisi, encodage et séparateur visibles. Les sources restent intactes ; l’aperçu conserve fichier/feuille/ligne physique, valeurs brutes, normalisées, anomalies et propositions. Les décisions détaillées et les champs de traçabilité sont définis dans [le modèle de données](02-data-model.md#décisions-lot-2-validées).
+
+La validation structurelle produit des candidats, pas une autorisation d’écriture. Le rapprochement privilégie les références source fiables, puis propose des correspondances métier. Les seuils 95/80 n’annulent ni un conflit d’identité ni une demande explicite de revue. L’exécution doit utiliser le fichier, le mapping et les décisions effectivement validés. La lecture actuelle charge une feuille en mémoire ; les transactions par 500 lignes concernent la persistance, pas une garantie de lecture en flux.
+
 Il est conçu **conjointement** avec le modèle de données métier (champs nullable de
 l'historique, provenance, traçabilité).
 

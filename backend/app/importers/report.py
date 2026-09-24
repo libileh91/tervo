@@ -94,7 +94,7 @@ class ImportReport:
     Attributes:
         filename: Nom du fichier d'origine.
         file_hash: SHA-256 du fichier — clé de l'idempotence.
-        kind: Nature de l'import (`clients`, `jobs`, `mixed`).
+        kind: Nature de l'import (`clients`, `sites`, `equipment`, `interventions`, `products`, `mixed`).
         batch_size: Taille de batch utilisée.
         status: Statut courant, mis à jour par `finalize()`.
         started_at: Début de l'import.
@@ -143,7 +143,8 @@ class ImportReport:
     @property
     def error_count(self) -> int:
         """Nombre de lignes en anomalie (dédupliquées par ligne)."""
-        return len({e.row for e in self.errors})
+        return len({(e.source_file, e.source_sheet, e.row) for e in self.errors
+                    if e.severity != "warning"})
 
     @property
     def is_finished(self) -> bool:

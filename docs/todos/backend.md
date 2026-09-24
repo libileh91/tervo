@@ -171,3 +171,15 @@
 | **Fichiers** | `app/models/equipment.py`, futur `app/models/installation.py`, migration, services et tests |
 | **Action attendue** | Ajouter la FK Equipment.installation_id, son unicité (Installation 1 → 0..1 Equipment) et les relations ORM. Alimenter ce champ uniquement lors de la réalisation d’une installation, en vérifiant site et produit. La colonne reste nullable pour les imports historiques. |
 | **Statut** | ⏳ En attente d’INT-103 ; aucun identifiant libre accepté par l’API actuelle |
+
+---
+
+## TD-B015 — Consommer les candidats et arbitrages INT-98
+
+| Champ | Valeur |
+| --- | --- |
+| **Créé dans** | INT-98 |
+| **Dépend de** | INT-99 (matching), INT-100 (persistance), INT-101 (API et décisions) |
+| **Fichiers** | `app/importers/validators.py`, `matcher.py`, `app/services/import_service.py`, futurs modèles ImportRecord/ImportError et API admin |
+| **Action attendue** | Résoudre les références dans leur namespace ; prouver toute association client avant de rendre MISSING_PHONE non bloquant ; appliquer les décisions validées (site/titre, statut historique, doublons et remplacement), puis enregistrer provenance/actions. Ne jamais écrire directement les dictionnaires normalized contenant des valeurs absentes sur un client existant. Vérifier les doublons d’interventions inter-fichiers et les orphelins C999. |
+| **Statut** | ⏳ Candidats et propositions disponibles ; rapprochement et exécution non implémentés |

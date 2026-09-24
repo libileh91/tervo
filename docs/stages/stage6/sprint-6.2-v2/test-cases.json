@@ -91,22 +91,68 @@
     {
       "id": "TC-INT-98-01",
       "task": "INT-98",
-      "title": "FormatDetector — mapping multi-entités",
-      "type": "unit",
-      "preconditions": ["3 fixtures Excel (2010, 2018, 2024) avec colonnes site/équipement/produit/intervention"],
+      "title": "Lecture et mapping des archives v2",
+      "type": "integration",
+      "preconditions": [
+        "Fixtures fictives autonomes tests/fixtures/excel"
+      ],
       "steps": [
-        "Charger chaque fixture",
-        "Appeler FormatDetector.detect()",
-        "Comparer le mapping retourné"
+        "Lire les trois classeurs et leurs feuilles",
+        "Lire le CSV Latin-1",
+        "Tester le mapping des cinq entités et les corrections manuelles",
+        "Créer une variante avec titre et lignes vides"
       ],
       "expected_result": {
-        "site_name_detecte": "'Site' → site_name",
-        "serial_number_detecte": "'N° série' → serial_number",
-        "product_detecte": "'Référence' → product_reference",
-        "intervention_type_detecte": "'Type' → intervention_type",
-        "score_confiance": ">= 0.8"
+        "sources_inchangees": true,
+        "ligne_physique_conservee": true,
+        "type_contextuel": true,
+        "ambiguite_non_mappee": true,
+        "encodage": "latin-1"
       },
-      "actual_result": null
+      "actual_result": "Validé : tests/test_importers_v2.py"
+    },
+    {
+      "id": "TC-INT-98-02",
+      "task": "INT-98",
+      "title": "Téléphone absent et association certaine",
+      "type": "unit",
+      "preconditions": [
+        "C006 sans téléphone ni adresse"
+      ],
+      "steps": [
+        "Valider comme création",
+        "Valider avec association interne certaine à un client existant"
+      ],
+      "expected_result": {
+        "creation": "MISSING_PHONE et MISSING_ADDRESS bloquants",
+        "association": "avertissements, aucun téléphone inventé ou effacé",
+        "preuve_identite": "à fournir par INT-99"
+      },
+      "actual_result": "Validé : tests/test_importers_v2.py"
+    },
+    {
+      "id": "TC-INT-98-03",
+      "task": "INT-98",
+      "title": "Anomalies historiques et conservation des sources",
+      "type": "integration",
+      "preconditions": [
+        "Jeu fictif"
+      ],
+      "steps": [
+        "Valider C001/C005, E003, E004/E005 et INT-2022-999",
+        "Valider INT-2023-010 sans appareil",
+        "Tester dates courtes avec et sans siècle confirmé",
+        "Tester formules, garanties inversées et champs sans mapping"
+      ],
+      "expected_result": {
+        "doublon_et_remplacement": "review",
+        "serie_absente": "warning",
+        "date_impossible": "error",
+        "equipement_diagnostic": null,
+        "sources_et_valeurs": "conservées",
+        "orphelin_C999": "résolution différée INT-99/100"
+      },
+      "actual_result": "Validé : tests/test_importers_v2.py"
     },
     {
       "id": "TC-INT-99-01",

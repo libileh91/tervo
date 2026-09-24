@@ -39,7 +39,7 @@ Flux complet :
     ClientMatcher.match()      (3 zones : ≥95 auto / 80-95 humain / <80 nouveau)
       │
       ▼
-    ImportService              (PASS 1 clients → PASS 2 jobs, transaction par batch)
+    ImportService              (PASS 1 clients/sites/équipements → PASS 2 interventions, transaction par batch)
       │
       ▼
     PostgreSQL + ImportReport

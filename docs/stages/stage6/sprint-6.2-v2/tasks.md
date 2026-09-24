@@ -132,11 +132,11 @@ Afin de **suivre son historique et ses interventions sur la durée**.
 ## Lot 2 — Migration Excel (remontée) (18 pts)
 
 > **C'est le différenciateur entretien.** Le package `app/importers/` (INT-71) est réutilisé :
-> la *structure* du pipeline reste, seuls le vocabulaire et les cibles changent.
+> la *structure* du pipeline reste, mais ses méthodes sont encore des squelettes : le Lot 2 implémente la lecture, la normalisation, la validation, le rapprochement et la persistance.
 
 ---
 
-## INT-98 — Retarget du pipeline sur le nouveau vocabulaire (5 pts)
+## INT-98 — Lecture et validation du pipeline v2 (5 pts, estimation à revoir)
 
 **User Story**
 En tant que **dev backend**,
@@ -144,15 +144,18 @@ Je veux **adapter le pipeline d'import au modèle v2**,
 Afin de **lire des fichiers historiques vers `Client → Site → Equipment → Intervention → Product`**.
 
 **Acceptance Criteria**
-- [ ] `InternalField` enrichi : `SITE_NAME`, `SITE_ADDRESS`, `SERIAL_NUMBER`, `INSTALLATION_DATE`, `WARRANTY_*`, `PRODUCT_*`, `INTERVENTION_TYPE`, etc.
-- [ ] `FormatDetector` : synonymes pour site, équipement, produit, intervention
-- [ ] `Normalizer` : + `serial_number`, `date`, `warranty_date`
-- [ ] `Validator` : champs requis par nature (`clients`, `sites`, `equipment`, `interventions`, `products`)
-- [ ] Test : 3 fixtures Excel (formats 2010/2018/2024) → mapping correct sur les 5 entités
+- [x] Lire `.xlsx` multi-feuilles et `.csv` (UTF-8/Latin-1, séparateur détecté/configurable), sans modifier les sources ; `.xls` explicitement non supporté en V1
+- [x] Détecter/configurer la ligne d’en-tête ; conserver fichier, feuille, ligne physique et valeurs originales
+- [x] Mapping v2 pour clients/sites/équipements/interventions/produits, identifiants historiques et nom/prénom ; mapping manuel contrôlé, ambiguïtés signalées
+- [x] Normaliser noms, téléphones, adresses, séries, dates et garanties sans inventer de valeurs absentes
+- [x] Valider les champs par entité ; `MISSING_PHONE` bloque un nouveau client, avertit pour une association certaine fournie par l’étape de rapprochement ; absence d’adresse distincte
+- [x] Aperçu sérialisable des sources, transformations, propositions et anomalies, sans écriture en base
+- [x] Tests : trois formats Excel dont un avec titre avant en-têtes, CSV Latin-1, champs manquants, dates impossibles et conservation des sources
 
 **Technical Notes**
-- Réutilise `excel_reader`, `format_detector`, `normalizer`, `validators` (INT-71)
-- Fixtures : `backend/tests/fixtures/excel/`
+- Implémentation des squelettes `excel_reader`, `format_detector`, `normalizer`, `validators` (INT-71).
+- Fixtures autonomes dans `backend/tests/fixtures/excel/`, issues du pack fictif et variantes séparées ; sources inchangées.
+- Le matching et la preuve d’association restent INT-99 ; persistance/reprise INT-100 ; API et décisions humaines INT-101.
 
 ---
 
@@ -167,7 +170,9 @@ Afin de **ne pas créer de doublons ni fusionner des entités distinctes**.
 - [ ] `ClientMatcher` généralisé : match client, puis site dans le client, puis équipement dans le site
 - [ ] 3 zones conservées (`≥95` auto / `80-95` humain / `<80` nouveau) par niveau
 - [ ] Score composite : nom + téléphone (client), adresse + ville (site), n° série + produit (équipement)
-- [ ] Test : cas exact / proche (ambigu) / distinct sur chaque niveau
+- [ ] Références source fiables prioritaires, noms seuls insuffisants, conflits et doublons signalés → validation humaine même au-dessus de 95
+- [ ] Candidats doublons d’interventions inter-fichiers ; ne pas confondre diagnostic et réparation
+- [ ] Test : cas exact / proche (ambigu) / distinct sur chaque niveau, C001/C005, téléphone absent et export ancien recouvrant le récent
 
 **Technical Notes**
 - `rapidfuzz.fuzz.token_sort_ratio` (ordre de mots insensible)
@@ -186,7 +191,9 @@ Afin de **garantir la cohérence sans bloquer sur 20 ans de données**.
 - [ ] PASS 1 : `Client → Site → Equipment` (résolution + IDs canoniques)
 - [ ] PASS 2 : `Intervention` (résolution `site_id` + `equipment_id`)
 - [ ] Transaction **par batch** (500 lignes), pas une transaction géante
-- [ ] Idempotence : SHA-256 + `ImportBatch` (`status=success` → skip)
+- [ ] Idempotence : SHA-256 + `ImportBatch` (`status=success` → skip), reprise des imports partiels via lignes déjà commitées
+- [ ] `ImportRecord` : namespace, référence source, fichier/feuille/ligne, valeurs originales/normalisées, cible, action et décision ; correspondances réutilisables entre fichiers
+- [ ] Product résolu avant Equipment si référence fiable ; sinon product_id nullable et attributs sources conservés
 - [ ] Interventions orphelines → `import_errors` (`ORPHAN`), jamais ignorées
 - [ ] Test : erreur simulée au batch 2 → batch 1 commité, batch 2 rollback
 
@@ -204,9 +211,10 @@ Je veux **prévisualiser, valider puis exécuter un import**,
 Afin de **contrôler ce qui sera inséré avant de le faire**.
 
 **Acceptance Criteria**
-- [ ] `POST /api/v1/admin/import/preview` → 10 lignes + mapping détecté
+- [ ] `POST /api/v1/admin/import/preview` → 10 lignes + mapping détecté, feuille/en-tête/encodage, provenance, transformations et propositions à confirmer
 - [ ] `POST /api/v1/admin/import/validate` → statistiques (prêts / doublons / erreurs)
-- [ ] `POST /api/v1/admin/import/execute` → import + rapport
+- [ ] `POST /api/v1/admin/import/execute` → import + rapport ; exécuter uniquement le fichier, mapping et décisions validés, sans recalcul silencieux
+- [ ] Décisions humaines tracées : doublons, noms de sites proposés, remplacement documenté ; données obligatoires manquantes corrigées ou laissées en attente
 - [ ] `GET /api/v1/admin/import/batches` + `GET .../batches/{id}/errors`
 - [ ] Auth `role=admin` requise
 - [ ] Tests API pour chaque endpoint

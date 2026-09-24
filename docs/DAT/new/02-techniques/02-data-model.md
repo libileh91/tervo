@@ -1106,7 +1106,15 @@ ImportRecord
 ├── id
 ├── import_batch_id
 ├── source_file
-├── source_row
+├── source_sheet
+├── source_row          -- numéro physique, en-tête compris
+├── source_namespace    -- famille/système source, commun aux fichiers liés
+├── source_entity_type
+├── source_id           -- identifiant historique, jamais un ID Tervo
+├── original_values
+├── normalized_values
+├── action              -- create / associate / ignore / pending
+├── decision            -- motif, validateur et date si décision humaine
 ├── source_hash
 ├── entity_type         -- client / site / equipment / intervention / product
 └── entity_id
@@ -1114,7 +1122,11 @@ ImportRecord
 ImportError
 ├── id
 ├── import_batch_id
-├── ligne
+├── source_file
+├── source_sheet
+├── ligne              -- numéro physique
+├── code               -- MISSING_PHONE, INVALID_VALUE, etc.
+├── severity           -- error / review / warning
 ├── colonne
 ├── valeur
 ├── erreur
@@ -1122,6 +1134,19 @@ ImportError
 ├── original_value
 └── created_at
 ```
+
+### Décisions Lot 2 validées
+
+- ImportBatch décrit l’exécution d’un fichier ; les transactions de 500 lignes sont des sous-lots. En cas de reprise, les ImportRecord déjà commités empêchent de rejouer ces lignes. SHA-256 protège le fichier identique ; le rapprochement métier protège les réexports différents.
+- Une correspondance source fiable utilise `(source_namespace, source_entity_type, source_id)` et peut pointer depuis plusieurs anciennes références vers la même entité Tervo. Une référence contradictoire exige une décision humaine.
+- Conserver fichier, feuille, ligne physique et valeurs originales, y compris pour les lignes invalides et les colonnes sans cible métier. Les dates normalisées ne remplacent pas la valeur source.
+- Client.phone reste obligatoire pour créer un client. `MISSING_PHONE` bloque la création ; si un client existant est identifié avec certitude, l’association peut être autorisée avec avertissement, sans effacer son téléphone. Le nom seul ne suffit pas. L’adresse manquante est une anomalie distincte.
+- Site.name absent : proposer un libellé issu de l’adresse dans l’aperçu, soumis à validation. Ne pas confondre adresse de facturation et chantier.
+- Produit sans référence fiable : Equipment.product_id reste NULL ; conserver marque/modèle sources. Pas de référence catalogue inventée.
+- C001/C005 du jeu fictif : validation humaine requise malgré un score élevé. E004/E005 : lien de remplacement proposé, jamais déduit automatiquement du texte.
+- Rapprocher aussi les interventions entre fichiers ; sans référence fiable, site/date/description produisent des candidats, pas une fusion automatique.
+- Les champs type, résultat, technicien et références documentaires sont conservés. Leur mapping métier est explicite ; aucun compte utilisateur créé depuis un prénom, aucun statut opérationnel déduit du seul résultat.
+- Aucun Sale/Installation/contrat/facture artificiel. PDF annexes sans OCR ni nouveau module documentaire.
 
 > **Règle :** ces tables assurent la **traçabilité du pipeline de migration** et ne
 > constituent **pas** le modèle métier principal. Elles ne sont utilisées que par l'import,

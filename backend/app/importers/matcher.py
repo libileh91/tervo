@@ -191,9 +191,9 @@ class ClientMatcher:
             non automatiques.
 
         Todo:
-            INT-74 — implémentation.
+            INT-99 — implémentation.
         """
-        raise NotImplementedError("INT-74 — ClientMatcher.match()")
+        raise NotImplementedError("INT-99 — ClientMatcher.match()")
 
     def score(
         self,
@@ -206,14 +206,14 @@ class ClientMatcher:
         l'ordre des mots (`"Dupont Jean"` ≈ `"Jean Dupont"`).
 
         Todo:
-            INT-74 — implémentation.
+            INT-99 — implémentation.
         """
-        raise NotImplementedError("INT-74 — ClientMatcher.score()")
+        raise NotImplementedError("INT-99 — ClientMatcher.score()")
 
     def classify(self, score: float) -> MatchZone:
         """Traduit un score en zone de décision.
 
         Todo:
-            INT-74 — implémentation.
+            INT-99 — implémentation.
         """
-        raise NotImplementedError("INT-74 — ClientMatcher.classify()")
+        raise NotImplementedError("INT-99 — ClientMatcher.classify()")
