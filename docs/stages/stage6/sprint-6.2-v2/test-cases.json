@@ -22,7 +22,7 @@
         "under_warranty_default_false": "true",
         "tests_verts": "true"
       },
-      "actual_result": null
+      "actual_result": "Validé : tests backend (141 réussis) et migrations PostgreSQL 17.4 pour INT-94–97"
     },
     {
       "id": "TC-INT-95-01",
@@ -41,16 +41,18 @@
         "client_sites_count": 2,
         "site_sans_client_rejete": "true"
       },
-      "actual_result": null
+      "actual_result": "Validé : tests backend (141 réussis) et migrations PostgreSQL 17.4 pour INT-94–97"
     },
     {
       "id": "TC-INT-96-01",
       "task": "INT-96",
       "title": "Product — référence vs instance",
       "type": "integration",
-      "preconditions": ["Un produit créé"],
+      "preconditions": [
+        "Un produit créé"
+      ],
       "steps": [
-        "POST /api/v1/products (brand, model, reference, category)",
+        "POST /api/v1/products (name, brand, model, reference, category)",
         "Créer 2 équipements liés à ce produit",
         "Désactiver le produit",
         "Vérifier que le produit n'est pas supprimé physiquement"
@@ -60,7 +62,10 @@
         "product_1_to_N_equipment": "true",
         "soft_delete": "true"
       },
-      "actual_result": null
+      "actual_result": {
+        "catalogue": "Création, désactivation et conservation validées par test_products.py",
+        "equipment": "Validé INT-97 : deux appareils, historique conservé après remplacement et désactivation"
+      }
     },
     {
       "id": "TC-INT-97-01",
@@ -81,7 +86,7 @@
         "historique_conserve": "true",
         "pas_de_statut_PLANNED": "true"
       },
-      "actual_result": null
+      "actual_result": "Validé : tests backend (141 réussis) et migrations PostgreSQL 17.4 pour INT-94–97"
     },
     {
       "id": "TC-INT-98-01",
@@ -325,6 +330,47 @@
         "historique_ancien_conserve": "true"
       },
       "actual_result": null
+    },
+    {
+      "id": "TC-INT-96-02",
+      "task": "INT-96",
+      "title": "Catalogue — validation et unicité",
+      "type": "integration",
+      "preconditions": [
+        "Base de test isolée"
+      ],
+      "steps": [
+        "Créer deux produits de même référence",
+        "Modifier vers une référence existante",
+        "Envoyer une chaîne vide ou null sur un champ obligatoire",
+        "Effacer description et characteristics via PATCH null"
+      ],
+      "expected_result": {
+        "doublons": 409,
+        "invalides": 422,
+        "champs_optionnels_effaces": true
+      },
+      "actual_result": "Validé : tests/test_products.py"
+    },
+    {
+      "id": "TC-INT-96-03",
+      "task": "INT-96",
+      "title": "Catalogue — recherche, pagination et droits",
+      "type": "integration",
+      "preconditions": [
+        "Base de test isolée"
+      ],
+      "steps": [
+        "Filtrer par search, brand, category, active",
+        "Paginer avec limit",
+        "Tenter une écriture TECHNICIAN et une lecture anonyme"
+      ],
+      "expected_result": {
+        "filtres_et_totaux": "cohérents",
+        "ecriture_technicien": 403,
+        "lecture_anonyme": "401 ou 403"
+      },
+      "actual_result": "Validé : tests/test_products.py"
     }
   ]
 }

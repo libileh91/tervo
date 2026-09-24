@@ -11,7 +11,7 @@
             <Message severity="error">
                 Impossible de charger l'intervention : {{ error?.message || "Erreur inconnue" }}
             </Message>
-            <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch" class="mt-2" />
+            <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch()" class="mt-2" />
         </div>
 
         <template v-else-if="intervention">
@@ -27,7 +27,7 @@
                             :severity="prioritySeverity(intervention.priority)"
                             size="small"
                         />
-                        <Chip :label="intervention.client?.full_name || '—'" severity="contrast" size="small" />
+                        <Chip :label="intervention.site?.name || '—'" severity="contrast" size="small" />
                     </div>
                 </div>
             </div>
@@ -75,15 +75,15 @@
 
             <!-- Onglets -->
             <TabView>
-                <TabPanel header="Infos">
+                <TabPanel value="0" header="Infos">
                     <div class="info-grid">
                         <div class="info-field">
-                            <label>Client</label>
-                            <p>{{ intervention.client?.full_name || "—" }}</p>
+                            <label>Site</label>
+                            <p>{{ intervention.site?.name || "—" }}</p>
                         </div>
                         <div class="info-field">
                             <label>Adresse</label>
-                            <p>{{ intervention.client?.address || "—" }}</p>
+                            <p>{{ intervention.site?.address || "—" }}</p>
                         </div>
                         <div class="info-field">
                             <label>Technicien</label>
@@ -119,14 +119,14 @@
                     </div>
                 </TabPanel>
 
-                <TabPanel header="Checklist" :disabled="true">
+                <TabPanel value="1" header="Checklist" :disabled="true">
                     <p class="placeholder-tab">
                         Disponible dans une prochaine version
                         <i class="pi pi-hourglass" />
                     </p>
                 </TabPanel>
 
-                <TabPanel header="Photos">
+                <TabPanel value="2" header="Photos">
                     <div class="photos-tab">
                         <!-- Upload buttons -->
                         <div class="upload-buttons">
@@ -216,7 +216,7 @@
                         <!-- Preview Dialog -->
                         <Dialog
                             v-model:visible="showPreview"
-                            :header="null"
+                            :header="undefined"
                             modal
                             dismissableMask
                             :style="{ maxWidth: '95vw', maxHeight: '90vh' }"
@@ -228,7 +228,7 @@
                     </div>
                 </TabPanel>
 
-                <TabPanel header="Matériaux">
+                <TabPanel value="3" header="Matériaux">
                     <div class="materials-tab">
                         <!-- Liste des matériaux existants -->
                         <div v-for="(mat, index) in materials" :key="mat.id" class="material-row">
@@ -283,7 +283,7 @@
                     </div>
                 </TabPanel>
 
-                <TabPanel header="Rapport">
+                <TabPanel value="4" header="Rapport">
                     <div v-if="intervention.status !== 'COMPLETED'" class="placeholder-tab">
                         <i class="pi pi-lock" />
                         <span>Rapport disponible après complétion</span>

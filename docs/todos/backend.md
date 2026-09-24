@@ -135,3 +135,39 @@
 | **Action**    | Les tests utilisent SQLite (`sqlite+aiosqlite:///./test_tervo.db`). Envisager un service PostgreSQL dans la CI pour détecter les écarts de dialecte (enums, contraintes `CHECK`, colonnes générées, index). |
 |               | Piste : ajouter un service `postgres` au job `backend-tests` et surcharger `DATABASE_URL`. |
 | **Statut**    | ⏳ Évolution — à planifier si des bugs spécifiques PostgreSQL apparaissent |
+
+
+---
+
+## TD-B012 — Relation Product → Equipment et test multi-instances
+
+| Champ | Valeur |
+| --- | --- |
+| **Créé dans** | INT-96 |
+| **Dépend de** | INT-97 — entité Equipment |
+| **Fichiers** | `app/models/product.py`, futur `app/models/equipment.py`, migrations, `tests/test_products.py` |
+| **Action attendue** | Ajouter Equipment.product_id (FK non unique), relations ORM bidirectionnelles ; tester deux équipements distincts du même produit puis la conservation des liens après désactivation. Valider les deux critères INT-96 restants. |
+| **Statut** | ✅ Fait dans INT-97 — relations ORM et test de deux appareils conservés après désactivation |
+
+## TD-B013 — Droits catalogue MANAGER / COMMERCIAL
+
+| Champ | Valeur |
+| --- | --- |
+| **Créé dans** | INT-96 |
+| **Dépend de** | Introduction des rôles MANAGER et COMMERCIAL prévus par la DAT |
+| **Fichiers** | `app/models/user.py`, `app/api/v1/products.py`, migrations, tests |
+| **Action attendue** | Étendre le contrôle catalogue_editor à ces rôles et tester leurs droits. Actuellement ADMIN écrit, TECHNICIAN consulte. |
+| **Statut** | ⏳ Rôles absents du modèle actuel |
+
+
+---
+
+## TD-B014 — Raccorder Equipment à Installation
+
+| Champ | Valeur |
+| --- | --- |
+| **Créé dans** | INT-97 |
+| **Dépend de** | INT-103 — entité Installation |
+| **Fichiers** | `app/models/equipment.py`, futur `app/models/installation.py`, migration, services et tests |
+| **Action attendue** | Ajouter la FK Equipment.installation_id, son unicité (Installation 1 → 0..1 Equipment) et les relations ORM. Alimenter ce champ uniquement lors de la réalisation d’une installation, en vérifiant site et produit. La colonne reste nullable pour les imports historiques. |
+| **Statut** | ⏳ En attente d’INT-103 ; aucun identifiant libre accepté par l’API actuelle |

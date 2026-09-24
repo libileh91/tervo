@@ -23,6 +23,7 @@ from app.main import app
 from app.models import Base
 from app.models.client import Client
 from app.models.intervention import Intervention, InterventionStatus
+from app.models.site import Site
 from app.models.user import Role, User
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"
@@ -197,19 +198,24 @@ class TestClients:
         resp = await client.delete("/api/v1/clients/99999", headers=auth_header)
         assert resp.status_code == 404
 
-    async def test_client_history(
+    async def test_site_history(
         self, client, auth_header, db: AsyncSession, tech_user
     ):
-        """GET /clients/{id}/interventions → 200 + list."""
+        """GET /sites/{id}/interventions → 200 + list."""
         c = Client(full_name="History", phone="0644444444", address="addr")
         db.add(c)
         await db.commit()
         await db.refresh(c)
 
+        s = Site(client_id=c.id, name="History Site", address="addr")
+        db.add(s)
+        await db.commit()
+        await db.refresh(s)
+
         for i in range(2):
             db.add(
                 Intervention(
-                    client_id=c.id,
+                    site_id=s.id,
                     technician_id=tech_user.id,
                     title=f"Intervention {i}",
                     status=InterventionStatus.PLANNED,
@@ -218,7 +224,7 @@ class TestClients:
             )
         await db.commit()
 
-        resp = await client.get(f"/api/v1/clients/{c.id}/interventions", headers=auth_header)
+        resp = await client.get(f"/api/v1/sites/{s.id}/interventions", headers=auth_header)
         assert resp.status_code == 200, resp.text
         data = resp.json()
         assert len(data) >= 2

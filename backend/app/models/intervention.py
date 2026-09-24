@@ -42,9 +42,11 @@ class Intervention(Base):
     __tablename__ = "intervention"
 
     id = Column(Integer, primary_key=True, index=True)
-    client_id = Column(
-        Integer, ForeignKey("client.id", ondelete="CASCADE"), nullable=False, index=True
+    site_id = Column(
+        Integer, ForeignKey("site.id", ondelete="CASCADE"), nullable=False, index=True
     )
+    equipment_id = Column(Integer, ForeignKey("equipment.id", ondelete="RESTRICT"), nullable=True, index=True)
+    equipment = relationship("Equipment", back_populates="interventions")
     technician_id = Column(
         Integer, ForeignKey("user.id", ondelete="SET NULL"), nullable=True, index=True
     )
@@ -75,7 +77,7 @@ class Intervention(Base):
     )
 
     # ── Relationships ───────────────────────────────────────
-    client = relationship("Client", backref="interventions")
+    site = relationship("Site", backref="interventions")
     technician = relationship("User", backref="interventions")
     checklist_items = relationship(
         "ChecklistItem", back_populates="intervention", cascade="all, delete-orphan"

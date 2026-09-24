@@ -8,11 +8,13 @@ import uuid
 from datetime import date, datetime, time, timedelta
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select, text
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.intervention import Intervention, InterventionStatus
+from app.models.site import Site
+from app.models.equipment import Equipment
 from app.models.user import User
 from app.repositories.intervention import InterventionRepository
 from app.repositories.review import ReviewRepository
@@ -81,9 +83,10 @@ class InterventionService:
     async def create_intervention(
         self, data: InterventionCreate, current_user: User
     ) -> InterventionResponse:
-        # Validate client exists
-        await self._check_client_exists(data.client_id)
+        # Validate site exists
+        await self._check_site_exists(data.site_id)
 
+        await self._check_equipment_site(data.equipment_id, data.site_id)
         create_data = data.model_dump()
 
         # Auto-assign the current user as technician
@@ -113,6 +116,9 @@ class InterventionService:
     ) -> InterventionResponse:
         intervention = await self._find_or_404(intervention_id)
         update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+        if "equipment_id" in data.model_fields_set:
+            await self._check_equipment_site(data.equipment_id, intervention.site_id)
+            intervention.equipment_id = data.equipment_id
         intervention = await self.repo.update(intervention, update_data)
         return InterventionResponse.model_validate(intervention)
 
@@ -271,12 +277,12 @@ class InterventionService:
             review_share_url=f"/review/{share_token}",
         )
 
-    # ── Client interventions history (from INT-06) ──────────
+    # ── Site interventions history (from INT-06) ──────────
 
-    async def get_client_interventions(
-        self, client_id: int, page: int = 1, page_size: int = 50
+    async def get_site_interventions(
+        self, site_id: int, page: int = 1, page_size: int = 50
     ) -> InterventionHistoryResponse:
-        await self._check_client_exists(client_id)
+        await self._check_site_exists(site_id)
 
         if page < 1:
             page = 1
@@ -285,8 +291,8 @@ class InterventionService:
         if page_size > 100:
             page_size = 100
 
-        total = await self.repo.count_by_client(client_id)
-        rows = await self.repo.list_by_client(client_id, page, page_size)
+        total = await self.repo.count_by_site(site_id)
+        rows = await self.repo.list_by_site(site_id, page, page_size)
         pages = (total + page_size - 1) // page_size if total > 0 else 1
 
         return InterventionHistoryResponse(
@@ -308,7 +314,7 @@ class InterventionService:
         # Interventions scheduled for today for this technician
         today_interventions = await self.repo.db.execute(
             select(Intervention)
-            .options(selectinload(Intervention.client))
+            .options(selectinload(Intervention.site))
             .where(
                 Intervention.scheduled_date == today,
                 Intervention.technician_id == current_user.id,
@@ -325,8 +331,8 @@ class InterventionService:
                     id=i.id,
                     title=i.title,
                     priority=i.priority.value,
-                    client_full_name=i.client.full_name,
-                    client_address=i.client.address,
+                    site_name=i.site.name,
+                    site_address=i.site.address,
                     scheduled_start_time=i.scheduled_start_time,
                 )
                 break
@@ -334,7 +340,7 @@ class InterventionService:
         # In-progress intervention (TOUTES les interventions en cours)
         in_progress_result = await self.repo.db.execute(
             select(Intervention)
-            .options(selectinload(Intervention.client))
+            .options(selectinload(Intervention.site))
             .where(
                 Intervention.technician_id == current_user.id,
                 Intervention.status == InterventionStatus.IN_PROGRESS,
@@ -389,8 +395,8 @@ class InterventionService:
                 priority=i.priority.value,
                 scheduled_date=i.scheduled_date.isoformat(),
                 days_overdue=(today - i.scheduled_date).days,
-                client_full_name=i.client.full_name,
-                client_address=i.client.address,
+                site_name=i.site.name,
+                site_address=i.site.address,
             )
             for i in overdue_raw
         ]
@@ -418,11 +424,20 @@ class InterventionService:
             )
         return intervention
 
-    async def _check_client_exists(self, client_id: int) -> None:
-        sql = text("SELECT id FROM client WHERE id = :client_id")
-        result = await self.db.execute(sql, {"client_id": client_id})
-        if result.scalar_one_or_none() is None:
+    async def _check_site_exists(self, site_id: int) -> None:
+        site = await self.db.get(Site, site_id)
+        if site is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Client non trouvé",
+                detail="Site non trouvé",
             )
+
+
+    async def _check_equipment_site(self, equipment_id, site_id):
+        if equipment_id is None:
+            return
+        equipment = await self.db.get(Equipment, equipment_id)
+        if equipment is None:
+            raise HTTPException(404, "Équipement non trouvé")
+        if equipment.site_id != site_id:
+            raise HTTPException(422, "L'équipement doit appartenir au site de l'intervention")

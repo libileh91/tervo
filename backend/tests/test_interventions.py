@@ -22,6 +22,7 @@ from app.main import app
 from app.models import Base
 from app.models.checklist_item import ChecklistItem
 from app.models.client import Client
+from app.models.site import Site
 from app.models.intervention import Intervention, InterventionStatus
 from app.models.user import Role, User
 
@@ -117,25 +118,29 @@ def other_auth_header(other_token: str) -> dict:
 
 
 @pytest.fixture
-async def client_fixture(db: AsyncSession) -> Client:
+async def site_fixture(db: AsyncSession) -> Site:
     c = Client(full_name="Intervention Test Client", phone="0600000000", address="1 rue Test")
     db.add(c)
     await db.commit()
     await db.refresh(c)
-    return c
+    s = Site(client_id=c.id, name="Site Test", address="1 rue Test")
+    db.add(s)
+    await db.commit()
+    await db.refresh(s)
+    return s
 
 
 class TestInterventions:
     """Tests for /interventions/* endpoints."""
 
     async def test_create_intervention(
-        self, client, auth_header, client_fixture, db: AsyncSession
+        self, client, auth_header, site_fixture, db: AsyncSession
     ):
         """POST /interventions → 201."""
         resp = await client.post(
             "/api/v1/interventions",
             json={
-                "client_id": client_fixture.id,
+                "site_id": site_fixture.id,
                 "title": "Nouvelle intervention",
                 "description": "Description test",
                 "scheduled_date": str(date.today()),
@@ -150,13 +155,13 @@ class TestInterventions:
         assert data["priority"] == "haute"
 
     async def test_list_interventions(
-        self, client, auth_header, client_fixture, db: AsyncSession, tech_user
+        self, client, auth_header, site_fixture, db: AsyncSession, tech_user
     ):
         """GET /interventions → 200 + list."""
         for i in range(2):
             db.add(
                 Intervention(
-                    client_id=client_fixture.id,
+                    site_id=site_fixture.id,
                     technician_id=tech_user.id,
                     title=f"Intervention {i}",
                     status=InterventionStatus.PLANNED,
@@ -171,11 +176,11 @@ class TestInterventions:
         assert len(data) >= 2
 
     async def test_get_intervention_by_id(
-        self, client, auth_header, client_fixture, db: AsyncSession, tech_user
+        self, client, auth_header, site_fixture, db: AsyncSession, tech_user
     ):
         """GET /interventions/{id} → 200."""
         j = Intervention(
-            client_id=client_fixture.id,
+            site_id=site_fixture.id,
             technician_id=tech_user.id,
             title="Detail Intervention",
             status=InterventionStatus.PLANNED,
@@ -195,11 +200,11 @@ class TestInterventions:
         assert resp.status_code == 404
 
     async def test_update_intervention(
-        self, client, auth_header, client_fixture, db: AsyncSession, tech_user
+        self, client, auth_header, site_fixture, db: AsyncSession, tech_user
     ):
         """PUT /interventions/{id} → 200."""
         j = Intervention(
-            client_id=client_fixture.id,
+            site_id=site_fixture.id,
             technician_id=tech_user.id,
             title="Old Title",
             status=InterventionStatus.PLANNED,
@@ -218,11 +223,11 @@ class TestInterventions:
         assert resp.json()["title"] == "New Title"
 
     async def test_delete_intervention(
-        self, client, auth_header, client_fixture, db: AsyncSession, tech_user
+        self, client, auth_header, site_fixture, db: AsyncSession, tech_user
     ):
         """DELETE /interventions/{id} → 204."""
         j = Intervention(
-            client_id=client_fixture.id,
+            site_id=site_fixture.id,
             technician_id=tech_user.id,
             title="To Delete",
             status=InterventionStatus.PLANNED,
@@ -236,11 +241,11 @@ class TestInterventions:
         assert resp.status_code == 204
 
     async def test_start_intervention(
-        self, client, auth_header, client_fixture, db: AsyncSession, tech_user
+        self, client, auth_header, site_fixture, db: AsyncSession, tech_user
     ):
         """PUT /interventions/{id}/start → 200 + status IN_PROGRESS."""
         j = Intervention(
-            client_id=client_fixture.id,
+            site_id=site_fixture.id,
             technician_id=tech_user.id,
             title="Startable",
             status=InterventionStatus.PLANNED,
@@ -258,11 +263,11 @@ class TestInterventions:
         assert resp.json()["status"] == "IN_PROGRESS"
 
     async def test_start_intervention_already_started(
-        self, client, auth_header, client_fixture, db: AsyncSession, tech_user
+        self, client, auth_header, site_fixture, db: AsyncSession, tech_user
     ):
         """PUT /interventions/{id}/start on already started → 400."""
         j = Intervention(
-            client_id=client_fixture.id,
+            site_id=site_fixture.id,
             technician_id=tech_user.id,
             title="Already Started",
             status=InterventionStatus.IN_PROGRESS,
@@ -280,11 +285,11 @@ class TestInterventions:
         assert resp.status_code == 400
 
     async def test_complete_intervention(
-        self, client, auth_header, client_fixture, db: AsyncSession, tech_user
+        self, client, auth_header, site_fixture, db: AsyncSession, tech_user
     ):
         """PUT /interventions/{id}/complete with checked checklist → 200."""
         j = Intervention(
-            client_id=client_fixture.id,
+            site_id=site_fixture.id,
             technician_id=tech_user.id,
             title="Completable",
             status=InterventionStatus.IN_PROGRESS,
@@ -319,11 +324,11 @@ class TestInterventions:
         assert "report_url" in data
 
     async def test_complete_intervention_not_in_progress(
-        self, client, auth_header, client_fixture, db: AsyncSession, tech_user
+        self, client, auth_header, site_fixture, db: AsyncSession, tech_user
     ):
         """PUT /interventions/{id}/complete on PLANNED → 400."""
         j = Intervention(
-            client_id=client_fixture.id,
+            site_id=site_fixture.id,
             technician_id=tech_user.id,
             title="Planifiée",
             status=InterventionStatus.PLANNED,
@@ -341,11 +346,11 @@ class TestInterventions:
         assert resp.status_code == 400
 
     async def test_wrong_technician(
-        self, client, other_auth_header, client_fixture, db: AsyncSession, tech_user
+        self, client, other_auth_header, site_fixture, db: AsyncSession, tech_user
     ):
         """Wrong tech → 403."""
         j = Intervention(
-            client_id=client_fixture.id,
+            site_id=site_fixture.id,
             technician_id=tech_user.id,
             title="Not Yours",
             status=InterventionStatus.PLANNED,
@@ -361,10 +366,10 @@ class TestInterventions:
         )
         assert resp.status_code == 403
 
-    async def test_no_auth(self, client, client_fixture, db: AsyncSession, tech_user):
+    async def test_no_auth(self, client, site_fixture, db: AsyncSession, tech_user):
         """No auth → 401."""
         j = Intervention(
-            client_id=client_fixture.id,
+            site_id=site_fixture.id,
             technician_id=tech_user.id,
             title="No Auth",
             status=InterventionStatus.PLANNED,
@@ -390,13 +395,13 @@ class TestDashboard:
         assert data["next_intervention"] is None
 
     async def test_dashboard_with_interventions(
-        self, client, auth_header, client_fixture, db: AsyncSession, tech_user
+        self, client, auth_header, site_fixture, db: AsyncSession, tech_user
     ):
         """Interventions today → summary with counts."""
         for i in range(2):
             db.add(
                 Intervention(
-                    client_id=client_fixture.id,
+                    site_id=site_fixture.id,
                     technician_id=tech_user.id,
                     title=f"Intervention {i}",
                     status=InterventionStatus.PLANNED,

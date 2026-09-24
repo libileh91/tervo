@@ -12,7 +12,7 @@
       <Message severity="error">
         Impossible de charger le client : {{ error?.message || "Erreur inconnue" }}
       </Message>
-      <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetchClient" class="mt-2" />
+      <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetchClient()" class="mt-2" />
     </div>
 
     <template v-else-if="client">
@@ -58,44 +58,35 @@
         <Button label="Supprimer" icon="pi pi-trash" severity="danger" fluid @click="showDeleteDialog = true" />
       </div>
 
-      <!-- Historique des interventions -->
+      <!-- Sites du client -->
       <div class="card">
-        <h2 class="section-title">Historique des interventions</h2>
+        <h2 class="section-title">Sites</h2>
 
-        <div v-if="interventionsLoading" class="loading-state">
+        <div v-if="sitesLoading" class="loading-state">
           <Skeleton height="40px" v-for="i in 3" :key="i" class="mb-1" />
         </div>
 
-        <div v-else-if="interventionsData && interventionsData.items.length > 0">
-          <DataTable :value="interventionsData.items" stripedRows size="small">
-            <Column field="title" header="Titre" />
-            <Column header="Statut">
-              <template #body="{ data: row }">
-                <Chip :label="statusLabel(row.status)" :severity="statusSeverity(row.status)" size="small" />
-              </template>
-            </Column>
-            <Column header="Technicien">
-              <template #body="{ data: row }">{{ row.technician_name || "—" }}</template>
-            </Column>
-            <Column field="completed_at" header="Terminé le" />
-          </DataTable>
+        <div v-else-if="sitesData && sitesData.items.length > 0">
+          <div v-for="site in sitesData.items" :key="site.id" class="site-row">
+            <p class="site-name">{{ site.name }}</p>
+            <p class="site-address">{{ [site.address, site.postal_code, site.city].filter(Boolean).join(", ") }}</p>
+          </div>
         </div>
 
-        <!-- Interventions error -->
-        <div v-else-if="interventionsError" class="error-state">
+        <div v-else-if="sitesError" class="error-state">
           <Message severity="warn">
-            Erreur chargement historique : {{ interventionsErrorObj?.message || "Erreur inconnue" }}
+            Erreur chargement des sites : {{ sitesErrorObj?.message || "Erreur inconnue" }}
           </Message>
-          <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetchInterventions" class="mt-2" />
+          <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetchSites()" class="mt-2" />
         </div>
 
-        <p v-else class="empty-text">Aucune intervention pour ce client.</p>
+        <p v-else class="empty-text">Aucun site pour ce client.</p>
       </div>
     </template>
 
     <!-- Dialog suppression -->
     <Dialog v-model:visible="showDeleteDialog" header="Confirmer la suppression" modal>
-      <p>Supprimer ce client ? Toutes ses interventions seront également supprimées.</p>
+      <p>Supprimer ce client ? Ses sites et interventions seront également supprimés.</p>
       <div class="dialog-actions">
         <Button label="Annuler" severity="secondary" fluid @click="showDeleteDialog = false" />
         <Button label="Confirmer" severity="danger" fluid :loading="deleting" @click="handleDelete" />
@@ -113,11 +104,9 @@ import Button from "primevue/button";
 import Chip from "primevue/chip";
 import Skeleton from "primevue/skeleton";
 import Message from "primevue/message";
-import DataTable from "primevue/datatable";
-import Column from "primevue/column";
 import Dialog from "primevue/dialog";
 import { useAuthStore } from "@/stores/auth";
-import { clientsApi, statusSeverity, statusLabel } from "@/api/client";
+import { clientsApi, sitesApi } from "@/api/client";
 
 const router = useRouter();
 const route = useRoute();
@@ -142,16 +131,16 @@ const deleting = ref(false);
     enabled: !!clientId,
   });
 
-  // Intervention history
+  // Client sites
   const {
-    data: interventionsData,
-    isLoading: interventionsLoading,
-    isError: interventionsError,
-    error: interventionsErrorObj,
-    refetch: refetchInterventions,
+    data: sitesData,
+    isLoading: sitesLoading,
+    isError: sitesError,
+    error: sitesErrorObj,
+    refetch: refetchSites,
   } = useQuery({
-    queryKey: ["client-interventions", clientId],
-    queryFn: () => clientsApi.getInterventions(auth.token!, clientId),
+    queryKey: ["client-sites", clientId],
+    queryFn: () => sitesApi.getByClient(auth.token!, clientId),
     enabled: !!clientId,
   });
 
@@ -190,6 +179,10 @@ async function handleDelete() {
 .actions { display: flex; flex-direction: column; gap: 0.5rem; }
 .loading-state { display: flex; flex-direction: column; gap: 0.5rem; }
 .empty-text { color: #9ca3af; text-align: center; padding: 1rem 0; }
+.site-row { padding: 0.6rem 0; border-bottom: 1px solid #f3f4f6; }
+.site-row:last-child { border-bottom: none; }
+.site-name { font-weight: 600; color: #1f2937; margin: 0; }
+.site-address { color: #6b7280; font-size: 0.85rem; margin: 0.2rem 0 0; }
 .dialog-actions { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
 .mb-2 { margin-bottom: 0.5rem; }
 .mb-1 { margin-bottom: 0.25rem; }

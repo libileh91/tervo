@@ -54,9 +54,13 @@
   <div class="info-block">
     <strong>Client</strong>
     <span>{{ client.full_name }}</span><br>
-    <span>{{ client.address }}</span><br>
-    {% if client.city %}<span>{{ client.postal_code }} {{ client.city }}</span><br>{% endif %}
     {% if client.phone %}<span>Tel: {{ client.phone }}</span>{% endif %}
+  </div>
+  <div class="info-block">
+    <strong>Site</strong>
+    <span>{{ site.name }}</span><br>
+    <span>{{ site.address }}</span><br>
+    {% if site.city %}<span>{{ site.postal_code }} {{ site.city }}</span>{% endif %}
   </div>
   <div class="info-block">
     <strong>Technicien</strong>

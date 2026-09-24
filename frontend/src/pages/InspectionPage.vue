@@ -17,7 +17,7 @@
             <Message severity="error">
                 Impossible de charger la checklist : {{ error?.message || "Erreur inconnue" }}
             </Message>
-            <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch" class="mt-2" />
+            <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch()" class="mt-2" />
         </div>
 
         <!-- Intervention not started -->

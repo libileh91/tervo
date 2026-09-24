@@ -31,7 +31,9 @@ class PriorityEnum(str):
 
 
 class InterventionCreate(BaseModel):
-    client_id: int
+    under_warranty: bool = False
+    site_id: int
+    equipment_id: int | None = Field(None, gt=0)
     title: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
     priority: str = "normale"
@@ -41,6 +43,8 @@ class InterventionCreate(BaseModel):
 
 
 class InterventionUpdate(BaseModel):
+    equipment_id: int | None = Field(None, gt=0)
+    under_warranty: bool | None = None
     title: str | None = Field(None, min_length=1, max_length=255)
     description: str | None = None
     priority: str | None = None
@@ -50,9 +54,10 @@ class InterventionUpdate(BaseModel):
     observations: str | None = None
 
 
-class ClientRef(BaseModel):
+class SiteRef(BaseModel):
     id: int
-    full_name: str
+    name: str
+    address: str
 
     model_config = {"from_attributes": True}
 
@@ -140,7 +145,8 @@ class MaterialResponse(BaseModel):
 
 class InterventionResponse(BaseModel):
     id: int
-    client_id: int
+    site_id: int
+    equipment_id: int | None = Field(None, gt=0)
     technician_id: int | None = None
     title: str
     description: str | None = None
@@ -155,7 +161,7 @@ class InterventionResponse(BaseModel):
     observations: str | None = None
     created_at: datetime
     updated_at: datetime
-    client: ClientRef | None = None
+    site: SiteRef | None = None
     technician: TechnicianRef | None = None
     checklist_items: list[ChecklistItemRef] = []
     photos: list[PhotoRef] = []
@@ -233,8 +239,8 @@ class NextInterventionRef(BaseModel):
     id: int
     title: str
     priority: str
-    client_full_name: str
-    client_address: str
+    site_name: str
+    site_address: str
     scheduled_start_time: time | None = None
 
 
@@ -251,8 +257,8 @@ class OverdueInterventionRef(BaseModel):
     priority: str
     scheduled_date: str  # ISO YYYY-MM-DD
     days_overdue: int
-    client_full_name: str
-    client_address: str
+    site_name: str
+    site_address: str
 
 
 class DashboardSummaryResponse(BaseModel):

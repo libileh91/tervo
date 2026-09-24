@@ -20,6 +20,7 @@ from app.main import app
 from app.models import Base
 from app.models.checklist_item import ChecklistItem
 from app.models.client import Client
+from app.models.site import Site
 from app.models.intervention import Intervention, InterventionStatus
 from app.models.user import Role, User
 
@@ -115,20 +116,24 @@ def other_auth_header(other_token: str) -> dict:
 
 
 @pytest.fixture
-async def client_fixture(db: AsyncSession) -> Client:
+async def site_fixture(db: AsyncSession) -> Site:
     c = Client(full_name="Extra Test Client", phone="0600000000", address="1 rue Test")
     db.add(c)
     await db.commit()
     await db.refresh(c)
-    return c
+    s = Site(client_id=c.id, name="Site Test", address="1 rue Test")
+    db.add(s)
+    await db.commit()
+    await db.refresh(s)
+    return s
 
 
 @pytest.fixture
 async def intervention_planned(
-    db: AsyncSession, tech_user: User, client_fixture: Client
+    db: AsyncSession, tech_user: User, site_fixture: Site
 ) -> Intervention:
     j = Intervention(
-        client_id=client_fixture.id,
+        site_id=site_fixture.id,
         technician_id=tech_user.id,
         title="Extra Planifié",
         status=InterventionStatus.PLANNED,
@@ -142,10 +147,10 @@ async def intervention_planned(
 
 @pytest.fixture
 async def intervention_in_progress(
-    db: AsyncSession, tech_user: User, client_fixture: Client
+    db: AsyncSession, tech_user: User, site_fixture: Site
 ) -> Intervention:
     j = Intervention(
-        client_id=client_fixture.id,
+        site_id=site_fixture.id,
         technician_id=tech_user.id,
         title="Extra En Cours",
         status=InterventionStatus.IN_PROGRESS,
@@ -159,9 +164,9 @@ async def intervention_in_progress(
 
 
 @pytest.fixture
-async def intervention_completed(db: AsyncSession, tech_user: User, client_fixture: Client) -> Intervention:
+async def intervention_completed(db: AsyncSession, tech_user: User, site_fixture: Site) -> Intervention:
     j = Intervention(
-        client_id=client_fixture.id,
+        site_id=site_fixture.id,
         technician_id=tech_user.id,
         title="Extra Terminé",
         status=InterventionStatus.COMPLETED,

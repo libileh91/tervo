@@ -17,7 +17,7 @@
             <Message severity="error">
                 Impossible de charger le tableau de bord : {{ error?.message || "Erreur inconnue" }}
             </Message>
-            <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch" class="mt-2" />
+            <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch()" class="mt-2" />
         </div>
 
         <!-- Data -->
@@ -61,8 +61,8 @@
                 </div>
                 <h3 class="intervention-title">{{ dashboard.next_intervention.title }}</h3>
                 <div class="intervention-details">
-                    <p><i class="pi pi-user" /> {{ dashboard.next_intervention.client_full_name }}</p>
-                    <p><i class="pi pi-map-marker" /> {{ dashboard.next_intervention.client_address }}</p>
+                    <p><i class="pi pi-home" /> {{ dashboard.next_intervention.site_name }}</p>
+                    <p><i class="pi pi-map-marker" /> {{ dashboard.next_intervention.site_address }}</p>
                     <p v-if="dashboard.next_intervention.scheduled_start_time">
                         <i class="pi pi-clock" /> {{ dashboard.next_intervention.scheduled_start_time }}
                     </p>
@@ -111,8 +111,8 @@
                             />
                         </div>
                         <div class="intervention-details">
-                            <p><i class="pi pi-user" /> {{ intervention.client_full_name }}</p>
-                            <p><i class="pi pi-map-marker" /> {{ intervention.client_address }}</p>
+                            <p><i class="pi pi-home" /> {{ intervention.site_name }}</p>
+                            <p><i class="pi pi-map-marker" /> {{ intervention.site_address }}</p>
                             <p><i class="pi pi-calendar" /> {{ intervention.scheduled_date }}</p>
                         </div>
                         <div class="overdue-item-actions">

@@ -11,6 +11,8 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.intervention import Intervention
+from app.models.site import Site
+from app.models.equipment import Equipment
 from app.repositories.client import ClientRepository
 from app.schemas.client import (
     ClientCreate,
@@ -54,11 +56,15 @@ class ClientService:
         """Get a single client by ID with intervention stats (real DB queries)."""
         client = await self._find_or_404(client_id)
 
-        # Query real intervention stats via ORM
-        stats_query = select(
-            func.count(Intervention.id),
-            func.max(Intervention.created_at),
-        ).where(Intervention.client_id == client_id)
+        # Query real intervention stats via ORM (through the site chain)
+        stats_query = (
+            select(
+                func.count(Intervention.id),
+                func.max(Intervention.created_at),
+            )
+            .join(Site, Intervention.site_id == Site.id)
+            .where(Site.client_id == client_id)
+        )
         result = await self.repo.db.execute(stats_query)
         row = result.fetchone()
         interventions_count = row[0] if row else 0
@@ -88,6 +94,8 @@ class ClientService:
     async def delete_client(self, client_id: int) -> None:
         """Delete a client."""
         client = await self._find_or_404(client_id)
+        if await self.repo.db.scalar(select(Equipment.id).join(Site).where(Site.client_id == client_id).limit(1)):
+            raise HTTPException(409, "Ce client possède des équipements : conserver leur historique")
         await self.repo.delete(client)
 
     async def _find_or_404(self, client_id: int):

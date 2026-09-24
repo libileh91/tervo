@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.intervention import Intervention
+from app.models.site import Site
 
 
 class InterventionRepository:
@@ -44,7 +45,7 @@ class InterventionRepository:
         technician_id: int | None = None,
     ) -> list[Intervention]:
         query = select(Intervention).options(
-            selectinload(Intervention.client),
+            selectinload(Intervention.site),
             selectinload(Intervention.technician),
             selectinload(Intervention.checklist_items),
             selectinload(Intervention.photos),
@@ -68,7 +69,7 @@ class InterventionRepository:
         result = await self.db.execute(
             select(Intervention)
             .options(
-                selectinload(Intervention.client),
+                selectinload(Intervention.site).selectinload(Site.client),
                 selectinload(Intervention.technician),
                 selectinload(Intervention.checklist_items),
                 selectinload(Intervention.photos),
@@ -104,7 +105,7 @@ class InterventionRepository:
         today = func.current_date()
         query = (
             select(Intervention)
-            .options(selectinload(Intervention.client))
+            .options(selectinload(Intervention.site))
             .where(
                 Intervention.technician_id == technician_id,
                 Intervention.status == "PLANNED",
@@ -117,27 +118,27 @@ class InterventionRepository:
 
     # ── Raw SQL (from INT-06) ──────────────────────────────
 
-    async def count_by_client(self, client_id: int) -> int:
-        sql = text("SELECT COUNT(*) FROM intervention WHERE client_id = :client_id")
-        result = await self.db.execute(sql, {"client_id": client_id})
+    async def count_by_site(self, site_id: int) -> int:
+        sql = text("SELECT COUNT(*) FROM intervention WHERE site_id = :site_id")
+        result = await self.db.execute(sql, {"site_id": site_id})
         return result.scalar_one()
 
-    async def list_by_client(
-        self, client_id: int, page: int = 1, page_size: int = 50
+    async def list_by_site(
+        self, site_id: int, page: int = 1, page_size: int = 50
     ) -> list[dict]:
         offset = (page - 1) * page_size
         sql = text("""
             SELECT i.id, i.title, i.status, i.completed_at, u.full_name AS technician_name
             FROM intervention i
             LEFT JOIN "user" u ON i.technician_id = u.id
-            WHERE i.client_id = :client_id
+            WHERE i.site_id = :site_id
             ORDER BY i.created_at DESC
             LIMIT :limit_val OFFSET :offset_val
         """)
         result = await self.db.execute(
             sql,
             {
-                "client_id": client_id,
+                "site_id": site_id,
                 "limit_val": page_size,
                 "offset_val": offset,
             },

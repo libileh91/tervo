@@ -28,6 +28,7 @@ from app.main import app
 from app.models import Base
 from app.models.checklist_item import ChecklistItem
 from app.models.client import Client
+from app.models.site import Site
 from app.models.intervention import Intervention, InterventionStatus
 from app.models.intervention_photo import InterventionPhoto
 from app.models.material import Material
@@ -149,22 +150,26 @@ def test_photo_bytes() -> bytes:
 
 
 @pytest.fixture
-async def client_fixture(db: AsyncSession) -> Client:
-    """Create a test client."""
+async def site_fixture(db: AsyncSession) -> Site:
+    """Create a test site (and its client)."""
     c = Client(full_name="Test Client", phone="0100000000", address="1 rue Test")
     db.add(c)
     await db.commit()
     await db.refresh(c)
-    return c
+    s = Site(client_id=c.id, name="Site Test", address="1 rue Test")
+    db.add(s)
+    await db.commit()
+    await db.refresh(s)
+    return s
 
 
 @pytest.fixture
 async def intervention_planned(
-    db: AsyncSession, tech_user: User, client_fixture: Client
+    db: AsyncSession, tech_user: User, site_fixture: Site
 ) -> Intervention:
     """Create a planifié intervention."""
     j = Intervention(
-        client_id=client_fixture.id,
+        site_id=site_fixture.id,
         technician_id=tech_user.id,
         title="Test Intervention Planifié",
         status=InterventionStatus.PLANNED,
@@ -178,11 +183,11 @@ async def intervention_planned(
 
 @pytest.fixture
 async def intervention_in_progress(
-    db: AsyncSession, tech_user: User, client_fixture: Client
+    db: AsyncSession, tech_user: User, site_fixture: Site
 ) -> Intervention:
     """Create a intervention en_cours with checklist items."""
     j = Intervention(
-        client_id=client_fixture.id,
+        site_id=site_fixture.id,
         technician_id=tech_user.id,
         title="Test Intervention En Cours",
         status=InterventionStatus.IN_PROGRESS,
@@ -210,10 +215,10 @@ async def intervention_in_progress(
 
 
 @pytest.fixture
-async def intervention_completed(db: AsyncSession, tech_user: User, client_fixture: Client) -> Intervention:
+async def intervention_completed(db: AsyncSession, tech_user: User, site_fixture: Site) -> Intervention:
     """Create a terminé intervention with photo, material, and review."""
     j = Intervention(
-        client_id=client_fixture.id,
+        site_id=site_fixture.id,
         technician_id=tech_user.id,
         title="Test Intervention Terminé",
         status=InterventionStatus.COMPLETED,

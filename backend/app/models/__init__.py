@@ -11,4 +11,9 @@ from app.models.intervention import Intervention
 from app.models.intervention_photo import InterventionPhoto
 from app.models.material import Material
 from app.models.review import Review
+from app.models.site import Site
 from app.models.user import User
+
+from app.models.product import Product
+
+from app.models.equipment import Equipment

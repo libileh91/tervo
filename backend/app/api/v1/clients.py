@@ -22,9 +22,9 @@ from app.schemas.client import (
     ClientResponse,
     ClientUpdate,
 )
-from app.schemas.intervention import InterventionHistoryResponse
+from app.schemas.site import SiteListResponse
 from app.services.client import ClientService
-from app.services.intervention import InterventionService
+from app.services.site import SiteService
 
 router = APIRouter(prefix="/clients", tags=["clients"])
 
@@ -76,17 +76,17 @@ async def update_client(
     return await service.update_client(client_id, body)
 
 
-@router.get("/{client_id}/interventions", response_model=InterventionHistoryResponse)
-async def get_client_interventions(
+@router.get("/{client_id}/sites", response_model=SiteListResponse)
+async def get_client_sites(
     client_id: int,
     page: int = 1,
     page_size: int = 50,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get paginated intervention history for a client (raw SQL demo)."""
-    service = InterventionService(db)
-    return await service.get_client_interventions(client_id, page, page_size)
+    """Get paginated sites for a client (404 if the client doesn't exist)."""
+    service = SiteService(db)
+    return await service.list_sites_for_client(client_id, page, page_size)
 
 
 @router.delete("/{client_id}", status_code=status.HTTP_204_NO_CONTENT)

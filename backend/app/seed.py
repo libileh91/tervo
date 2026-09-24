@@ -19,6 +19,7 @@ from app.core.security import get_password_hash
 from app.models.base import Base
 from app.models.client import Client
 from app.models.intervention import Intervention, InterventionStatus, Priority
+from app.models.site import Site
 from app.models.user import Role, User
 
 
@@ -36,6 +37,7 @@ async def seed():
             "intervention_photo",
             "checklist_item",
             "intervention",
+            "site",
             "client",
             '"user"',  # quoted: reserved keyword in PostgreSQL
         ]:
@@ -153,6 +155,25 @@ async def seed():
         for c in clients_data:
             print(f"     - {c.full_name} ({c.city})")
 
+        # ── 3b. Sites (un site par client) ────────────────────
+        print("📍 Creating sites…")
+
+        sites_data = [
+            Site(
+                client_id=c.id,
+                name="Domicile" if idx < 5 else "Siège",
+                address=c.address,
+                postal_code=c.postal_code,
+                city=c.city,
+            )
+            for idx, c in enumerate(clients_data)
+        ]
+        for s in sites_data:
+            session.add(s)
+        await session.flush()
+
+        print(f"  ✅ {len(sites_data)} sites created")
+
         # ── 4. Interventions ──────────────────────────────────
         print("📋 Creating interventions…")
         today = date.today()
@@ -160,7 +181,7 @@ async def seed():
         interventions_data = [
             # ── Interventions aujourd'hui ────────────────────
             Intervention(
-                client_id=clients_data[0].id,
+                site_id=sites_data[0].id,
                 technician_id=tech1.id,
                 title="Installation climatisation réversible",
                 description="Installation clim réversible 80m² - 3 splits + unité extérieure",
@@ -171,7 +192,7 @@ async def seed():
                 scheduled_end_time=time(12, 0),
             ),
             Intervention(
-                client_id=clients_data[3].id,
+                site_id=sites_data[3].id,
                 technician_id=tech1.id,
                 title="Dépannage chaudière gaz",
                 description="Chaudière gaz Viessmann qui ne s'allume plus - code erreur F4",
@@ -182,7 +203,7 @@ async def seed():
                 scheduled_end_time=time(16, 0),
             ),
             Intervention(
-                client_id=clients_data[5].id,
+                site_id=sites_data[5].id,
                 technician_id=tech1.id,
                 title="Maintenance chaudière collective",
                 description="Entretien annuel chaudière collective immeuble 12 logements",
@@ -196,7 +217,7 @@ async def seed():
             ),
             # ── Interventions passées (terminées) ──────────────
             Intervention(
-                client_id=clients_data[1].id,
+                site_id=sites_data[1].id,
                 technician_id=tech1.id,
                 title="Dépannage urgence fuite gaz",
                 description="Fuite sur raccord chaudière - intervention rapide",
@@ -210,7 +231,7 @@ async def seed():
             ),
             # ── Interventions à venir ──────────────────────────
             Intervention(
-                client_id=clients_data[2].id,
+                site_id=sites_data[2].id,
                 technician_id=tech1.id,
                 title="Remplacement chauffe-eau",
                 description="Remplacement chauffe-eau électrique 200L - cumulus usé",
@@ -221,7 +242,7 @@ async def seed():
                 scheduled_end_time=time(11, 0),
             ),
             Intervention(
-                client_id=clients_data[4].id,
+                site_id=sites_data[4].id,
                 technician_id=tech1.id,
                 title="Installation pompe à chaleur",
                 description="PAC air-eau pour maison individuelle 120m²",
@@ -232,7 +253,7 @@ async def seed():
                 scheduled_end_time=time(17, 0),
             ),
             Intervention(
-                client_id=clients_data[6].id,
+                site_id=sites_data[6].id,
                 technician_id=tech1.id,
                 title="Dépannage climatisation Cagdheer",
                 description="Climatisation centrale qui ne refroidit plus - local serveurs",
@@ -250,7 +271,7 @@ async def seed():
 
         print(f"  ✅ {len(interventions_data)} interventions created")
         for i in interventions_data:
-            print(f"     - [{i.status.value}] {i.title} — {i.client.full_name}")
+            print(f"     - [{i.status.value}] {i.title} — {i.site.name}")
 
         print("\n🎉 Seed complete!")
 

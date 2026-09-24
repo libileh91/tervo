@@ -65,10 +65,10 @@ export type ClientCreateForm = z.infer<typeof clientCreateSchema>;
 // ── Intervention ──────────────────────────────────────────────────
 
 export const interventionSchema = z.object({
-  client_id: z
+  site_id: z
     .number({ message: requiredMsg, invalid_type_error: requiredMsg })
     .int()
-    .positive("Veuillez sélectionner un client")
+    .positive("Veuillez sélectionner un site")
     .nullish(),
   title: z
     .string({ message: requiredMsg, invalid_type_error: requiredMsg })

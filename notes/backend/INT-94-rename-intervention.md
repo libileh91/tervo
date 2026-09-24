@@ -95,3 +95,8 @@ Renommer une entité « partout » ne se résume pas à `sed 's/job/intervention
 - les **fichiers** se renomment (modèles, schémas, services, repositories, router,
   pages Vue) en même temps que leurs **imports** ;
 - une **migration idempotente** doit couvrir table, colonnes FK, enum et index.
+
+
+## Revue du socle après INT-97
+
+`site_id` est requis depuis INT-95 et `equipment_id` est maintenant une FK nullable. Le service valide Equipment.site_id == Intervention.site_id en création et modification ; null permet de dissocier un appareil. `under_warranty` est accessible en création/modification. Le scénario PostgreSQL de montée/descente conserve une intervention historique et traduit correctement son statut.

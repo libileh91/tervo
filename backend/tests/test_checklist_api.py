@@ -21,6 +21,7 @@ from app.main import app
 from app.models import Base
 from app.models.checklist_item import ChecklistItem
 from app.models.client import Client
+from app.models.site import Site
 from app.models.intervention import Intervention, InterventionStatus
 from app.models.user import Role, User
 
@@ -90,21 +91,25 @@ def auth_header(token: str) -> dict:
 
 
 @pytest.fixture
-async def client_fixture(db: AsyncSession) -> Client:
+async def site_fixture(db: AsyncSession) -> Site:
     c = Client(full_name="Checklist Client", phone="0600000000", address="1 rue Test")
     db.add(c)
     await db.commit()
     await db.refresh(c)
-    return c
+    s = Site(client_id=c.id, name="Site Test", address="1 rue Test")
+    db.add(s)
+    await db.commit()
+    await db.refresh(s)
+    return s
 
 
 @pytest.fixture
 async def intervention_with_checklist(
-    db: AsyncSession, tech_user: User, client_fixture: Client
+    db: AsyncSession, tech_user: User, site_fixture: Site
 ) -> Intervention:
     """Intervention with 3 pre + 2 post checklist items."""
     j = Intervention(
-        client_id=client_fixture.id,
+        site_id=site_fixture.id,
         technician_id=tech_user.id,
         title="Checklist Intervention",
         status=InterventionStatus.IN_PROGRESS,

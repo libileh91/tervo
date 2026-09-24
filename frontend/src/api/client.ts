@@ -133,8 +133,8 @@ export interface DashboardSummary {
     id: number;
     title: string;
     priority: string;
-    client_full_name: string;
-    client_address: string;
+    site_name: string;
+    site_address: string;
     scheduled_start_time: string | null;
   } | null;
   in_progress_intervention: {
@@ -149,8 +149,8 @@ export interface DashboardSummary {
     priority: string;
     scheduled_date: string;
     days_overdue: number;
-    client_full_name: string;
-    client_address: string;
+    site_name: string;
+    site_address: string;
   }[];
 }
 
@@ -276,7 +276,32 @@ export const clientsApi = {
   update: (token: string, id: number, data: Partial<ClientUpdateRequest>) =>
     api.put<ClientListItem>(`/clients/${id}`, data, token),
   delete: (token: string, id: number) => api.delete<void>(`/clients/${id}`, token),
-  getInterventions: (token: string, id: number) => api.get<InterventionHistoryResponse>(`/clients/${id}/interventions`, token),
+};
+
+// ── Site types ──────────────────────────────────────────────
+
+export interface SiteListItem {
+  id: number;
+  client_id: number;
+  name: string;
+  address: string;
+  postal_code: string | null;
+  city: string | null;
+}
+
+export interface SiteListResponse {
+  items: SiteListItem[];
+  total: number;
+  page: number;
+  page_size: number;
+  pages: number;
+}
+
+export const sitesApi = {
+  getByClient: (token: string, clientId: number) =>
+    api.get<SiteListResponse>(`/clients/${clientId}/sites`, token),
+  create: (token: string, data: { client_id: number; name: string; address: string; postal_code?: string; city?: string }) =>
+    api.post<SiteListItem>("/sites", data, token),
 };
 
 // ── Photos API (INT-27) ────────────────────────────────────
@@ -336,7 +361,7 @@ export interface InterventionListItem {
   status: string;
   priority: string;
   scheduled_date: string;
-  client: { id: number; full_name: string } | null;
+  site: { id: number; name: string; address: string } | null;
   technician: { id: number; full_name: string | null } | null;
 }
 
@@ -372,6 +397,11 @@ export interface ChecklistItemRef {
 }
 
 export interface InterventionDetailResponse {
+  site_id: number;
+  equipment_id: number | null;
+  under_warranty: boolean;
+  photos: PhotoResponse[];
+  materials: MaterialItem[];
   id: number;
   title: string;
   description: string | null;
@@ -385,13 +415,15 @@ export interface InterventionDetailResponse {
   observations: string | null;
   created_at: string;
   updated_at: string;
-  client: { id: number; full_name: string } | null;
+  site: { id: number; name: string; address: string } | null;
   technician: { id: number; full_name: string | null } | null;
   checklist_items: ChecklistItemRef[];
 }
 
 export interface InterventionCreateRequest {
-  client_id: number;
+  equipment_id?: number | null;
+  under_warranty?: boolean;
+  site_id: number;
   title: string;
   description?: string;
   scheduled_date: string;

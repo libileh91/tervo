@@ -85,8 +85,9 @@ class ReportExporter:
             "CANCELLED": "Annulée",
         }
 
-        # Client data
-        client = intervention.client
+        # Site + client data (the client is reachable through the site)
+        site = intervention.site
+        client = site.client if site else None
         technician = intervention.technician
 
         ctx = {
@@ -111,9 +112,12 @@ class ReportExporter:
             "client": {
                 "full_name": client.full_name if client else "",
                 "phone": client.phone if client else "",
-                "address": client.address if client else "",
-                "postal_code": client.postal_code if client else "",
-                "city": client.city if client else "",
+            },
+            "site": {
+                "name": site.name if site else "",
+                "address": site.address if site else "",
+                "postal_code": site.postal_code if site else "",
+                "city": site.city if site else "",
             },
             "technician": {
                 "full_name": technician.full_name if technician else "",

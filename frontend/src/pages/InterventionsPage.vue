@@ -43,7 +43,7 @@
             <Message severity="error">
                 Impossible de charger les interventions : {{ error?.message || "Erreur inconnue" }}
             </Message>
-            <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch" class="mt-2" />
+            <Button label="Réessayer" icon="pi pi-refresh" fluid @click="refetch()" class="mt-2" />
         </div>
 
         <!-- Table -->
@@ -62,9 +62,9 @@
                 class="intervention-table"
             >
                 <Column field="title" header="Titre" sortable />
-                <Column header="Client">
+                <Column header="Site">
                     <template #body="{ data: row }">
-                        {{ row.client?.full_name || "—" }}
+                        {{ row.site?.name || "—" }}
                     </template>
                 </Column>
                 <Column header="Statut">
@@ -166,6 +166,55 @@
                     />
                 </div>
 
+                <!-- Site : sélection ou nouveau -->
+                <div class="field" v-if="selectedClient || showNewClientForm">
+                    <label>Site</label>
+
+                    <!-- Client existant : choisir un site ou en créer un -->
+                    <template v-if="selectedClient && !showNewSiteForm">
+                        <Select
+                            v-model="selectedSiteId"
+                            :options="sitesList"
+                            optionLabel="name"
+                            optionValue="id"
+                            placeholder="Sélectionner un site"
+                            fluid
+                            :loading="sitesLoading"
+                        />
+                        <Button
+                            label="➕ Nouveau site"
+                            severity="secondary"
+                            size="small"
+                            fluid
+                            @click="showNewSiteForm = true"
+                            class="mt-2"
+                        />
+                    </template>
+
+                    <!-- Nouveau client OU nouveau site : formulaire inline -->
+                    <template v-if="showNewClientForm || showNewSiteForm">
+                        <div class="new-client-section">
+                            <div class="field">
+                                <label for="nsname">Nom du site *</label>
+                                <InputText id="nsname" v-model="newSiteName" placeholder="Ex: Agence Massy" fluid />
+                            </div>
+                            <div class="field">
+                                <label for="nsaddr">Adresse</label>
+                                <InputText id="nsaddr" v-model="newSiteAddress" placeholder="Ex: 10 rue de la Gare" fluid />
+                            </div>
+                            <Button
+                                v-if="showNewSiteForm && !showNewClientForm"
+                                label="Annuler"
+                                severity="secondary"
+                                size="small"
+                                fluid
+                                @click="cancelNewSite"
+                                class="mb-2"
+                            />
+                        </div>
+                    </template>
+                </div>
+
                 <div class="field">
                     <label for="jtitle">Titre</label>
                     <InputText id="jtitle" v-model="newInterventionTitle" placeholder="Ex: Depannage chaudiere" fluid />
@@ -214,7 +263,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { useQuery } from "@tanstack/vue-query";
+import { useQuery, keepPreviousData } from "@tanstack/vue-query";
 import Button from "primevue/button";
 import Select from "primevue/select";
 import DatePicker from "primevue/datepicker";
@@ -224,7 +273,7 @@ import Chip from "primevue/chip";
 import Skeleton from "primevue/skeleton";
 import Message from "primevue/message";
 import { useAuthStore } from "@/stores/auth";
-import { interventionsApi, clientsApi, statusSeverity, statusLabel, prioritySeverity, priorityLabel } from "@/api/client";
+import { interventionsApi, clientsApi, sitesApi, statusSeverity, statusLabel, prioritySeverity, priorityLabel, type SiteListItem } from "@/api/client";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
@@ -289,7 +338,7 @@ const { data, isLoading, isError, error, refetch } = useQuery({
             page: page.value,
             page_size: pageSize,
         }),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
 });
 
 // ── Nouveau intervention Dialog ────────────────────────────────
@@ -312,6 +361,14 @@ const newClientName = ref("");
 const newClientPhone = ref("");
 const newClientAddress = ref("");
 
+// Site selection
+const sitesList = ref<SiteListItem[]>([]);
+const sitesLoading = ref(false);
+const selectedSiteId = ref<number | null>(null);
+const showNewSiteForm = ref(false);
+const newSiteName = ref("");
+const newSiteAddress = ref("");
+
 // Client search results (client-side filter on preloaded list)
 const clientSearchResults = computed(() => {
     if (!clientSearchQuery.value.trim()) return [];
@@ -325,10 +382,36 @@ function selectClient(client: { id: number; full_name: string }) {
     selectedClient.value = client;
     clientSearchQuery.value = "";
     showNewClientForm.value = false;
+    selectedSiteId.value = null;
+    showNewSiteForm.value = false;
+    loadSites(client.id);
 }
 
 function clearSelectedClient() {
     selectedClient.value = null;
+    selectedSiteId.value = null;
+    sitesList.value = [];
+    showNewSiteForm.value = false;
+}
+
+async function loadSites(clientId: number) {
+    sitesLoading.value = true;
+    try {
+        const res = await sitesApi.getByClient(auth.token!, clientId);
+        sitesList.value = res.items;
+        // Auto-sélection si un seul site
+        if (res.items.length === 1) selectedSiteId.value = res.items[0].id;
+    } catch (err) {
+        console.error("Failed to load sites", err);
+    } finally {
+        sitesLoading.value = false;
+    }
+}
+
+function cancelNewSite() {
+    showNewSiteForm.value = false;
+    newSiteName.value = "";
+    newSiteAddress.value = "";
 }
 
 function cancelNewClient() {
@@ -363,6 +446,11 @@ watch(showNewDialog, async (open) => {
         newClientName.value = "";
         newClientPhone.value = "";
         newClientAddress.value = "";
+        selectedSiteId.value = null;
+        sitesList.value = [];
+        showNewSiteForm.value = false;
+        newSiteName.value = "";
+        newSiteAddress.value = "";
     }
 });
 
@@ -374,13 +462,12 @@ const priorityOptions = [
 ];
 
 async function onSubmitIntervention() {
-    // Déterminer le client_id (existant ou nouveau)
+    // Étape 1 : déterminer le client (existant ou nouveau)
     let clientId: number;
 
     if (selectedClient.value) {
         clientId = selectedClient.value.id;
     } else if (showNewClientForm.value && newClientName.value.trim()) {
-        // Étape 1 : créer le client
         interventionSubmitting.value = true;
         try {
             const created = await clientsApi.create(auth.token!, {
@@ -412,7 +499,41 @@ async function onSubmitIntervention() {
         return;
     }
 
-    // Étape 2 : créer le intervention
+    // Étape 2 : déterminer le site (existant ou nouveau)
+    let siteId: number;
+
+    if (selectedSiteId.value) {
+        siteId = selectedSiteId.value;
+    } else if (showNewSiteForm.value && newSiteName.value.trim()) {
+        interventionSubmitting.value = true;
+        try {
+            const created = await sitesApi.create(auth.token!, {
+                client_id: clientId,
+                name: newSiteName.value.trim(),
+                address: newSiteAddress.value.trim() || newSiteName.value.trim(),
+            });
+            siteId = created.id;
+        } catch (err: any) {
+            toast.add({
+                severity: "error",
+                summary: "Erreur création site",
+                detail: err.detail || "Impossible de créer le site",
+                life: 5000,
+            });
+            interventionSubmitting.value = false;
+            return;
+        }
+    } else {
+        toast.add({
+            severity: "error",
+            summary: "Site requis",
+            detail: "Sélectionnez un site existant ou créez-en un nouveau",
+            life: 3000,
+        });
+        return;
+    }
+
+    // Étape 3 : créer l'intervention
     const title = newInterventionTitle.value.trim() || newInterventionDescription.value.trim().slice(0, 80) || "Intervention";
     const dateStr = newInterventionDate.value
         ? newInterventionDate.value instanceof Date
@@ -423,7 +544,7 @@ async function onSubmitIntervention() {
     interventionSubmitting.value = true;
     try {
         const newIntervention = await interventionsApi.create(auth.token!, {
-            client_id: clientId,
+            site_id: siteId,
             title,
             description: newInterventionDescription.value || undefined,
             scheduled_date: dateStr,
