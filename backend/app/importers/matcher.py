@@ -171,6 +171,11 @@ class ClientMatcher:
         max_candidates: int = DEFAULT_MAX_CANDIDATES,
     ) -> None:
         self.weights = weights or MatchWeights()
+        if any(w < 0 for w in self.weights.to_dict().values()) or self.weights.total <= 0:
+            raise ValueError("Pondérations invalides")
+        from app.importers.multi_matcher import MultiLevelMatcher
+        self.multi = MultiLevelMatcher(auto_threshold, review_threshold, max_candidates)
+        self.multi.client_weights = (self.weights.name, self.weights.phone, self.weights.city)
         self.auto_threshold = auto_threshold
         self.review_threshold = review_threshold
         self.max_candidates = max_candidates
@@ -190,10 +195,11 @@ class ClientMatcher:
             La décision retenue, avec les meilleurs candidats pour les zones
             non automatiques.
 
-        Todo:
-            INT-99 — implémentation.
         """
-        raise NotImplementedError("INT-99 — ClientMatcher.match()")
+        result = self.multi.match('clients', candidate, existing)
+        return MatchDecision(zone=MatchZone.NEW_CLIENT if result.zone == 'new' else MatchZone(result.zone),
+            score=result.score, matched_client_id=result.entity_id, reason=result.reason,
+            candidates=[MatchCandidate(client_id=c['entity_id'], score=c['score']) for c in result.candidates])
 
     def score(
         self,
@@ -205,15 +211,21 @@ class ClientMatcher:
         Utilise `rapidfuzz.fuzz.token_sort_ratio` sur les noms — insensible à
         l'ordre des mots (`"Dupont Jean"` ≈ `"Jean Dupont"`).
 
-        Todo:
-            INT-99 — implémentation.
         """
-        raise NotImplementedError("INT-99 — ClientMatcher.score()")
+        from rapidfuzz.fuzz import token_sort_ratio
+        from app.importers.normalizer import Normalizer as N
+        total = weight = 0.0
+        for key, w in [('full_name', self.weights.name), ('phone', self.weights.phone), ('city', self.weights.city)]:
+            normalizer = self.multi.phone if key == 'phone' else N.name
+            a, b = normalizer(candidate.get(key)), normalizer(client.get(key))
+            if a and b:
+                total += w * ((100 if a == b else 0) if key == 'phone' else token_sort_ratio(a, b))
+                weight += w
+        return min(100.0, total / weight) if weight else 0.0
 
     def classify(self, score: float) -> MatchZone:
         """Traduit un score en zone de décision.
 
-        Todo:
-            INT-99 — implémentation.
         """
-        raise NotImplementedError("INT-99 — ClientMatcher.classify()")
+        zone = self.multi.classify(score)
+        return MatchZone.NEW_CLIENT if zone == 'new' else MatchZone(zone)

@@ -167,12 +167,12 @@ Je veux **rapprocher un enregistrement historique sur 3 niveaux (client → site
 Afin de **ne pas créer de doublons ni fusionner des entités distinctes**.
 
 **Acceptance Criteria**
-- [ ] `ClientMatcher` généralisé : match client, puis site dans le client, puis équipement dans le site
-- [ ] 3 zones conservées (`≥95` auto / `80-95` humain / `<80` nouveau) par niveau
-- [ ] Score composite : nom + téléphone (client), adresse + ville (site), n° série + produit (équipement)
-- [ ] Références source fiables prioritaires, noms seuls insuffisants, conflits et doublons signalés → validation humaine même au-dessus de 95
-- [ ] Candidats doublons d’interventions inter-fichiers ; ne pas confondre diagnostic et réparation
-- [ ] Test : cas exact / proche (ambigu) / distinct sur chaque niveau, C001/C005, téléphone absent et export ancien recouvrant le récent
+- [x] `ClientMatcher` généralisé : match client, puis site dans le client, puis équipement dans le site
+- [x] 3 zones conservées (`≥95` auto / `80-95` humain / `<80` nouveau) par niveau
+- [x] Score composite : nom + téléphone (client), adresse + ville (site), n° série + produit (équipement)
+- [x] Références source fiables prioritaires, noms seuls insuffisants, conflits et doublons signalés → validation humaine même au-dessus de 95
+- [x] Candidats doublons d’interventions inter-fichiers ; ne pas confondre diagnostic et réparation
+- [x] Test : cas exact / proche (ambigu) / distinct sur chaque niveau, C001/C005, téléphone absent et export ancien recouvrant le récent
 
 **Technical Notes**
 - `rapidfuzz.fuzz.token_sort_ratio` (ordre de mots insensible)
