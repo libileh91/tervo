@@ -179,45 +179,52 @@
       "task": "INT-100",
       "title": "Import — 2 passes + rollback par batch",
       "type": "integration",
-      "preconditions": ["Fixture 1000 lignes, erreur simulée au batch 2, batch_size=500"],
+      "preconditions": [
+        "Fixture 502 clients, erreur après écriture au batch 2, batch_size=500 ; pack métier testé séparément en deux passes"
+      ],
       "steps": [
         "Lancer l'import complet",
         "Provoquer une erreur au batch 2",
         "Vérifier l'état de la base"
       ],
       "expected_result": {
-        "batch_1_commite": "true (clients/sites/équipements en base)",
+        "batch_1_commite": "500 clients + 500 références + 500 traces",
         "batch_2_rollback": "true",
-        "import_batch_status": "partial",
+        "import_batch_status": "failed ; reprise puis success sans doublon",
         "passe_1_avant_passe_2": "true"
       },
-      "actual_result": null
+      "actual_result": "Validé : 11 tests test_import_service_v2.py sur SQLite et PostgreSQL 17.4 ; migration up/down/up et comparaison ORM sans écart."
     },
     {
       "id": "TC-INT-100-02",
       "task": "INT-100",
       "title": "Import — idempotence SHA-256",
       "type": "integration",
-      "preconditions": ["Base vide", "Un fichier Excel de 100 lignes"],
+      "preconditions": [
+        "Base vide",
+        "CSV de 2 clients ; même contenu et réexport différent"
+      ],
       "steps": [
         "Importer le fichier",
         "Réimporter exactement le même fichier",
         "Comparer les comptages"
       ],
       "expected_result": {
-        "premier_import_creations": 100,
+        "premier_import_creations": 2,
         "deuxieme_import_creations": 0,
-        "deuxieme_status": "skipped",
+        "deuxieme_status": "success (rapport existant retourné)",
         "import_batches_total": 1
       },
-      "actual_result": null
+      "actual_result": "Validé : 11 tests test_import_service_v2.py sur SQLite et PostgreSQL 17.4 ; migration up/down/up et comparaison ORM sans écart."
     },
     {
       "id": "TC-INT-100-03",
       "task": "INT-100",
       "title": "Intervention orpheline → import_errors",
       "type": "integration",
-      "preconditions": ["Fixture avec 1 intervention dont l'équipement est introuvable"],
+      "preconditions": [
+        "Fixture avec une intervention dont le site source S999 est introuvable"
+      ],
       "steps": [
         "Lancer l'import",
         "Vérifier la table interventions",
@@ -229,7 +236,7 @@
         "status_ORPHAN": "true",
         "original_value_conserve": "true"
       },
-      "actual_result": null
+      "actual_result": "Validé : 11 tests test_import_service_v2.py sur SQLite et PostgreSQL 17.4 ; migration up/down/up et comparaison ORM sans écart."
     },
     {
       "id": "TC-INT-101-01",

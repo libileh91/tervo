@@ -1081,59 +1081,46 @@ Le périmètre relationnel principal est :
 
 # Entités techniques de migration
 
-Les trois entités suivantes ne font **pas** partie du modèle métier : ce sont des entités
-**techniques** qui assurent la traçabilité et l'idempotence du pipeline d'import.
+Les quatre entités suivantes sont techniques : elles assurent la traçabilité et l’idempotence du pipeline d’import (INT-100).
 
-| Entité         | Rôle                                                        |
-| -------------- | ----------------------------------------------------------- |
-| `ImportBatch`  | un lot d'import (fichier, hash SHA-256, statut)             |
-| `ImportRecord` | traçabilité ligne à ligne (source → entité créée)           |
-| `ImportError`  | les anomalies (validation, orphelin, rapprochement ambigu)  |
+| Entité | Rôle |
+| --- | --- |
+| `ImportBatch` | Fichier original, sélections, plan approuvé et état d’exécution |
+| `ImportRecord` | Trace d’une ligne effectivement traitée et cible canonique |
+| `ImportReference` | Correspondance persistante des identifiants source entre fichiers |
+| `ImportError` | Anomalies de validation, orphelins, ambiguïtés et rollback |
 
 ```text
 ImportBatch
-├── id
-├── filename
-├── file_hash            -- SHA-256 du fichier (idempotence)
-├── type_import
-├── status               -- running / success / partial / failed / skipped
-├── started_at
-├── completed_at
-├── rapport
-└── imported_by
+├── id / filename / source_namespace / file_hash
+├── source_bytes / selections / source_records   -- source originale et manifeste
+├── plan / decisions / plan_token / revision
+├── database_snapshot                           -- empreinte du référentiel validé
+├── status                                      -- staged / ready / running / success / partial / failed
+├── execution_slot / execution_token / lease_until
+└── imported_by / created_at / completed_at
 
 ImportRecord
+├── id / import_batch_id / row_key               -- unique par import et ligne
+├── entity_type / entity_id / action             -- create / associate / ignore
+├── source                                      -- namespace, fichier, feuille, ligne physique
+├── original_values / normalized_values         -- références historiques et attributs conservés
+└── decision / created_at                        -- corrections, motif, validateur, révision, matching
+
+ImportReference
 ├── id
-├── import_batch_id
-├── source_file
-├── source_sheet
-├── source_row          -- numéro physique, en-tête compris
-├── source_namespace    -- famille/système source, commun aux fichiers liés
-├── source_entity_type
-├── source_id           -- identifiant historique, jamais un ID Tervo
-├── original_values
-├── normalized_values
-├── action              -- create / associate / ignore / pending
-├── decision            -- motif, validateur et date si décision humaine
-├── source_hash
-├── entity_type         -- client / site / equipment / intervention / product
-└── entity_id
+├── source_namespace / entity_type / source_id   -- contrainte unique
+└── entity_id                                   -- cible canonique du type indiqué
 
 ImportError
-├── id
-├── import_batch_id
-├── source_file
-├── source_sheet
-├── ligne              -- numéro physique
-├── code               -- MISSING_PHONE, INVALID_VALUE, etc.
-├── severity           -- error / review / warning
-├── colonne
-├── valeur
-├── erreur
-├── status               -- VALIDATION_ERROR / ORPHAN / DUPLICATE_AMBIGUOUS
-├── original_value
-└── created_at
+├── id / import_batch_id / revision / row_key
+├── code / severity / message
+└── source / original_values / created_at
 ```
+
+Les clés `entity_id` des tables techniques sont polymorphes, sans FK vers une table métier unique ; le service vérifie la cible et son parent avant écriture. Les états `pending` appartiennent au plan, sans `ImportRecord` tant que la ligne n’est pas traitée. Les anomalies originales détaillées (colonne, valeur et proposition) restent dans `source_records` et le plan ; `ImportError` fournit le journal chronologique par révision. Une anomalie ancienne n’est pas supprimée lorsqu’une nouvelle révision la résout.
+
+Contrainte unique `(source_namespace, file_hash)` sur ImportBatch. Les octets sont privés à l’administration et ne sont jamais renvoyés dans les réponses JSON. Limite V1 : 10 Mio par fichier, traitement en mémoire.
 
 ### Décisions Lot 2 validées
 

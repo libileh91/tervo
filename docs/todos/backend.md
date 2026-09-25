@@ -182,4 +182,17 @@
 | **Dépend de** | INT-99 (matching), INT-100 (persistance), INT-101 (API et décisions) |
 | **Fichiers** | `app/importers/validators.py`, `matcher.py`, `app/services/import_service.py`, futurs modèles ImportRecord/ImportError et API admin |
 | **Action attendue** | Résoudre les références dans leur namespace ; prouver toute association client avant de rendre MISSING_PHONE non bloquant ; appliquer les décisions validées (site/titre, statut historique, doublons et remplacement), puis enregistrer provenance/actions. Ne jamais écrire directement les dictionnaires normalized contenant des valeurs absentes sur un client existant. Vérifier les doublons d’interventions inter-fichiers et les orphelins C999. |
-| **Statut** | ⏳ Candidats et propositions disponibles ; rapprochement et exécution non implémentés |
+| **Statut** | ⏳ INT-99 et INT-100 faits : rapprochement, décisions et persistance testés ; reste l’exposition API INT-101 |
+
+
+---
+
+## TD-B016 — Mesurer l’import sur un volume représentatif
+
+| Champ | Valeur |
+| --- | --- |
+| **Créé dans** | INT-100 |
+| **Dépend de** | Échantillon anonymisé représentatif avant migration réelle |
+| **Fichiers** | `app/importers/excel_reader.py`, `app/services/import_planner.py`, `app/services/import_service.py` |
+| **Action attendue** | Mesurer mémoire, durée, coût du rapprochement et attente des verrous PostgreSQL ; définir le découpage des archives. Selon les mesures, ajouter index de candidats, lecture en flux ou worker asynchrone. Le lecteur et le référentiel sont actuellement chargés en mémoire ; les transactions de 500 lignes ne garantissent pas le passage à l’échelle. |
+| **Statut** | ⏳ À mesurer avant import réel ; pack fictif et scénario de 502 lignes validés |

@@ -147,16 +147,20 @@ Migration / Import historique
      │
      ├── ExcelReader / FormatDetector   (lecture + mapping des colonnes)
      ├── Normalizer / Validator         (normalisation + validation)
-     ├── ClientMatcher                  (rapprochement fuzzy, 3 zones)
+     ├── MultiLevelMatcher              (rapprochement hiérarchique, 3 zones)
      └── ImportService                  (2 passes + transactions par batch)
      │
      ▼
-PostgreSQL  (ImportBatch / ImportRecord / ImportError)
+PostgreSQL  (ImportBatch / ImportRecord / ImportReference / ImportError)
 ```
 
 Lecture V1 : `.xlsx` et `.csv`, multi-feuilles, en-tête détecté ou choisi, encodage et séparateur visibles. Les sources restent intactes ; l’aperçu conserve fichier/feuille/ligne physique, valeurs brutes, normalisées, anomalies et propositions. Les décisions détaillées et les champs de traçabilité sont définis dans [le modèle de données](02-data-model.md#décisions-lot-2-validées).
 
 La validation structurelle produit des candidats, pas une autorisation d’écriture. Le rapprochement privilégie les références source fiables, puis propose des correspondances métier. Les seuils 95/80 n’annulent ni un conflit d’identité ni une demande explicite de revue. L’exécution doit utiliser le fichier, le mapping et les décisions effectivement validés. La lecture actuelle charge une feuille en mémoire ; les transactions par 500 lignes concernent la persistance, pas une garantie de lecture en flux.
+
+INT-100 matérialise un plan révisé avec un jeton SHA-256. L’exécution utilise ce plan sans recalcul. Un référentiel modifié impose une revalidation ; les lignes déjà commitées sont immuables et sautées lors d’une reprise. Les états sont `staged`, `ready`, `running`, `success`, `partial` (lignes en attente) et `failed` (sous-lot annulé).
+
+Un emplacement d’exécution unique et un bail renouvelé de quinze minutes sérialisent les imports. Un jeton distinct protège la reprise contre un ancien processus. Sur PostgreSQL, la ligne d’import et les tables métier concernées sont verrouillées pendant chaque sous-lot ; ces verrous peuvent retarder les écritures métier concurrentes. Le matching et l’empreinte chargent encore le référentiel entier. L’exécution synchrone et la lecture en mémoire nécessitent une mesure sur volume représentatif avant l’import réel de vingt ans d’archives.
 
 Il est conçu **conjointement** avec le modèle de données métier (champs nullable de
 l'historique, provenance, traçabilité).

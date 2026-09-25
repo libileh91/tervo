@@ -188,14 +188,14 @@ Je veux **importer clients/sites/équipements puis interventions, batch par batc
 Afin de **garantir la cohérence sans bloquer sur 20 ans de données**.
 
 **Acceptance Criteria**
-- [ ] PASS 1 : `Client → Site → Equipment` (résolution + IDs canoniques)
-- [ ] PASS 2 : `Intervention` (résolution `site_id` + `equipment_id`)
-- [ ] Transaction **par batch** (500 lignes), pas une transaction géante
-- [ ] Idempotence : SHA-256 + `ImportBatch` (`status=success` → skip), reprise des imports partiels via lignes déjà commitées
-- [ ] `ImportRecord` : namespace, référence source, fichier/feuille/ligne, valeurs originales/normalisées, cible, action et décision ; correspondances réutilisables entre fichiers
-- [ ] Product résolu avant Equipment si référence fiable ; sinon product_id nullable et attributs sources conservés
-- [ ] Interventions orphelines → `import_errors` (`ORPHAN`), jamais ignorées
-- [ ] Test : erreur simulée au batch 2 → batch 1 commité, batch 2 rollback
+- [x] PASS 1 : `Client → Site → Equipment` (résolution + IDs canoniques)
+- [x] PASS 2 : `Intervention` (résolution `site_id` + `equipment_id`)
+- [x] Transaction **par batch** (500 lignes), pas une transaction géante
+- [x] Idempotence : SHA-256 + `ImportBatch` (`status=success` → skip), reprise des imports partiels via lignes déjà commitées
+- [x] `ImportRecord` : namespace, référence source, fichier/feuille/ligne, valeurs originales/normalisées, cible, action et décision ; correspondances réutilisables entre fichiers
+- [x] Product résolu avant Equipment si référence fiable ; sinon product_id nullable et attributs sources conservés
+- [x] Interventions orphelines → `import_errors` (`ORPHAN`), jamais ignorées
+- [x] Test : erreur simulée au batch 2 → batch 1 commité, batch 2 rollback
 
 **Technical Notes**
 - `async with session.begin():` par batch
