@@ -211,13 +211,13 @@ Je veux **prévisualiser, valider puis exécuter un import**,
 Afin de **contrôler ce qui sera inséré avant de le faire**.
 
 **Acceptance Criteria**
-- [ ] `POST /api/v1/admin/import/preview` → 10 lignes + mapping détecté, feuille/en-tête/encodage, provenance, transformations et propositions à confirmer
-- [ ] `POST /api/v1/admin/import/validate` → statistiques (prêts / doublons / erreurs)
-- [ ] `POST /api/v1/admin/import/execute` → import + rapport ; exécuter uniquement le fichier, mapping et décisions validés, sans recalcul silencieux
-- [ ] Décisions humaines tracées : doublons, noms de sites proposés, remplacement documenté ; données obligatoires manquantes corrigées ou laissées en attente
-- [ ] `GET /api/v1/admin/import/batches` + `GET .../batches/{id}/errors`
-- [ ] Auth `role=admin` requise
-- [ ] Tests API pour chaque endpoint
+- [x] `POST /api/v1/admin/import/preview` → 10 lignes + mapping détecté, feuille/en-tête/encodage, provenance, transformations et propositions à confirmer
+- [x] `POST /api/v1/admin/import/validate` → statistiques (prêts / doublons / erreurs)
+- [x] `POST /api/v1/admin/import/execute` → import + rapport ; exécuter uniquement le fichier, mapping et décisions validés, sans recalcul silencieux
+- [x] Décisions humaines tracées : doublons, noms de sites proposés, remplacement documenté ; données obligatoires manquantes corrigées ou laissées en attente
+- [x] `GET /api/v1/admin/import/batches` + `GET .../batches/{id}/errors`
+- [x] Auth `role=admin` requise
+- [x] Tests API pour chaque endpoint
 
 **Technical Notes**
 - Upload multipart ; réponse typée Pydantic

@@ -1560,3 +1560,62 @@ EQUIPMENT
 L'API ne doit pas exposer inutilement les détails internes de PostgreSQL ou de l'ORM.
 
 Le modèle métier reste la source de vérité ; l'API en est l'interface technique.
+
+---
+
+# Administration — migration des archives (INT-101)
+
+Toutes les routes `/api/v1/admin/import` exigent un utilisateur actif `ADMIN`. Un technicien reçoit `403` ; l’absence de jeton suit le garde HTTPBearer commun. Les sources, coordonnées et anomalies ne sont pas publiques.
+
+| Méthode et suffixe | Entrée | Résultat |
+| --- | --- | --- |
+| `POST /preview` | multipart : `file`, `source_namespace`, `selections` (liste JSON) | Import conservé, dix lignes maximum, provenance, mapping, valeurs brutes/normalisées, anomalies et propositions |
+| `POST /validate` | `batch_id`, `decisions`, `selections` facultatives | Plan révisé, `plan_token`, compteurs create/associate/ignore/pending/committed/ready/duplicates |
+| `POST /execute` | `batch_id`, `plan_token` seulement | Rapport du plan approuvé, sans recalcul ni nouveaux choix |
+| `GET /batches` | `page`, `page_size` | Historique paginé avec compteurs |
+| `GET /batches/{id}` | `page`, `page_size` | Lignes du plan et manifeste de lecture |
+| `GET /batches/{id}/errors` | `page`, `page_size` | Journal des anomalies de toutes les révisions |
+
+La pagination commence à 1 ; `page_size` vaut au maximum 100. Les listes de batches et d’erreurs renvoient `items`, `total`, `page`, `page_size`, `pages`. Le détail possède `total`, `items`, `page` et `page_size`.
+
+Exemple de manifeste multipart, avec une nature explicite par feuille :
+
+```json
+[
+  {"sheet":"Clients","kind":"clients"},
+  {"sheet":"Sites","kind":"sites"},
+  {"sheet":"Equipements","kind":"equipment"}
+]
+```
+
+Options : `header_row` (ligne physique, à partir de 1), `encoding`, `separator`, `two_digit_year_base` (1900 ou 2000) et `mapping` (champ interne → colonne source). Formats acceptés : XLSX et CSV, au maximum 10 Mio. `mixed` doit être séparé en sélections de natures explicites ; PDF/OCR est hors périmètre.
+
+Une décision est indexée par la clé de ligne renvoyée par l’aperçu, par exemple `Clients:6:clients` :
+
+```json
+{
+  "batch_id": 1,
+  "decisions": {
+    "Clients:6:clients": {
+      "action": "associate",
+      "associate_source_id": "C001",
+      "note": "Doublon confirmé après comparaison des archives"
+    },
+    "Sites:2:sites": {
+      "action": "create",
+      "corrections": {"site_name": "Maison — 12 rue des Lilas"},
+      "note": "Libellé confirmé"
+    }
+  }
+}
+```
+
+Actions : `create`, `associate`, `ignore`, `review`. `review` applique une correction puis soumet à nouveau la ligne au rapprochement. Une association exige exactement une cible : `entity_id` Tervo ou `associate_source_id` du même namespace et du même type. Le motif est obligatoire. Les décisions fournies remplacent les décisions précédentes des mêmes lignes ; les autres restent conservées.
+
+Le fichier est conservé sous empreinte SHA-256. Recharger le même contenu dans le même namespace retrouve le même import ; pour changer le mapping, utiliser `validate`. Une nouvelle validation invalide l’ancien jeton. Un changement du référentiel métier impose aussi une revalidation (`409`). Dès le premier sous-lot commité, le mapping et les décisions des lignes traitées sont figés. Un import réussi retourne son rapport existant.
+
+`MISSING_PHONE` reste visible dans les anomalies. Une correction permet la création ; une association certaine conserve les coordonnées de la cible. Les anomalies journalisées décrivent leurs révisions et les données originales : consulter le plan courant pour connaître les lignes encore `pending`.
+
+`422` : fichier, manifeste ou contrat invalide ; `413` : fichier trop volumineux ; `404` : import absent ; `409` : approbation périmée, import occupé ou modification d’une ligne commitée. Une réponse `200` d’exécution contient un rapport dont le statut doit être lu : `success`, `partial` ou `failed` (rollback d’un sous-lot).
+
+L’exécution est synchrone. `ready` compte les opérations approuvées restant à exécuter ; `committed` compte les traces persistées. Les compteurs d’opérations décrivent le plan et ne sont pas des promesses de débit.

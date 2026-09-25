@@ -134,7 +134,7 @@
 | **Fichiers**  | `.github/workflows/ci.yml`, `backend/tests/`                    |
 | **Action**    | Les tests utilisent SQLite (`sqlite+aiosqlite:///./test_tervo.db`). Envisager un service PostgreSQL dans la CI pour détecter les écarts de dialecte (enums, contraintes `CHECK`, colonnes générées, index). |
 |               | Piste : ajouter un service `postgres` au job `backend-tests` et surcharger `DATABASE_URL`. |
-| **Statut**    | ⏳ Évolution — à planifier si des bugs spécifiques PostgreSQL apparaissent |
+| **Statut**    | ✅ Fait (INT-101) — PostgreSQL 17.4 en CI : migrations aller/retour + tests du service d’import et de l’API admin ; suite générale conservée sur SQLite |
 
 
 ---
@@ -182,7 +182,7 @@
 | **Dépend de** | INT-99 (matching), INT-100 (persistance), INT-101 (API et décisions) |
 | **Fichiers** | `app/importers/validators.py`, `matcher.py`, `app/services/import_service.py`, futurs modèles ImportRecord/ImportError et API admin |
 | **Action attendue** | Résoudre les références dans leur namespace ; prouver toute association client avant de rendre MISSING_PHONE non bloquant ; appliquer les décisions validées (site/titre, statut historique, doublons et remplacement), puis enregistrer provenance/actions. Ne jamais écrire directement les dictionnaires normalized contenant des valeurs absentes sur un client existant. Vérifier les doublons d’interventions inter-fichiers et les orphelins C999. |
-| **Statut** | ⏳ INT-99 et INT-100 faits : rapprochement, décisions et persistance testés ; reste l’exposition API INT-101 |
+| **Statut** | ✅ Fait (INT-99 à INT-101) — décisions explicites, sources conservées, reprise, arbitrage inter-fichiers et API admin testés |
 
 
 ---

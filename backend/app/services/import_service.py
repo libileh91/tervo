@@ -1,5 +1,6 @@
 """Staged imports: immutable sources, approved plans, per-chunk transactions and audit."""
 from collections import Counter
+from csv import Error as CSVError
 from datetime import date, datetime, timedelta, timezone
 from hashlib import sha256
 import json
@@ -9,7 +10,7 @@ from zipfile import BadZipFile
 from xml.etree.ElementTree import ParseError
 
 from fastapi import HTTPException
-from sqlalchemy import select, update, text
+from sqlalchemy import select, update, text, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -91,7 +92,7 @@ class ImportService:
                 return await self.detail(existing.id,page_size=10)
             try:
                 rows = read_sources(content,filename,namespace,selections)
-            except (ValueError,KeyError,UnicodeError,BadZipFile,ParseError,IndexError) as exc:
+            except (ValueError,KeyError,UnicodeError,BadZipFile,ParseError,IndexError,CSVError) as exc:
                 raise HTTPException(422,str(exc)) from exc
             if not rows:
                 raise HTTPException(422,'Aucune ligne à importer')
@@ -131,7 +132,7 @@ class ImportService:
                 selections = [SheetSelection.model_validate(s).model_dump(mode='json',exclude_none=True) for s in selections]
                 try:
                     rows = read_sources(batch.source_bytes,batch.filename,batch.source_namespace,selections)
-                except (ValueError,KeyError,UnicodeError,BadZipFile,ParseError,IndexError) as exc:
+                except (ValueError,KeyError,UnicodeError,BadZipFile,ParseError,IndexError,CSVError) as exc:
                     raise HTTPException(422,str(exc)) from exc
                 if not rows:
                     raise HTTPException(422,'Aucune ligne à importer')
@@ -276,16 +277,21 @@ class ImportService:
             batch = await self._get(db,batch_id)
             entries = batch.plan or batch.source_records
             committed = list(await db.scalars(select(ImportRecord).where(ImportRecord.import_batch_id==batch_id)))
+            committed_keys = {r.row_key for r in committed}
             counts = Counter(e.get('op','unvalidated') for e in entries)
-            counts.update({'committed':len(committed)})
+            counts.update({'committed':len(committed),
+                'ready':sum(e.get('op') in {'create','associate','ignore'} and e['key'] not in committed_keys for e in entries),
+                'duplicates':sum(e.get('planning_error',{}).get('code')=='DUPLICATE_AMBIGUOUS' for e in entries)})
             return dict(id=batch.id,filename=batch.filename,source_namespace=batch.source_namespace,
-                file_hash=batch.file_hash,status=batch.status,revision=batch.revision,plan_token=batch.plan_token,
+                file_hash=batch.file_hash,status=batch.status,revision=batch.revision,plan_token=batch.plan_token,selections=batch.selections,
                 total=len(entries),counts=dict(counts),items=entries[(page-1)*page_size:page*page_size],page=page,page_size=page_size)
 
     async def list_batches(self, page=1, page_size=25):
         async with self.sessions() as db:
             ids = list(await db.scalars(select(ImportBatch.id).order_by(ImportBatch.id.desc()).offset((page-1)*page_size).limit(page_size)))
-        return [await self.detail(i,page_size=0) for i in ids]
+            total = await db.scalar(select(func.count()).select_from(ImportBatch))
+        return dict(items=[await self.detail(i,page_size=0) for i in ids],total=total,
+                    page=page,page_size=page_size,pages=(total+page_size-1)//page_size)
 
     async def errors(self, batch_id, page=1, page_size=100):
         async with self.sessions() as db:
@@ -294,3 +300,12 @@ class ImportService:
                 .order_by(ImportError.id).offset((page-1)*page_size).limit(page_size))
             return [dict(id=e.id,revision=e.revision,key=e.row_key,code=e.code,severity=e.severity,
                          message=e.message,source=e.source,original=e.original_values) for e in errors]
+
+
+    async def error_page(self, batch_id, page=1, page_size=100):
+        items = await self.errors(batch_id, page, page_size)
+        async with self.sessions() as db:
+            total = await db.scalar(select(func.count()).select_from(ImportError)
+                                    .where(ImportError.import_batch_id == batch_id))
+        return dict(items=items,total=total,page=page,page_size=page_size,
+                    pages=(total+page_size-1)//page_size)

@@ -243,7 +243,9 @@
       "task": "INT-101",
       "title": "API import — preview / validate / execute",
       "type": "api",
-      "preconditions": ["Admin authentifié"],
+      "preconditions": [
+        "Admin authentifié"
+      ],
       "steps": [
         "POST /api/v1/admin/import/preview (multipart)",
         "POST /api/v1/admin/import/validate",
@@ -255,9 +257,76 @@
         "validate_statistiques": "true",
         "execute_rapport": "true",
         "errors_liste": "true",
-        "non_admin_401": "true"
+        "technicien_403": "true",
+        "anonyme_401_ou_403": "selon HTTPBearer commun"
       },
-      "actual_result": null
+      "actual_result": "Validé : 28 tests API ; 214 tests backend au total ; 39 tests service/API import sur PostgreSQL 17.4."
+    },
+    {
+      "id": "TC-INT-101-02",
+      "task": "INT-101",
+      "title": "Plan approuvé : jeton, référentiel et mapping",
+      "type": "api",
+      "preconditions": [
+        "Admin authentifié",
+        "Import validé"
+      ],
+      "steps": [
+        "Revalider avec un mapping explicite",
+        "Exécuter avec l’ancien jeton",
+        "Modifier le référentiel puis exécuter",
+        "Revalider et exécuter le jeton courant"
+      ],
+      "expected_result": {
+        "ancien_jeton": "409",
+        "referentiel_modifie": "409",
+        "nouveau_plan": "success",
+        "choices_dans_execute": "422"
+      },
+      "actual_result": "Validé : tests API et service sur SQLite/PostgreSQL"
+    },
+    {
+      "id": "TC-INT-101-03",
+      "task": "INT-101",
+      "title": "Téléphone absent : correction ou association tracée",
+      "type": "api",
+      "preconditions": [
+        "CSV sans téléphone"
+      ],
+      "steps": [
+        "Prévisualiser MISSING_PHONE",
+        "Corriger avec motif et revalider",
+        "Exécuter et consulter la trace",
+        "Tester séparément une association explicite à un client existant"
+      ],
+      "expected_result": {
+        "source_originale": "conservée vide",
+        "correction": "normalisée et tracée avec validateur",
+        "association": "coordonnées existantes préservées",
+        "anomalies": "journalisées par révision"
+      },
+      "actual_result": "Validé : tests API et service sur SQLite/PostgreSQL"
+    },
+    {
+      "id": "TC-INT-101-04",
+      "task": "INT-101",
+      "title": "Sécurité, erreurs de fichier et reprise partielle",
+      "type": "api",
+      "preconditions": [
+        "Admin et technicien authentifiés"
+      ],
+      "steps": [
+        "Appeler les six routes en technicien et sans token",
+        "Envoyer un fichier trop volumineux ou malformé",
+        "Exécuter un import partiel puis modifier une ligne commitée ou son mapping"
+      ],
+      "expected_result": {
+        "technicien": "403 sans création d’import",
+        "fichier_trop_volumineux": "413",
+        "fichier_ou_manifeste_invalide": "422",
+        "ligne_ou_mapping_fige": "409"
+      },
+      "actual_result": "Validé : tests API sur SQLite/PostgreSQL"
     },
     {
       "id": "TC-INT-102-01",

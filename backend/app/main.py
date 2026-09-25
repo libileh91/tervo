@@ -38,6 +38,7 @@ app.add_middleware(
 )
 
 # ── Routers ───────────────────────────────────────────────
+from app.api.v1.imports import router as imports_router
 from app.api.v1.auth import router as auth_router  # noqa: E402
 from app.api.v1.checklist import router as checklist_router  # noqa: E402
 from app.api.v1.clients import router as clients_router  # noqa: E402
@@ -51,6 +52,7 @@ from app.api.v1.equipment import router as equipment_router
 from app.api.v1.products import router as products_router
 from app.api.v1.sites import router as sites_router  # noqa: E402
 
+app.include_router(imports_router, prefix=settings.API_V1_PREFIX)
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
 app.include_router(clients_router, prefix=settings.API_V1_PREFIX)
 app.include_router(interventions_router, prefix=settings.API_V1_PREFIX)

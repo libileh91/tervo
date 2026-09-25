@@ -24,6 +24,8 @@ def read_sources(content: bytes, filename: str, namespace: str, selections: list
             options = {k:selection[k] for k in ('sheet','header_row','encoding','separator') if k in selection}
             frame = ExcelReader().read(path, source_namespace=namespace, **options)
             frame.attrs['source']['file'] = filename
+            if path.suffix == '.csv':
+                frame.attrs['source']['sheet'] = Path(filename).stem
             mapping = FormatDetector().detect(list(frame.columns), kind, selection.get('mapping'))
             validated = Validator().validate(frame, mapping, kind, two_digit_year_base=selection.get('two_digit_year_base'))
             for record in validated.records:

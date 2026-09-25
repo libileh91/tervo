@@ -61,6 +61,21 @@ jobs:
       run:
         working-directory: backend
 
+    services:
+      postgres:
+        image: postgres:17.4
+        env:
+          POSTGRES_USER: tervo_ci
+          POSTGRES_PASSWORD: local-ci-only
+          POSTGRES_DB: tervo_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tervo_ci -d tervo_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v7
 
@@ -74,6 +89,19 @@ jobs:
 
       - name: Run tests
         run: uv run pytest tests/ -q
+
+      - name: PostgreSQL migrations round trip
+        env:
+          DATABASE_URL: postgresql+psycopg2://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
+        run: |
+          uv run alembic upgrade head
+          uv run alembic downgrade -1
+          uv run alembic upgrade head
+
+      - name: PostgreSQL import service and admin API
+        env:
+          TERVO_IMPORT_TEST_DATABASE_URL: postgresql+asyncpg://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
+        run: uv run pytest tests/test_import_service_v2.py tests/test_import_api_v2.py -q
 
   # ── Frontend : build ────────────────────────────────────
   frontend-build:
