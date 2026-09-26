@@ -1,0 +1,249 @@
+{
+  "$schema": "Stage 7 - Sprint 7.2 Test Cases",
+  "sprint": "7.2",
+  "description": "Tervo V2 — Migration Excel",
+  "test_cases": [
+    {
+      "id": "TC-INT-98-01",
+      "task": "INT-98",
+      "title": "Lecture et mapping des archives v2",
+      "type": "integration",
+      "preconditions": [
+        "Fixtures fictives autonomes tests/fixtures/excel"
+      ],
+      "steps": [
+        "Lire les trois classeurs et leurs feuilles",
+        "Lire le CSV Latin-1",
+        "Tester le mapping des cinq entités et les corrections manuelles",
+        "Créer une variante avec titre et lignes vides"
+      ],
+      "expected_result": {
+        "sources_inchangees": true,
+        "ligne_physique_conservee": true,
+        "type_contextuel": true,
+        "ambiguite_non_mappee": true,
+        "encodage": "latin-1"
+      },
+      "actual_result": "Validé : tests/test_importers_v2.py"
+    },
+    {
+      "id": "TC-INT-98-02",
+      "task": "INT-98",
+      "title": "Téléphone absent et association certaine",
+      "type": "unit",
+      "preconditions": [
+        "C006 sans téléphone ni adresse"
+      ],
+      "steps": [
+        "Valider comme création",
+        "Valider avec association interne certaine à un client existant"
+      ],
+      "expected_result": {
+        "creation": "MISSING_PHONE et MISSING_ADDRESS bloquants",
+        "association": "avertissements, aucun téléphone inventé ou effacé",
+        "preuve_identite": "à fournir par INT-99"
+      },
+      "actual_result": "Validé : tests/test_importers_v2.py"
+    },
+    {
+      "id": "TC-INT-98-03",
+      "task": "INT-98",
+      "title": "Anomalies historiques et conservation des sources",
+      "type": "integration",
+      "preconditions": [
+        "Jeu fictif"
+      ],
+      "steps": [
+        "Valider C001/C005, E003, E004/E005 et INT-2022-999",
+        "Valider INT-2023-010 sans appareil",
+        "Tester dates courtes avec et sans siècle confirmé",
+        "Tester formules, garanties inversées et champs sans mapping"
+      ],
+      "expected_result": {
+        "doublon_et_remplacement": "review",
+        "serie_absente": "warning",
+        "date_impossible": "error",
+        "equipement_diagnostic": null,
+        "sources_et_valeurs": "conservées",
+        "orphelin_C999": "résolution différée INT-99/100"
+      },
+      "actual_result": "Validé : tests/test_importers_v2.py"
+    },
+    {
+      "id": "TC-INT-99-01",
+      "task": "INT-99",
+      "title": "Matcher multi-niveaux — 3 zones",
+      "type": "unit",
+      "preconditions": [
+        "Package importers.matcher"
+      ],
+      "steps": [
+        "Matcher client 'Jean Dupont' 0612345678 vs 'Jean DUPONT' 0612345678",
+        "Matcher site '12 rue de Paris 75001' vs '12 rue de paris 75001'",
+        "Matcher équipement 'PAC Daikin ABC-123' vs 'PAC Daikin XYZ-999'"
+      ],
+      "expected_result": {
+        "client_exact_auto": "score >= 95",
+        "site_exact_auto": "score >= 95",
+        "equipment_distinct_nouveau": "score < 80",
+        "trois_zones_par_niveau": "true",
+        "rapidfuzz_utilise": "true"
+      },
+      "actual_result": "Validé : tests/test_matching_v2.py (hiérarchie, références, conflits, doublons et seuils)"
+    },
+    {
+      "id": "TC-INT-100-01",
+      "task": "INT-100",
+      "title": "Import — 2 passes + rollback par batch",
+      "type": "integration",
+      "preconditions": [
+        "Fixture 502 clients, erreur après écriture au batch 2, batch_size=500 ; pack métier testé séparément en deux passes"
+      ],
+      "steps": [
+        "Lancer l'import complet",
+        "Provoquer une erreur au batch 2",
+        "Vérifier l'état de la base"
+      ],
+      "expected_result": {
+        "batch_1_commite": "500 clients + 500 références + 500 traces",
+        "batch_2_rollback": "true",
+        "import_batch_status": "failed ; reprise puis success sans doublon",
+        "passe_1_avant_passe_2": "true"
+      },
+      "actual_result": "Validé : 11 tests test_import_service_v2.py sur SQLite et PostgreSQL 17.4 ; migration up/down/up et comparaison ORM sans écart."
+    },
+    {
+      "id": "TC-INT-100-02",
+      "task": "INT-100",
+      "title": "Import — idempotence SHA-256",
+      "type": "integration",
+      "preconditions": [
+        "Base vide",
+        "CSV de 2 clients ; même contenu et réexport différent"
+      ],
+      "steps": [
+        "Importer le fichier",
+        "Réimporter exactement le même fichier",
+        "Comparer les comptages"
+      ],
+      "expected_result": {
+        "premier_import_creations": 2,
+        "deuxieme_import_creations": 0,
+        "deuxieme_status": "success (rapport existant retourné)",
+        "import_batches_total": 1
+      },
+      "actual_result": "Validé : 11 tests test_import_service_v2.py sur SQLite et PostgreSQL 17.4 ; migration up/down/up et comparaison ORM sans écart."
+    },
+    {
+      "id": "TC-INT-100-03",
+      "task": "INT-100",
+      "title": "Intervention orpheline → import_errors",
+      "type": "integration",
+      "preconditions": [
+        "Fixture avec une intervention dont le site source S999 est introuvable"
+      ],
+      "steps": [
+        "Lancer l'import",
+        "Vérifier la table interventions",
+        "Vérifier import_errors"
+      ],
+      "expected_result": {
+        "intervention_non_inseree": "true",
+        "present_dans_import_errors": "true",
+        "status_ORPHAN": "true",
+        "original_value_conserve": "true"
+      },
+      "actual_result": "Validé : 11 tests test_import_service_v2.py sur SQLite et PostgreSQL 17.4 ; migration up/down/up et comparaison ORM sans écart."
+    },
+    {
+      "id": "TC-INT-101-01",
+      "task": "INT-101",
+      "title": "API import — preview / validate / execute",
+      "type": "api",
+      "preconditions": [
+        "Admin authentifié"
+      ],
+      "steps": [
+        "POST /api/v1/admin/import/preview (multipart)",
+        "POST /api/v1/admin/import/validate",
+        "POST /api/v1/admin/import/execute",
+        "GET /api/v1/admin/import/batches/{id}/errors"
+      ],
+      "expected_result": {
+        "preview_10_lignes_plus_mapping": "true",
+        "validate_statistiques": "true",
+        "execute_rapport": "true",
+        "errors_liste": "true",
+        "technicien_403": "true",
+        "anonyme_401_ou_403": "selon HTTPBearer commun"
+      },
+      "actual_result": "Validé : 28 tests API ; 214 tests backend au total ; 39 tests service/API import sur PostgreSQL 17.4."
+    },
+    {
+      "id": "TC-INT-101-02",
+      "task": "INT-101",
+      "title": "Plan approuvé : jeton, référentiel et mapping",
+      "type": "api",
+      "preconditions": [
+        "Admin authentifié",
+        "Import validé"
+      ],
+      "steps": [
+        "Revalider avec un mapping explicite",
+        "Exécuter avec l’ancien jeton",
+        "Modifier le référentiel puis exécuter",
+        "Revalider et exécuter le jeton courant"
+      ],
+      "expected_result": {
+        "ancien_jeton": "409",
+        "referentiel_modifie": "409",
+        "nouveau_plan": "success",
+        "choices_dans_execute": "422"
+      },
+      "actual_result": "Validé : tests API et service sur SQLite/PostgreSQL"
+    },
+    {
+      "id": "TC-INT-101-03",
+      "task": "INT-101",
+      "title": "Téléphone absent : correction ou association tracée",
+      "type": "api",
+      "preconditions": [
+        "CSV sans téléphone"
+      ],
+      "steps": [
+        "Prévisualiser MISSING_PHONE",
+        "Corriger avec motif et revalider",
+        "Exécuter et consulter la trace",
+        "Tester séparément une association explicite à un client existant"
+      ],
+      "expected_result": {
+        "source_originale": "conservée vide",
+        "correction": "normalisée et tracée avec validateur",
+        "association": "coordonnées existantes préservées",
+        "anomalies": "journalisées par révision"
+      },
+      "actual_result": "Validé : tests API et service sur SQLite/PostgreSQL"
+    },
+    {
+      "id": "TC-INT-101-04",
+      "task": "INT-101",
+      "title": "Sécurité, erreurs de fichier et reprise partielle",
+      "type": "api",
+      "preconditions": [
+        "Admin et technicien authentifiés"
+      ],
+      "steps": [
+        "Appeler les six routes en technicien et sans token",
+        "Envoyer un fichier trop volumineux ou malformé",
+        "Exécuter un import partiel puis modifier une ligne commitée ou son mapping"
+      ],
+      "expected_result": {
+        "technicien": "403 sans création d’import",
+        "fichier_trop_volumineux": "413",
+        "fichier_ou_manifeste_invalide": "422",
+        "ligne_ou_mapping_fige": "409"
+      },
+      "actual_result": "Validé : tests API sur SQLite/PostgreSQL"
+    }
+  ]
+}

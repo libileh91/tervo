@@ -25,8 +25,59 @@ Tu bosses en mode **feu-vert** : je valide chaque étape avant que tu passes à 
 
 - **Nom du projet : Tervo** — nom conservé, pas de rebranding (ni « MB Chauffage », ni « ShowRoom »)
 - **DAT unique** : `docs/DAT/new/` (refonte en cours — voir structure ci-dessous)
-- **Sprint en cours** : `docs/stages/stage6/sprint-6.2-v2/` (Tervo v2 : cœur métier + migration Excel)
+- **Prochain sprint à démarrer** : `docs/stages/stage7/sprint7.3/` (Tervo v2 : chaîne commerciale ; prochaine tâche INT-102)
+- **Planning V2** : `docs/stages/stage7/README.md` — sprints `sprint7.1` à `sprint7.6` ; 7.1 et 7.2 terminés
 - **Branche de travail DAT** : `chore/rewrite-dat`
+
+### Organisation du Stage 7 (réorganisation du 26 septembre 2026)
+
+Le point d’entrée du planning est `docs/stages/stage7/README.md`. Chaque sprint
+possède son propre `tasks.md` et son `test-cases.json` ; conserver exactement les
+noms `sprint7.1` à `sprint7.6` (sans tiret). Les statuts ci-dessous sont un état de
+reprise : relire les critères et les todos avant de commencer une tâche.
+
+| Dossier sous `docs/stages/stage7/` | Périmètre | Tâches | État à la réorganisation |
+|---|---|---|---|
+| `sprint7.1/` | Socle physique | INT-94 à INT-97 | Terminé |
+| `sprint7.2/` | Migration Excel | INT-98 à INT-101 | Terminé |
+| `sprint7.3/` | Ventes et installations | INT-102 à INT-103 | À démarrer ; prochaine tâche INT-102 |
+| `sprint7.4/` | Cycle terrain | INT-104 à INT-108 | À traiter |
+| `sprint7.5/` | Showroom et remplacement | INT-109 à INT-110 | À traiter |
+| `sprint7.6/` | Déploiement VPS et documentation entretien | INT-111 à INT-112 | À traiter |
+
+**Reprise des anciens dossiers :**
+- `stage6/sprint-6.1/` et `stage6/sprint-6.2/` sont conservés ; 6.2 est gelé,
+  avec reprise du pipeline dans 7.2. INT-71 reste une tâche historique de 6.2.
+- `stage6/sprint-6.2-v2/` et le dossier intermédiaire `stage7/sprint7/` ont été
+  remplacés par les six sprints ; ne pas recréer de planning monolithique.
+- `stage6/sprint-6.3/`, `sprint-6.4/` et `sprint-6.5/` sont supprimés.
+  Leur contenu initial reste dans Git : ne pas créer de liens vers ces dossiers.
+- Ancien 6.3 : catalogue repris dans INT-96 (7.1), showroom repensé dans INT-109
+  (7.5). Le modèle exposition physique, les badges essai/vendable, les prix
+  catalogue et la suppression en cascade ne sont pas transposés au modèle V2.
+- Anciens 6.4/6.5 : critères utiles repris dans INT-111/112 (7.6), avec dix cas
+  de test adaptés ; `legacy_id` conserve leur provenance. Ils restent à exécuter.
+
+**Dépendances et points de reprise :**
+- 7.1 fournit le socle à 7.2, 7.3 et 7.4. L’import 7.2 ne dépend pas de 7.3 :
+  `installation_id` reste nullable pour les équipements historiques.
+- 7.5 dépend du socle et de 7.3 pour le lien showroom → vente. Avant INT-110,
+  vérifier le remplacement déjà amorcé dans INT-97 pour éviter de le réimplémenter.
+- `docs/todos/backend.md` : TD-B014 attend INT-103 (Equipment → Installation) ;
+  TD-B016 exige une mesure sur volume représentatif avant import réel ; TD-B010
+  est rattaché à INT-111 (cible PostgreSQL et migration des données existantes).
+  TD-B013 reste ouvert pour les rôles MANAGER/COMMERCIAL.
+- `docs/todos/frontend.md` : TD-F007 suit les besoins catalogue/showroom V2
+  (navigation, filtres, formulaires, états loading/empty/error et tests E2E).
+  La clôture backend d’INT-96 ne signifie pas que ces interfaces sont livrées.
+- Les cas de test détaillés d’INT-105 et INT-108 restent à compléter avant leur
+  implémentation dans 7.4. Les cas INT-111/112 sont désormais présents dans 7.6.
+- 7.6 déploie le périmètre effectivement validé, documente le backlog et reprend
+  les critères détaillés des anciens sprints ; réévaluer ses estimations au démarrage.
+
+Les identifiants INT et les critères validés sont conservés. Une réorganisation
+documentaire ne vaut ni nouvelle implémentation, ni exécution de tests, ni
+validation de déploiement. Le feu vert par tâche reste applicable.
 
 ### Modèle métier (verrouillé)
 
@@ -71,7 +122,7 @@ docs/DAT/new/
     └── implementation.md              → phases + migration remontée (position 09)
 ```
 
-> ⚠️ **L'ancien DAT (`docs/DAT/` : 04-architecture, 05-data-model, 06-workflows, …) est périmé** —
+> ⚠️ **L'ancien DAT (`docs/DAT/old/`) est périmé** —
 > il décrit l'ancien modèle `clients + jobs`. La référence est désormais `docs/DAT/new/`.
 > Ne pas recréer de second DAT.
 
@@ -116,7 +167,8 @@ Le projet sert aussi à **préparer un entretien** (profil backend Java/Go). Don
 - **Revue à appliquer** : `docs/DAT/new/00-revue/` (vue d'ensemble + lots) + `02-techniques/02-data-model.md`
 - **Avancement backend/frontend** : `notes/`, `docs/todos/`
 - **Dépendances inter-tâches** : une tâche aval peut nécessiter une rétro-modification d'une tâche amont déjà terminée
-- **Tests existants** : `docs/stages/…/test-cases.json`
+- **Planning actif** : `docs/stages/stage7/README.md`, puis `sprint7.N/tasks.md` pour le sprint concerné
+- **Tests existants** : `docs/stages/stage7/sprint7.N/test-cases.json` (N = numéro du sprint)
 
 ### 1.2 Rédiger les users stories / tasks
 
@@ -141,7 +193,7 @@ Afin de **[bénéfice]**.
 
 ### 1.3 Fournir des tests cases JSON
 
-Chaque tâche a son fichier `test-cases.json` dans le dossier du sprint, avec :
+Chaque sprint possède un fichier `test-cases.json` regroupant les cas de ses tâches, identifiés par `id` et `task` (INT-XX), avec :
 - Tests API, intégration, unit, E2E selon le besoin
 - Résultats attendus explicites
 
@@ -192,8 +244,10 @@ Quand du code est en attente d'une dépendance future :
 
 **Organisation des notes :**
 
-- Ranger toutes les notes backend d'un sprint dans `notes/backend/<nom-du-sprint>/`, en reprenant exactement le nom du dossier dans `docs/stages/` (ex. `sprint-6.2-v2`). Cela inclut les notes INT-XX, les correctifs, les bilans et les comptes rendus de déploiement propres au sprint.
-- Déterminer le sprint à partir de la note et de `tasks.md` ; en cas de réutilisation d'un numéro INT, vérifier le sujet. Une note historique conserve son sprint d'origine (ex. INT-71 dans `sprint-6.2`, INT-94 à INT-101 dans `sprint-6.2-v2`).
+- Ranger toutes les notes backend d'un sprint dans `notes/backend/<nom-du-sprint>/`, en reprenant exactement le nom du dossier dans `docs/stages/` (ex. `sprint7.2`). Cela inclut les notes INT-XX, les correctifs, les bilans et les comptes rendus de déploiement propres au sprint.
+- Déterminer le sprint à partir de la note et de `tasks.md` ; en cas de réutilisation d'un numéro INT, vérifier le sujet. Une note historique conserve son sprint d'origine (ex. INT-71 dans `sprint-6.2`, INT-94 à INT-97 dans `sprint7.1`, INT-98 à INT-101 dans `sprint7.2`).
+- Les huit notes INT-94 à INT-101 ont été réparties entre `notes/backend/sprint7.1/` et `notes/backend/sprint7.2/`. Les anciens dossiers `notes/backend/sprint-6.2-v2/`, `notes/backend/sprint7/` et le rangement thématique `notes/backend/import/` ne sont plus utilisés.
+- Créer les notes de 7.3 à 7.6 dans le dossier du sprint concerné au fil des tâches ; conserver les fiches de présentation dans `notes/interview/`.
 - Appliquer ce classement aux anciennes notes lors d'une réorganisation et mettre à jour les chemins et liens relatifs concernés. Ne pas créer de dossier thématique tel que `import/` pour les notes de sprint, ni laisser ces notes à la racine de `notes/backend/`.
 - Réserver `deploy/` et `extras/` aux procédures et guides transversaux, indépendants d'un sprint.
 
@@ -202,7 +256,8 @@ notes/
 ├── backend/
 │   ├── sprint-1.1/    → notes du sprint 1.1 (même règle pour les autres sprints)
 │   ├── sprint-6.2/    → architecture initiale du pipeline (INT-71)
-│   ├── sprint-6.2-v2/ → cœur métier et migration Excel v2 (INT-94 et suivantes)
+│   ├── sprint7.1/   → socle physique v2 (INT-94 à INT-97)
+│   ├── sprint7.2/   → migration Excel v2 (INT-98 à INT-101)
 │   ├── deploy/        → procédures transversales (mini-s1, VPS, 1Panel, Cloudflare)
 │   └── extras/        → guides transversaux et migrations d'outils (pip→uv)
 ├── frontend/        → Vue, composants, états
@@ -216,7 +271,7 @@ notes/
 
 > **Deux cibles cohabitent :**
 > - **Local / mini-s1** (192.168.10.192) — dev et démo, via 1Panel + Cloudflare Tunnel
-> - **VPS** (Stage 6.4) — production publique : IP fixe, DNS, Let's Encrypt, `127.0.0.1`
+> - **VPS** (Sprint 7.6 — INT-111) — production publique : IP fixe, DNS, Let's Encrypt, `127.0.0.1`
 
 ### 3.1 Fin de chaque sprint (local)
 
@@ -240,7 +295,7 @@ curl http://localhost:3000/       # → 200
 curl http://localhost:8000/docs   # → 200
 ```
 
-### 3.2 Déploiement VPS (Stage 6.4)
+### 3.2 Déploiement VPS (Sprint 7.6 — INT-111)
 
 ```
 Internet → 1Panel OpenResty (80/443) → 127.0.0.1:PORT → service
@@ -313,7 +368,7 @@ Tervo/
 │   │   ├── schemas/      → Pydantic validation
 │   │   ├── services/     → business logic
 │   │   ├── repositories/ → DB queries
-│   │   └── importers/    → pipeline Excel (INT-71 fait, retarget v2 en cours)
+│   │   └── importers/    → pipeline Excel v2 (INT-98 à INT-101 terminés, sprint7.2)
 │   ├── alembic/          → migrations
 │   ├── tests/
 │   └── seed.py
@@ -331,8 +386,18 @@ Tervo/
 │   │   │   ├── 00-sommaire.md + 00-revue/ (vue d'ensemble + lots)
 │   │   │   ├── 01-fonctionnel/ · 02-techniques/
 │   │   │   └── 03-modules/ · 04-roadmap/
-│   │   └── (ancien DAT périmé — à supprimer)
-│   └── stages/                      → sprints tasks + tests
+│   │   └── old/                     → ancien DAT périmé, non référent
+│   └── stages/
+│       ├── stage6/                  → sprint-6.1 et sprint-6.2 conservés
+│       └── stage7/                  → planning Tervo V2
+│           ├── README.md            → sommaire, avancement, dépendances
+│           ├── sprint7.1/           → socle physique
+│           ├── sprint7.2/           → migration Excel
+│           ├── sprint7.3/           → chaîne commerciale
+│           ├── sprint7.4/           → cycle terrain
+│           ├── sprint7.5/           → showroom et remplacement
+│           └── sprint7.6/           → VPS et documentation entretien
+│                                    (chaque sprint : tasks.md + test-cases.json)
 ├── notes/                           → pédagogie
 └── .github/workflows/               → CI/CD
 ```

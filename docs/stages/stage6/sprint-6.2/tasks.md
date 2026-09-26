@@ -1,6 +1,6 @@
 # Sprint 6.2 : Import Excel — pandas + fuzzy + pipeline (6 jours)
 
-> ⚠️ **GELÉ — remplacé par [`sprint-6.2-v2/`](../sprint-6.2-v2/tasks.md).**
+> ⚠️ **GELÉ — remplacé par [sprint7.2](../../stage7/sprint7.2/tasks.md).**
 > Ce sprint décrivait l'import sur l'ancien modèle `clients + jobs`. Suite à la refonte du
 > DAT (Tervo v2 : `Client → Site → Equipment → Intervention` + `Product → Sale →
 > Installation`), il est remplacé par le sprint v2.

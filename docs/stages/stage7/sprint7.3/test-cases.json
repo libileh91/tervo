@@ -1,0 +1,50 @@
+{
+  "$schema": "Stage 7 - Sprint 7.3 Test Cases",
+  "sprint": "7.3",
+  "description": "Tervo V2 — Chaîne commerciale",
+  "test_cases": [
+    {
+      "id": "TC-INT-102-01",
+      "task": "INT-102",
+      "title": "Sale — quantity > 1",
+      "type": "integration",
+      "preconditions": [
+        "Un client, un site, un produit"
+      ],
+      "steps": [
+        "POST /api/v1/sales avec une ligne quantity=3",
+        "POST /api/v1/sales/{id}/confirm",
+        "Vérifier les lignes"
+      ],
+      "expected_result": {
+        "sale_status_CONFIRMED": "true",
+        "sale_line_quantity_3": "true",
+        "une_seule_sale_line": "true",
+        "confirme_sans_ligne_rejete": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-103-01",
+      "task": "INT-103",
+      "title": "Installation — complete → Equipment atomique",
+      "type": "integration",
+      "preconditions": [
+        "Une SaleLine confirmée"
+      ],
+      "steps": [
+        "POST /api/v1/installations (sale_line_id, site_id)",
+        "POST /api/v1/installations/{id}/start",
+        "POST /api/v1/installations/{id}/complete (serial_number, dates)"
+      ],
+      "expected_result": {
+        "statut_apres_start": "IN_PROGRESS",
+        "statut_apres_complete": "COMPLETED",
+        "equipment_cree": "true",
+        "equipment_installation_id_renseigne": "true",
+        "transaction_atomique": "true"
+      },
+      "actual_result": null
+    }
+  ]
+}

@@ -18,9 +18,9 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 | **DNS**            | Cloudflare (`tervoapp.com`)            | Enregistrements A                   |
 | **Ports services** | Historiquement `0.0.0.0`               | **`127.0.0.1`** (Stage 6.1)         |
 | **PostgreSQL**     | Conteneur partagé préexistant          | Embarqué dans le compose            |
-| **Statut**         | ✅ opérationnel                        | ⏳ Stage 6.4                        |
+| **Statut**         | ✅ opérationnel                        | ⏳ Sprint 7.6 (INT-111)                        |
 
-> **Pourquoi deux cibles ?** Le mini-s1 a servi à valider l'application et la chaîne de déploiement sans exposer la machine. Le VPS est la cible professionnelle (Stage 6.4).
+> **Pourquoi deux cibles ?** Le mini-s1 a servi à valider l'application et la chaîne de déploiement sans exposer la machine. Le VPS est la cible professionnelle (Sprint 7.6 (INT-111)).
 
 ---
 
@@ -219,7 +219,7 @@ push main
 - [ ] Reverse proxy 1Panel → sites configurés
 - [ ] Vérifications : `curl` frontend + API, login
 
-### 7.2 Déploiement VPS (Stage 6.4)
+### 7.2 Déploiement VPS (Sprint 7.6 (INT-111))
 
 - [ ] VPS provisionné, Ubuntu 24.04, SSH par clé
 - [ ] `ufw` (22/80/443) + `fail2ban` + `unattended-upgrades`

@@ -1,6 +1,6 @@
 # INT-95 — Entité `Site` + chaîne `Client → Site → Intervention`
 
-> Tervo v2 · Sprint 6.2-v2 · Lot 1 (socle physique)
+> Tervo v2 · Sprint 7.1 · Lot 1 (socle physique)
 
 ## Objectif
 

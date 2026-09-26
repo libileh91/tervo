@@ -1,0 +1,45 @@
+{
+  "$schema": "Stage 7 - Sprint 7.5 Test Cases",
+  "sprint": "7.5",
+  "description": "Tervo V2 — Showroom et remplacement",
+  "test_cases": [
+    {
+      "id": "TC-INT-109-01",
+      "task": "INT-109",
+      "title": "Showroom — prospect sans client",
+      "type": "integration",
+      "preconditions": [
+        "Aucun client pour le prospect"
+      ],
+      "steps": [
+        "POST /api/v1/showroom/visits avec visitor_name (sans client_id)",
+        "Vérifier la visite"
+      ],
+      "expected_result": {
+        "client_id_null": "true",
+        "visitor_name_conserve": "true",
+        "produits_associables": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-110-01",
+      "task": "INT-110",
+      "title": "Remplacement — replaced_by_id",
+      "type": "integration",
+      "preconditions": [
+        "Un équipement avec interventions"
+      ],
+      "steps": [
+        "POST /api/v1/equipment/{id}/replace (nouveau serial_number)",
+        "Vérifier l'ancien et le nouveau"
+      ],
+      "expected_result": {
+        "ancien_status_REPLACED": "true",
+        "ancien_replaced_by_id": "nouveau.id",
+        "historique_ancien_conserve": "true"
+      },
+      "actual_result": null
+    }
+  ]
+}

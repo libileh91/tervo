@@ -2,6 +2,7 @@
 
 > **Projet :** Tervo — gestion des activités d'intervention CVC
 > **Statut :** refonte du DAT
+> **Sprints Tervo V2 :** [Stage 7 — découpage et avancement](../../stages/stage7/README.md)
 > **Branche de travail :** `chore/rewrite-dat`
 
 ## 1. Rôle du DAT

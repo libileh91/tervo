@@ -1,0 +1,66 @@
+{
+  "$schema": "Stage 7 - Sprint 7.4 Test Cases",
+  "sprint": "7.4",
+  "description": "Tervo V2 — Cycle terrain",
+  "test_cases": [
+    {
+      "id": "TC-INT-104-01",
+      "task": "INT-104",
+      "title": "Checklist — snapshot immuable",
+      "type": "integration",
+      "preconditions": [
+        "Un ChecklistTemplate",
+        "Une intervention créée avec ce modèle"
+      ],
+      "steps": [
+        "Modifier le ChecklistTemplate (ajouter un item)",
+        "Vérifier la checklist de l'intervention"
+      ],
+      "expected_result": {
+        "checklist_intervention_inchangee": "true",
+        "nouvel_item_absent_historique": "true",
+        "deux_niveaux": "true (template vs snapshot)"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-106-01",
+      "task": "INT-106",
+      "title": "Résultat ≠ statut",
+      "type": "integration",
+      "preconditions": [
+        "Une intervention"
+      ],
+      "steps": [
+        "Compléter l'intervention avec result=PART_NEEDED",
+        "Vérifier status et result en base"
+      ],
+      "expected_result": {
+        "status_COMPLETED": "true",
+        "result_PART_NEEDED": "true",
+        "deux_champs_distincts": "true"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-107-01",
+      "task": "INT-107",
+      "title": "Rapport — versionnement stable",
+      "type": "integration",
+      "preconditions": [
+        "Une intervention terminée"
+      ],
+      "steps": [
+        "Générer un rapport (v1) et le transmettre",
+        "Corriger une info de l'intervention",
+        "Générer un rapport (v2)"
+      ],
+      "expected_result": {
+        "v1_conserve": "true",
+        "v2_nouvelle_version": "true",
+        "document_logique_unique": "true"
+      },
+      "actual_result": null
+    }
+  ]
+}

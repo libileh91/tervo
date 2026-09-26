@@ -104,7 +104,7 @@ jobs:
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `needs: [backend-tests, frontend-build]` | On ne déploie pas du code non testé                                                                                             |
 | `if: ref == main && event == push`       | Pas de déploiement depuis une PR                                                                                                |
-| **`vars.DEPLOY_ENABLED == 'true'`**      | Déploiement **désactivé par défaut** — le VPS n'existe pas encore et les secrets ne sont pas configurés. À activer en Stage 6.4 |
+| **`vars.DEPLOY_ENABLED == 'true'`**      | Déploiement **désactivé par défaut** — le VPS n'existe pas encore et les secrets ne sont pas configurés. À activer en Sprint 7.6 (INT-111) |
 | `uv sync --frozen`                       | Respecte le lockfile `uv.lock`                                                                                                  |
 | `bun install --frozen-lockfile`          | Respecte `bun.lock`                                                                                                             |
 | `set -e` dans le script SSH              | Le pipeline échoue au premier problème                                                                                          |

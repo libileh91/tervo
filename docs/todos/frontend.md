@@ -111,3 +111,16 @@
 |                       | • Actif si checklist complète → appelle `api.put('/jobs/{id}/complete')` |
 |                       | • Invalider `['dashboard']`, `['jobs']`, `['job', jobId]`    |
 | **Statut**            | ✅ Fait — Bouton "Terminer" sur JobDetailPage + InspectionPage |
+
+
+---
+
+## TD-F007 — Reprendre les besoins frontend catalogue/showroom dans le modèle V2
+
+| Champ | Valeur |
+|---|---|
+| **Créé dans** | Restructuration Stage 7 ; reprise de l’ancien INT-83 avant suppression du sprint 6.3 |
+| **Dépend de** | INT-96 (catalogue, sprint7.1), INT-109 (visites showroom, sprint7.5), cadrage frontend du DAT V2 |
+| **Fichiers** | `frontend/src/pages/`, `frontend/src/router/`, `docs/stages/stage7/sprint7.5/tasks.md` |
+| **Action attendue** | Vérifier l’existant et planifier les écrans V2 : catalogue, détail et édition, visites showroom, navigation, recherche/filtres et états loading/empty/error avec réessai. Adapter les cas E2E de l’ancien INT-83 au modèle V2 ; ne pas reprendre implicitement exposition physique, prix catalogue ou badges essai/vendable. |
+| **Statut** | ⏳ À cadrer avant livraison des interfaces V2 ; aucune réalisation frontend déduite de la clôture backend d’INT-96 |
