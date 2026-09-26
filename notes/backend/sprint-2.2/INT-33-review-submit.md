@@ -272,7 +272,7 @@ sequenceDiagram
 | `docs/todos/backend.md` | **Modifié** | TD-B006 marqué ✅ complet |
 | `docs/stages/stage2/sprint-2.2/tasks.md` | **Modifié** | 8 critères INT-33 cochés ✅ |
 | `docs/stages/stage2/sprint-2.2/test-cases.json` | **Modifié** | `actual_result` TC-33-01 ✅, TC-33-02 ✅ |
-| `notes/backend/INT-33-review-submit.md` | **Créé** | Note détaillée avec diagramme, tableaux, 4 points clés |
+| `notes/backend/sprint-2.2/INT-33-review-submit.md` | **Créé** | Note détaillée avec diagramme, tableaux, 4 points clés |
 
 ### Tests validés
 

@@ -41,7 +41,7 @@ Afin de **rendre l'architecture lisible et défendable**.
 - **Implémenté à ce stade :** la structure, les interfaces et les objets de valeur. Les algorithmes (INT-72 → INT-78) sont des squelettes marqués `Todo: INT-XX`.
 - **Contrat testé :** `tests/test_importers_structure.py` vérifie par AST que `app/importers` n'importe ni FastAPI, ni SQLAlchemy, ni les modèles/repositories/API.
 - **Dépendances ajoutées :** `pandas`, `openpyxl`, `rapidfuzz` (`uv add` → `pyproject.toml` + `uv.lock`).
-- **Note :** `notes/backend/import/architecture-pipeline.md`
+- **Note :** `notes/backend/sprint-6.2/architecture-pipeline.md`
 
 ---
 
@@ -237,11 +237,11 @@ Afin de **pouvoir expliquer chaque étape en entretien**.
 - [ ] Tests d'intégration : pipeline complet preview → execute
 - [ ] Tests idempotence : double import
 - [ ] Notes pédagogiques créées :
-  - `notes/backend/import/pandas-openpyxl.md`
-  - `notes/backend/import/normalisation-unicode.md`
-  - `notes/backend/import/fuzzy-matching-rapidfuzz.md`
-  - `notes/backend/import/transactions-batch.md`
-  - `notes/backend/import/idempotence-sha256.md`
+  - `notes/backend/sprint-6.2/pandas-openpyxl.md`
+  - `notes/backend/sprint-6.2/normalisation-unicode.md`
+  - `notes/backend/sprint-6.2/fuzzy-matching-rapidfuzz.md`
+  - `notes/backend/sprint-6.2/transactions-batch.md`
+  - `notes/backend/sprint-6.2/idempotence-sha256.md`
 
 **Technical Notes**
 - Fixtures : `backend/tests/fixtures/excel/`

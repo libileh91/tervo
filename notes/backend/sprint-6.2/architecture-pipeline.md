@@ -204,7 +204,7 @@ avec un marqueur `Todo: INT-XX`. C'est volontaire — la structure est validée 
 | `INT-77` | statuts `ORPHAN` / `DUPLICATE_AMBIGUOUS` + table `import_error` |
 | `INT-78` | `ImportService.execute()` + passes + batches |
 | `INT-79` | `ImportService.analyze()` + API admin |
-| `INT-80` | tests métier + notes `notes/backend/import/` |
+| `INT-80` | tests métier + notes `notes/backend/sprint-6.2/` |
 
 Sont **déjà implémentés** (objets de valeur, aucune logique métier) : `SheetPreview`,
 `ColumnMapping`, `RowError`, `ValidationResult`, `MatchZone`, `MatchWeights`,

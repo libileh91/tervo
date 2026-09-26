@@ -24,11 +24,11 @@ GitHub Actions
 
 Pourquoi ? Parce qu'il n'y a **aucun registry intermédiaire**. La CI construit des images… puis les jette. Le VPS reconstruit tout de zéro.
 
-| Conséquence | Impact |
-|-------------|--------|
-| Temps de pipeline doublé | CI plus lente, minutes consommées inutilement |
-| Ressources gaspillées | CPU/bande passante sur les runners GitHub **et** sur le VPS |
-| Incohérence possible | Les deux builds pourraient diverger (env, cache, ordre) |
+| Conséquence              | Impact                                                      |
+| ------------------------ | ----------------------------------------------------------- |
+| Temps de pipeline doublé | CI plus lente, minutes consommées inutilement               |
+| Ressources gaspillées    | CPU/bande passante sur les runners GitHub **et** sur le VPS |
+| Incohérence possible     | Les deux builds pourraient diverger (env, cache, ordre)     |
 
 ---
 
@@ -52,7 +52,7 @@ GitHub Actions
 ```
 
 **Avantages :** simple, un seul point de construction, pas de registry à gérer.
-**Limite :** la CI ne teste pas les *images* (elle teste le code).
+**Limite :** la CI ne teste pas les _images_ (elle teste le code).
 
 ### Niveau 2 — Registry d'images (évolution)
 
@@ -89,9 +89,9 @@ on:
     branches: [main]
 
 jobs:
-  backend-tests:      # uv sync + pytest
-  frontend-build:     # bun install + bun run build
-  deploy:             # needs: [backend-tests, frontend-build]
+  backend-tests: # uv sync + pytest
+  frontend-build: # bun install + bun run build
+  deploy: # needs: [backend-tests, frontend-build]
     if: >
       github.ref == 'refs/heads/main' &&
       github.event_name == 'push' &&
@@ -100,31 +100,31 @@ jobs:
 
 ### Points de conception
 
-| Choix | Raison |
-|-------|--------|
-| `needs: [backend-tests, frontend-build]` | On ne déploie pas du code non testé |
-| `if: ref == main && event == push` | Pas de déploiement depuis une PR |
-| **`vars.DEPLOY_ENABLED == 'true'`** | Déploiement **désactivé par défaut** — le VPS n'existe pas encore et les secrets ne sont pas configurés. À activer en Stage 6.4 |
-| `uv sync --frozen` | Respecte le lockfile `uv.lock` |
-| `bun install --frozen-lockfile` | Respecte `bun.lock` |
-| `set -e` dans le script SSH | Le pipeline échoue au premier problème |
-| `alembic upgrade head` après `up -d` | Migrations appliquées automatiquement |
-| `docker image prune -f` | Évite l'accumulation d'images orphelines |
+| Choix                                    | Raison                                                                                                                          |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `needs: [backend-tests, frontend-build]` | On ne déploie pas du code non testé                                                                                             |
+| `if: ref == main && event == push`       | Pas de déploiement depuis une PR                                                                                                |
+| **`vars.DEPLOY_ENABLED == 'true'`**      | Déploiement **désactivé par défaut** — le VPS n'existe pas encore et les secrets ne sont pas configurés. À activer en Stage 6.4 |
+| `uv sync --frozen`                       | Respecte le lockfile `uv.lock`                                                                                                  |
+| `bun install --frozen-lockfile`          | Respecte `bun.lock`                                                                                                             |
+| `set -e` dans le script SSH              | Le pipeline échoue au premier problème                                                                                          |
+| `alembic upgrade head` après `up -d`     | Migrations appliquées automatiquement                                                                                           |
+| `docker image prune -f`                  | Évite l'accumulation d'images orphelines                                                                                        |
 
 > **Pourquoi une variable et pas un secret ?** Les `secrets.*` ne sont pas lisibles dans un `if:` d'étape au niveau job. Les `vars.*` (repository variables) le sont — ce qui permet de garder le pipeline vert tant que le VPS n'est pas prêt.
 
 ### Secrets requis
 
-| Secret | Contenu |
-|--------|---------|
-| `VPS_HOST` | IP ou nom d'hôte du serveur |
-| `VPS_USER` | Utilisateur SSH |
+| Secret        | Contenu                      |
+| ------------- | ---------------------------- |
+| `VPS_HOST`    | IP ou nom d'hôte du serveur  |
+| `VPS_USER`    | Utilisateur SSH              |
 | `VPS_SSH_KEY` | Clé privée SSH (déploiement) |
 
 ### Variable de dépôt requise
 
-| Variable | Valeur |
-|----------|--------|
+| Variable         | Valeur                                                                        |
+| ---------------- | ----------------------------------------------------------------------------- |
 | `DEPLOY_ENABLED` | `true` pour activer le déploiement (absent ou ≠ `true` → job `deploy` ignoré) |
 
 ---
@@ -164,10 +164,10 @@ concurrency:
 
 **`cancel-in-progress` est conditionnel** — c'est le point intéressant :
 
-| Branche | Comportement | Pourquoi |
-|---------|--------------|----------|
-| `main` | Le run en cours **n'est pas annulé** (mise en file d'attente) | Un **déploiement** ne doit pas être coupé à mi-chemin |
-| Autres branches / PR | Le run obsolète est **annulé** | Seul le dernier commit compte |
+| Branche              | Comportement                                                  | Pourquoi                                              |
+| -------------------- | ------------------------------------------------------------- | ----------------------------------------------------- |
+| `main`               | Le run en cours **n'est pas annulé** (mise en file d'attente) | Un **déploiement** ne doit pas être coupé à mi-chemin |
+| Autres branches / PR | Le run obsolète est **annulé**                                | Seul le dernier commit compte                         |
 
 Écrire `cancel-in-progress: true` partout serait une erreur : un push rapide pendant un déploiement tuerait le déploiement en plein vol, laissant le serveur dans un état intermédiaire.
 
@@ -199,14 +199,14 @@ Les tests utilisent une base **SQLite** (`sqlite+aiosqlite:///./test_tervo.db`),
 
 ## Pièges
 
-| Piège | Conséquence |
-|-------|-------------|
-| Builder dans la CI sans registry | Travail jeté, pipeline deux fois plus long |
-| Déployer sans `needs` | Code non testé en production |
-| Déployer depuis une PR | Déploiements non maîtrisés |
-| Oublier `--frozen` / `--frozen-lockfile` | Dépendances non déterministes |
-| Oublier les migrations | L'application tourne sur un schéma obsolète |
-| `cancel-in-progress: true` sur `main` | Un déploiement en cours est tué à mi-chemin |
+| Piège                                    | Conséquence                                 |
+| ---------------------------------------- | ------------------------------------------- |
+| Builder dans la CI sans registry         | Travail jeté, pipeline deux fois plus long  |
+| Déployer sans `needs`                    | Code non testé en production                |
+| Déployer depuis une PR                   | Déploiements non maîtrisés                  |
+| Oublier `--frozen` / `--frozen-lockfile` | Dépendances non déterministes               |
+| Oublier les migrations                   | L'application tourne sur un schéma obsolète |
+| `cancel-in-progress: true` sur `main`    | Un déploiement en cours est tué à mi-chemin |
 
 ---
 

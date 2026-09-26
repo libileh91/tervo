@@ -18,7 +18,7 @@
 
 **Cause :** L'enum PostgreSQL `jobstatus` contient des valeurs sans accents (`planifie`) alors que le code Python utilise `planifié` avec accents. La migration a créé l'enum avec les valeurs par défaut Python.
 
-**Fix :** Modifier l'enum PostgreSQL pour accepter les valeurs accentuées. Voir `notes/backend/extras/fix-postgresql-enum.md`.
+**Fix :** Modifier l'enum PostgreSQL pour accepter les valeurs accentuées. Voir `notes/backend/sprint-3.1/fix-postgresql-enum.md`.
 
 ```
 asyncpg.exceptions.InvalidTextRepresentationError:

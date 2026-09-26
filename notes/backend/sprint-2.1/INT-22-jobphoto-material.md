@@ -132,7 +132,7 @@ INT-22 — Modèle JobPhoto + Material + migration (3 pts) — ✅ Terminé\*\*
 | Relations `job.photos` + `job.materials` | `app/models/job.py` (débloque TD-B003)       |
 | Pillow installé                          | `requirements.txt` (thumbnail 300×300)       |
 | Migration `170af5c7827f`                 | 2 tables créées : `job_photo`, `material`    |
-| Note                                     | `notes/backend/INT-22-jobphoto-material.md`  |
+| Note                                     | `notes/backend/sprint-2.1/INT-22-jobphoto-material.md`  |
 
 ### Todos débloqués
 

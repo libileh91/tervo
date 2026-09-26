@@ -141,7 +141,7 @@ Les validations par étape :
 | `app/services/job.py`                  | `complete_job()` avec validations checklist         |
 | `app/api/v1/jobs.py`                   | Endpoint `PUT /{id}/complete`                       |
 | `docs/tasks.md` (sprint 1.2)           | Flags ✅ (sauf photos → Phase 2)                    |
-| `notes/backend/INT-11-complete-job.md` | Note pédagogique                                    |
+| `notes/backend/sprint-1.2/INT-11-complete-job.md` | Note pédagogique                                    |
 
 ### Workflow job complet
 

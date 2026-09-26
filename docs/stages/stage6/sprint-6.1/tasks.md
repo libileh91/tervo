@@ -66,7 +66,7 @@ Afin de **ne pas exposer l'administration (1Panel) publiquement**.
 - [x] Suppression des mentions contradictoires dans le DAT (`7410` exposé vs non exposé)
 
 **Technical Notes**
-- Fichier : `notes/backend/deploy/firewall.md` (nouveau)
+- Fichier : `notes/backend/sprint-6.1/firewall.md` (nouveau)
 - `ufw allow 22,80,443/tcp`
 - **Rappel entretien :** « L'interface d'administration n'est jamais exposée publiquement — elle est accessible via tunnel SSH ou restriction d'IP. »
 
@@ -103,7 +103,7 @@ Afin de **ne pas builder les images deux fois inutilement**.
 - [x] Correction implémentée : GitHub Actions fait les **tests**, puis SSH → `git pull` → `docker compose up -d --build` → `alembic upgrade head`
 - [x] Aucun build d'image dans GitHub Actions (le dossier `.github/` était vide — le workflow créé ne contient pas ce build redondant)
 - [x] Évolution documentée (non implémentée) : build → push **GHCR** → `docker compose pull` sur le VPS
-- [x] Note pédagogique : `notes/backend/deploy/ci-cd.md`
+- [x] Note pédagogique : `notes/backend/sprint-6.1/ci-cd.md`
 - [x] Validation : YAML parsé, 97 tests backend OK, `bun run build` OK
 
 **Technical Notes**

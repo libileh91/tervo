@@ -36,6 +36,6 @@ Les tests Product utilisent une base SQLite en mémoire indépendante. Ils couvr
 
 ## Suivi après INT-97
 
-[TD-B012](../../docs/todos/backend.md#td-b012--relation-product--equipment-et-test-multi-instances) est résolu : Equipment.product_id est une FK non unique et les relations ORM sont bidirectionnelles. Le test `test_replacement_preserves_history_and_product_instances` vérifie deux appareils d’un même produit et la conservation des liens après désactivation. Les critères INT-96 sont désormais cochés.
+[TD-B012](../../../docs/todos/backend.md#td-b012--relation-product--equipment-et-test-multi-instances) est résolu : Equipment.product_id est une FK non unique et les relations ORM sont bidirectionnelles. Le test `test_replacement_preserves_history_and_product_instances` vérifie deux appareils d’un même produit et la conservation des liens après désactivation. Les critères INT-96 sont désormais cochés.
 
 TD-B013 reste en attente de l’introduction des rôles MANAGER et COMMERCIAL. La revue des todos a été effectuée à la fin d’INT-97.

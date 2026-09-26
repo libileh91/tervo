@@ -51,4 +51,4 @@ Sur PostgreSQL 17.4 jetable : montée depuis le schéma avant INT-94 avec une in
 - TD-B013 : rôles MANAGER/COMMERCIAL encore absents, reste en attente.
 - TD-B014 : FK Installation et alimentation métier à réaliser dans INT-103.
 
-Le détail des actions reste dans [docs/todos/backend.md](../../docs/todos/backend.md). INT-98 n’est pas commencé.
+Le détail des actions reste dans [docs/todos/backend.md](../../../docs/todos/backend.md). INT-98 n’est pas commencé.

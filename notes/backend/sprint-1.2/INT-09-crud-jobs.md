@@ -198,6 +198,6 @@ INT-09 — CRUD Jobs API (5 pts) — ✅ Terminé**
 | `app/api/v1/jobs.py` | **Nouveau** (5 endpoints) |
 | `app/main.py` | Modifié (jobs router) |
 | `alembic/versions/...` | Migration `checklist_item` |
-| `notes/backend/INT-09-crud-jobs.md` | Note pédagogique |
+| `notes/backend/sprint-1.2/INT-09-crud-jobs.md` | Note pédagogique |
 
 Prêt pour **INT-10 — PUT /jobs/{id}/start** quand tu veux.

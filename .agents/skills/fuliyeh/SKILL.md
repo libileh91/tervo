@@ -192,12 +192,19 @@ Quand du code est en attente d'une dépendance future :
 
 **Organisation des notes :**
 
+- Ranger toutes les notes backend d'un sprint dans `notes/backend/<nom-du-sprint>/`, en reprenant exactement le nom du dossier dans `docs/stages/` (ex. `sprint-6.2-v2`). Cela inclut les notes INT-XX, les correctifs, les bilans et les comptes rendus de déploiement propres au sprint.
+- Déterminer le sprint à partir de la note et de `tasks.md` ; en cas de réutilisation d'un numéro INT, vérifier le sujet. Une note historique conserve son sprint d'origine (ex. INT-71 dans `sprint-6.2`, INT-94 à INT-101 dans `sprint-6.2-v2`).
+- Appliquer ce classement aux anciennes notes lors d'une réorganisation et mettre à jour les chemins et liens relatifs concernés. Ne pas créer de dossier thématique tel que `import/` pour les notes de sprint, ni laisser ces notes à la racine de `notes/backend/`.
+- Réserver `deploy/` et `extras/` aux procédures et guides transversaux, indépendants d'un sprint.
+
 ```
 notes/
 ├── backend/
-│   ├── deploy/      → procédures (mini-s1, VPS, 1Panel, Cloudflare)
-│   ├── extras/      → migrations d'outils (pip→uv)
-│   └── import/      → pandas, openpyxl, rapidfuzz, transactions, idempotence
+│   ├── sprint-1.1/    → notes du sprint 1.1 (même règle pour les autres sprints)
+│   ├── sprint-6.2/    → architecture initiale du pipeline (INT-71)
+│   ├── sprint-6.2-v2/ → cœur métier et migration Excel v2 (INT-94 et suivantes)
+│   ├── deploy/        → procédures transversales (mini-s1, VPS, 1Panel, Cloudflare)
+│   └── extras/        → guides transversaux et migrations d'outils (pip→uv)
 ├── frontend/        → Vue, composants, états
 ├── interview/       → fiche archi, Q/R entretien, périmètre crédibilité
 └── context/         → contexte de session (handoff entre sessions)
@@ -247,7 +254,8 @@ Internet → 1Panel OpenResty (80/443) → 127.0.0.1:PORT → service
 
 ### 3.3 Documenter le déploiement
 
-Dans `notes/backend/deploy/` :
+Dans `notes/backend/<nom-du-sprint>/` pour le compte rendu du sprint, et dans
+`notes/backend/deploy/` pour les procédures transversales :
 - Procédure complète
 - Erreurs rencontrées et corrections
 - Ports, IPs, configuration 1Panel

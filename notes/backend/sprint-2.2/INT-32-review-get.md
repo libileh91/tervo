@@ -300,7 +300,7 @@ asyncio.run(main())
 | `backend/app/main.py`                           | **Modifié** | Import + `include_router` du reviews_router                                          |
 | `docs/stages/stage2/sprint-2.2/tasks.md`        | **Modifié** | 5 critères INT-32 cochés ✅                                                          |
 | `docs/stages/stage2/sprint-2.2/test-cases.json` | **Modifié** | `actual_result` remplis pour TC-32-01/02/03                                          |
-| `notes/backend/INT-32-review-get.md`            | **Créé**    | Note pédagogique détaillée avec mermaid, tableaux, pièges (timezone), tests curl     |
+| `notes/backend/sprint-2.2/INT-32-review-get.md`            | **Créé**    | Note pédagogique détaillée avec mermaid, tableaux, pièges (timezone), tests curl     |
 
 ### Tests validés
 
