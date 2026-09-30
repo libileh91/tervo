@@ -2,6 +2,8 @@
 
 **28 septembre 2026 — INT-103 partiellement terminée.** L'utilisateur a explicitement validé l'ordre INT-103 avant INT-102. Le backend autonome est livré et testé ; aucun frontend, commit ni déploiement n'a été effectué.
 
+> **État historique au 28 septembre :** les passages ci-dessous décrivent le contrat autonome initial. Depuis INT-102, la FK nullable `sale_line_id` existe, absent/null sont acceptés et la provenance commerciale est vérifiée. Voir [la note INT-102](INT-102-ventes-lignes-et-provenance.md) pour le contrat actuel et ses limites de validation.
+
 Références : [tâches](../../../docs/stages/stage7/sprint7.3/tasks.md), [cas de test](../../../docs/stages/stage7/sprint7.3/test-cases.json), [DAT](../../../docs/DAT/new/00-revue/03-lot-commercial.md), [todos](../../../docs/todos/backend.md).
 
 ## 1. Installation n'est ni une vente ni un équipement planifié

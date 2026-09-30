@@ -1,10 +1,12 @@
 """Atomic installation lifecycle, with conditional writes against competing actions."""
 from datetime import datetime, timezone
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from app.models.equipment import Equipment, EquipmentStatus
-from app.models.installation import InstallationStatus as Status
+from app.models.installation import Installation, InstallationStatus as Status
+from app.models.sale import SaleLine, SaleStatus
 from app.repositories.installation import InstallationRepository
 from app.schemas.installation import InstallationListResponse, InstallationResponse
 from app.services.equipment import EquipmentService
@@ -19,6 +21,26 @@ class InstallationService:
         self.db = db
         self.repo = InstallationRepository(db)
         self.references = EquipmentService(db)
+
+    async def _check_sale_line(self, sale_line_id, site_id, exclude_installation_id=None):
+        line = await self.db.scalar(select(SaleLine).where(SaleLine.id == sale_line_id)
+            .options(selectinload(SaleLine.sale)).with_for_update())
+        if line is None:
+            raise HTTPException(404, "Ligne de vente non trouvée")
+        if line.sale.status != SaleStatus.CONFIRMED:
+            raise HTTPException(409, "La vente doit être confirmée")
+        if line.sale.site_id != site_id:
+            raise HTTPException(422, "Le site doit correspondre à la vente")
+        count_query = select(func.count(Installation.id)).where(
+            Installation.sale_line_id == sale_line_id,
+            Installation.status != Status.CANCELLED,
+        )
+        if exclude_installation_id is not None:
+            count_query = count_query.where(Installation.id != exclude_installation_id)
+        linked_count = await self.db.scalar(count_query)
+        if linked_count >= line.quantity:
+            raise HTTPException(409, "La quantité vendue est déjà entièrement planifiée")
+        return line
 
     async def get_installation(self, installation_id):
         installation = await self.repo.get(installation_id)
@@ -35,7 +57,11 @@ class InstallationService:
     async def create_installation(self, body):
         try:
             await self.references.check_site(body.site_id)
-            installation_id = await self.repo.create(body.model_dump())
+            values = body.model_dump()
+            if body.sale_line_id is not None:
+                line = await self._check_sale_line(body.sale_line_id, body.site_id)
+                values["sale_line_id"] = line.id
+            installation_id = await self.repo.create(values)
             await self.db.commit()
         except IntegrityError as exc:
             await self.db.rollback()
@@ -71,8 +97,14 @@ class InstallationService:
                          commissioning_date=body.commissioning_date)):
                 raise HTTPException(409, "Seule une installation en cours peut être terminée")
             dates = dict(installed_at=body.installation_date, commissioned_at=body.commissioning_date)
+            sale_line = None
+            if installation.sale_line_id is not None:
+                sale_line = await self._check_sale_line(installation.sale_line_id, installation.site_id,
+                                                         exclude_installation_id=installation_id)
             if body.equipment.mode == "create":
                 await self.references.check_product(body.equipment.product_id)
+                if sale_line is not None and body.equipment.product_id != sale_line.product_id:
+                    raise HTTPException(422, "Le produit installé doit correspondre à la ligne vendue")
                 await self.repo.create_equipment(dict(site_id=installation.site_id,
                     installation_id=installation_id, **dates,
                     **body.equipment.model_dump(exclude={"mode"})))
@@ -83,6 +115,8 @@ class InstallationService:
                     Equipment.id == body.equipment.equipment_id).with_for_update())
                 if equipment is None:
                     raise HTTPException(404, "Équipement non trouvé")
+                if sale_line is not None and equipment.product_id != sale_line.product_id:
+                    raise HTTPException(422, "L'équipement doit correspondre au produit vendu")
                 if equipment.site_id != installation.site_id:
                     raise HTTPException(422, "L'équipement doit appartenir au site de l'installation")
                 if (equipment.installation_id is not None or equipment.replaced_by_id is not None

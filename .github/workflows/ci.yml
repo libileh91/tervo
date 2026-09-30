@@ -97,11 +97,12 @@ jobs:
           uv run alembic downgrade -1
           uv run alembic upgrade head
 
-      - name: PostgreSQL installation API, transactions and migrations
+      - name: PostgreSQL installation and sales APIs, transactions and migrations
         env:
           TERVO_INSTALLATION_TEST_DATABASE_URL: postgresql+asyncpg://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
+          TERVO_SALE_TEST_DATABASE_URL: postgresql+asyncpg://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
           TERVO_INSTALLATION_MIGRATION_TEST_URL: postgresql+psycopg2://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
-        run: uv run pytest tests/test_installations.py tests/test_installation_migration.py -q
+        run: uv run pytest tests/test_installations.py tests/test_sales.py tests/test_installation_migration.py -q
 
       - name: PostgreSQL import service and admin API
         env:

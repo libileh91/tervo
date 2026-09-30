@@ -11,7 +11,7 @@ from app.models import Base
 
 PREVIOUS = "d100e0010001"
 REVISION = "e103e0010001"
-HEAD = "e103e0010001"
+HEAD = "f102e0010001"
 BACKEND = Path(__file__).resolve().parents[1]
 
 
@@ -39,7 +39,7 @@ def migration(tmp_path, monkeypatch):
         # the previous schema for SQLite; the full chain is tested on PostgreSQL.
         previous = sa.MetaData()
         for table in Base.metadata.sorted_tables:
-            if table.name != "installation":
+            if table.name not in {"installation", "sale", "sale_line"}:
                 table.to_metadata(previous)
         equipment = previous.tables["equipment"]
         for constraint in list(equipment.constraints):
@@ -70,7 +70,8 @@ def test_upgrade_preserves_history_and_enforces_constraints(migration):
     config, engine = migration
     command.upgrade(config, "head")
     inspector = sa.inspect(engine)
-    assert 'sale_line_id' not in {c['name'] for c in inspector.get_columns('installation')}
+    assert any(c['name'] == 'sale_line_id' and c['nullable'] for c in inspector.get_columns('installation'))
+    assert 'sale' in inspector.get_table_names() and 'sale_line' in inspector.get_table_names()
     assert any(f['referred_table']=='installation' for f in inspector.get_foreign_keys('equipment'))
     assert any(u['column_names']==['installation_id'] for u in inspector.get_unique_constraints('equipment'))
     with engine.connect() as db:

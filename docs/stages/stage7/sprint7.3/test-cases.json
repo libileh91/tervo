@@ -1,7 +1,13 @@
 {
   "$schema": "Stage 7 - Sprint 7.3 Test Cases",
   "sprint": "7.3",
-  "description": "Tervo V2 — Chaîne commerciale",
+  "description": "Tervo V2 — INT-103 autonome précède INT-102 ; INT-102 et le raccordement commercial sont implémentés",
+  "validation": {
+    "date": "2026-09-29",
+    "backend_suite": "271 passed (SQLite)",
+    "postgresql_17_4": "Non exécuté pour INT-102 ; migration testée sur SQLite jetable",
+    "commercial_link": "FK Installation.sale_line_id nullable, ventes confirmées uniquement, quantité et cohérence vente/site/produit vérifiées"
+  },
   "test_cases": [
     {
       "id": "TC-INT-102-01",
@@ -20,14 +26,17 @@
         "sale_status_CONFIRMED": "true",
         "sale_line_quantity_3": "true",
         "une_seule_sale_line": "true",
-        "confirme_sans_ligne_rejete": "true"
+        "confirme_sans_ligne_rejete": "true",
+        "trois_installations_associees_maximum": "true"
       },
-      "actual_result": null
+      "status": "passed",
+      "actual_result": "SQLite, tests/test_sales.py : vente confirmée avec ligne quantity=3, trois installations liées acceptées, quatrième refusée (409)."
     },
     {
       "id": "TC-INT-103-01",
       "task": "INT-103",
-      "title": "Installation — complete → Equipment atomique",
+      "title": "Installation — complete → Equipment atomique avec provenance commerciale",
+      "status": "passed",
       "type": "integration",
       "preconditions": [
         "Une SaleLine confirmée"
@@ -44,7 +53,123 @@
         "equipment_installation_id_renseigne": "true",
         "transaction_atomique": "true"
       },
-      "actual_result": null
+      "actual_result": "SQLite, tests/test_sales.py : trois installations sur une SaleLine quantity=3, une installation clôturée avec Equipment du produit vendu et provenance conservée."
+    },
+    {
+      "id": "TC-INT-103-02",
+      "task": "INT-103",
+      "title": "Installation de matériel fourni par le client, sans vente",
+      "type": "integration",
+      "preconditions": ["Un client et son site existent", "Aucune vente ni ligne de vente ; aucun stock requis"],
+      "steps": [
+        "POST /api/v1/installations avec site_id et planning, sans sale_line_id",
+        "Vérifier que la réponse expose sale_line_id:null",
+        "Démarrer puis terminer avec installation_date, commissioning_date et equipment.mode=create (série, produit facultatif)",
+        "Vérifier les équipements, les liens et l'absence de vente créée implicitement"
+      ],
+      "expected_result": {
+        "creation": 201,
+        "sale_line_id": null,
+        "statut_final": "COMPLETED",
+        "equipement_par_installation": 1,
+        "equipment_site_id": "site demandé",
+        "equipment_installation_id": "installation terminée",
+        "vente_ou_ligne_fictive_creee": false,
+        "stock_requis": false
+      },
+      "status": "passed",
+      "actual_result": "Régression SQLite après INT-102 : test_autonomous_create_and_reads ; sale_line_id:null, aucun équipement avant complete, équipement ACTIVE après clôture. PostgreSQL validé uniquement sur le contrat autonome antérieur."
+    },
+    {
+      "id": "TC-INT-103-03",
+      "task": "INT-103",
+      "title": "Installation autonome — site obligatoire et provenance facultative",
+      "type": "api",
+      "preconditions": ["Un site existe"],
+      "steps": [
+        "Créer sans site_id puis avec site_id null",
+        "Créer avec un site inexistant",
+        "Créer avec un sale_line_id inconnu puis avec sale_line_id:null"
+      ],
+      "expected_result": {
+        "site_absent_ou_null": 422,
+        "site_inconnu": 404,
+        "sale_line_inconnue": 404,
+        "sale_line_null": 201,
+        "vente_fictive_creee": false
+      },
+      "status": "passed",
+      "actual_result": "SQLite, tests/test_installations.py et tests/test_sales.py : site obligatoire, ligne inconnue 404, null accepté avec réponse null."
+    },
+    {
+      "id": "TC-INT-103-04",
+      "task": "INT-103",
+      "title": "Installation sans vente — clôture atomique",
+      "type": "integration",
+      "preconditions": ["Installation sans vente en IN_PROGRESS"],
+      "steps": [
+        "Provoquer un échec de création/rattachement de l'équipement pendant complete",
+        "Relire l'installation et les équipements dans une nouvelle session"
+      ],
+      "expected_result": {
+        "statut_apres_echec": "IN_PROGRESS",
+        "completed_at": null,
+        "equipement_partiel_cree": false,
+        "transaction_rollback": true
+      },
+      "status": "passed",
+      "actual_result": "SQLite et PostgreSQL : test_exception_after_equipment_write_rolls_back (create/attach), test_failed_completion_rolls_back et test_integrity_conflict_during_create_is_atomic. Relecture en nouvelle session après écriture effective puis échec."
+    },
+    {
+      "id": "TC-INT-103-05",
+      "task": "INT-103",
+      "title": "Transitions, répétitions et concurrence",
+      "type": "integration",
+      "steps": ["Tester start/cancel/complete depuis chaque statut", "Lancer deux complete concurrents", "Faire concourir cancel et complete", "Faire concourir deux installations pour le même équipement"],
+      "expected_result": {"transitions_interdites": 409, "une_seule_action_concurrente_validee": true, "aucun_doublon_ou_equipement_partiel": true},
+      "status": "passed",
+      "actual_result": "SQLite et PostgreSQL : test_transition_matrix (12 cas), test_concurrent_closure_creates_only_one_equipment, test_same_equipment_competing_installations, test_cancel_competing_with_complete."
+    },
+    {
+      "id": "TC-INT-103-06",
+      "task": "INT-103",
+      "title": "Choix create/attach explicite et conservation de l'existant",
+      "type": "api",
+      "steps": ["Refuser une clôture sans mode ou avec champs incompatibles", "Rattacher un équipement ACTIVE sans installation au même site", "Refuser un autre site, un équipement déjà lié, remplacé, retiré ou hors service", "Refuser l'écrasement des dates historiques et les références produit/équipement inconnues"],
+      "expected_result": {"mode_obligatoire": true, "produit_serie_notes_conserves": true, "meme_site": true, "une_installation_par_equipement": true, "pas_de_PLANNED": true},
+      "status": "passed",
+      "actual_result": "SQLite et PostgreSQL : test_explicit_completion_contract, test_attach_preserves_equipment_and_prevents_reuse, test_failed_completion_rolls_back, test_replaced_equipment_cannot_be_attached."
+    },
+    {
+      "id": "TC-INT-103-07",
+      "task": "INT-103",
+      "title": "JWT actif, lecture paginée et protection historique",
+      "type": "api",
+      "steps": ["Accéder aux six routes sans JWT, avec JWT invalide et utilisateur désactivé", "Exercer les parcours avec TECHNICIAN et ADMIN", "Lire détail, liste filtrée/paginée et identifiant inconnu", "Supprimer le site/client d'une installation non terminée"],
+      "expected_result": {"auth_requise": true, "roles_actuels_seulement": true, "ressource_inconnue": 404, "suppression_historique": 409},
+      "status": "passed",
+      "actual_result": "SQLite et PostgreSQL : test_all_routes_require_real_active_jwt, test_admin_and_unknown_resources, test_autonomous_create_and_reads, test_database_constraints_and_history_protection."
+    },
+    {
+      "id": "TC-INT-103-08",
+      "task": "INT-103",
+      "title": "Migration TD-B014, contraintes et préservation des données",
+      "type": "integration",
+      "steps": ["Migrer des équipements historiques dont installation_id est null", "Vérifier FK, unicité, nullabilité, enum et liens de remplacement", "Effectuer downgrade/upgrade sans installations", "Refuser upgrade si installation_id préexistant non vérifiable", "Refuser downgrade si installations présentes"],
+      "expected_result": {"donnees_historiques_conservees": true, "pas_de_backfill_fictif": true, "identifiant_non_verifiable_non_efface": true, "downgrade_destructif_refuse": true},
+      "status": "passed",
+      "actual_result": "3 tests dans test_installation_migration.py : PostgreSQL 17.4 chaîne Alembic complète ; SQLite révision ciblée depuis schéma antérieur reconstitué (ancienne migration ALTER TYPE spécifique PostgreSQL)."
+    },
+    {
+      "id": "TC-INT-103-09",
+      "task": "INT-103",
+      "title": "Contrat commercial cible : nullable, référence vérifiée et provenance",
+      "type": "api",
+      "preconditions": ["INT-102 réalisé avec Sale et SaleLine", "FK Installation.sale_line_id réelle et nullable"],
+      "steps": ["Créer sans ligne puis avec sale_line_id:null", "Créer avec une ligne inexistante", "Créer avec une ligne valide et vérifier provenance/site/produit lors de la clôture"],
+      "expected_result": {"absent_ou_null": 201, "ligne_inconnue": 404, "provenance_verifiee": true},
+      "status": "passed",
+      "actual_result": "tests/test_sales.py + tests/test_installations.py : omission/null acceptés, référence inconnue 404, ligne non confirmée et quantité dépassée refusées, site/produit cohérents, parcours autonome non régressif."
     }
   ]
 }

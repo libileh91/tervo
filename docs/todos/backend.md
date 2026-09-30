@@ -170,7 +170,7 @@
 | **Dépend de** | INT-103 — entité Installation |
 | **Fichiers** | `app/models/equipment.py`, futur `app/models/installation.py`, migration, services et tests |
 | **Action attendue** | Ajouter la FK Equipment.installation_id, son unicité (Installation 1 → 0..1 Equipment) et les relations ORM. Alimenter ce champ uniquement lors de la réalisation d’une installation, en vérifiant site et produit. La colonne reste nullable pour les imports historiques. |
-| **Statut** | ⏳ En attente d’INT-103 ; aucun identifiant libre accepté par l’API actuelle |
+| **Statut** | ✅ Fait dans INT-103 autonome (28/09/2026) — FK nullable + unicité + relations ORM ; clôture atomique créer/rattacher, site vérifié et produit catalogue validé à la création/conservé au rattachement. Tests SQLite et PostgreSQL. Cohérence avec un produit vendu reportée à TD-B017. |
 
 ---
 
@@ -196,3 +196,16 @@
 | **Fichiers** | `app/importers/excel_reader.py`, `app/services/import_planner.py`, `app/services/import_service.py` |
 | **Action attendue** | Mesurer mémoire, durée, coût du rapprochement et attente des verrous PostgreSQL ; définir le découpage des archives. Selon les mesures, ajouter index de candidats, lecture en flux ou worker asynchrone. Le lecteur et le référentiel sont actuellement chargés en mémoire ; les transactions de 500 lignes ne garantissent pas le passage à l’échelle. |
 | **Statut** | ⏳ À mesurer avant import réel ; pack fictif et scénario de 502 lignes validés |
+
+---
+
+## TD-B017 — Raccorder les installations autonomes à SaleLine
+
+| Champ | Valeur |
+| --- | --- |
+| **Créé dans** | INT-103 partielle, sprint7.3 ; inversion INT-103 avant INT-102 explicitement validée |
+| **Dépend de** | INT-102 — véritables entités Sale et SaleLine |
+| **Fichiers** | `app/models/installation.py`, `app/schemas/installation.py`, `app/services/installation.py`, migration Alembic, `tests/test_installations.py`, `docs/stages/stage7/sprint7.3/test-cases.json` |
+| **Action attendue** | Ajouter sale_line_id comme FK nullable (pas d'entier libre), sans inventer de ventes pour les installations existantes. Exposer/accepter absent ou null ; vérifier les références non nulles et leur provenance commerciale, cohérence vente/site/produit et règles de quantité/statut validées pour INT-102. Tester le parcours vendu, la ligne inconnue (404), le produit du matériel créé/rattaché et la non-régression autonome. |
+| **Contrat intermédiaire** | Aucun champ sale_line_id en ORM, migration ou réponse API. Toute présence dans les corps de création/clôture, y compris null, donne 422 (`extra=forbid`). Les tests commerciaux restent différés, pas validés par les tests autonomes. |
+| **Statut** | ✅ Fait avec INT-102 (29/09/2026) : FK nullable et réponse `sale_line_id: null` pour le parcours autonome ; référence confirmée vérifiée, cohérence site/produit/quantité appliquée et parcours vendu testé. TD-B014 reste réalisé. |

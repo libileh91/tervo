@@ -90,7 +90,7 @@ async def test_autonomous_create_and_reads(context):
     installation = response.json()
     assert installation["status"] == "SCHEDULED" and installation["equipment"] is None
     assert installation["scheduled_start"] == "2026-09-28T08:00:00"
-    assert "sale_line_id" not in installation
+    assert installation["sale_line_id"] is None
     async with sessions() as db:
         assert await db.scalar(select(func.count(Equipment.id))) == 0
     url = f'{PREFIX}/{installation["id"]}'
@@ -111,11 +111,11 @@ async def test_autonomous_create_and_reads(context):
     assert listing["total"] == 1 and listing["items"] == [done]
     assert (await ac.get(PREFIX, params={"page": 2, "page_size": 1})).json()["items"] == []
     assert (await ac.get(PREFIX + "?status=PLANNED")).status_code == 422
-    assert not {"sale", "sale_line", "stock"}.intersection(Base.metadata.tables)
+    assert "stock" not in Base.metadata.tables
 
 
 @pytest.mark.parametrize("payload,code", [({},422), ({"site_id":None},422), ({"site_id":999},404),
-    ({"site_id":1,"sale_line_id":999},422), ({"site_id":1,"sale_line_id":None},422),
+    ({"site_id":1,"sale_line_id":999},404), ({"site_id":1,"sale_line_id":None},201),
     ({"site_id":1,"status":"COMPLETED"},422),
     ({"site_id":1,"scheduled_end":"2026-09-28T08:00:00"},422),
     ({"site_id":1,"scheduled_start":"2026-09-28T10:00:00","scheduled_end":"2026-09-28T09:00:00"},422)])
@@ -123,7 +123,7 @@ async def test_creation_validation(context, payload, code):
     ac, sessions, _, _ = context
     assert (await ac.post(PREFIX, json=payload)).status_code == code
     async with sessions() as db:
-        assert await db.scalar(select(func.count(Installation.id))) == 0
+        assert await db.scalar(select(func.count(Installation.id))) == (1 if code == 201 else 0)
 
 
 @pytest.mark.parametrize("body", [{}, {"installation_date":"2026-09-28"},

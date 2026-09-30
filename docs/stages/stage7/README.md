@@ -2,13 +2,13 @@
 
 Tervo V2 est réparti en six sprints. Ils reprennent les lots auparavant regroupés dans `sprint-6.2-v2`, puis `sprint7`, en conservant les identifiants INT, critères validés et cas de test.
 
-La référence métier et technique reste le [DAT unique](../../DAT/new/00-sommaire.md). La prochaine tâche est **INT-102**, dans **sprint7.3**.
+La référence métier et technique reste le [DAT unique](../../DAT/new/00-sommaire.md). L'utilisateur a validé **INT-103 autonome avant INT-102**, dans **sprint7.3**. Le parcours autonome et son raccordement commercial INT-102 / TD-B017 sont désormais implémentés ; la validation PostgreSQL d'INT-102 reste à exécuter.
 
 | Sprint | Périmètre | Tâches | Avancement |
 |---|---|---|---|
 | [7.1](sprint7.1/tasks.md) | Socle physique | INT-94 à INT-97 | Terminé |
 | [7.2](sprint7.2/tasks.md) | Migration Excel | INT-98 à INT-101 | Terminé |
-| [7.3](sprint7.3/tasks.md) | Chaîne commerciale | INT-102 à INT-103 | À démarrer — prochaine tâche INT-102 |
+| [7.3](sprint7.3/tasks.md) | Chaîne commerciale | INT-102 à INT-103 | INT-102 et raccordement commercial INT-103 implémentés ; validations PostgreSQL à exécuter |
 | [7.4](sprint7.4/tasks.md) | Cycle terrain | INT-104 à INT-108 | À traiter |
 | [7.5](sprint7.5/tasks.md) | Showroom et remplacement | INT-109 à INT-110 | À traiter |
 | [7.6](sprint7.6/tasks.md) | Déploiement VPS et documentation entretien | INT-111 à INT-112 | À traiter |
@@ -22,7 +22,7 @@ Chaque dossier contient son `tasks.md` et son `test-cases.json`. Les notes termi
 - 7.5 utilise le socle 7.1 et la chaîne commerciale 7.3 pour relier showroom et vente.
 - 7.6 déploie le périmètre effectivement validé et documente les fonctionnalités encore en backlog.
 
-La mesure de l’import sur un volume représentatif reste ouverte dans [TD-B016](../../todos/backend.md#td-b016--mesurer-limport-sur-un-volume-représentatif). Le raccordement Equipment → Installation reste suivi dans TD-B014 pour INT-103. Avant INT-110, vérifier le remplacement déjà amorcé dans INT-97.
+La mesure de l’import sur un volume représentatif reste ouverte dans [TD-B016](../../todos/backend.md#td-b016--mesurer-limport-sur-un-volume-représentatif). Les liens Equipment → Installation (TD-B014) et Installation → SaleLine (TD-B017) sont réalisés. Avant INT-110, vérifier le remplacement déjà amorcé dans INT-97.
 
 ## Historique du Stage 6
 

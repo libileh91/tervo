@@ -16,6 +16,7 @@ class Installation(Base):
     __tablename__ = "installation"
     id = Column(Integer, primary_key=True, index=True)
     site_id = Column(Integer, ForeignKey("site.id", ondelete="RESTRICT"), nullable=False, index=True)
+    sale_line_id = Column(Integer, ForeignKey("sale_line.id", ondelete="RESTRICT"), nullable=True, index=True)
     scheduled_start = Column(DateTime, nullable=True)
     scheduled_end = Column(DateTime, nullable=True)
     started_at = Column(DateTime, nullable=True)
@@ -29,5 +30,6 @@ class Installation(Base):
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
     site = relationship("Site", back_populates="installations")
+    sale_line = relationship("SaleLine", back_populates="installations")
     equipment = relationship("Equipment", back_populates="installation", uselist=False,
                              passive_deletes="all")

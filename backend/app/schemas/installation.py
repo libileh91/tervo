@@ -9,6 +9,7 @@ from app.schemas.equipment import EquipmentResponse
 class InstallationCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
     site_id: int = Field(gt=0)
+    sale_line_id: int | None = Field(default=None, gt=0)
     scheduled_start: datetime | None = None
     scheduled_end: datetime | None = None
     technician_notes: str | None = None
@@ -59,6 +60,7 @@ class InstallationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
     site_id: int
+    sale_line_id: int | None
     scheduled_start: datetime | None
     scheduled_end: datetime | None
     started_at: datetime | None
