@@ -216,6 +216,15 @@ Tu peux **créer, modifier, fusionner, réordonner ou supprimer** des tâches IN
 - **Ne jamais enchainer 2 user stories** sans mon feu-vert explicite
 - Chaque tâche doit être testée et cochée (`[x]`) avant la suivante
 
+### Convention de commits (obligatoire)
+
+- Découper les commits par tâche, et non par couche technique ou lot transversal : `[DEV]INT-XXX — Description de la tâche`. Regrouper les devs, tests, notes et adaptations CI propres à cette tâche ; attribuer les modifications des fichiers partagés à la tâche qui les nécessite, en conservant des états intermédiaires cohérents.
+- Pour un enrichissement documentaire d'une tâche existante : `[DEV]INT-XXX — Notes : sujet précis`, sans prétendre à une nouvelle implémentation.
+- DAT : `[DOC][DAT] sprint7.N — Description du cadrage`. Le cadrage transverse de migration peut utiliser `[DOC][DAT] Migration — Description`.
+- Les exceptions sans tâche (skill, outillage transverse) restent dans des commits distincts au titre explicite.
+- Ajouter un corps de commit lorsque nécessaire : objectif métier, devs/règles, tests et validations réellement exécutées, notes, CI, dépendances et limites. Ne pas inventer de validation ; distinguer une configuration CI d'un run distant réussi.
+- Avant commit/push, vérifier le découpage et le nommage existants. Ne réécrire un historique déjà poussé qu'avec accord explicite ; conserver une référence de sauvegarde, vérifier le contenu final et utiliser un `--force-with-lease` ciblé sur la révision distante attendue.
+
 ### 2.2 Rétrospective avant chaque nouvelle tâche
 
 Avant de commencer une nouvelle tâche :
@@ -241,6 +250,8 @@ Quand du code est en attente d'une dépendance future :
 - Explique le code, les commandes, les patterns utilisés
 - Pas de redondances — une note claire > deux notes confuses
 - Objectif : tu m'apprends les technos et le code du projet
+
+**Niveau de détail obligatoire :** une note de sprint doit être aussi pédagogique et détaillée que `notes/backend/sprint7.3/INT-103-installations-autonomes.md`, et non un simple résumé de livraison. Avant rédaction, inspecter les fichiers réellement modifiés et citer des extraits représentatifs, fidèles au code livré. Expliquer les choix et invariants du modèle, les contrats/validations API, les transitions métier, le rôle des couches (route, schéma, service, repository, ORM), la transaction et les erreurs lorsque cela s'applique, les migrations/contraintes et la préservation des données, les scénarios de tests avec résultats observés, les commandes réellement exécutées et les limites ou travaux différés. Organiser la note en sections lisibles, avec exemples JSON et tableaux de routes/tests si utiles. Ne jamais inventer de résultats, annoncer PostgreSQL/déploiement comme validés sans exécution, ni recopier un état temporaire devenu obsolète : relire les notes/todos dépendants après chaque tâche aval et actualiser explicitement les contrats concernés.
 
 **Organisation des notes :**
 
