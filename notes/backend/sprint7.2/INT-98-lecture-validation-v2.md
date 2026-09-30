@@ -137,3 +137,49 @@ uv run pytest tests/test_importers_structure.py tests/test_importers_v2.py -q
 Le [pack fictif](../../../backend/tests/fixtures/excel/README.md) couvre notamment : C006 sans téléphone/adresse, E003 sans série, E004/E005 à arbitrer, date impossible, Latin-1, en-têtes décalés, lignes physiques, formules et colonnes inconnues.
 
 Limites : lecture en mémoire, pas de XLS/OCR/PDF. La mesure sur volume réel reste dans [TD-B016](../../../docs/todos/backend.md#td-b016--mesurer-limport-sur-un-volume-représentatif). Le raccordement au matching, à la persistance et à l’API (TD-B015) est désormais terminé.
+
+## Voir comment les étapes sont assemblées
+
+Extrait du fichier [ingestion.py](../../../backend/app/importers/ingestion.py), lignes 9 à 37 :
+
+```python
+def read_sources(content: bytes, filename: str, namespace: str, selections: list[dict]):
+    if not selections:
+        raise ValueError('Sélectionner au moins une feuille et sa nature')
+    if len(content) > 10 * 1024 * 1024:
+        raise ValueError('Fichier supérieur à 10 Mio')
+    if Path(filename).suffix.lower() not in {'.xlsx', '.csv'}:
+        raise ValueError('Format non supporté')
+    results, seen = [], set()
+    with TemporaryDirectory(prefix='tervo-import-') as folder:
+        path = Path(folder) / ('source' + Path(filename).suffix.lower())
+        path.write_bytes(content)
+        for selection in selections:
+            kind = ImportKind(selection['kind'])
+            if kind == ImportKind.MIXED:
+                raise ValueError('Choisir une nature explicite par sélection')
+            options = {k:selection[k] for k in ('sheet','header_row','encoding','separator') if k in selection}
+            frame = ExcelReader().read(path, source_namespace=namespace, **options)
+            frame.attrs['source']['file'] = filename
+            if path.suffix == '.csv':
+                frame.attrs['source']['sheet'] = Path(filename).stem
+            mapping = FormatDetector().detect(list(frame.columns), kind, selection.get('mapping'))
+            validated = Validator().validate(frame, mapping, kind, two_digit_year_base=selection.get('two_digit_year_base'))
+            for record in validated.records:
+                key = f"{record['source']['sheet']}:{record['source']['row']}:{kind.value}"
+                if key in seen:
+                    raise ValueError('Sélection de ligne dupliquée')
+                seen.add(key)
+                results.append(dict(key=key, kind=kind.value, mapping=mapping.to_dict(), **record))
+    return results
+```
+
+Cette fonction raccorde les composants détaillés plus haut. Elle reçoit les octets et un manifeste de sélections, pas une session SQL.
+
+Le nom du fichier temporaire est reconstruit à partir de l’extension ; le nom source est conservé dans les métadonnées pour la provenance. Le bloc `TemporaryDirectory` nettoie cette copie à sa sortie. Le fichier fourni par l’utilisateur n’est pas réécrit.
+
+Pour chaque sélection, `ExcelReader` lit une feuille, `FormatDetector` produit le mapping et `Validator` retourne les enregistrements enrichis de leurs anomalies. Une ligne invalide peut donc rester dans `results` : elle doit être visible pour correction, pas disparaître du rapport.
+
+La clé `feuille:ligne:nature` identifie une ligne dans ce fichier. Le set `seen` refuse deux sélections qui capturent la même ligne avec la même nature. Il ne détecte pas les doublons métier entre deux fichiers : cette responsabilité appartient au matching et au journal d’import.
+
+Le retour est une liste de dictionnaires qui conserve mapping, valeurs et coordonnées sources. Le service INT-100 peut ensuite préparer un plan sans dépendre du fichier temporaire.
