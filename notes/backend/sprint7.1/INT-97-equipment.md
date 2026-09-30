@@ -41,7 +41,7 @@ npm run typecheck
 npm run build
 ```
 
-Résultat local : 141 tests backend réussis. Les tests Equipment activent les FK SQLite et couvrent le remplacement, la conservation des interventions, les références absentes, la cohérence du site, le diagnostic sans appareil, les états interdits, la pagination, les protections de suppression et l’authentification.
+Résultat local à la livraison d’INT-97 : 141 tests backend réussis. Les tests Equipment activent les FK SQLite et couvrent le remplacement, la conservation des interventions, les références absentes, la cohérence du site, le diagnostic sans appareil, les états interdits, la pagination, les protections de suppression et l’authentification.
 
 Sur PostgreSQL 17.4 jetable : montée depuis le schéma avant INT-94 avec une intervention existante, second upgrade head, downgrade jusqu’avant INT-94 et remontée. L’intervention et son client restent reliés, avec traduction du statut. Le test concurrent complète les tests API SQLite. Aucune base applicative n’a été migrée.
 
@@ -51,4 +51,58 @@ Sur PostgreSQL 17.4 jetable : montée depuis le schéma avant INT-94 avec une in
 - TD-B013 : rôles MANAGER/COMMERCIAL encore absents, reste en attente.
 - TD-B014 : FK Installation et alimentation métier à réaliser dans INT-103.
 
-Le détail des actions reste dans [docs/todos/backend.md](../../../docs/todos/backend.md). INT-98 n’est pas commencé.
+Le détail des actions reste dans [docs/todos/backend.md](../../../docs/todos/backend.md). Depuis cette livraison, INT-98 à INT-101 sont terminés ; leurs notes sont dans [sprint7.2](../sprint7.2/).
+
+## Décomposer le remplacement atomique
+
+Extrait du fichier [equipment.py](../../../backend/app/services/equipment.py), lignes 41 à 52 :
+
+```python
+async def replace_equipment(self, equipment_id, body):
+    old = await self.get_equipment(equipment_id)
+    if old.replaced_by_id is not None or old.lifecycle_status not in (
+        EquipmentStatus.ACTIVE, EquipmentStatus.OUT_OF_SERVICE
+    ):
+        raise HTTPException(409, "Cet équipement ne peut plus être remplacé")
+    await self.check_product(body.new_product_id)
+    new = await self.repo.replace(old, dict(product_id=body.new_product_id,
+        installed_at=body.installation_date, serial_number=body.serial_number, notes=body.notes))
+    if new is None:
+        raise HTTPException(409, "Équipement déjà remplacé")
+    return new
+```
+
+Le service refuse immédiatement un ancien appareil déjà remplacé ou retiré, puis vérifie la référence catalogue demandée. Il adapte le vocabulaire de l’entrée (`new_product_id`, `installation_date`) aux colonnes du nouvel appareil (`product_id`, `installed_at`). Le nouveau reste sur le même site.
+
+La protection face à deux requêtes simultanées se trouve dans le repository :
+
+Extrait du fichier [equipment.py](../../../backend/app/repositories/equipment.py), lignes 29 à 47 :
+
+```python
+async def replace(self, old, values):
+    new = Equipment(site_id=old.site_id, **values)
+    self.db.add(new)
+    try:
+        await self.db.flush()
+        # Conditional update also protects against concurrent replacements.
+        result = await self.db.execute(update(Equipment).where(
+            Equipment.id == old.id, Equipment.replaced_by_id.is_(None),
+            Equipment.lifecycle_status.in_([EquipmentStatus.ACTIVE, EquipmentStatus.OUT_OF_SERVICE])
+        ).values(replaced_by_id=new.id, lifecycle_status=EquipmentStatus.REPLACED))
+        if result.rowcount != 1:
+            await self.db.rollback()
+            return None
+        await self.db.commit()
+        await self.db.refresh(new)
+        return new
+    except Exception:
+        await self.db.rollback()
+        raise
+```
+
+1. `add` prépare l’insertion ; `flush` l’envoie en base et obtient `new.id`, sans valider la transaction.
+2. L’UPDATE exige encore `replaced_by_id IS NULL` et un statut remplaçable. Le contrôle du service seul ne suffirait pas : un autre appel peut intervenir entre la lecture et l’écriture.
+3. `rowcount != 1` signifie que la mise à jour attendue n’a pas eu lieu. Le rollback annule aussi l’insertion du nouvel équipement ; le service retourne alors 409.
+4. `commit` valide ensemble le nouvel appareil et le lien depuis l’ancien ; `refresh` recharge l’objet retourné.
+
+Aucune de ces instructions ne modifie `Intervention.equipment_id`. Les interventions restent rattachées à l’ancien appareil ; le nouveau commence son propre historique. Le bloc `except` annule la transaction si une autre erreur survient.
