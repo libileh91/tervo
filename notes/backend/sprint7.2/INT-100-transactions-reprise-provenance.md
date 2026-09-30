@@ -168,3 +168,45 @@ TERVO_IMPORT_TEST_DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST/TEST_DB \
 ```
 
 Validation initiale : 11 tests sur SQLite et PostgreSQL 17.4, migration montée/descente/remontée et comparaison ORM sans écart. Source et référentiel restent chargés en mémoire ; exécution synchrone, 10 Mio maximum par fichier. [TD-B016](../../../docs/todos/backend.md#td-b016--mesurer-limport-sur-un-volume-représentatif) conserve la mesure sur volume réel ; 502 lignes ne prouvent pas la capacité à importer vingt ans d’archives.
+
+## Comprendre le refus d’un plan devenu périmé
+
+Extrait du fichier [import_service.py](../../../backend/app/services/import_service.py), lignes 144 à 154 :
+
+```python
+token = digest(dict(file_hash=batch.file_hash,namespace=batch.source_namespace,
+                    plan=plan,choices=choices,revision=revision+1,selections=selections if selections is not None else batch.selections))
+# Optimistic revision check: simultaneous validation cannot overwrite approval.
+result = await db.execute(update(ImportBatch).where(ImportBatch.id==batch_id,
+    ImportBatch.revision==revision,ImportBatch.status.notin_(['running','success']))
+    .values(revision=revision+1,plan=plan,decisions=choices,plan_token=token,
+            database_snapshot=fingerprint,status='ready',imported_by=imported_by,
+            selections=selections if selections is not None else batch.selections,source_records=rows))
+if result.rowcount != 1:
+    await db.rollback()
+    raise HTTPException(409,'Import modifié pendant la validation')
+```
+
+Le token est calculé sur le fichier, le namespace, le plan, les choix, la révision suivante et les sélections. Il identifie ce qui vient d’être validé. Il ne remplace pas l’authentification de l’administrateur.
+
+L’UPDATE contient la révision précédemment lue. Si une autre validation a changé cette révision, aucune ligne ne correspond et `rowcount` vaut zéro : le rollback empêche d’écraser le plan concurrent. Le token et le plan sont stockés ensemble.
+
+Avant l’exécution, le service contrôle également le référentiel :
+
+Extrait du fichier [import_service.py](../../../backend/app/services/import_service.py), lignes 213 à 221 :
+
+```python
+if batch.plan_token != plan_token or not batch.plan:
+    raise HTTPException(409,'Valider le plan actuel avant exécution')
+if batch.status == 'success':
+    return await self.detail(batch_id)
+if batch.status not in {'ready','partial','failed'}:
+    raise HTTPException(409,'Import non disponible')
+_,_,fingerprint = await self._load(db)
+if fingerprint != batch.database_snapshot:
+    raise HTTPException(409,'Référentiel modifié : revalider le plan')
+```
+
+Un ancien token produit 409. Même avec le token actuel, une modification du référentiel depuis la validation exige une nouvelle validation. Le snapshot est une empreinte des données chargées par le service ; il ne s’agit pas d’une sauvegarde de toute la base.
+
+La boucle de transactions présentée plus haut refait ce contrôle avant chaque sous-lot et actualise l’empreinte après ses propres écritures. Cela relie l’accord de l’utilisateur au plan exécuté, tout en permettant la reprise des lots déjà committés.
