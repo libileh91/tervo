@@ -1,0 +1,1877 @@
+{
+  "checklist_item": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "intervention_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "category",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(20)"
+      },
+      {
+        "name": "label",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "checked",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "BOOLEAN"
+      },
+      {
+        "name": "note",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TEXT"
+      },
+      {
+        "name": "position",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "intervention_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "CASCADE",
+            "onupdate": null,
+            "target": "intervention.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      }
+    ]
+  },
+  "client": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "full_name",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "phone",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(50)"
+      },
+      {
+        "name": "email",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "address",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(500)"
+      },
+      {
+        "name": "postal_code",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(20)"
+      },
+      {
+        "name": "city",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "notes",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TEXT"
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "updated_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      }
+    ]
+  },
+  "equipment": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "site_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "product_id",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "installation_id",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "serial_number",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "installed_at",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "DATE"
+      },
+      {
+        "name": "commissioned_at",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "DATE"
+      },
+      {
+        "name": "warranty_start",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "DATE"
+      },
+      {
+        "name": "warranty_end",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "DATE"
+      },
+      {
+        "name": "lifecycle_status",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "ACTIVE",
+        "type": "VARCHAR(14)"
+      },
+      {
+        "name": "replaced_by_id",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "notes",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TEXT"
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "updated_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "installation_id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "UniqueConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "installation_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "RESTRICT",
+            "onupdate": null,
+            "target": "installation.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": "equipment_installation_id_fkey"
+      },
+      {
+        "columns": [
+          "lifecycle_status"
+        ],
+        "definition": "equipment.lifecycle_status IN (__[POSTCOMPILE_param_1])",
+        "foreign_keys": [],
+        "kind": "CheckConstraint",
+        "name": "equipment_status"
+      },
+      {
+        "columns": [
+          "product_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "RESTRICT",
+            "onupdate": null,
+            "target": "product.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "replaced_by_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "RESTRICT",
+            "onupdate": null,
+            "target": "equipment.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "site_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "RESTRICT",
+            "onupdate": null,
+            "target": "site.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      }
+    ]
+  },
+  "import_batch": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "filename",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "source_namespace",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(100)"
+      },
+      {
+        "name": "file_hash",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(64)"
+      },
+      {
+        "name": "source_bytes",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "BYTEA"
+      },
+      {
+        "name": "selections",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "JSON"
+      },
+      {
+        "name": "source_records",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "JSON"
+      },
+      {
+        "name": "plan",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "JSON"
+      },
+      {
+        "name": "decisions",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "JSON"
+      },
+      {
+        "name": "plan_token",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(64)"
+      },
+      {
+        "name": "database_snapshot",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(64)"
+      },
+      {
+        "name": "revision",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "status",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(20)"
+      },
+      {
+        "name": "execution_slot",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "execution_token",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(32)"
+      },
+      {
+        "name": "lease_until",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "imported_by",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "completed_at",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "execution_slot"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "UniqueConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "imported_by"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "SET NULL",
+            "onupdate": null,
+            "target": "user.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "source_namespace",
+          "file_hash"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "UniqueConstraint",
+        "name": "uq_import_file"
+      }
+    ]
+  },
+  "import_error": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "import_batch_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "revision",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "row_key",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(300)"
+      },
+      {
+        "name": "code",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(80)"
+      },
+      {
+        "name": "severity",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(20)"
+      },
+      {
+        "name": "message",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TEXT"
+      },
+      {
+        "name": "source",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "JSON"
+      },
+      {
+        "name": "original_values",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "JSON"
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "import_batch_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": null,
+            "onupdate": null,
+            "target": "import_batch.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      }
+    ]
+  },
+  "import_record": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "import_batch_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "row_key",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(300)"
+      },
+      {
+        "name": "entity_type",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(30)"
+      },
+      {
+        "name": "entity_id",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "action",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(20)"
+      },
+      {
+        "name": "source",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "JSON"
+      },
+      {
+        "name": "original_values",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "JSON"
+      },
+      {
+        "name": "normalized_values",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "JSON"
+      },
+      {
+        "name": "decision",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "JSON"
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "import_batch_id",
+          "row_key"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "UniqueConstraint",
+        "name": "uq_import_record_row"
+      },
+      {
+        "columns": [
+          "import_batch_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": null,
+            "onupdate": null,
+            "target": "import_batch.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      }
+    ]
+  },
+  "import_reference": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "source_namespace",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(100)"
+      },
+      {
+        "name": "entity_type",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(30)"
+      },
+      {
+        "name": "source_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "entity_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "source_namespace",
+          "entity_type",
+          "source_id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "UniqueConstraint",
+        "name": "uq_import_reference"
+      }
+    ]
+  },
+  "installation": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "site_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "sale_line_id",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "scheduled_start",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "scheduled_end",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "started_at",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "completed_at",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "installation_date",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "DATE"
+      },
+      {
+        "name": "commissioning_date",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "DATE"
+      },
+      {
+        "name": "status",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "SCHEDULED",
+        "type": "VARCHAR(11)"
+      },
+      {
+        "name": "technician_notes",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TEXT"
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "updated_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "sale_line_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "RESTRICT",
+            "onupdate": null,
+            "target": "sale_line.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "site_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "RESTRICT",
+            "onupdate": null,
+            "target": "site.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "status"
+        ],
+        "definition": "installation.status IN (__[POSTCOMPILE_param_1])",
+        "foreign_keys": [],
+        "kind": "CheckConstraint",
+        "name": "installation_status"
+      }
+    ]
+  },
+  "intervention": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "site_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "equipment_id",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "technician_id",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "title",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "description",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TEXT"
+      },
+      {
+        "name": "status",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "interventionstatus"
+      },
+      {
+        "name": "priority",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "priority"
+      },
+      {
+        "name": "under_warranty",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "BOOLEAN"
+      },
+      {
+        "name": "scheduled_date",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "DATE"
+      },
+      {
+        "name": "scheduled_start_time",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TIME WITHOUT TIME ZONE"
+      },
+      {
+        "name": "scheduled_end_time",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TIME WITHOUT TIME ZONE"
+      },
+      {
+        "name": "started_at",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "completed_at",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "observations",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TEXT"
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "updated_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "equipment_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "RESTRICT",
+            "onupdate": null,
+            "target": "equipment.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "site_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "CASCADE",
+            "onupdate": null,
+            "target": "site.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "technician_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "SET NULL",
+            "onupdate": null,
+            "target": "user.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      }
+    ]
+  },
+  "intervention_photo": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "intervention_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "category",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(20)"
+      },
+      {
+        "name": "file_path",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(500)"
+      },
+      {
+        "name": "thumbnail_path",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(500)"
+      },
+      {
+        "name": "taken_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "intervention_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "CASCADE",
+            "onupdate": null,
+            "target": "intervention.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      }
+    ]
+  },
+  "material": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "intervention_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "name",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "quantity",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(50)"
+      },
+      {
+        "name": "position",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "intervention_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "CASCADE",
+            "onupdate": null,
+            "target": "intervention.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      }
+    ]
+  },
+  "product": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "reference",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(100)"
+      },
+      {
+        "name": "name",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "description",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TEXT"
+      },
+      {
+        "name": "brand",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "model",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "category",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(100)"
+      },
+      {
+        "name": "characteristics",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "JSON"
+      },
+      {
+        "name": "active",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "true",
+        "type": "BOOLEAN"
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "updated_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "reference"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "UniqueConstraint",
+        "name": null
+      }
+    ]
+  },
+  "review": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "intervention_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "rating",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "comment",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TEXT"
+      },
+      {
+        "name": "reviewer_name",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "share_token",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(64)"
+      },
+      {
+        "name": "share_token_expires_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "submitted_at",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "intervention_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "CASCADE",
+            "onupdate": null,
+            "target": "intervention.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      }
+    ]
+  },
+  "sale": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "client_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "site_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "sale_date",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "DATE"
+      },
+      {
+        "name": "status",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "DRAFT",
+        "type": "VARCHAR(9)"
+      },
+      {
+        "name": "notes",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TEXT"
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "updated_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "client_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "RESTRICT",
+            "onupdate": null,
+            "target": "client.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "site_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "RESTRICT",
+            "onupdate": null,
+            "target": "site.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "status"
+        ],
+        "definition": "sale.status IN (__[POSTCOMPILE_param_1])",
+        "foreign_keys": [],
+        "kind": "CheckConstraint",
+        "name": "sale_status"
+      }
+    ]
+  },
+  "sale_line": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "sale_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "product_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "quantity",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "unit_price",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "NUMERIC(12, 2)"
+      },
+      {
+        "name": "description",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(500)"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "product_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "RESTRICT",
+            "onupdate": null,
+            "target": "product.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "sale_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "CASCADE",
+            "onupdate": null,
+            "target": "sale.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [],
+        "definition": "quantity > 0",
+        "foreign_keys": [],
+        "kind": "CheckConstraint",
+        "name": "ck_sale_line_quantity_positive"
+      },
+      {
+        "columns": [],
+        "definition": "unit_price >= 0",
+        "foreign_keys": [],
+        "kind": "CheckConstraint",
+        "name": "ck_sale_line_price_nonnegative"
+      }
+    ]
+  },
+  "site": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "client_id",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "name",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "address",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(500)"
+      },
+      {
+        "name": "postal_code",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(20)"
+      },
+      {
+        "name": "city",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "country",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(100)"
+      },
+      {
+        "name": "access_notes",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TEXT"
+      },
+      {
+        "name": "notes",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "TEXT"
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "updated_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "client_id"
+        ],
+        "definition": null,
+        "foreign_keys": [
+          {
+            "ondelete": "CASCADE",
+            "onupdate": null,
+            "target": "client.id"
+          }
+        ],
+        "kind": "ForeignKeyConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      }
+    ]
+  },
+  "user": {
+    "columns": [
+      {
+        "name": "id",
+        "nullable": false,
+        "primary_key": true,
+        "server_default": null,
+        "type": "INTEGER"
+      },
+      {
+        "name": "username",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(100)"
+      },
+      {
+        "name": "email",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "hashed_password",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "full_name",
+        "nullable": true,
+        "primary_key": false,
+        "server_default": null,
+        "type": "VARCHAR(255)"
+      },
+      {
+        "name": "role",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "role"
+      },
+      {
+        "name": "is_active",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": null,
+        "type": "BOOLEAN"
+      },
+      {
+        "name": "created_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      },
+      {
+        "name": "updated_at",
+        "nullable": false,
+        "primary_key": false,
+        "server_default": "now()",
+        "type": "TIMESTAMP WITHOUT TIME ZONE"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "email"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "UniqueConstraint",
+        "name": null
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": null,
+        "foreign_keys": [],
+        "kind": "PrimaryKeyConstraint",
+        "name": null
+      }
+    ]
+  }
+}

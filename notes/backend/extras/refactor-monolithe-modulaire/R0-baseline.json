@@ -1,0 +1,52 @@
+{
+  "artifact_sha256": {
+    "R0-metadata.json": "e86c52bc02519708beb34a3dd587ca566a222f54a04a3fe0b62bdd742ca2089a",
+    "R0-openapi.json": "dcabfd245b80cbf3989f71049669c3a65e9766b3ed9512bbf58e22acea942fd7",
+    "R0-postgresql-results.json": "7a2af5ea5243e9f22a4d768e2af0eebd27bd58210dc979e8478f096bf228fa12"
+  },
+  "import_fixture_sha256": {
+    "backend/tests/fixtures/excel/01_clients_sites_equipements.xlsx": "2a786f8408e47ab1751b6c61cf24ea20e3ce6d9d7177e887b29b3a3ba2b38a7b",
+    "backend/tests/fixtures/excel/02_interventions_2018_2025.xlsx": "14aec149a263cbf68884873625892538bef997a4a15cfb5c7c0df46aa07a6c3d",
+    "backend/tests/fixtures/excel/03_export_ancien_format.xlsx": "8746825732c61b9a7d2ab489760633a7a888d9a5c0adec032f2974d3f74a8adf",
+    "backend/tests/fixtures/excel/04_export_clients_latin1.csv": "5cf68d3323882bdef21a2edb5dbefc17281372b0bed8d109d3a7ab74c6fbc6f6",
+    "backend/tests/fixtures/excel/README.md": "ff60444dfa9f009075dccf11906a3b536f47d80bd62f287c9bd981eefcc78428",
+    "backend/tests/fixtures/excel/anomalies_attendues.json": "93aa95025179b6cf88c334bc2c99b2db6d6a5ed9f97f1c631fa1cf6aac4327a5"
+  },
+  "observed": {
+    "api_startup": "passed",
+    "docs_http_status": 200,
+    "openapi_http_status": 200,
+    "openapi_operations": 63,
+    "openapi_paths": 46,
+    "orm_tables": 17,
+    "postgres_alembic_check": "preexisting_intervention_technician_id_ondelete_difference",
+    "postgres_imports": {
+      "passed": 39,
+      "warnings": 1
+    },
+    "postgres_migration_round_trip": "passed",
+    "postgres_sales_installations": {
+      "passed": 56,
+      "warnings": 1
+    },
+    "sqlite_full_migration_chain": "failed_at_postgresql_alter_type",
+    "sqlite_suite": {
+      "passed": 271,
+      "warnings": 5
+    }
+  },
+  "packages": {
+    "alembic": "1.18.4",
+    "asyncpg": "0.31.0",
+    "fastapi": "0.138.0",
+    "psycopg2-binary": "2.9.12",
+    "pytest": "9.1.1",
+    "sqlalchemy": "2.0.51",
+    "uvicorn": "0.49.0"
+  },
+  "python": "3.12.0 (main, Aug 29 2024, 15:28:39) [GCC 12.2.0]",
+  "source_branch": "main",
+  "source_sha": "544a23d6cb2cbe878fbc8ddf2d962c7adf76c000",
+  "status": "verifications_completed_pending_user_approval_and_refactor_branch",
+  "wave": "R0"
+}
