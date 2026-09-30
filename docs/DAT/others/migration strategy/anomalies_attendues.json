@@ -1,0 +1,13 @@
+{
+  "cas": [
+    "C001 et C005 : doublon client probable, validation requise",
+    "INT-2022-999 : date impossible, client C999 inconnu, site absent",
+    "E003 : numéro de série manquant",
+    "INT-2023-010 : intervention sans équipement identifié",
+    "C003 : adresse de facturation différente du site",
+    "03_export_ancien_format.xlsx : colonnes et formats de dates différents",
+    "04_export_clients_latin1.csv : séparateur point-virgule et encodage Latin-1",
+    "Contrat annuel facturé séparément de la visite : ne pas fabriquer une facture par intervention",
+    "PDF : exemples archivables, aucune extraction automatique exigée en V1"
+  ]
+}
