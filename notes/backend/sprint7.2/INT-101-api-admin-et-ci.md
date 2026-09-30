@@ -172,3 +172,57 @@ TERVO_IMPORT_TEST_DATABASE_URL=postgresql+asyncpg://USER:PASSWORD@HOST/TEST_DB \
 Le [workflow CI](../../../.github/workflows/ci.yml) exécute la suite SQLite, les migrations PostgreSQL aller/retour et les tests service/API import dans des schémas isolés. À la livraison : 214 tests backend, dont 28 API import ; 39 tests service/API rejoués sur PostgreSQL, et CI verte.
 
 TD-B011 et TD-B015 sont clôturés. TD-B016 garde la mesure sur volume réel. Cette tâche ne livre ni écran frontend d’import, ni worker, ni OCR.
+
+## Suivre la validation HTTP jusqu’à la preuve du test
+
+Extrait du fichier [imports.py](../../../backend/app/api/v1/imports.py), lignes 50 à 62 :
+
+```python
+@router.post('/validate', response_model=ImportBatchResponse)
+async def validate_import(
+    body: ValidateImport,
+    user: User = Depends(import_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    return await ImportService(db).validate(
+        body.batch_id,
+        decisions={key:choice.model_dump(mode='json') for key,choice in body.decisions.items()},
+        selections=([s.model_dump(mode='json', exclude_none=True) for s in body.selections]
+                    if body.selections is not None else None),
+        imported_by=user.id,
+    )
+```
+
+`ValidateImport` valide le corps JSON avant l’entrée dans la fonction. La dépendance `import_admin` contrôle le rôle. `mode="json"` convertit les valeurs Pydantic dans une forme sérialisable ; `exclude_none=True` évite d’envoyer des options de lecture absentes.
+
+Le routeur transmet les décisions au service et lui fournit l’identifiant de l’administrateur pour la traçabilité. Il n’effectue pas de matching lui-même et ne réécrit pas les modèles métier directement.
+
+Le test suivant vérifie le lien entre mapping, nouvelle approbation et exécution :
+
+Extrait du fichier [test_import_api_v2.py](../../../backend/tests/test_import_api_v2.py), lignes 129 à 141 :
+
+```python
+async def test_manifest_changes_need_new_approval_and_immutable_execute(api):
+    client,tokens,_ = api
+    batch = (await preview(api)).json()
+    first = (await client.post(PREFIX+'/validate',headers=tokens['admin'],json={'batch_id':batch['id']})).json()
+    second = await client.post(PREFIX+'/validate',headers=tokens['admin'],json={
+        'batch_id':batch['id'],'selections':[{'kind':'clients','header_row':1,'mapping':{'full_name':'Nom'}}]})
+    assert second.status_code==200,second.text
+    assert second.json()['plan_token']!=first['plan_token']
+    payload={'batch_id':batch['id'],'plan_token':first['plan_token']}
+    assert (await client.post(PREFIX+'/execute',headers=tokens['admin'],json=payload)).status_code==409
+    payload['plan_token']=second.json()['plan_token']
+    assert (await client.post(PREFIX+'/execute',headers=tokens['admin'],json={**payload,'decisions':{}})).status_code==422
+    assert (await client.post(PREFIX+'/execute',headers=tokens['admin'],json=payload)).json()['status']=='success'
+```
+
+La fixture `api` fournit un client HTTP de test, des tokens et une base isolée. Ce bloc est un test pytest existant, pas un script autonome à lancer sur un serveur.
+
+La seconde validation change la sélection et doit produire un autre token. Le premier token est alors rejeté avec 409. Ajouter `decisions` à la requête d’exécution produit 422 : les corrections appartiennent à `/validate`, elles ne peuvent pas être glissées silencieusement dans `/execute`. Avec le token courant et le corps autorisé, l’import réussit.
+
+Pour rejouer uniquement cette preuve depuis `backend/` :
+
+```bash
+uv run pytest tests/test_import_api_v2.py::test_manifest_changes_need_new_approval_and_immutable_execute -q
+```
