@@ -180,7 +180,12 @@ quantity = 3
    └── Installation #3 → Equipment #3
 ```
 
-`SaleLine 1 → N Installation` doit être conservé.
+`SaleLine 1 → N Installation` doit être conservé. Dans l'autre sens,
+`Installation → 0..1 SaleLine` : `sale_line_id` est nullable, `site_id` requis.
+Le matériel fourni par le client, acheté ailleurs, peut être installé sans vente
+fictive ni stock (hors V1). Si le lien existe, la provenance commerciale est
+conservée. `Equipment.installation_id` nullable reste un besoin distinct pour
+les équipements historiques sans installation enregistrée.
 
 ---
 
@@ -619,20 +624,23 @@ Il ne faut pas recalculer une ancienne vente à partir d'un futur prix catalogue
 
 ## Objectif
 
-Transformer une vente en événement d'installation.
+Planifier et réaliser une installation sur un site, avec ou sans vente.
 
 ```text
-SaleLine
-    ↓
-Installation
+Site (requis) ──► Installation ──► Equipment à la clôture
+                      │
+                      └── 0..1 SaleLine (provenance commerciale si liée)
 ```
+
+Le parcours sans vente accepte le matériel fourni par le client, acheté ailleurs,
+sans créer de `Sale` ou `SaleLine` fictive. Aucune dépendance au stock (hors V1).
 
 ### Modèle
 
 ```text
 Installation
-├── sale_line_id
-├── site_id
+├── sale_line_id (nullable)
+├── site_id (requis)
 ├── scheduled_start
 ├── scheduled_end
 ├── installation_date
@@ -1255,8 +1263,21 @@ Sale → SaleLine → Product
 ### Installation
 
 ```text
-SaleLine → Installation
+SaleLine → N installations
+Installation → 0..1 SaleLine
+Site requis → Installation sans vente → Equipment
 ```
+
+Cas à vérifier :
+
+* création sans `sale_line_id` ou avec `null`, sur un site existant ;
+* rejet si le site est absent ou si la ligne de vente renseignée n'existe pas ;
+* parcours `start` → `complete` sans vente : équipement créé/rattaché à
+  l'installation, aucune vente fictive, aucun stock requis ;
+* parcours avec vente : provenance commerciale conservée et plusieurs
+  installations possibles pour une ligne de quantité supérieure à 1 ;
+* conservation des équipements historiques avec `installation_id` nullable,
+  sans confusion avec une nouvelle installation sans vente.
 
 ### Équipement
 

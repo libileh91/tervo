@@ -234,7 +234,8 @@ Product 1 ───── N Equipment
 
 La relation directe avec `Equipment` représente le produit dont provient l'équipement.
 
-Elle ne remplace pas la traçabilité par la vente et l'installation.
+Elle ne remplace pas la traçabilité par l'installation et, lorsqu'une ligne de
+vente est liée, la provenance commerciale. Elle n'impose aucune vente.
 
 ---
 
@@ -325,9 +326,12 @@ Product 1 ── N SaleLine
 
 ## 8.1 Responsabilité
 
-`Installation` représente l'événement technique qui transforme une vente ou une ligne vendue en équipement réellement installé.
+`Installation` représente l'événement technique de pose d'une unité physique
+sur un site, avec ou sans vente. Le matériel peut être fourni par le client et
+acheté ailleurs : aucune vente fictive ni stock ne sont requis (stock hors V1).
 
-Cette distinction est importante.
+Le parcours suivant décrit le cas avec vente ; sans vente, le parcours commence
+par une installation rattachée au site.
 
 ```text
 Vente
@@ -351,8 +355,8 @@ Une installation peut avoir lieu plusieurs jours ou mois après la vente.
 ```text
 Installation
 ├── id
-├── sale_line_id
-├── site_id
+├── sale_line_id (nullable)
+├── site_id (requis)
 ├── installation_date
 ├── commissioning_date
 ├── status
@@ -365,7 +369,9 @@ Installation
 └── updated_at
 ```
 
-Le rattachement à `SaleLine` permet de conserver la provenance commerciale de l'équipement.
+Le rattachement facultatif à `SaleLine`, lorsqu'il existe, conserve la provenance
+commerciale de l'équipement. Aucun champ enum de provenance supplémentaire
+n'est nécessaire pour ce besoin.
 
 ## 8.3 Statut
 
@@ -412,7 +418,7 @@ Equipment
 ├── id
 ├── site_id
 ├── product_id
-├── installation_id
+├── installation_id (nullable)
 ├── serial_number
 ├── installed_at
 ├── commissioned_at
@@ -426,6 +432,11 @@ Equipment
 ```
 
 Certains champs peuvent être facultatifs selon le type d'équipement et les informations disponibles.
+
+`Equipment.installation_id` nullable permet de conserver un équipement historique
+sans installation enregistrée. Cette nullabilité est distincte de celle de
+`Installation.sale_line_id` : une installation réalisée sans vente reste liée à
+l'équipement qu'elle crée ou rattache.
 
 `replaced_by_id` pointe depuis l'ancien équipement vers le nouvel équipement.
 Exemple :
@@ -1200,14 +1211,18 @@ Cette règle doit être garantie au niveau métier.
 ## Installation
 
 ```text
-Installation.sale_line_id → SaleLine.id
-Installation.site_id → Site.id
+Installation.sale_line_id → SaleLine.id (nullable)
+Installation.site_id → Site.id (requis)
 
 SaleLine 1 ─── N Installation
+Installation 1 ─── 0..1 SaleLine
 Installation 1 ─── 0..1 Equipment
 ```
 
-Une installation doit identifier ce qui est installé et où.
+Une installation doit identifier ce qui est installé et où. Son site est
+obligatoire ; une ligne de vente ne l'est pas. Si elle est renseignée, elle doit
+référencer une `SaleLine` existante et conserver la provenance commerciale.
+Aucune `Sale` ni `SaleLine` fictive ne doit être créée pour permettre la pose.
 
 Une ligne de vente peut correspondre à plusieurs installations lorsque la
 quantité vendue est supérieure à 1.

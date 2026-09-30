@@ -286,6 +286,18 @@ Cette distinction permet de gérer les situations où un produit est vendu mais 
 Une ligne de vente peut donner lieu à plusieurs installations lorsque la
 quantité vendue est supérieure à 1.
 
+### Installation avec ou sans vente
+
+`Installation` représente la pose d'une unité physique sur un site, pas la
+transformation obligatoire d'une vente. Le matériel peut être fourni par le
+client et acheté ailleurs, sans vente fictive ni dépendance au stock (hors V1).
+`Installation.site_id` est requis ; `Installation.sale_line_id` est nullable.
+Si une ligne est liée, la provenance commerciale est conservée par ce lien.
+
+À la clôture, l'équipement est créé ou rattaché à l'installation, même sans vente.
+La nullabilité de `Equipment.installation_id` est distincte : elle permet de
+conserver les équipements historiques sans installation enregistrée.
+
 ## 14. Garantie et SAV
 
 La garantie est une propriété liée à l'équipement installé.
@@ -317,6 +329,10 @@ l'intervention.
 | Client → Site                      | 1 → N             |
 | Site → Équipement                  | 1 → N             |
 | Produit → Équipement               | 1 → N             |
+| Site → Installation                | 1 → N             |
+| SaleLine → Installation            | 1 → N             |
+| Installation → SaleLine            | 1 → 0..1          |
+| Installation → Équipement          | 1 → 0..1          |
 | Équipement → Intervention          | 1 → N             |
 | Intervention → Checklist           | 1 → 0..1          |
 | Intervention → Photo               | 1 → N             |

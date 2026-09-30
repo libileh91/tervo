@@ -27,6 +27,10 @@ Le DAT a donc été retravaillé autour de **deux chaînes** :
 
 Et une **activité de prospection** (showroom) qui alimente la chaîne commerciale.
 
+La chaîne commerciale décrit le cas avec vente, pas un passage obligatoire :
+une installation sur un site peut concerner du matériel fourni par le client,
+acheté ailleurs, sans vente fictive ni stock (hors V1).
+
 > **Principe directeur :** Tervo doit savoir **ce qui a été vendu, ce qui a été installé
 > chez quel client, et ce qui a été fait dessus.**
 
@@ -70,6 +74,7 @@ Toutes les décisions qui étaient « à prendre » lors de la première revue s
 | Identifiants                       | entier auto-incrémenté (pas d'UUID)                 |
 | `Equipment` sans `PLANNED`         | `ACTIVE / OUT_OF_SERVICE / REPLACED / RETIRED`      |
 | `SaleLine 1 → N Installation`      | oui (`quantity > 1` → N installations)              |
+| `Installation → 0..1 SaleLine`    | `sale_line_id` nullable ; `site_id` requis           |
 | Statuts `Installation`             | `SCHEDULED / IN_PROGRESS / COMPLETED / CANCELLED`   |
 | `Report` versionné V1              | document logique + versions                         |
 | `ShowroomVisit.client_id` nullable | oui (prospect non encore client)                    |

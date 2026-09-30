@@ -427,15 +427,35 @@ technician_id
 POST /api/v1/installations
 ```
 
-Exemple :
+`site_id` est requis et référence un site existant. `sale_line_id` est facultatif
+(omis ou `null`) ; s'il est fourni, il référence une ligne de vente existante et
+conserve la provenance commerciale. Les identifiants sont des entiers.
+
+Exemple avec vente :
 
 ```json
 {
-  "sale_line_id": "...",
-  "site_id": "...",
-  "scheduled_date": "2026-10-15"
+  "sale_line_id": 501,
+  "site_id": 42,
+  "scheduled_start": "2026-10-15T08:00:00+02:00",
+  "scheduled_end": "2026-10-15T12:00:00+02:00"
 }
 ```
+
+Exemple sans vente — matériel fourni par le client, acheté ailleurs :
+
+```json
+{
+  "site_id": 42,
+  "scheduled_start": "2026-10-15T08:00:00+02:00",
+  "scheduled_end": "2026-10-15T12:00:00+02:00",
+  "technician_notes": "PAC fournie par le client, achetée ailleurs."
+}
+```
+
+L'absence de `sale_line_id` est acceptée sans créer de vente ni de ligne fictive.
+L'absence de `site_id` est une erreur de validation. Aucun stock n'est requis
+(stock hors V1), ni aucun enum de provenance supplémentaire.
 
 ---
 
@@ -479,7 +499,11 @@ Exemple :
 }
 ```
 
-La finalisation crée ou associe l'équipement correspondant.
+La finalisation crée ou associe l'équipement correspondant et le lie à cette
+installation, avec ou sans vente, dans la même transaction que le passage à
+`COMPLETED`. Un éventuel lien `sale_line_id` est conservé.
+`Equipment.installation_id` nullable répond au cas distinct des équipements
+historiques sans installation enregistrée.
 
 ---
 

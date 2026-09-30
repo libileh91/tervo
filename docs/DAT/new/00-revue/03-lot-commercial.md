@@ -1,6 +1,6 @@
 # Lot 3 — Chaîne commerciale 🟡
 
-> **Objectif :** relier le catalogue à l'équipement via la vente et l'installation.
+> **Objectif :** suivre les installations avec ou sans vente et conserver le lien commercial lorsqu'il existe.
 > **Périmètre :** parcours commercial — hors API et implémentation.
 > **Statut :** ✅ verrouillé.
 
@@ -14,6 +14,9 @@ Produit ──► Vente ──► SaleLine ──► Installation ──► Équ
 
 La vente et l'installation sont **deux événements distincts** : un produit peut être vendu
 sans être installé, et l'installation peut intervenir des semaines après la vente.
+Une installation peut aussi porter sur du matériel fourni par le client, acheté
+ailleurs : aucune vente ni gestion de stock n'est obligatoire ; aucune vente
+fictive ne doit être créée. Le stock reste hors V1.
 
 ---
 
@@ -24,15 +27,21 @@ sans être installé, et l'installation peut intervenir des semaines après la v
 - `Sale 1 → N SaleLine` ; une vente confirmée contient **au moins** une ligne.
 
 **Point clé — la quantité :** `quantity > 1` est la source du `SaleLine 1 → N Installation`.
-Une PAC vendue ×3 donnera **3 installations** et **3 équipements** distincts.
+Une PAC vendue ×3 peut donner lieu à **3 installations** et **3 équipements** distincts.
 
 ---
 
 # 3. Installation
 
-`Installation` est l'événement qui transforme une ligne vendue en équipement physique.
+`Installation` est l'événement technique de pose d'une unité physique sur un site,
+avec ou sans ligne de vente associée.
 
-**Données :** `sale_line_id`, `site_id`, `scheduled_start/end`, `started_at`, `completed_at`,
+**Relations :** `SaleLine 1 → N Installation` ; `Installation → 0..1 SaleLine`.
+Lorsqu'il existe, le lien à `SaleLine` conserve la provenance commerciale.
+`Equipment.installation_id` nullable répond à un autre besoin : conserver les
+équipements historiques sans installation enregistrée, sans en inventer une.
+
+**Données :** `sale_line_id` (nullable), `site_id` (requis), `scheduled_start/end`, `started_at`, `completed_at`,
 `installation_date`, `commissioning_date`, `status`, `technician_notes`.
 
 **Statut :**
@@ -97,6 +106,8 @@ L'historique SAV se reconstruit naturellement à partir de l'historique de l'éq
 
 - [x] Vente ≠ Installation ≠ Équipement
 - [x] `Sale 1 → N SaleLine` · `SaleLine 1 → N Installation` (`quantity > 1`)
+- [x] `Installation.sale_line_id` nullable ; `site_id` requis ; matériel client accepté sans vente fictive ni stock
+- [x] `Installation → 0..1 SaleLine` ; provenance commerciale conservée si liée
 - [x] Statuts `Installation` : `SCHEDULED / IN_PROGRESS / COMPLETED / CANCELLED`
 - [x] `complete` → `Installation COMPLETED` + `Equipment` créé (atomique)
 - [x] `ShowroomVisit.client_id` nullable (`visitor_name` requis en secours)

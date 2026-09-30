@@ -85,7 +85,7 @@ Client : Société Dupont
 ├── Site : Agence Massy
 │    ├── PAC air/eau
 │    └── Climatisation bureaux
-└── Site : Agence Palaiseau
+└── Site : Agence Harby
      └── Chaudière gaz
 ```
 
@@ -238,6 +238,18 @@ Le suivi doit pouvoir évoluer vers une demande de devis, une vente puis une ins
 
 La vente et l'installation restent deux événements distincts.
 
+### Installation avec ou sans vente
+
+Tervo doit permettre d'installer du matériel fourni par le client, y compris acheté
+ailleurs, sans vente préalable ni stock obligatoire. Le site est requis
+(`Installation.site_id`) ; le lien commercial est facultatif
+(`Installation.sale_line_id` nullable). Aucune vente fictive ne doit être créée.
+Si une ligne de vente est liée, elle conserve la provenance commerciale.
+
+Ce cas est distinct des équipements historiques dont `Equipment.installation_id`
+reste nullable faute d'installation enregistrée. Une nouvelle installation sans
+vente est bien enregistrée et liée à l'équipement créé ou rattaché à sa clôture.
+
 ## 11. Garantie et SAV
 
 La garantie concerne l'équipement physique installé, et non uniquement la référence catalogue.
@@ -287,7 +299,7 @@ Les décisions de rapprochement doivent rester traçables.
 
 Ne sont pas prioritaires dans le cœur V1 :
 
-* gestion complète du stock ;
+* gestion du stock (hors V1, aucun prérequis pour installer) ;
 * gestion avancée des fournisseurs ;
 * processus d'achat complet ;
 * contrats de maintenance complexes ;
@@ -308,6 +320,7 @@ Le modèle fonctionnel est considéré comme cohérent lorsque Tervo permet de :
 * qualifier son résultat ;
 * produire un rapport ;
 * recueillir un avis ;
-* relier catalogue, vente, installation et équipement ;
+* relier catalogue, vente, installation et équipement lorsqu'une vente existe ;
+* planifier et réaliser une installation de matériel fourni par le client sans vente ;
 * conserver l'historique lors d'un remplacement ;
 * importer des données historiques sans perdre les cas ambigus.

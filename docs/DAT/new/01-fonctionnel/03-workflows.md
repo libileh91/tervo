@@ -112,7 +112,11 @@ Client
 
 ---
 
-# 3. Workflow — Vente → Installation → Équipement
+# 3. Workflow — Installation avec ou sans vente → Équipement
+
+Le parcours commercial ci-dessous est une possibilité, pas un prérequis.
+Toute installation exige un site (`site_id` requis), mais peut ne référencer
+aucune ligne de vente (`sale_line_id` nullable).
 
 ## 3.1 Vente d'un produit
 
@@ -181,9 +185,27 @@ Installation
       └── Garantie
 ```
 
-## 3.4 Quantité vendue > 1 et statut de l'installation
+## 3.4 Parcours sans vente — matériel fourni par le client
 
-Une ligne de vente avec `quantity = N` donne lieu à `N` installations,
+1. Retrouver ou créer le client et son site.
+2. Planifier une `Installation` sur ce site sans `sale_line_id` : le matériel
+   est fourni par le client, éventuellement acheté ailleurs.
+3. Démarrer puis réaliser l'installation et renseigner les informations techniques réelles.
+4. Finaliser : passer à `COMPLETED` et créer ou rattacher l'équipement au site
+   et à cette installation, dans la même transaction métier.
+
+Aucune `Sale` ni `SaleLine` fictive n'est créée. Aucun stock n'est requis ; sa
+gestion reste hors V1. Si une ligne de vente est présente, son lien est conservé
+pour la provenance commerciale (`SaleLine → N installations`,
+`Installation → 0..1 SaleLine`).
+
+Ce parcours ne doit pas être confondu avec l'import historique :
+`Equipment.installation_id` peut rester null lorsqu'aucune installation n'est
+connue, alors qu'ici l'installation réalisée est bien enregistrée.
+
+## 3.5 Quantité vendue > 1 et statut de l'installation
+
+Une ligne de vente avec `quantity = N` peut donner lieu à `N` installations,
 chacune produisant un équipement physique distinct :
 
 ```text
@@ -756,7 +778,8 @@ La décision de migration doit être traçable lorsque cela est nécessaire.
 
 # 19. Workflow global
 
-Le fonctionnement général de Tervo peut être résumé ainsi :
+Le parcours avec vente peut être résumé ainsi. Le parcours sans vente entre
+directement à l'étape `Installation` depuis le site (section 3.4).
 
 ```text
                          ┌─────────────────┐
@@ -836,7 +859,8 @@ L'équipement représente une instance physique.
 
 ### R5 — Une vente n'est pas une installation
 
-Une vente peut précéder l'installation.
+Une vente peut précéder l'installation, mais n'est jamais obligatoire : le
+matériel peut être fourni par le client, sans vente fictive ni stock.
 
 ### R6 — Une intervention peut être liée à un équipement
 
