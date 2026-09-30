@@ -17,5 +17,6 @@ from app.models.user import User
 from app.models.product import Product
 
 from app.models.equipment import Equipment
+from app.models.installation import Installation
 
 from app.models.import_batch import ImportBatch, ImportRecord, ImportReference, ImportError

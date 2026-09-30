@@ -31,6 +31,7 @@ class Site(Base):
     )
 
     equipment = relationship("Equipment", back_populates="site", passive_deletes="all")
+    installations = relationship("Installation", back_populates="site", passive_deletes="all")
 
     # ── Relationships ───────────────────────────────────────
     client = relationship("Client", backref="sites")

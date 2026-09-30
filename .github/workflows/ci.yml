@@ -7,7 +7,6 @@
 # Pourquoi ne pas builder dans GitHub Actions ET sur le VPS ?
 #   Les images construites dans la CI ne seraient pas réutilisées (aucun
 #   registry intermédiaire) : le build serait fait deux fois pour rien.
-#   Voir docs/DAT/annexes/revue-architecture.md §5.
 #
 # Évolution possible (non implémentée) :
 #   CI → build → push GHCR → VPS → docker compose pull → up -d
@@ -15,7 +14,7 @@
 # ⚠️ Le déploiement est désactivé par défaut.
 #   Il s'active en définissant la variable de dépôt DEPLOY_ENABLED = 'true'
 #   (Settings → Secrets and variables → Actions → Variables).
-#   À activer quand le VPS est provisionné et les secrets en place (Stage 6.4).
+#   À activer quand le VPS est provisionné et les secrets en place.
 #
 # Optimisations (20/09/2026) :
 #   1. paths-ignore  — un changement purement documentaire (docs/, notes/,
@@ -97,6 +96,12 @@ jobs:
           uv run alembic upgrade head
           uv run alembic downgrade -1
           uv run alembic upgrade head
+
+      - name: PostgreSQL installation API, transactions and migrations
+        env:
+          TERVO_INSTALLATION_TEST_DATABASE_URL: postgresql+asyncpg://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
+          TERVO_INSTALLATION_MIGRATION_TEST_URL: postgresql+psycopg2://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
+        run: uv run pytest tests/test_installations.py tests/test_installation_migration.py -q
 
       - name: PostgreSQL import service and admin API
         env:

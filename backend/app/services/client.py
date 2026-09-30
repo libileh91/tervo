@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.intervention import Intervention
 from app.models.site import Site
 from app.models.equipment import Equipment
+from app.models.installation import Installation
 from app.repositories.client import ClientRepository
 from app.schemas.client import (
     ClientCreate,
@@ -96,6 +97,8 @@ class ClientService:
         client = await self._find_or_404(client_id)
         if await self.repo.db.scalar(select(Equipment.id).join(Site).where(Site.client_id == client_id).limit(1)):
             raise HTTPException(409, "Ce client possède des équipements : conserver leur historique")
+        if await self.repo.db.scalar(select(Installation.id).join(Site).where(Site.client_id == client_id).limit(1)):
+            raise HTTPException(409, "Ce client possède des installations : conserver leur historique")
         await self.repo.delete(client)
 
     async def _find_or_404(self, client_id: int):

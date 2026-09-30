@@ -8,6 +8,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.equipment import Equipment
+from app.models.installation import Installation
 
 from app.models.client import Client
 from app.repositories.site import SiteRepository
@@ -82,6 +83,8 @@ class SiteService:
         site = await self._find_or_404(site_id)
         if await self.db.scalar(select(Equipment.id).where(Equipment.site_id == site_id).limit(1)):
             raise HTTPException(409, "Ce site possède des équipements : conserver leur historique")
+        if await self.db.scalar(select(Installation.id).where(Installation.site_id == site_id).limit(1)):
+            raise HTTPException(409, "Ce site possède des installations : conserver leur historique")
         await self.repo.delete(site)
 
     async def _find_or_404(self, site_id: int):

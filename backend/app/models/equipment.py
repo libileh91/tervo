@@ -17,8 +17,8 @@ class Equipment(Base):
     id = Column(Integer, primary_key=True, index=True)
     site_id = Column(Integer, ForeignKey("site.id", ondelete="RESTRICT"), nullable=False, index=True)
     product_id = Column(Integer, ForeignKey("product.id", ondelete="RESTRICT"), nullable=True, index=True)
-    # Todo later TD-B014 / INT-103: add Installation FK + relationship.
-    installation_id = Column(Integer, nullable=True)
+    installation_id = Column(Integer, ForeignKey("installation.id", ondelete="RESTRICT",
+                             name="equipment_installation_id_fkey"), nullable=True, unique=True)
     serial_number = Column(String(255), nullable=True, index=True)
     installed_at = Column(Date, nullable=True)
     commissioned_at = Column(Date, nullable=True)
@@ -33,5 +33,6 @@ class Equipment(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
     site = relationship("Site", back_populates="equipment")
     product = relationship("Product", back_populates="equipment")
+    installation = relationship("Installation", back_populates="equipment")
     replaced_by = relationship("Equipment", remote_side=[id])
     interventions = relationship("Intervention", back_populates="equipment")

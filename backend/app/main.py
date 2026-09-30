@@ -49,6 +49,7 @@ from app.api.v1.photos import router as photos_router  # noqa: E402
 from app.api.v1.reports import router as reports_router  # noqa: E402
 from app.api.v1.reviews import router as reviews_router  # noqa: E402
 from app.api.v1.equipment import router as equipment_router
+from app.api.v1.installations import router as installations_router
 from app.api.v1.products import router as products_router
 from app.api.v1.sites import router as sites_router  # noqa: E402
 
@@ -65,6 +66,7 @@ app.include_router(reviews_router, prefix=settings.API_V1_PREFIX)
 app.include_router(sites_router, prefix=settings.API_V1_PREFIX)
 app.include_router(products_router, prefix=settings.API_V1_PREFIX)
 app.include_router(equipment_router, prefix=settings.API_V1_PREFIX)
+app.include_router(installations_router, prefix=settings.API_V1_PREFIX)
 
 # ── Static files (uploaded photos) ────────────────────────
 # Le dossier est gitignoré : il est donc absent d'un checkout neuf (CI,
