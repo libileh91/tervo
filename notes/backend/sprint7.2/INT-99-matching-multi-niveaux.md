@@ -135,3 +135,57 @@ uv run pytest tests/test_matching_v2.py tests/test_importers_structure.py -q
 ```
 
 Les [tests](../../../backend/tests/test_matching_v2.py) couvrent homonymes, C001/C005, téléphone absent, conflit de référence, parent différent et séries distinctes. Deux interventions à des dates différentes restent distinctes. L’ancien export recouvrant le récent est aussi testé de bout en bout dans [test_import_service_v2.py](../../../backend/tests/test_import_service_v2.py).
+
+## Lire le contrat de sortie et les conflits
+
+Extrait du fichier [multi_matcher.py](../../../backend/app/importers/multi_matcher.py), lignes 17 à 28 :
+
+```python
+@dataclass
+class EntityMatch:
+    zone: str
+    score: float = 0.0
+    entity_id: int | None = None
+    reason: str = ''
+    candidates: list[dict] = field(default_factory=list)
+    evidence: str | None = None
+
+    def to_dict(self):
+        return dict(zone=self.zone, score=round(self.score, 2), entity_id=self.entity_id,
+                    reason=self.reason, candidates=self.candidates, evidence=self.evidence)
+```
+
+`EntityMatch` est une dataclass : sa structure décrit le résultat sans dépendre de SQLAlchemy. `default_factory=list` crée une liste de candidats distincte pour chaque résultat. `to_dict()` prépare une représentation sérialisable et arrondit le score affiché ; cela ne modifie pas le score utilisé auparavant pour décider.
+
+Voici le contrôle complet des contradictions :
+
+Extrait du fichier [multi_matcher.py](../../../backend/app/importers/multi_matcher.py), lignes 82 à 101 :
+
+```python
+def conflict(self, kind, incoming, existing):
+    keys = {'clients':['phone'], 'sites':['postal_code'], 'equipment':['serial_number','product_id'],
+            'interventions':['equipment_id','scheduled_date'], 'products':['reference']}[kind]
+    for key in keys:
+        a, b = incoming.get(key), existing.get(key)
+        if a is not None and b is not None and N.text(a) and N.text(b):
+            norm = self.phone if key == 'phone' else N.name
+            if norm(a) != norm(b):
+                return True
+    if kind == 'clients' and incoming.get('full_name') and existing.get('full_name'):
+        if token_sort_ratio(N.name(incoming['full_name']), N.name(existing['full_name'])) < 80:
+            return True
+    if kind == 'sites':
+        a, b = incoming.get('address'), existing.get('address')
+        if a and b:
+            if re.findall(r'\d+', str(a)) != re.findall(r'\d+', str(b)):
+                return True
+            if token_sort_ratio(N.name(a), N.name(b)) < 80:
+                return True
+    return False
+```
+
+Le dictionnaire `keys` sélectionne les champs d’identité par nature. Deux valeurs présentes et différentes constituent un conflit. Un champ manquant n’est pas une contradiction à lui seul : l’insuffisance de preuve est gérée dans `match()` par `strong`.
+
+Pour les sites, les nombres de l’adresse sont comparés séparément. « 12 rue Victor Hugo » et « 14 rue Victor Hugo » peuvent obtenir une forte similarité textuelle, mais la différence de numéro empêche une association automatique. Pour les clients, un téléphone identique ne neutralise pas un nom trop différent.
+
+Ce contrôle s’applique après la recherche de référence source ou après un score élevé. Une correspondance stockée n’autorise donc pas à ignorer une incohérence nouvelle.
