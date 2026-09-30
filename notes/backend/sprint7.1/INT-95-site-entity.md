@@ -85,7 +85,7 @@ Quand on remplace un FK direct par une chaîne (`Client → Site → Interventio
 4. Le **frontend** doit refléter la nouvelle hiérarchie : créer une intervention
    demande désormais un **client PUIS un site**.
 
-## Vérification
+## Vérification à la livraison d’INT-95
 
 - `uv run pytest tests/ -q` → **126 passed** (dont les 12 tests `Site` d'INT-95).
 - `uv run alembic heads` → `06c3c51d3e72 (head)`.
@@ -93,7 +93,66 @@ Quand on remplace un FK direct par une chaîne (`Client → Site → Interventio
 
 ## Reste à aligner sur le DAT (tickets suivants)
 
-- `equipment_id` (nullable) sur `Intervention` → **INT-97**.
+- `equipment_id` (nullable) sur `Intervention` → **réalisé dans INT-97**.
 - `type` / `result` / `created_by` / `scheduled_start/end` (datetime) sur
   `Intervention` → couverts par INT-106 (« Résultat + clôture ») et suivants.
 - `priority` et `title` ne sont pas dans le data-model cible : à trancher plus tard.
+
+## Suivre une création et la reprise des données
+
+Extrait du fichier [site.py](../../../backend/app/services/site.py), lignes 67 à 71 :
+
+```python
+async def create_site(self, data: SiteCreate) -> SiteResponse:
+    """Create a new site (validates the client exists)."""
+    await self._check_client_exists(data.client_id)
+    site = await self.repo.create(data.model_dump())
+    return SiteResponse.model_validate(site)
+```
+
+Le service vérifie d’abord que le client existe. `model_dump()` convertit la requête Pydantic en valeurs pour le repository ; `model_validate(site)` prépare la réponse à partir de l’objet ORM. Un client inexistant est signalé avant l’insertion.
+
+La migration traite les interventions qui ne possèdent pas encore de site. Voici son `upgrade()` :
+
+Extrait du fichier [06c3c51d3e72_link_intervention_to_site.py](../../../backend/alembic/versions/06c3c51d3e72_link_intervention_to_site.py), lignes 11 à 31 :
+
+```python
+def upgrade():
+    # Create one default site per legacy client that has interventions but no site.
+    op.execute("""
+        INSERT INTO site (client_id, name, address, postal_code, city)
+        SELECT c.id, 'Site principal', c.address, c.postal_code, c.city
+        FROM client c
+        WHERE EXISTS (SELECT 1 FROM intervention i WHERE i.client_id = c.id)
+          AND NOT EXISTS (SELECT 1 FROM site s WHERE s.client_id = c.id)
+    """)
+    op.add_column("intervention", sa.Column("site_id", sa.Integer(), nullable=True))
+    op.execute("""
+        UPDATE intervention SET site_id = (
+            SELECT MIN(s.id) FROM site s WHERE s.client_id = intervention.client_id
+        )
+    """)
+    op.alter_column("intervention", "site_id", nullable=False)
+    op.create_foreign_key("intervention_site_id_fkey", "intervention", "site", ["site_id"], ["id"], ondelete="CASCADE")
+    op.create_index("ix_intervention_site_id", "intervention", ["site_id"])
+    op.drop_index("ix_intervention_client_id", table_name="intervention")
+    op.drop_constraint("job_client_id_fkey", "intervention", type_="foreignkey")
+    op.drop_column("intervention", "client_id")
+```
+
+L’INSERT ne crée un site que pour les clients ayant des interventions et aucun site. La nouvelle colonne reste nullable pendant le remplissage. L’UPDATE rattache ensuite chaque intervention au site de plus petit identifiant de son client ; seulement après, la migration impose NOT NULL et retire l’ancienne FK. Ce choix conserve le lien au client mais ne reconstitue pas une localisation historique inconnue.
+
+La protection métier à la suppression est également explicite :
+
+Extrait du fichier [site.py](../../../backend/app/services/site.py), lignes 80 à 85 :
+
+```python
+async def delete_site(self, site_id: int) -> None:
+    """Delete a site."""
+    site = await self._find_or_404(site_id)
+    if await self.db.scalar(select(Equipment.id).where(Equipment.site_id == site_id).limit(1)):
+        raise HTTPException(409, "Ce site possède des équipements : conserver leur historique")
+    await self.repo.delete(site)
+```
+
+Le SELECT ne demande qu’un identifiant et s’arrête au premier équipement. Sa présence produit un conflit HTTP 409. La FK et cette règle métier répondent à deux besoins complémentaires : cohérence des relations et conservation de l’historique physique.
