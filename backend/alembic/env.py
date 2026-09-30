@@ -13,11 +13,12 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# ── Tervo: import all models via Base ──────────────────────
+# ── Tervo: load all models before exposing metadata ────────
 from app.config import settings
-from app.models.base import Base
+from app.core.base import Base
+from app.model_registry import load_models
 
-# Alembic will discover all models imported via Base.metadata
+load_models()
 target_metadata = Base.metadata
 
 # Override database URL from application settings

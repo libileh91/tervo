@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.core.database import engine
+from app.model_registry import load_models
 
 
 @asynccontextmanager
@@ -37,38 +38,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Routers ───────────────────────────────────────────────
-from app.api.v1.imports import router as imports_router
-from app.api.v1.auth import router as auth_router  # noqa: E402
-from app.api.v1.checklist import router as checklist_router  # noqa: E402
-from app.api.v1.clients import router as clients_router  # noqa: E402
-from app.api.v1.dashboard import router as dashboard_router  # noqa: E402
-from app.api.v1.interventions import router as interventions_router  # noqa: E402
-from app.api.v1.materials import router as materials_router  # noqa: E402
-from app.api.v1.photos import router as photos_router  # noqa: E402
-from app.api.v1.reports import router as reports_router  # noqa: E402
-from app.api.v1.reviews import router as reviews_router  # noqa: E402
-from app.api.v1.equipment import router as equipment_router
-from app.api.v1.installations import router as installations_router
-from app.api.v1.products import router as products_router
-from app.api.v1.sites import router as sites_router  # noqa: E402
-from app.api.v1.sales import router as sales_router  # noqa: E402
+# ── Models and routers ────────────────────────────────────
+load_models()
 
-app.include_router(imports_router, prefix=settings.API_V1_PREFIX)
-app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
-app.include_router(clients_router, prefix=settings.API_V1_PREFIX)
-app.include_router(interventions_router, prefix=settings.API_V1_PREFIX)
-app.include_router(dashboard_router, prefix=settings.API_V1_PREFIX)
-app.include_router(checklist_router, prefix=settings.API_V1_PREFIX)
-app.include_router(photos_router, prefix=settings.API_V1_PREFIX)
-app.include_router(materials_router, prefix=settings.API_V1_PREFIX)
-app.include_router(reports_router, prefix=settings.API_V1_PREFIX)
-app.include_router(reviews_router, prefix=settings.API_V1_PREFIX)
-app.include_router(sites_router, prefix=settings.API_V1_PREFIX)
-app.include_router(products_router, prefix=settings.API_V1_PREFIX)
-app.include_router(equipment_router, prefix=settings.API_V1_PREFIX)
-app.include_router(installations_router, prefix=settings.API_V1_PREFIX)
-app.include_router(sales_router, prefix=settings.API_V1_PREFIX)
+from app.router import api_router
+
+app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 # ── Static files (uploaded photos) ────────────────────────
 # Le dossier est gitignoré : il est donc absent d'un checkout neuf (CI,

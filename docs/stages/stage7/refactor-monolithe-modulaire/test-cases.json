@@ -1,0 +1,522 @@
+{
+  "$schema": "Stage 7 - Refactor monolithe modulaire Test Cases",
+  "chantier": "refactor-monolithe-modulaire",
+  "description": "Chantier technique transverse avant 7.4 ; INT-113 à INT-123 correspondent à R1 à R11, sans modifier les sprints fonctionnels.",
+  "branch": "refactor/modular-monolith",
+  "authorization": {
+    "R0": "validated",
+    "R1": "implemented_locally_verified_pending_user_acceptance",
+    "R2_to_R11": "not_started_separate_user_approval_required_per_wave"
+  },
+  "validation": {
+    "status": "R1_executed_remaining_not_run",
+    "scope": "R1 vérifié localement ; R2 à R11 non commencées et non exécutées.",
+    "R1_observed": {
+      "bootstrap_passed": 14,
+      "sqlite_suite_passed": 285,
+      "sqlite_warnings": 5,
+      "postgres_sales_installations_passed": 56,
+      "postgres_imports_passed": 39,
+      "full_openapi_equals_R0": true,
+      "full_metadata_equals_R0": true,
+      "model_definitions_unchanged_except_Base_import": true,
+      "new_alembic_operations_beyond_R0": [],
+      "startup_shutdown_and_HTTP_checks": "passed",
+      "evidence": "notes/backend/refactor-monolithe-modulaire/R1-validation.json",
+      "note": "notes/backend/refactor-monolithe-modulaire/INT-113-R1-socle-modulaire.md",
+      "remote_CI_or_deployment_executed": false
+    },
+    "baseline_source_sha": "544a23d6cb2cbe878fbc8ddf2d962c7adf76c000",
+    "baseline_manifest": "notes/backend/extras/refactor-monolithe-modulaire/R0-baseline.json",
+    "baseline_openapi": "notes/backend/extras/refactor-monolithe-modulaire/R0-openapi.json",
+    "baseline_metadata": "notes/backend/extras/refactor-monolithe-modulaire/R0-metadata.json",
+    "baseline_postgresql_results": "notes/backend/extras/refactor-monolithe-modulaire/R0-postgresql-results.json",
+    "status_convention": "not_run = non exécuté ; passed = scénario vérifié localement ; passed_with_known_baseline_difference = résultat attendu vérifié avec l'écart Alembic R0 conservé. Les preuves sont locales, sans validation distante implicite.",
+    "common_gate_after_each_wave": [
+      "Tests ciblés puis suite applicable sans régression ; conserver les résultats réels.",
+      "OpenAPI complète et metadata ORM complète égales à R0, sans masquer une différence par un simple comptage.",
+      "PostgreSQL jetable : migrations fonctionnelles, aucune nouvelle différence schéma/ORM ; seule exception FK technicien R0 conservée sans correction.",
+      "Aucune migration SQL générée pour un changement de package Python.",
+      "Note pédagogique dans notes/backend/refactor-monolithe-modulaire/, validation de clôture puis feu vert distinct pour la vague suivante."
+    ],
+    "isolation": "SQLite, uploads et PostgreSQL temporaires ; aucune base locale ou déployée visée. La chaîne Alembic complète SQLite reste incompatible avec ALTER TYPE PostgreSQL, comme en R0.",
+    "known_postgresql_diff": {
+      "constraint": "job_technician_id_fkey",
+      "source": "intervention.technician_id",
+      "target": "user.id",
+      "migrated_ondelete": null,
+      "orm_ondelete": "SET NULL",
+      "expected_operations": ["remove_fk", "add_fk"],
+      "correction_authorized": false
+    }
+  },
+  "test_cases": [
+    {
+      "id": "TC-INT-113-01",
+      "task": "INT-113",
+      "wave": "R1",
+      "title": "Base technique pure, importée seule hors API",
+      "type": "unit",
+      "preconditions": ["R0 validé et feu vert R1 donné", "Processus Python neuf avec configuration de test isolée, sans import préalable du backend"],
+      "steps": [
+        "Importer uniquement le module technique choisi pour définir Base.",
+        "Inspecter sys.modules, Base.metadata.tables et le registre des mappers sans importer les modèles legacy.",
+        "Vérifier que ce module ne dépend pas du registre de modèles, des domaines ni de la composition FastAPI."
+      ],
+      "expected_result": {
+        "import_succeeds": true,
+        "metadata_tables_before_registry": 0,
+        "mapped_business_classes_before_registry": 0,
+        "business_models_imported": false,
+        "app_model_registry_imported": false,
+        "app_main_or_router_or_api_imported": false,
+        "business_import_cycle": false
+      },
+      "status": "passed",
+      "evidence": "backend/tests/test_modular_bootstrap.py::test_core_base_is_pure_in_fresh_process"
+    },
+    {
+      "id": "TC-INT-113-02",
+      "task": "INT-113",
+      "wave": "R1",
+      "title": "Base unique et compatibilité du chemin legacy",
+      "type": "unit",
+      "preconditions": ["Module technique Base pure disponible", "Compatibilité app.models.base conservée pendant R1"],
+      "steps": [
+        "Dans un processus neuf, importer la Base technique puis app.models.base.Base et le registre.",
+        "Dans un autre processus neuf, importer la Base legacy puis la Base technique et le registre.",
+        "Comparer par identité les deux Base, leurs metadata et les tables/mappers chargés ; vérifier que chaque modèle appartient à cette Base."
+      ],
+      "expected_result": {
+        "technical_Base_is_legacy_Base": true,
+        "technical_metadata_is_legacy_metadata": true,
+        "all_models_share_the_same_Base": true,
+        "table_count_after_registry_in_both_orders": 17,
+        "second_declarative_Base_created": false,
+        "duplicate_Table_or_mapper": false,
+        "import_order_error": false
+      },
+      "status": "passed",
+      "evidence": "backend/tests/test_modular_bootstrap.py — identité Base et ordres d'import"
+    },
+    {
+      "id": "TC-INT-113-03",
+      "task": "INT-113",
+      "wave": "R1",
+      "title": "Registre explicite complet de 17 tables utilisable sans API",
+      "type": "integration",
+      "preconditions": ["Processus neuf ; aucun import app.main, app.router ou app.api préalable"],
+      "steps": [
+        "Importer la Base technique puis app.model_registry directement et appeler load_models(), hors composition API.",
+        "Exécuter configure_mappers() et comparer exactement les noms de tables à R0-metadata.json.",
+        "Vérifier la présence des 17 modèles, y compris les modèles terrain secondaires et les quatre modèles d'import, et résoudre les relations/FK croisées.",
+        "Vérifier les modules chargés et que l'enregistrement ne nécessite aucune connexion SQL."
+      ],
+      "expected_result": {
+        "table_count": 17,
+        "table_names": ["checklist_item", "client", "equipment", "import_batch", "import_error", "import_record", "import_reference", "installation", "intervention", "intervention_photo", "material", "product", "review", "sale", "sale_line", "site", "user"],
+        "model_names": ["Client", "Site", "Product", "Sale", "SaleLine", "Installation", "Equipment", "Intervention", "ChecklistItem", "InterventionPhoto", "Material", "Review", "User", "ImportBatch", "ImportRecord", "ImportReference", "ImportError"],
+        "configure_mappers_succeeds": true,
+        "unresolved_relationship_or_foreign_key": false,
+        "app_main_or_router_or_api_imported": false,
+        "database_connection_required": false
+      },
+      "status": "passed",
+      "evidence": "backend/tests/test_modular_bootstrap.py — registre complet, package legacy neutralisé et gardes sans SQL/engine/API"
+    },
+    {
+      "id": "TC-INT-113-04",
+      "task": "INT-113",
+      "wave": "R1",
+      "title": "Registre idempotent et absence de double déclaration",
+      "type": "unit",
+      "preconditions": ["Registre complet importé hors API", "Identités des tables, classes et mappers mémorisées après le premier chargement"],
+      "steps": [
+        "Importer à nouveau le registre, puis réexécuter son chargement explicite selon son interface (reload du registre si son chargement se fait à l'import). Ne pas recharger les modules définissant les classes ORM.",
+        "Répéter configure_mappers() et comparer le contenu de metadata ainsi que les identités des tables/classes/mappers.",
+        "Rejouer dans les deux ordres d'import technique/legacy pour révéler un éventuel chargement implicite manquant."
+      ],
+      "expected_result": {
+        "table_count_after_each_load": 17,
+        "metadata_snapshot_unchanged": true,
+        "Table_objects_are_the_same": true,
+        "mapped_classes_and_mappers_are_the_same": true,
+        "duplicate_registration_warning_or_error": false,
+        "mapper_configuration_error": false,
+        "import_order_dependency": false
+      },
+      "status": "passed",
+      "evidence": "backend/tests/test_modular_bootstrap.py — tests idempotence et ordres legacy-first/registry-first"
+    },
+    {
+      "id": "TC-INT-113-05",
+      "task": "INT-113",
+      "wave": "R1",
+      "title": "Composition explicite sans déplacer les domaines",
+      "type": "integration",
+      "preconditions": ["Squelette R1 et router de composition disponibles", "Contrats R0 intacts"],
+      "steps": [
+        "Inspecter le squelette : app/modules existe sans domaines anticipés ; les implémentations métier restent dans les couches legacy pendant R1.",
+        "Importer l'application et vérifier l'inclusion explicite de chaque router existant via app.router avec le préfixe existant.",
+        "Comparer les couples chemin/méthode et la multiplicité d'enregistrement à R0 ; vérifier l'absence de découverte dynamique."
+      ],
+      "expected_result": {
+        "business_domain_moved_in_R1": false,
+        "empty_future_domain_directories_created": false,
+        "all_existing_routers_included_explicitly": true,
+        "duplicate_route_registration": false,
+        "dynamic_router_discovery": false,
+        "api_prefix_changed": false,
+        "openapi_paths": 46,
+        "openapi_operations": 63
+      },
+      "status": "passed",
+      "evidence": "backend/app/router.py, app/modules/__init__.py et test_api_router_aggregates_exact_legacy_routes_in_order"
+    },
+    {
+      "id": "TC-INT-113-06",
+      "task": "INT-113",
+      "wave": "R1",
+      "title": "Snapshots OpenAPI et metadata strictement égaux à R0",
+      "type": "integration",
+      "preconditions": ["Artefacts R0 disponibles sans modification", "Même configuration de génération et même sérialisation déterministe que R0"],
+      "steps": [
+        "Produire un nouveau snapshot complet d'app.openapi() et le comparer à R0-openapi.json, sans écraser la référence.",
+        "Charger le registre puis produire le snapshot ORM selon le format R0 : colonnes, types compilés PostgreSQL, nullabilité, PK, server defaults, contraintes et FK.",
+        "Comparer à R0-metadata.json ; vérifier en complément index, séquences, valeurs d'enums et defaults Python contre les déclarations de la source R0.",
+        "Conserver les sorties après R1 et un rapport des différences, pas seulement le nombre de routes/tables."
+      ],
+      "expected_result": {
+        "full_openapi_diff": [],
+        "full_metadata_diff": [],
+        "openapi_paths": 46,
+        "openapi_operations": 63,
+        "orm_tables": 17,
+        "indexes_sequences_enums_python_defaults_changed": false,
+        "R0_artifacts_overwritten": false
+      },
+      "status": "passed",
+      "evidence": "notes/backend/refactor-monolithe-modulaire/R1-openapi.json, R1-metadata.json et R1-source-invariants.json"
+    },
+    {
+      "id": "TC-INT-113-07",
+      "task": "INT-113",
+      "wave": "R1",
+      "title": "Alembic PostgreSQL indépendant de l'API, seule diff FK connue",
+      "type": "integration",
+      "preconditions": ["PostgreSQL 17.4 neuf et jetable", "DATABASE_URL de test isolée ; aucun schéma applicatif existant utilisé"],
+      "steps": [
+        "Vérifier que alembic/env.py importe la Base technique et le registre avant target_metadata, sans importer l'application FastAPI.",
+        "Exécuter upgrade head, downgrade -1 puis upgrade head ; relever les révisions et codes de retour.",
+        "Exécuter alembic check ou inspecter une comparaison autogenerate sans écrire de migration ; comparer les opérations à R0-postgresql-results.json.",
+        "Nettoyer le serveur/schema jetable ; ne pas corriger la FK technicien."
+      ],
+      "expected_result": {
+        "upgrade_head_exit_code": 0,
+        "first_head": "f102e0010001",
+        "downgrade_last_revision_exit_code": 0,
+        "downgrade_target": "e103e0010001",
+        "second_upgrade_exit_code": 0,
+        "second_head": "f102e0010001",
+        "alembic_check_nonzero_for_known_diff": true,
+        "only_diff": "remove_fk job_technician_id_fkey sur intervention.technician_id → user.id sans ondelete, puis add_fk de la même relation avec ondelete=SET NULL selon l'ORM",
+        "new_schema_operations": [],
+        "artificial_drop_create": false,
+        "migration_generated": false,
+        "known_FK_corrected": false,
+        "FastAPI_import_required": false,
+        "temporary_resources_cleaned": true
+      },
+      "status": "passed_with_known_baseline_difference",
+      "evidence": "notes/backend/refactor-monolithe-modulaire/R1-postgresql-results.json ; contrôle AST du point d'entrée Alembic"
+    },
+    {
+      "id": "TC-INT-113-08",
+      "task": "INT-113",
+      "wave": "R1",
+      "title": "Suite et groupes PostgreSQL sans régression après bootstrap",
+      "type": "integration",
+      "preconditions": ["SQLite et uploads dans un répertoire temporaire comme R0", "PostgreSQL 17.4 jetable avec variables TERVO_*_TEST_DATABASE_URL adaptées aux fixtures"],
+      "steps": [
+        "Exécuter les tests ciblés du bootstrap : pureté Base, identité legacy, registre hors API, complétude et idempotence.",
+        "Exécuter la suite backend complète isolée, sans supprimer, sauter ou affaiblir les tests R0 pour masquer une régression.",
+        "Exécuter sur PostgreSQL tests/test_installations.py, tests/test_sales.py et tests/test_installation_migration.py, puis tests/test_import_service_v2.py et tests/test_import_api_v2.py.",
+        "Consigner les comptes, warnings et codes de retour réels ; distinguer tests existants réexécutés et tests nouveaux. Ne pas exiger la chaîne Alembic complète sur SQLite."
+      ],
+      "expected_result": {
+        "bootstrap_tests_pass": true,
+        "sqlite_suite_exit_code": 0,
+        "all_271_R0_sqlite_tests_still_pass": true,
+        "additional_bootstrap_tests_pass": true,
+        "postgres_sales_installations_migration_exit_code": 0,
+        "all_56_R0_postgres_sales_installation_tests_still_pass": true,
+        "postgres_imports_exit_code": 0,
+        "all_39_R0_postgres_import_tests_still_pass": true,
+        "tests_suppressed_to_hide_regression": false,
+        "local_or_deployed_database_modified": false,
+        "remote_CI_or_deployment_claimed_from_local_run": false
+      },
+      "status": "passed",
+      "evidence": "notes/backend/refactor-monolithe-modulaire/R1-bootstrap-results.json, R1-sqlite-results.json et R1-postgresql-results.json"
+    },
+    {
+      "id": "TC-INT-113-09",
+      "task": "INT-113",
+      "wave": "R1",
+      "title": "Startup/shutdown réels et documentation HTTP",
+      "type": "integration",
+      "preconditions": ["Configuration SQLite/uploads temporaires", "Port local libre ; aucun serveur existant redémarré"],
+      "steps": [
+        "Démarrer réellement Uvicorn avec le lifespan ASGI et attendre un démarrage borné sans erreur.",
+        "Appeler GET /openapi.json et GET /docs ; comparer l'OpenAPI HTTP à app.openapi() et à la référence R0.",
+        "Arrêter et attendre le processus ; vérifier le shutdown et le nettoyage des ressources."
+      ],
+      "expected_result": {
+        "startup_succeeds": true,
+        "openapi_http_status": 200,
+        "docs_http_status": 200,
+        "http_openapi_equals_app_openapi_and_R0": true,
+        "shutdown_succeeds": true,
+        "test_server_left_running": false,
+        "startup_alone_proves_business_database_queries": false
+      },
+      "status": "passed",
+      "evidence": "notes/backend/refactor-monolithe-modulaire/R1-runtime-results.json ; assertion SIGTERM adaptée après contrôle initial trop strict"
+    },
+    {
+      "id": "TC-INT-114-01",
+      "task": "INT-114",
+      "wave": "R2",
+      "title": "Customers — CRUD et protection historique conservés",
+      "type": "api",
+      "preconditions": ["INT-113 clôturée ; feu vert R2 distinct requis et pas encore donné", "Clients/sites de test, dont un site lié à une installation existante"],
+      "steps": ["Rejouer création, lecture, mise à jour, listes filtrées/paginées Client/Site et erreurs sur ressources inconnues.", "Tester suppression d'un site/client lié à une installation et relire les données historiques.", "Comparer contrats OpenAPI et schéma à R0 après déplacement."],
+      "expected_result": {
+        "CRUD_and_list_contracts_unchanged": true,
+        "unknown_resource": 404,
+        "delete_site_or_client_with_installation": 409,
+        "history_and_relations_preserved": true,
+        "openapi_and_metadata_diff": [],
+        "new_postgresql_schema_diff": []
+      },
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-114-02",
+      "task": "INT-114",
+      "wave": "R2",
+      "title": "Customers — coexistence avec modèles aval encore legacy",
+      "type": "integration",
+      "preconditions": ["Feu vert R2 distinct requis", "Client/Site déplacés ; autres domaines pas encore tous déplacés"],
+      "steps": ["Importer le registre hors API en processus neuf et exécuter configure_mappers().", "Résoudre et exercer les liens Client/Site avec Sale, Installation, Equipment et Intervention.", "Rechercher les anciennes implémentations et vérifier le cutover des imports."],
+      "expected_result": {"orm_tables": 17, "mapper_and_FK_resolution_succeeds": true, "downstream_relationships_preserved": true, "duplicate_Client_or_Site_definition": false, "obsolete_active_source_files": [], "new_postgresql_schema_diff": []},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-115-01",
+      "task": "INT-115",
+      "wave": "R3",
+      "title": "Catalogue — référence produit, unicité et désactivation",
+      "type": "integration",
+      "preconditions": ["INT-114 clôturée ; feu vert R3 distinct requis et pas encore donné", "Produit de référence lié à une ligne de vente et à un équipement"],
+      "steps": ["Rejouer les tests CRUD, unicité et désactivation Product existants.", "Relire SaleLine et Equipment après désactivation sans modifier leurs liens.", "Contrôler le cutover catalogue, OpenAPI, metadata et Alembic PostgreSQL."],
+      "expected_result": {"existing_product_tests_pass": true, "duplicate_product_rejected_as_before": true, "SaleLine_and_Equipment_links_preserved": true, "equipment_history_deleted": false, "Product_merged_with_Equipment": false, "stock_behavior_added": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-116-01",
+      "task": "INT-116",
+      "wave": "R4",
+      "title": "Sales — brouillon, confirmation, annulation et validations",
+      "type": "integration",
+      "preconditions": ["INT-115 clôturée ; feu vert R4 distinct requis et pas encore donné", "Client/site cohérents et produit existant"],
+      "steps": ["Créer un brouillon ; essayer de confirmer une vente sans ligne puis une vente avec ligne.", "Tester quantity=0 et négative, produit inconnu et site d'un autre client ; vérifier l'absence d'écriture invalide.", "Tester unit_price Decimal/Numeric sans perte de précision, puis annulation selon les transitions existantes."],
+      "expected_result": {"initial_status": "DRAFT", "confirmation_with_line_status": "CONFIRMED", "confirmation_without_line_rejected": true, "non_positive_quantity_rejected": true, "unknown_product_or_incoherent_site_rejected": true, "invalid_sale_persisted": false, "Decimal_price_preserved_without_float_rounding": true, "valid_cancellation_status": "CANCELLED", "transitions_changed": false},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-116-02",
+      "task": "INT-116",
+      "wave": "R4",
+      "title": "Sales — quantité 3, raccordement installations et absence de repository artificiel",
+      "type": "integration",
+      "preconditions": ["Feu vert R4 distinct requis", "SaleLine confirmée de quantité 3"],
+      "steps": ["Créer trois installations commerciales sur cette ligne puis tenter une quatrième.", "Vérifier une seule SaleLine de quantité 3, les liens et le service après déplacement.", "Inspecter le module : aucune couche repository sales ajoutée uniquement pour la symétrie ; comparer OpenAPI/metadata et Alembic."],
+      "expected_result": {"SaleLine_count": 1, "SaleLine_quantity": 3, "accepted_installations": 3, "fourth_installation": 409, "commercial_provenance_preserved": true, "artificial_sales_repository_created": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-117-01",
+      "task": "INT-117",
+      "wave": "R5",
+      "title": "Equipment — cycle de vie, historique, liens et remplacement",
+      "type": "integration",
+      "preconditions": ["INT-116 clôturée ; feu vert R5 distinct requis et pas encore donné", "Équipement historique installation_id=null et équipement de remplacement"],
+      "steps": ["Rejouer les tests FK Site/Product, statuts et remplacement existants.", "Vérifier que replaced_by_id va de l'ancien vers le nouveau et que l'historique n'est pas supprimé.", "Vérifier nullabilité/unicité d'installation_id, absence de backfill fictif et snapshots après cutover."],
+      "expected_result": {"statuses": ["ACTIVE", "OUT_OF_SERVICE", "REPLACED", "RETIRED"], "PLANNED_added": false, "historical_installation_id": null, "installation_link_nullable_and_unique": true, "replacement_direction": "ancien → nouveau", "history_preserved": true, "invalid_site_or_product_rejected": true, "fictitious_installation_created": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-118-01",
+      "task": "INT-118",
+      "wave": "R6",
+      "title": "Installation autonome — create/attach sans vente",
+      "type": "api",
+      "preconditions": ["INT-117 clôturée ; feu vert R6 distinct requis et pas encore donné", "Site existant, équipement ACTIVE du même site non lié pour attach"],
+      "steps": ["Créer avec sale_line_id absent puis null ; essayer sans site, avec site null et site inconnu.", "Démarrer et terminer une installation avec equipment.mode=create, puis une autre avec attach.", "Vérifier dates/métadonnées, liens et absence de vente/ligne implicite ; refaire complete."],
+      "expected_result": {"create_without_sale_line": 201, "sale_line_id": null, "missing_or_null_site": 422, "unknown_site": 404, "after_start": "IN_PROGRESS", "after_complete": "COMPLETED", "equipment_per_completed_installation": 1, "equipment_installation_id_set": true, "attach_preserves_existing_dates_and_metadata": true, "repeat_complete": 409, "fictitious_sale_or_line_created": false},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-118-02",
+      "task": "INT-118",
+      "wave": "R6",
+      "title": "Installation commerciale — référence, site, produit et quantité",
+      "type": "integration",
+      "preconditions": ["Feu vert R6 distinct requis", "Ventes DRAFT et CONFIRMED, sites et produits distincts"],
+      "steps": ["Tester ligne inconnue, vente non confirmée, site incohérent et quantité dépassée.", "Clôturer une installation liée à une ligne valide ; tester produit contradictoire.", "Vérifier statut, équipement, provenance et conservation des équipements historiques sans installation."],
+      "expected_result": {"unknown_sale_line": 404, "unconfirmed_sale_rejected": true, "incoherent_site_or_product_rejected": true, "quantity_exceeded": 409, "valid_completion_status": "COMPLETED", "equipment_product_matches_sale_line": true, "commercial_provenance_preserved": true, "historical_equipment_unchanged": true},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-118-03",
+      "task": "INT-118",
+      "wave": "R6",
+      "title": "Installation — rollback, concurrence et transitions inchangés",
+      "type": "integration",
+      "preconditions": ["Feu vert R6 distinct requis", "PostgreSQL jetable ; installations IN_PROGRESS et équipement éligible"],
+      "steps": ["Injecter un échec après écriture Equipment en create puis attach ; relire dans une nouvelle session.", "Rejouer la matrice des transitions, deux complete concurrents, cancel/complete concurrents et deux installations visant le même équipement.", "Rejouer JWT actif et protections site/client, puis vérifier les garde-fous communs."],
+      "expected_result": {"status_after_completion_failure": "IN_PROGRESS", "completed_at_after_failure": null, "partial_equipment_or_link_persisted": false, "same_session_and_transaction_preserved": true, "one_concurrent_action_committed": true, "duplicate_equipment_created": false, "forbidden_transition": 409, "active_JWT_required": true, "history_delete": 409, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-119-01",
+      "task": "INT-119",
+      "wave": "R7",
+      "title": "Interventions — cinq familles terrain déplacées sans évolution 7.4",
+      "type": "integration",
+      "preconditions": ["INT-118 clôturée ; feu vert R7 distinct requis et pas encore donné", "Intervention avec checklist, photo, matériel et avis selon le modèle existant"],
+      "steps": ["Rejouer les tests existants des routes interventions/checklist/photos/materials/reviews et leurs autorisations.", "Vérifier les liens, historiques et intégration avec les consommateurs reports/imports.", "Inspecter les modèles pour confirmer qu'aucune feature INT-104 à INT-108 n'a été introduite."],
+      "expected_result": {"all_existing_terrain_route_tests_pass": true, "five_existing_model_families_preserved": true, "authorization_and_history_unchanged": true, "new_checklist_snapshot_models_created": false, "InterventionPhoto_renamed_to_Photo": false, "Material_replaced_by_MaterialUsage": false, "future_report_versioning_or_closure_added": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-119-02",
+      "task": "INT-119",
+      "wave": "R7",
+      "title": "Interventions — pièces jointes et FK technicien conservées",
+      "type": "integration",
+      "preconditions": ["Feu vert R7 distinct requis", "Uploads temporaires avec une photo et registre complet hors API"],
+      "steps": ["Vérifier stockage/lecture des photos existantes après adaptation des imports sans déplacer ni altérer les fichiers sources.", "Charger les mappers hors API et comparer les tables terrain à R0.", "Inspecter alembic check PostgreSQL et le cutover des anciens fichiers."],
+      "expected_result": {"photo_content_and_links_preserved": true, "upload_contract_unchanged": true, "configure_mappers_succeeds": true, "orm_table_count": 17, "known_technician_FK_diff_preserved_only": true, "FK_correction_or_migration_generated": false, "duplicate_active_terrain_implementation": false},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-120-01",
+      "task": "INT-120",
+      "wave": "R8",
+      "title": "Reports — template résolu et PDF fonctionnellement identique",
+      "type": "integration",
+      "preconditions": ["INT-119 clôturée ; feu vert R8 distinct requis et pas encore donné", "Jeu d'intervention/checklist/photos/matériel identique avant/après, dépendances PDF existantes"],
+      "steps": ["Générer le rapport via l'API existante et via le renderer depuis un répertoire courant différent.", "Comparer données métier et contenu rendu avant/après, sans imposer l'identité binaire des métadonnées PDF volatiles.", "Vérifier qu'aucun ancien chemin de template ni modèle Report/ReportVersion nouveau n'est requis, puis les garde-fous communs."],
+      "expected_result": {"template_load_succeeds_from_new_package": true, "working_directory_dependency": false, "existing_PDF_route_succeeds": true, "PDF_response_contract_unchanged": true, "business_content_identical": true, "Report_or_ReportVersion_model_created": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-121-01",
+      "task": "INT-121",
+      "wave": "R9",
+      "title": "Imports — même pack, preuves fonctionnelles avant/après identiques",
+      "type": "integration",
+      "preconditions": ["INT-120 clôturée ; feu vert R9 distinct requis et pas encore donné", "Pack backend/tests/fixtures/excel/ et empreintes R0 disponibles", "Deux bases jetables avec état initial équivalent, mêmes mapping, décisions et configuration"],
+      "steps": [
+        "Avant le move R9, vérifier les SHA-256 du pack : 01_clients_sites_equipements.xlsx, 02_interventions_2018_2025.xlsx, 03_export_ancien_format.xlsx, 04_export_clients_latin1.csv et fichiers d'accompagnement selon le manifeste R0.",
+        "Exécuter le pack avant déplacement et capturer ImportBatch, ImportRecord, ImportReference, ImportError et les clients/sites/équipements/interventions/produits créés ou rattachés.",
+        "Après déplacement, rejouer les mêmes sources intactes, dans le même ordre, avec les mêmes décisions et un état initial équivalent ; capturer les mêmes sorties.",
+        "Comparer brut/normalisé, provenance fichier/feuille/ligne, anomalies, matching, décisions, plans, statuts, compteurs, erreurs/orphelins et liens métier. Documenter seulement les normalisations indispensables de champs techniques volatils et conserver les captures brutes."
+      ],
+      "expected_result": {
+        "fixture_hashes_equal_R0": true,
+        "same_pack_and_order_and_mapping_and_decisions": true,
+        "initial_business_state_equivalent": true,
+        "ImportBatch_business_diff": [],
+        "ImportRecord_business_diff": [],
+        "ImportReference_business_diff": [],
+        "ImportError_business_diff": [],
+        "created_or_attached_entities_and_links_diff": [],
+        "provenance_raw_normalized_decisions_and_errors_diff": [],
+        "source_files_modified": false,
+        "volatile_field_normalization_documented": true,
+        "business_difference_hidden_by_normalization": false,
+        "full_before_after_capture_assumed_from_R0_hashes_alone": false
+      },
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-121-02",
+      "task": "INT-121",
+      "wave": "R9",
+      "title": "Imports — idempotence, reprise, bail et transactions par sous-lots",
+      "type": "integration",
+      "preconditions": ["Feu vert R9 distinct requis", "PostgreSQL jetable et scénarios existants d'import multi-sous-lots/concurrence"],
+      "steps": ["Rejouer une source identique, tenter une exécution avec plan non validé ou référentiel changé.", "Injecter une erreur dans un sous-lot puis reprendre ; comparer les lignes déjà commitées et les entités.", "Rejouer les scénarios de concurrence, bail et protection contre un ancien processus ; vérifier les verrous et l'API import."],
+      "expected_result": {"SHA256_idempotence_preserved": true, "duplicate_business_entities_after_replay": false, "unvalidated_or_stale_plan_execution_rejected": true, "validated_plan_executed_without_recalculation": true, "failed_subbatch_rolled_back": true, "previously_committed_subbatches_preserved": true, "committed_records_skipped_on_resume": true, "single_execution_slot_and_lease_preserved": true, "obsolete_process_cannot_resume_with_stale_token": true, "locking_and_transaction_owner_changed": false, "existing_postgres_import_tests_pass": true},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-121-03",
+      "task": "INT-121",
+      "wave": "R9",
+      "title": "Imports — formats, orphelins et historique sans chaîne commerciale fictive",
+      "type": "integration",
+      "preconditions": ["Feu vert R9 distinct requis", "Pack .xlsx multi-feuilles et .csv latin1 avec anomalies attendues"],
+      "steps": ["Rejouer lecture, format/mapping, normalisation, validation, matching multi-niveaux et décisions explicites sur les formats du pack.", "Importer un équipement historique sans installation et une intervention sans équipement lorsque le contrat existant le permet.", "Vérifier erreurs/orphelins tracés, aucune vente/installation artificielle, puis snapshots et Alembic."],
+      "expected_result": {"xlsx_csv_and_multisheet_support_preserved": true, "file_sheet_physical_line_provenance_preserved": true, "expected_anomalies_and_orphans_traced": true, "historical_equipment_installation_id": null, "historical_intervention_equipment_nullable_when_allowed": true, "fictitious_sale_or_installation_created": false, "imports_becomes_owner_of_business_entities": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-122-01",
+      "task": "INT-122",
+      "wave": "R10",
+      "title": "Identity — authentification unique, primitives core et rôles existants",
+      "type": "api",
+      "preconditions": ["INT-121 clôturée ; feu vert R10 distinct requis et pas encore donné", "Utilisateurs ADMIN/TECHNICIAN actifs et utilisateur désactivé, comme le périmètre actuel"],
+      "steps": ["Rejouer les tests auth/JWT et accès aux routes protégées avec token absent/invalide et utilisateur désactivé.", "Exercer les accès des rôles existants et inspecter deps/security après déplacement User/Auth.", "Vérifier Base unique et absence de nouveaux rôles ou d'affectation métier ; comparer les garde-fous communs."],
+      "expected_result": {"existing_auth_tests_pass": true, "active_authenticated_user_required": true, "existing_authorizations_unchanged": true, "new_MANAGER_or_COMMERCIAL_role_added": false, "new_assignment_rule_added": false, "generic_JWT_and_hash_primitives_remain_in_core": true, "single_User_mapping_and_Base": true, "dependency_cycle": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-122-02",
+      "task": "INT-122",
+      "wave": "R10",
+      "title": "Dashboard, seed et composition finale sans responsabilités artificielles",
+      "type": "integration",
+      "preconditions": ["Feu vert R10 distinct requis", "Base jetable avec jeu métier de référence et seed existant"],
+      "steps": ["Exécuter le seed via l'entrypoint retenu et comparer les données au comportement existant.", "Lire le dashboard avec un jeu métier identique et comparer les réponses/agrégats avant/après ; vérifier qu'il n'écrit pas de données.", "Inspecter composition explicite de tous les routers, registre hors API et absence de couches vides ou seconde implémentation du seed."],
+      "expected_result": {"seed_entrypoint_succeeds": true, "seed_business_behavior_unchanged": true, "seed_implementation_count": 1, "dashboard_responses_identical_for_same_data": true, "dashboard_business_writes": false, "dashboard_absorbs_domain_rules": false, "router_composition_explicit_and_complete": true, "registry_table_count": 17, "artificial_service_or_repository_added": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-123-01",
+      "task": "INT-123",
+      "wave": "R11",
+      "title": "Nettoyage legacy conditionnel et recherche finale des imports",
+      "type": "integration",
+      "preconditions": ["INT-122 clôturée ; feu vert R11 distinct requis et pas encore donné", "Tous les domaines ont subi leur cutover validé"],
+      "steps": ["Chercher app.models, app.repositories, app.schemas, app.services, app.api.v1, app.importers et app.exporters dans runtime/tests/Alembic/seed/scripts/configuration.", "Résoudre les références exécutables puis supprimer uniquement les packages devenus inutiles ; retirer le shim Base lorsque plus aucun appelant ne l'utilise.", "Distinguer les citations historiques des imports exécutables et conserver les preuves R0 ; charger registre/application/Alembic sans anciens packages."],
+      "expected_result": {"remaining_executable_legacy_imports": [], "required_package_deleted_prematurely": false, "duplicate_active_business_implementation": false, "historical_R0_evidence_rewritten": false, "technical_Base_identity_changed": false, "all_active_domains_have_explicit_modules": true, "core_contains_only_technical_concerns": true, "registry_table_count": 17},
+      "status": "not_run"
+    },
+    {
+      "id": "TC-INT-123-02",
+      "task": "INT-123",
+      "wave": "R11",
+      "title": "Validation globale backend/PostgreSQL/HTTP et parcours frontend existants",
+      "type": "e2e",
+      "preconditions": ["Feu vert R11 distinct requis", "Nettoyage legacy terminé, ressources de test isolées", "Preuves de comparaison pack avant/après R9 conservées"],
+      "steps": ["Exécuter suite backend et groupes PostgreSQL critiques ; migrations upgrade/dernier downgrade/upgrade et comparaison schéma/ORM sur PostgreSQL neuf.", "Comparer les snapshots complets OpenAPI/metadata à R0 ; démarrer/arrêter FastAPI et vérifier /openapi.json et /docs.", "Rejouer les parcours frontend actuellement livrés : clients/sites, vente, installation autonome et commerciale, import et rapport ; consigner résultats et limites réels.", "Vérifier que les adaptations documentaires autorisées reprennent les nouveaux chemins avant 7.4 sans réécrire son historique ou celui de 7.3 ; soumettre le bilan de clôture."],
+      "expected_result": {"backend_suite_and_postgres_groups_pass": true, "postgres_migration_round_trip_succeeds": true, "only_schema_diff_is_known_technician_FK": true, "migration_generated_for_refactor": false, "full_openapi_diff": [], "full_metadata_diff": [], "startup_and_shutdown_succeed": true, "openapi_and_docs_http_status": 200, "existing_frontend_critical_flows_preserved": true, "R9_fixed_pack_business_diff": [], "stage7_paths_ready_before_future_features": true, "historical_validation_status_rewritten": false, "deployment_or_future_features_claimed": false},
+      "status": "not_run"
+    }
+  ]
+}

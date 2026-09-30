@@ -10,7 +10,7 @@ from pathlib import Path
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.orm import relationship
 
-from app.models.base import Base
+from app.core.base import Base
 
 
 class InterventionPhoto(Base):

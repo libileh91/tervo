@@ -1,0 +1,14 @@
+{
+  "initial_harness_issue": "Expected exit 0 after SIGTERM; actual -15 with graceful shutdown. Rechecked with signal-aware assertion and captured logs.",
+  "startup": "passed",
+  "openapi_http_status": 200,
+  "docs_http_status": 200,
+  "http_openapi_equals_app_and_R0": true,
+  "metadata_equals_R0": true,
+  "openapi_paths": 46,
+  "openapi_operations": 63,
+  "orm_tables": 17,
+  "shutdown_returncode": -15,
+  "shutdown_signal": "SIGTERM",
+  "uvicorn_log": "INFO:     Started server process [213430]\nINFO:     Waiting for application startup.\nINFO:     Application startup complete.\nINFO:     Uvicorn running on http://127.0.0.1:38261 (Press CTRL+C to quit)\nINFO:     127.0.0.1:59386 - \"GET /openapi.json HTTP/1.1\" 200 OK\nINFO:     127.0.0.1:59396 - \"GET /docs HTTP/1.1\" 200 OK\nINFO:     Shutting down\nINFO:     Waiting for application shutdown.\nINFO:     Application shutdown complete.\nINFO:     Finished server process [213430]\n"
+}

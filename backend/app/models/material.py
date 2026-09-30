@@ -7,7 +7,7 @@ Represents a material/part used during an intervention.
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
-from app.models.base import Base
+from app.core.base import Base
 
 
 class Material(Base):

@@ -1,10 +1,11 @@
 """
 Tervo — SQLAlchemy models.
 
-Import all models here so that Alembic's --autogenerate can discover them.
+Legacy exports for existing callers during the modular cutover.
+Entry points load models explicitly through app.model_registry.
 """
 
-from app.models.base import Base
+from app.core.base import Base
 from app.models.checklist_item import ChecklistItem
 from app.models.client import Client
 from app.models.intervention import Intervention

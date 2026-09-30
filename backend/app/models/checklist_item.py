@@ -7,7 +7,7 @@ Represents a checklist item attached to an intervention (pre/post).
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
-from app.models.base import Base
+from app.core.base import Base
 
 
 class ChecklistItem(Base):

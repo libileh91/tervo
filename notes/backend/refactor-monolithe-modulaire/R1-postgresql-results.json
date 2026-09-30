@@ -1,0 +1,51 @@
+{
+  "postgres_version": "17.4 (Debian 17.4-1.pgdg120+2)",
+  "upgrade": {
+    "returncode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running upgrade  -> 9b55bf942f2a, initial empty schema\nINFO  [alembic.runtime.migration] Running upgrade 9b55bf942f2a -> 24b96d6f9dfa, add user table\nINFO  [alembic.runtime.migration] Running upgrade 24b96d6f9dfa -> a341de379a02, add client table\nINFO  [alembic.runtime.migration] Running upgrade a341de379a02 -> 5cc5d1686947, add job table\nINFO  [alembic.runtime.migration] Running upgrade 5cc5d1686947 -> 7e7c3408ecfb, update job model with ondelete and forward relationships\nINFO  [alembic.runtime.migration] Running upgrade 7e7c3408ecfb -> 593528cce1f6, add checklist_item table\nINFO  [alembic.runtime.migration] Running upgrade 593528cce1f6 -> 170af5c7827f, add job_photo and material tables\nINFO  [alembic.runtime.migration] Running upgrade 170af5c7827f -> add2e3d9afdc, add review table\nINFO  [alembic.runtime.migration] Running upgrade add2e3d9afdc -> 9d34b52092ce, rename job to intervention\nINFO  [alembic.runtime.migration] Running upgrade 9d34b52092ce -> 24556984074e, add site table\nINFO  [alembic.runtime.migration] Running upgrade 24556984074e -> 06c3c51d3e72, Link interventions to sites, preserving existing client history.\nINFO  [alembic.runtime.migration] Running upgrade 06c3c51d3e72 -> 8d431c2a9601, Add commercial product catalogue.\nINFO  [alembic.runtime.migration] Running upgrade 8d431c2a9601 -> c197e0010001, Physical equipment and optional intervention link (INT-97).\nINFO  [alembic.runtime.migration] Running upgrade c197e0010001 -> d100e0010001, Durable import plans, checkpoints, source identities and errors (INT-100).\nINFO  [alembic.runtime.migration] Running upgrade d100e0010001 -> e103e0010001, Autonomous installations and verified equipment link (INT-103 / TD-B014).\nINFO  [alembic.runtime.migration] Running upgrade e103e0010001 -> f102e0010001, Commercial sales and nullable installation provenance (INT-102 / TD-B017).\n"
+  },
+  "downgrade": {
+    "returncode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running downgrade f102e0010001 -> e103e0010001, Commercial sales and nullable installation provenance (INT-102 / TD-B017).\n"
+  },
+  "reupgrade": {
+    "returncode": 0,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.migration] Running upgrade e103e0010001 -> f102e0010001, Commercial sales and nullable installation provenance (INT-102 / TD-B017).\n"
+  },
+  "metadata_check": {
+    "returncode": 255,
+    "output": "INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.\nINFO  [alembic.runtime.migration] Will assume transactional DDL.\nINFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.schemas\nINFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.tables\nINFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.types\nINFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.constraints\nINFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.defaults\nINFO  [alembic.runtime.plugins] setting up autogenerate plugin alembic.autogenerate.comments\nINFO  [alembic.ddl.postgresql] Detected sequence named 'import_record_id_seq' as owned by integer column 'import_record(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'sale_line_id_seq' as owned by integer column 'sale_line(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'job_id_seq' as owned by integer column 'intervention(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'job_photo_id_seq' as owned by integer column 'intervention_photo(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'review_id_seq' as owned by integer column 'review(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'material_id_seq' as owned by integer column 'material(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'equipment_id_seq' as owned by integer column 'equipment(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'client_id_seq' as owned by integer column 'client(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'installation_id_seq' as owned by integer column 'installation(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'product_id_seq' as owned by integer column 'product(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'import_reference_id_seq' as owned by integer column 'import_reference(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'import_batch_id_seq' as owned by integer column 'import_batch(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'checklist_item_id_seq' as owned by integer column 'checklist_item(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'site_id_seq' as owned by integer column 'site(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'sale_id_seq' as owned by integer column 'sale(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'import_error_id_seq' as owned by integer column 'import_error(id)', assuming SERIAL and omitting\nINFO  [alembic.ddl.postgresql] Detected sequence named 'user_id_seq' as owned by integer column 'user(id)', assuming SERIAL and omitting\nINFO  [alembic.autogenerate.compare.constraints] Detected removed foreign key (technician_id)(id) on table intervention\nINFO  [alembic.autogenerate.compare.constraints] Detected added foreign key (technician_id)(id) on table intervention\nERROR [alembic.util.messaging] New upgrade operations detected: [('remove_fk', ForeignKeyConstraint(<sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x7f7c0f954ea0>, None, name='job_technician_id_fkey', table=Table('intervention', MetaData(), Column('technician_id', NullType(), ForeignKey('user.id'), table=<intervention>), schema=None))), ('add_fk', ForeignKeyConstraint(<sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x7f7c0f955080>, None, ondelete='SET NULL', table=Table('intervention', MetaData(), Column('technician_id', NullType(), ForeignKey('user.id'), table=<intervention>), schema=None)))]\nFAILED: New upgrade operations detected: [('remove_fk', ForeignKeyConstraint(<sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x7f7c0f954ea0>, None, name='job_technician_id_fkey', table=Table('intervention', MetaData(), Column('technician_id', NullType(), ForeignKey('user.id'), table=<intervention>), schema=None))), ('add_fk', ForeignKeyConstraint(<sqlalchemy.sql.base.ReadOnlyColumnCollection object at 0x7f7c0f955080>, None, ondelete='SET NULL', table=Table('intervention', MetaData(), Column('technician_id', NullType(), ForeignKey('user.id'), table=<intervention>), schema=None)))]\n"
+  },
+  "autogenerate_operations": [
+    {
+      "operation": "remove_fk",
+      "table": "intervention",
+      "columns": [
+        "technician_id"
+      ],
+      "targets": [
+        "user.id"
+      ],
+      "ondelete": null
+    },
+    {
+      "operation": "add_fk",
+      "table": "intervention",
+      "columns": [
+        "technician_id"
+      ],
+      "targets": [
+        "user.id"
+      ],
+      "ondelete": "SET NULL"
+    }
+  ],
+  "postgres_sales_installations": {
+    "returncode": 0,
+    "output": "........................................................                 [100%]\n=============================== warnings summary ===============================\n../../home/lob/workspace/python/fastapi/Tervo/backend/.venv/lib/python3.12/site-packages/passlib/utils/__init__.py:854\n  /home/lob/workspace/python/fastapi/Tervo/backend/.venv/lib/python3.12/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13\n    from crypt import crypt as _crypt\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n56 passed, 1 warning in 24.91s\n"
+  },
+  "postgres_imports": {
+    "returncode": 0,
+    "output": ".......................................                                  [100%]\n=============================== warnings summary ===============================\n../../home/lob/workspace/python/fastapi/Tervo/backend/.venv/lib/python3.12/site-packages/passlib/utils/__init__.py:854\n  /home/lob/workspace/python/fastapi/Tervo/backend/.venv/lib/python3.12/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13\n    from crypt import crypt as _crypt\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n39 passed, 1 warning in 27.29s\n"
+  }
+}

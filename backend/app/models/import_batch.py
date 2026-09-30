@@ -1,6 +1,6 @@
 """Technical import journal. Source bytes/plans remain private to administrators."""
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, JSON, LargeBinary, String, Text, UniqueConstraint, func
-from app.models.base import Base
+from app.core.base import Base
 
 
 class ImportBatch(Base):

@@ -8,7 +8,7 @@ import enum
 
 from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String, func
 
-from app.models.base import Base
+from app.core.base import Base
 
 
 class Role(str, enum.Enum):

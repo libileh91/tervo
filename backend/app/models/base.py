@@ -1,11 +1,3 @@
-"""
-Tervo — SQLAlchemy declarative base.
+"""Legacy import path; all models share the Base defined in core."""
 
-Every ORM model in this project inherits from this Base.
-"""
-
-from sqlalchemy.orm import DeclarativeBase
-
-
-class Base(DeclarativeBase):
-    pass
+from app.core.base import Base  # noqa: F401

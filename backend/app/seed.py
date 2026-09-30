@@ -16,7 +16,8 @@ from sqlalchemy import text
 
 from app.core.database import async_session, engine
 from app.core.security import get_password_hash
-from app.models.base import Base
+from app.core.base import Base
+from app.model_registry import load_models
 from app.models.client import Client
 from app.models.intervention import Intervention, InterventionStatus, Priority
 from app.models.site import Site
@@ -24,6 +25,7 @@ from app.models.user import Role, User
 
 
 async def seed():
+    load_models()
     # ── 0. Créer les tables si elles n'existent pas ──────────
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

@@ -8,7 +8,7 @@ installed and where interventions take place.
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import relationship
 
-from app.models.base import Base
+from app.core.base import Base
 
 
 class Site(Base):

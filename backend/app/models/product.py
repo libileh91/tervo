@@ -1,7 +1,7 @@
 """Commercial references, independent of installed equipment."""
 from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String, Text, func, true
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from app.core.base import Base
 
 
 class Product(Base):

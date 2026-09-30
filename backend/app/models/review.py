@@ -19,7 +19,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from app.models.base import Base
+from app.core.base import Base
 
 
 class Review(Base):

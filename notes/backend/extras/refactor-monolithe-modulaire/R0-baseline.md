@@ -214,7 +214,7 @@ Proposition validée par l'utilisateur après les vérifications R0 :
 
 - branche : `refactor/modular-monolith` ;
 - planning technique : `docs/stages/stage7/refactor-monolithe-modulaire/`, séparé des six sprints fonctionnels ;
-- `INT-113` à `INT-123` réservés à R1 à R11 ; le planning technique sera livré avec INT-113 ;
+- `INT-113` à `INT-123` attribués à R1 à R11 dans le [planning technique](../../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md) ;
 - R0 reste ce checkpoint documentaire ;
 - pour la FK technicien : conserver l'écart connu pendant le refactor, sans correctif SQL dans les déplacements.
 

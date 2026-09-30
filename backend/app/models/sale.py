@@ -2,7 +2,7 @@
 import enum
 from sqlalchemy import CheckConstraint, Column, Date, DateTime, Enum, ForeignKey, Integer, Numeric, String, Text, func
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from app.core.base import Base
 
 
 class SaleStatus(str, enum.Enum):

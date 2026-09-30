@@ -6,7 +6,7 @@ Represents a customer / client site where interventions take place.
 
 from sqlalchemy import Column, DateTime, Integer, String, Text, func
 
-from app.models.base import Base
+from app.core.base import Base
 
 
 class Client(Base):

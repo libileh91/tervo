@@ -1,0 +1,20 @@
+{
+  "source_sha": "544a23d6cb2cbe878fbc8ddf2d962c7adf76c000",
+  "model_files_only_base_import_changed": [
+    "backend/app/models/checklist_item.py",
+    "backend/app/models/client.py",
+    "backend/app/models/equipment.py",
+    "backend/app/models/import_batch.py",
+    "backend/app/models/installation.py",
+    "backend/app/models/intervention.py",
+    "backend/app/models/intervention_photo.py",
+    "backend/app/models/material.py",
+    "backend/app/models/product.py",
+    "backend/app/models/review.py",
+    "backend/app/models/sale.py",
+    "backend/app/models/site.py",
+    "backend/app/models/user.py"
+  ],
+  "all_model_declarations_unchanged_including_indexes_enums_python_defaults_sequences": true,
+  "migration_revisions_unchanged": true
+}

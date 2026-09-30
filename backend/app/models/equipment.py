@@ -2,7 +2,7 @@
 import enum
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from app.core.base import Base
 
 
 class EquipmentStatus(str, enum.Enum):
