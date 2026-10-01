@@ -7,6 +7,10 @@
 > **Important :** l'historique Git ayant été réécrit, les anciens SHA ne doivent plus servir de baseline de comparaison.
 > **Avancement du chantier :** R0/R1 validés et committés localement (`6754a50`, `73e5ac9`) sur `refactor/modular-monolith`. R2 / INT-114 validé localement : [note et preuves](../refactor-monolithe-modulaire/INT-114-R2-customers.md), [planning technique](../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md). Clôture/commit R2 soumis à l'utilisateur ; R3 non commencé, feu vert distinct requis. La [baseline R0](refactor-monolithe-modulaire/R0-baseline.md) et l'écart préexistant d'`alembic check` sur la FK technicien sont conservés sans correction.
 
+### Décision de naming
+
+`app/modules` est conservé. Le package Python `catalog` (anglais américain) remplace `catalogue` : `app/modules/catalog` et `app.modules.catalog`. Les routes `/products`, noms de classes et `catalogue_editor` restent inchangés, comme le vocabulaire métier français « catalogue ». Aucun renommage rétroactif des captures JSON R0/R1/R2 ni réécriture Git. Les anciennes validations R3 restent une capture avant naming ; le parent ajoutera une nouvelle section au manifeste R3 avec les résultats après naming et les SHA des commits naming et R3 demandés.
+
 ---
 
 ## 1. Objectif
@@ -234,7 +238,7 @@ api/v1/sites.py
 
 ---
 
-## 5.3 `catalogue`
+## 5.3 `catalog`
 
 Responsabilité :
 
@@ -562,7 +566,7 @@ backend/app/
     │   ├── service.py
     │   └── api.py
     │
-    ├── catalogue/
+    ├── catalog/
     ├── sales/
     ├── equipment/
     ├── installations/
@@ -604,7 +608,7 @@ Après refactor, conserver une composition explicite, simple :
 from fastapi import APIRouter
 
 from app.modules.customers.api import router as customers_router
-from app.modules.catalogue.api import router as catalogue_router
+from app.modules.catalog.api import router as catalogue_router
 from app.modules.sales.api import router as sales_router
 from app.modules.equipment.api import router as equipment_router
 from app.modules.installations.api import router as installations_router
@@ -764,7 +768,7 @@ Exemple conceptuel :
 # app/model_registry.py
 from app.modules.identity.models import User
 from app.modules.customers.models import Client, Site
-from app.modules.catalogue.models import Product
+from app.modules.catalog.models import Product
 from app.modules.sales.models import Sale, SaleLine
 from app.modules.installations.models import Installation
 from app.modules.equipment.models import Equipment
@@ -911,7 +915,7 @@ anciens fichiers supprimés après cutover
 
 ---
 
-## R3 — `catalogue`
+## R3 — `catalog`
 
 Déplacer verticalement :
 
