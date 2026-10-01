@@ -2,12 +2,12 @@
 
 > **Chantier transverse du Stage 7, avant 7.4 ; pas un sprint de features.**
 > **Branche :** `refactor/modular-monolith`, déjà créée. **R0 :** validé, sans nouvel INT.
-> **Autorisation :** R1/R2/R3 validés par l'utilisateur et committés ; R3 : `29f034e`, naming documentaire : `8f3e876`. R4 autorisé et vérifié localement, clôture soumise, non committé dans les deux checkouts. R5 à R11 non commencées, feu vert distinct par tâche.
+> **Autorisation :** R1 à R4 validés par l'utilisateur et committés ; R4 : `93be411`. R5 accepté par l'utilisateur, commit autorisé. Feu vert distinct R6 reçu dans ce fil ; R7 à R11 non commencées, feu vert distinct par tâche.
 > **Références :** [cadrage et baseline](README.md) · [plan](../../../../notes/backend/extras/tervo_plan_refactor_monolithe_modulaire.md) · [DAT](../../../DAT/new/00-sommaire.md).
 > **Estimations :** estimation à confirmer pour chaque tâche.
 > **Notes futures :** `notes/backend/refactor-monolithe-modulaire/`. La preuve R0 reste dans `notes/backend/extras/refactor-monolithe-modulaire/`.
 
-Les critères d'INT-113 à INT-115 sont cochés après validation locale et acceptation utilisateur. Les critères techniques INT-116 sont cochés après vérification locale sur le checkout principal ; son acceptation reste attendue. Les captures historiques restent intactes. R5 à R11 restent ouverts et non commencés ; la création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
+Les critères d'INT-113 à INT-117 sont cochés après validation locale et acceptation utilisateur. Les captures historiques restent intactes. R6 est autorisé mais ses critères restent ouverts ; R7 à R11 sont non commencés. La création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
 
 ## Garde-fous communs à toutes les tâches
 
@@ -108,7 +108,7 @@ Afin de **rendre explicite la responsabilité de la référence commerciale dist
 
 ## INT-116 — R4 — Déplacer `sales`
 
-**Statut :** implémenté, vérifié localement et accepté par l'utilisateur ; commit INT-116 demandé dans le checkout principal. R5 autorisé distinctement après ce commit.
+**Statut :** accepté et committé directement dans le checkout principal sous `93be411`, worktree agent aligné par fast-forward. R5 autorisé distinctement après ce commit.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -133,7 +133,7 @@ Afin de **isoler la vente tout en préservant le raccordement commercial des ins
 
 ## INT-117 — R5 — Déplacer `equipment`
 
-**Statut :** non commencé — feu vert distinct requis après validation d'INT-116.
+**Statut :** implémenté et vérifié localement, accepté par l'utilisateur ; commit autorisé. Les 23 empreintes sources/tests sont conformes à la preuve R5 ; 76 tests ciblés rejoués avant commit (1 warning, 20,19 s). Feu vert R6 reçu distinctement.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -141,21 +141,23 @@ Je veux **regrouper le cycle de vie de l'équipement physique dans equipment**,
 Afin de **préparer le déplacement d'Installation sans perdre l'historique physique**.
 
 **Acceptance Criteria**
-- [ ] Déplacer modèle, schémas, repository, service et API vers `app/modules/equipment/` ; adapter registre, router et consommateurs.
-- [ ] Préserver FK Site/Product, `installation_id` nullable et unique, remplacement ancien → nouveau et historiques ; aucun statut PLANNED ni installation fictive.
-- [ ] Conserver ACTIVE / OUT_OF_SERVICE / REPLACED / RETIRED, validations et protections existantes ; tests équipement/remplacement sans régression.
-- [ ] Cutover et garde-fous communs satisfaits ; produire la note R5 et obtenir validation avant tout feu vert R6.
+- [x] Déplacer modèle, schémas, repository, service et API vers `app/modules/equipment/` ; adapter registre, router et consommateurs.
+- [x] Préserver FK Site/Product, `installation_id` nullable et unique, remplacement ancien → nouveau et historiques ; aucun statut PLANNED ni installation fictive.
+- [x] Conserver ACTIVE / OUT_OF_SERVICE / REPLACED / RETIRED, validations et protections existantes ; tests équipement/remplacement sans régression.
+- [x] Cutover et garde-fous communs satisfaits ; produire la note R5 et soumettre sa clôture avec les preuves locales.
+- [x] Obtenir l'acceptation utilisateur avant commit et tout feu vert R6.
 
 **Technical Notes**
 - Source : `models/equipment.py`, `schemas/equipment.py`, `repositories/equipment.py`, `services/equipment.py`, `api/v1/equipment.py`, sous `backend/app/`.
 - Ne pas réimplémenter le remplacement amorcé par INT-97 ni anticiper INT-110. Un équipement historique reste valide sans installation enregistrée.
-- Cas : `TC-INT-117-01`.
+- Cible livrée : `equipment/{models,schemas,repository,service,api}.py` et init pur ; cinq anciennes sources supprimées, consommateurs adaptés uniquement par imports.
+- Cas : `TC-INT-117-01`, vérifié localement. [Note et preuve INT-117](../../../../notes/backend/refactor-monolithe-modulaire/INT-117-R5-equipment.md) : 155 ciblés, 324 SQLite, groupes PostgreSQL 56 + 39 ; contrats/schéma identiques, seul écart FK historique. AST de cinq modules égal hors imports, 12 définitions. Neuf nouveaux cas SQLite, dont historique TECHNICIAN et trois injections d'erreur avant commit avec rollback réel.
 
 ---
 
 ## INT-118 — R6 — Déplacer `installations`
 
-**Statut :** non commencé — feu vert distinct requis après validation d'INT-117.
+**Statut :** feu vert distinct reçu après acceptation d'INT-117 ; à démarrer après son commit.
 
 **User Story**
 En tant que **mainteneur backend**,

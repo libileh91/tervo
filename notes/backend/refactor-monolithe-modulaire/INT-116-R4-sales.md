@@ -2,7 +2,7 @@
 
 > **Planning :** [refactor monolithe modulaire](../../../docs/stages/stage7/refactor-monolithe-modulaire/tasks.md#L109).
 > **Parent R3 :** `29f034e4597a33c65fcbf9a4afe15440a1a1e18e`, branche `refactor/modular-monolith`.
-> **État :** R4 accepté par l'utilisateur ; commit INT-116 demandé dans le checkout principal, puis feu vert distinct R5. Le manifeste JSON conserve son état historique de capture avant acceptation.
+> **État :** R4 accepté et committé sous `93be411` dans le checkout principal, puis worktree agent aligné par fast-forward. R5 a reçu son feu vert distinct ; voir la [note INT-117](INT-117-R5-equipment.md). Le manifeste JSON conserve sa capture avant acceptation.
 > **Preuve :** [R4-validation.json](R4-validation.json), avec résultats observés et empreintes des sources.
 
 ## 1. Reprise : R3 livré, checkout principal et stash R2
@@ -14,6 +14,8 @@ Le checkout principal `/home/lob/workspace/python/fastapi/Tervo` avait été syn
 Le feu vert utilisateur porte sur **R4 uniquement**. Les changements sont présents dans le worktree agent **et** dans le checkout principal, avec comparaison des contenus avant transfert pour détecter des modifications concurrentes. Les tests et le runtime décrits ici ont été exécutés sur le backend du **checkout principal**, depuis des répertoires de travail temporaires. Les fichiers SQLite existants n'ont pas servi aux tests.
 
 R4 n'était pas committé lors de la capture des preuves ; l'utilisateur a ensuite accepté la livraison et demandé son commit dans le checkout principal, puis autorisé R5 distinctement. Les captures JSON historiques ne sont pas réécrites.
+
+Le commit `93be411` a ensuite été créé après contrôle des 13 empreintes sources/tests et réexécution bootstrap/sales/module : **33 passed, 1 warning, 16,52 s**. Les développements, tests, note et suivi R4 y sont regroupés ; aucun fichier R5 inclus. Ce contrôle avant commit ne remplace pas les validations complètes capturées plus bas.
 
 ## 2. Une extraction verticale sans repository inventé
 

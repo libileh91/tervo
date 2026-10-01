@@ -12,7 +12,7 @@ from app.core.security import create_access_token
 from app.main import app
 from app.models import Base
 from app.modules.customers.models import Client, Site
-from app.models.equipment import Equipment
+from app.modules.equipment.models import Equipment
 from app.models.installation import Installation
 from app.modules.catalog.models import Product
 

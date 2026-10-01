@@ -14,7 +14,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.intervention import Intervention, InterventionStatus
 from app.modules.customers.models import Site
-from app.models.equipment import Equipment
+from app.modules.equipment.models import Equipment
 from app.models.user import User
 from app.repositories.intervention import InterventionRepository
 from app.repositories.review import ReviewRepository

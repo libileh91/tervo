@@ -11,7 +11,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.intervention import Intervention
-from app.models.equipment import Equipment
+from app.modules.equipment.models import Equipment
 from app.models.installation import Installation
 from app.modules.customers.models import Client, Site
 from app.modules.customers.repository import ClientRepository, SiteRepository

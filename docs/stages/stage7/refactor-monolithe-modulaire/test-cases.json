@@ -8,12 +8,13 @@
     "R1": "user_accepted_locally_committed_73e5ac9",
     "R2": "user_accepted_locally_committed_ed67168",
     "R3": "user_accepted_committed_29f034e",
-    "R4": "authorized_implemented_locally_verified_pending_user_acceptance",
-    "R5_to_R11": "not_started_separate_user_approval_required_per_wave"
+    "R4": "user_accepted_committed_in_primary_93be411",
+    "R5": "authorized_implemented_locally_verified_pending_user_acceptance",
+    "R6_to_R11": "not_started_separate_user_approval_required_per_wave"
   },
   "validation": {
-    "status": "R1_R2_R3_R4_executed_remaining_not_run",
-    "scope": "R1 à R4 vérifiés localement ; captures historiques conservées. R4 vérifié sur le checkout principal, non committé et acceptation attendue. R5 à R11 non commencées.",
+    "status": "R1_R2_R3_R4_R5_executed_remaining_not_run",
+    "scope": "R1 à R5 vérifiés localement ; captures historiques conservées. R4 committé, R5 vérifié sur le checkout principal, non committé et acceptation attendue. R6 à R11 non commencées.",
     "R1_observed": {
       "bootstrap_passed": 14,
       "sqlite_suite_passed": 285,
@@ -83,6 +84,23 @@
       "startup_shutdown_and_HTTP_checks": "passed",
       "evidence": "notes/backend/refactor-monolithe-modulaire/R4-validation.json",
       "note": "notes/backend/refactor-monolithe-modulaire/INT-116-R4-sales.md",
+      "remote_CI_or_deployment_executed": false
+    },
+    "R5_observed": {
+      "validated_checkout": "primary",
+      "targeted_passed": 155,
+      "sqlite_suite_passed": 324,
+      "new_equipment_cases": 9,
+      "new_cases_dialect": "SQLite",
+      "postgres_sales_installations_passed": 56,
+      "postgres_imports_passed": 39,
+      "full_openapi_and_metadata_equal_baseline": true,
+      "moved_module_AST_equal_except_imports": 5,
+      "moved_definitions_AST_equal": 12,
+      "new_alembic_operations": [],
+      "startup_shutdown_and_HTTP_checks": "passed",
+      "evidence": "notes/backend/refactor-monolithe-modulaire/R5-validation.json",
+      "note": "notes/backend/refactor-monolithe-modulaire/INT-117-R5-equipment.md",
       "remote_CI_or_deployment_executed": false
     },
     "baseline_source_sha": "544a23d6cb2cbe878fbc8ddf2d962c7adf76c000",
@@ -415,10 +433,11 @@
       "wave": "R5",
       "title": "Equipment — cycle de vie, historique, liens et remplacement",
       "type": "integration",
-      "preconditions": ["INT-116 clôturée ; feu vert R5 distinct requis et pas encore donné", "Équipement historique installation_id=null et équipement de remplacement"],
+      "preconditions": ["INT-116 validée et committée sous 93be411 ; feu vert R5 distinct donné", "Équipement historique installation_id=null et équipement de remplacement"],
       "steps": ["Rejouer les tests FK Site/Product, statuts et remplacement existants.", "Vérifier que replaced_by_id va de l'ancien vers le nouveau et que l'historique n'est pas supprimé.", "Vérifier nullabilité/unicité d'installation_id, absence de backfill fictif et snapshots après cutover."],
       "expected_result": {"statuses": ["ACTIVE", "OUT_OF_SERVICE", "REPLACED", "RETIRED"], "PLANNED_added": false, "historical_installation_id": null, "installation_link_nullable_and_unique": true, "replacement_direction": "ancien → nouveau", "history_preserved": true, "invalid_site_or_product_rejected": true, "fictitious_installation_created": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
-      "status": "not_run"
+      "status": "passed",
+      "evidence": "test_equipment.py, test_equipment_module.py, bootstrap et consommateurs ; R5-validation.json : 155 ciblés, 324 SQLite et groupes PostgreSQL 56 + 39, schéma/contrats inchangés"
     },
     {
       "id": "TC-INT-118-01",

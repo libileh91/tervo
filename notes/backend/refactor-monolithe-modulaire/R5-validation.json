@@ -1,0 +1,131 @@
+{
+  "task": "INT-117",
+  "wave": "R5",
+  "branch": "refactor/modular-monolith",
+  "source_parent_sha": "93be411b09b736df967bd22bd8f85b8bea1a5203",
+  "status": "implemented_locally_verified_pending_user_acceptance",
+  "primary_checkout": "/home/lob/workspace/python/fastapi/Tervo",
+  "primary_and_agent_changes_equal": true,
+  "changes_uncommitted_in_both_checkouts": true,
+  "R6_started": false,
+  "environment": {
+    "python": "3.12.0",
+    "interpreter": "primary backend/.venv/bin/python",
+    "postgresql": "17.4 (Debian 17.4-1.pgdg120+2)",
+    "isolation": "temporary cwd, SQLite/uploads, disposable PostgreSQL with loopback ephemeral port and no named volume",
+    "lockfile_unchanged": true
+  },
+  "targeted": {
+    "files": [
+      "test_modular_bootstrap.py", "test_equipment_module.py", "test_equipment.py",
+      "test_catalog_module.py", "test_customers_module.py", "test_sites.py",
+      "test_installations.py", "test_interventions.py",
+      "test_import_service_v2.py", "test_import_api_v2.py"
+    ],
+    "command": "python -m pytest <absolute paths> -q -p no:cacheprovider",
+    "returncode": 0,
+    "passed": 155,
+    "warnings": 3,
+    "seconds": 44.91
+  },
+  "sqlite_suite": {
+    "command": "python -m pytest <absolute backend/tests> -q -p no:cacheprovider",
+    "returncode": 0,
+    "passed": 324,
+    "warnings": 5,
+    "seconds": 68.34,
+    "new_equipment_cases": 9,
+    "new_cases_dialect": "SQLite"
+  },
+  "postgresql": {
+    "executed_by": "independent scout on primary checkout",
+    "upgrade_head_returncode": 0,
+    "downgrade_last_returncode": 0,
+    "reupgrade_head_returncode": 0,
+    "head": "f102e0010001",
+    "downgrade_target": "e103e0010001",
+    "alembic_check_returncode": 255,
+    "autogenerate_operations": [
+      {"operation": "remove_fk", "table": "intervention", "columns": ["technician_id"], "targets": ["user.id"], "ondelete": null},
+      {"operation": "add_fk", "table": "intervention", "columns": ["technician_id"], "targets": ["user.id"], "ondelete": "SET NULL"}
+    ],
+    "operations_equal_R2_and_known_baseline": true,
+    "new_operations": [],
+    "sales_installations_migrations": {"returncode": 0, "passed": 56, "warnings": 1, "seconds": 28.36},
+    "imports_service_and_API": {"returncode": 0, "passed": 39, "warnings": 1, "seconds": 32.26},
+    "new_equipment_module_tests_included": false,
+    "container_and_temporary_directory_removed": true
+  },
+  "contracts": {
+    "snapshots_byte_identical_to_R0_R1_R2": true,
+    "same_snapshot_hashes_as_R3_R4_references": true,
+    "reference_openapi": "notes/backend/extras/refactor-monolithe-modulaire/R0-openapi.json",
+    "reference_metadata": "notes/backend/extras/refactor-monolithe-modulaire/R0-metadata.json",
+    "openapi_sha256": "dcabfd245b80cbf3989f71049669c3a65e9766b3ed9512bbf58e22acea942fd7",
+    "metadata_sha256": "e86c52bc02519708beb34a3dd587ca566a222f54a04a3fe0b62bdd742ca2089a",
+    "paths": 46,
+    "operations": 63,
+    "tables": 17,
+    "snapshots_not_duplicated": true
+  },
+  "runtime": {
+    "validated_checkout": "primary",
+    "docs_http_status": 200,
+    "openapi_http_status": 200,
+    "HTTP_openapi_equals_app_and_R0": true,
+    "startup_and_shutdown_complete": true,
+    "uvicorn_returncode_after_SIGTERM": -15,
+    "server_process_stopped": true
+  },
+  "source_invariants": {
+    "comparison": "whole-module AST equal to R4 except top-level Import/ImportFrom nodes, no name/decorator normalization",
+    "modules": 5,
+    "definitions": 12,
+    "retired_modules": [
+      "app.models.equipment", "app.schemas.equipment", "app.repositories.equipment",
+      "app.services.equipment", "app.api.v1.equipment"
+    ],
+    "retired_files_absent": true,
+    "active_retired_imports_AST_scan": [],
+    "replacement_transaction_and_conditional_update_unchanged": true,
+    "installation_id_nullable_and_unique_preserved": true,
+    "PLANNED_added": false,
+    "alembic_and_dependencies_unchanged": true,
+    "R0_R1_R2_R3_R4_JSON_artifacts_unchanged": true,
+    "R0_import_fixture_hashes_unchanged": true
+  },
+  "source_sha256": {
+    "backend/app/model_registry.py": "a5dd01f87696ab0650453f8d429bf1e16f2f84f7a648b15597f91f0ba9fdba78",
+    "backend/app/models/__init__.py": "e19f9ae805d14b22cc29dc44c0c2be0f34c3b9603d19ae65febe1428c9c76c2c",
+    "backend/app/modules/customers/api.py": "9f19ada8d470a045f902b6855d1be75b18ff5b3b8b1635e098fad0a64ed30c67",
+    "backend/app/modules/customers/service.py": "4bb53d4801b6d30283c59aabfd963711fed4f617fdb523adfde978059a70e408",
+    "backend/app/modules/equipment/__init__.py": "ff7974f2c591c66c942df8c4218c03d07041a4341c42e6b8daa817a2979d80fe",
+    "backend/app/modules/equipment/api.py": "eb0ae1112d801e0f60562bf48e1802bd3bcea12bcf7d0dd8815fe90ca5f16231",
+    "backend/app/modules/equipment/models.py": "b7c9e5c6cb131d227c7c0556d0fd2694d9e223f7059a345c4250f8759b669fc2",
+    "backend/app/modules/equipment/repository.py": "1bf9353396730dbcbed1b02c27f513a36c30db4ee044ed77a217879902adfb81",
+    "backend/app/modules/equipment/schemas.py": "9ce0a7ee4c61153b80323e5483f80e20f72d02f8e1807715f4300cd3d772d801",
+    "backend/app/modules/equipment/service.py": "fc21683541bfba8ff4b120cfbf096380b91abaad5af8052a6d6c56712307ebca",
+    "backend/app/repositories/installation.py": "052d7bf33763959b4d9250ae3fca41d1d57686ea9375e56e7b59142ec974777d",
+    "backend/app/router.py": "fa32695d5c49304c0ba003ceba50a4cf6b6d159edf788dd75c330a03d2c043d8",
+    "backend/app/schemas/installation.py": "ef35b2fb3bb7138b158044845e4459de7a7f04db482c180aad4fa5ae63a9c694",
+    "backend/app/services/import_planner.py": "c7675472eef1a02fb350a8930e131b1ce7dd39d246656930425f8cac143c6abc",
+    "backend/app/services/import_service.py": "eb284731024b038e0b2d7a58920068b9abc745ee61fdbae560e76bf9348ae896",
+    "backend/app/services/installation.py": "f6ccbe893e69483c3295417ce5cbd7fddbda341a0f7bcabf60390e56e103c1c3",
+    "backend/app/services/intervention.py": "4ba7a196095a1def9881a0ae1a6ebd52d42c5257defd5f8da2118cbdc779a07c",
+    "backend/tests/test_catalog_module.py": "9ecb14860d4aac05b757497518e16ba6f0959dc6f02e8dcfe1714fe13e2b8151",
+    "backend/tests/test_equipment.py": "8bbac2743ae6bada379bd6ef71411a67da35f4fc81ec0a2820dc6fcac02aa241",
+    "backend/tests/test_equipment_module.py": "195c2b0e55940117f9749acb60997c0cd559d459dcf440229fa402de4bd41042",
+    "backend/tests/test_import_service_v2.py": "dee2f5e2daa8dfb6844bb23e8d1329cefb69823d2996b3d5d47d05228f4f665d",
+    "backend/tests/test_installations.py": "073ef558e8031a6d2aa8c3a5dc0e6197aaf9af30d2561c540129aabe91c6c2e5",
+    "backend/tests/test_modular_bootstrap.py": "80ec2fa32f2293967e96df779e7f10722e902a951b5259564370f207657fb9b2"
+  },
+  "independent_review": {
+    "findings": [],
+    "baseline_compared_explicitly": "93be411",
+    "whole_module_AST_and_cutover_checked": true,
+    "Python_and_test_plan_JSON_parsing": "passed",
+    "full_suites_or_PostgreSQL_repeated": false,
+    "files_modified_by_reviewer": false
+  },
+  "seed_or_remote_CI_or_deployment_or_push_executed": false
+}

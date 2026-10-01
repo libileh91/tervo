@@ -39,7 +39,7 @@ ROUTER_REFERENCES = (
     ("app.api.v1.reviews", "router"),
     ("app.modules.customers.api", "sites_router"),
     ("app.modules.catalog.api", "router"),
-    ("app.api.v1.equipment", "router"),
+    ("app.modules.equipment.api", "router"),
     ("app.api.v1.installations", "router"),
     ("app.modules.sales.api", "router"),
 )

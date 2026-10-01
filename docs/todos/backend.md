@@ -145,7 +145,7 @@
 | --- | --- |
 | **Créé dans** | INT-96 |
 | **Dépend de** | INT-97 — entité Equipment |
-| **Fichiers** | `app/modules/catalog/models.py` (déplacé dans INT-115), `app/models/equipment.py`, migrations, `tests/test_products.py` |
+| **Fichiers** | `app/modules/catalog/models.py` (déplacé dans INT-115), `app/modules/equipment/models.py` (déplacé dans INT-117), migrations, `tests/test_products.py` |
 | **Action attendue** | Ajouter Equipment.product_id (FK non unique), relations ORM bidirectionnelles ; tester deux équipements distincts du même produit puis la conservation des liens après désactivation. Valider les deux critères INT-96 restants. |
 | **Statut** | ✅ Fait dans INT-97 — relations ORM et test de deux appareils conservés après désactivation |
 
@@ -168,7 +168,7 @@
 | --- | --- |
 | **Créé dans** | INT-97 |
 | **Dépend de** | INT-103 — entité Installation |
-| **Fichiers** | `app/models/equipment.py`, futur `app/models/installation.py`, migration, services et tests |
+| **Fichiers** | `app/modules/equipment/models.py` (déplacé dans INT-117), `app/models/installation.py`, migration, services et tests |
 | **Action attendue** | Ajouter la FK Equipment.installation_id, son unicité (Installation 1 → 0..1 Equipment) et les relations ORM. Alimenter ce champ uniquement lors de la réalisation d’une installation, en vérifiant site et produit. La colonne reste nullable pour les imports historiques. |
 | **Statut** | ✅ Fait dans INT-103 autonome (28/09/2026) — FK nullable + unicité + relations ORM ; clôture atomique créer/rattacher, site vérifié et produit catalogue validé à la création/conservé au rattachement. Tests SQLite et PostgreSQL. Cohérence avec un produit vendu reportée à TD-B017. |
 

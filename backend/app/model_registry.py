@@ -7,7 +7,7 @@ def load_models() -> None:
     # Python's module cache makes repeated calls safe without a second registry.
     from app.models.checklist_item import ChecklistItem  # noqa: F401
     from app.modules.customers.models import Client, Site  # noqa: F401
-    from app.models.equipment import Equipment  # noqa: F401
+    from app.modules.equipment.models import Equipment  # noqa: F401
     from app.models.import_batch import (  # noqa: F401
         ImportBatch,
         ImportError,

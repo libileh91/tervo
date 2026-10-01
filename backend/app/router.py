@@ -6,7 +6,7 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.checklist import router as checklist_router
 from app.modules.customers.api import clients_router, sites_router
 from app.api.v1.dashboard import router as dashboard_router
-from app.api.v1.equipment import router as equipment_router
+from app.modules.equipment.api import router as equipment_router
 from app.api.v1.imports import router as imports_router
 from app.api.v1.installations import router as installations_router
 from app.api.v1.interventions import router as interventions_router

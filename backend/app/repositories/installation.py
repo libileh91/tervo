@@ -2,7 +2,7 @@
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import selectinload
 from app.models.installation import Installation
-from app.models.equipment import Equipment, EquipmentStatus
+from app.modules.equipment.models import Equipment, EquipmentStatus
 
 
 class InstallationRepository:

@@ -2,9 +2,9 @@
 from fastapi import HTTPException
 from app.modules.customers.models import Site
 from app.modules.catalog.models import Product
-from app.models.equipment import EquipmentStatus
-from app.repositories.equipment import EquipmentRepository
-from app.schemas.equipment import EquipmentListResponse, EquipmentResponse
+from app.modules.equipment.models import EquipmentStatus
+from app.modules.equipment.repository import EquipmentRepository
+from app.modules.equipment.schemas import EquipmentListResponse, EquipmentResponse
 
 
 class EquipmentService:

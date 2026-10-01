@@ -10,7 +10,7 @@ from app.models import Base
 from app.modules.customers.models import Client, Site
 from app.models.user import Role, User
 from app.modules.catalog.models import Product
-from app.models.equipment import Equipment
+from app.modules.equipment.models import Equipment
 from app.models.intervention import Intervention
 
 

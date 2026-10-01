@@ -1,7 +1,7 @@
 """Equipment API contracts; replacement creates a distinct physical instance."""
 from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, Field, model_validator
-from app.models.equipment import EquipmentStatus
+from app.modules.equipment.models import EquipmentStatus
 
 
 class EquipmentCreate(BaseModel):

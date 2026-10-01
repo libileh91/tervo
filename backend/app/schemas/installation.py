@@ -3,7 +3,7 @@ from datetime import date, datetime, timezone
 from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from app.models.installation import InstallationStatus
-from app.schemas.equipment import EquipmentResponse
+from app.modules.equipment.schemas import EquipmentResponse
 
 
 class InstallationCreate(BaseModel):

@@ -18,7 +18,7 @@ from app.importers.ingestion import read_sources
 from app.importers.report import DEFAULT_BATCH_SIZE
 from app.modules.customers.models import Client, Site
 from app.modules.catalog.models import Product
-from app.models.equipment import Equipment
+from app.modules.equipment.models import Equipment
 from app.models.intervention import Intervention
 from app.models.user import User
 from app.models.import_batch import ImportBatch, ImportRecord, ImportReference, ImportError

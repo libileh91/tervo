@@ -24,8 +24,8 @@ from app.modules.customers.schemas import (
 from app.modules.customers.service import ClientService, SiteService
 from app.schemas.intervention import InterventionHistoryResponse
 from app.services.intervention import InterventionService
-from app.schemas.equipment import EquipmentListResponse
-from app.services.equipment import EquipmentService
+from app.modules.equipment.schemas import EquipmentListResponse
+from app.modules.equipment.service import EquipmentService
 
 clients_router = APIRouter(prefix="/clients", tags=["clients"])
 sites_router = APIRouter(prefix="/sites", tags=["sites"])

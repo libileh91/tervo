@@ -1,6 +1,6 @@
 """Equipment queries and atomic replacement writes."""
 from sqlalchemy import func, select, update
-from app.models.equipment import Equipment, EquipmentStatus
+from app.modules.equipment.models import Equipment, EquipmentStatus
 
 
 class EquipmentRepository:

@@ -5,7 +5,7 @@ from app.importers.format_detector import FormatDetector, ImportKind
 from app.importers.multi_matcher import MultiLevelMatcher, SOURCE_FIELDS
 from app.importers.normalizer import Normalizer as N
 from app.modules.customers.schemas import ClientCreate, SiteCreate
-from app.schemas.equipment import EquipmentCreate
+from app.modules.equipment.schemas import EquipmentCreate
 from app.modules.catalog.schemas import ProductCreate
 from app.schemas.intervention import InterventionCreate
 
