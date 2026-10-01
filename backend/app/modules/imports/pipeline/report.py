@@ -25,8 +25,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
 
-from app.importers.format_detector import ImportKind
-from app.importers.validators import RowError
+from app.modules.imports.pipeline.format_detector import ImportKind
+from app.modules.imports.pipeline.validators import RowError
 
 # ── Paramètres ─────────────────────────────────────────────
 

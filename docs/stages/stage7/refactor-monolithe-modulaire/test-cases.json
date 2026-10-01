@@ -555,7 +555,7 @@
       "wave": "R9",
       "title": "Imports — même pack, preuves fonctionnelles avant/après identiques",
       "type": "integration",
-      "preconditions": ["INT-120 clôturée ; feu vert R9 distinct requis et pas encore donné", "Pack backend/tests/fixtures/excel/ et empreintes R0 disponibles", "Deux bases jetables avec état initial équivalent, mêmes mapping, décisions et configuration"],
+      "preconditions": ["INT-120 acceptée et committée sous bb1fc14 ; feu vert distinct R9 reçu", "Pack backend/tests/fixtures/excel/ et empreintes R0 disponibles", "Deux bases jetables avec état initial équivalent, mêmes mapping, décisions et configuration"],
       "steps": [
         "Avant le move R9, vérifier les SHA-256 du pack : 01_clients_sites_equipements.xlsx, 02_interventions_2018_2025.xlsx, 03_export_ancien_format.xlsx, 04_export_clients_latin1.csv et fichiers d'accompagnement selon le manifeste R0.",
         "Exécuter le pack avant déplacement et capturer ImportBatch, ImportRecord, ImportReference, ImportError et les clients/sites/équipements/interventions/produits créés ou rattachés.",
@@ -577,7 +577,16 @@
         "business_difference_hidden_by_normalization": false,
         "full_before_after_capture_assumed_from_R0_hashes_alone": false
       },
-      "status": "not_run"
+      "status": "passed",
+      "execution": {
+        "scope": "full golden pack comparison on SQLite, all tables initially empty, fixed namespace/mapping/decisions and source bytes",
+        "tests": ["test_imports_module.py", "test_modular_bootstrap.py"],
+        "observed": "original legacy capture verified before move; full normalized before/after JSON byte-identical (560268 bytes, f98dd88686d7efc6446187e5507a8c49be5fe3be66453acc014b1fcbec502db2). IDs/FKs/plan_token/fingerprint exact; 4 clients/4 sites/3 equipment/4 interventions, 18 records/15 references/111 anomalies-errors; ambiguities remain pending",
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R9-validation.json",
+        "before_artifact": "backend/tests/fixtures/imports_refactor/before.json",
+        "user_acceptance": "pending",
+        "whole_golden_PostgreSQL_executed": false
+      }
     },
     {
       "id": "TC-INT-121-02",
@@ -585,10 +594,17 @@
       "wave": "R9",
       "title": "Imports — idempotence, reprise, bail et transactions par sous-lots",
       "type": "integration",
-      "preconditions": ["Feu vert R9 distinct requis", "PostgreSQL jetable et scénarios existants d'import multi-sous-lots/concurrence"],
+      "preconditions": ["Feu vert distinct R9 reçu", "PostgreSQL jetable et scénarios existants d'import multi-sous-lots/concurrence"],
       "steps": ["Rejouer une source identique, tenter une exécution avec plan non validé ou référentiel changé.", "Injecter une erreur dans un sous-lot puis reprendre ; comparer les lignes déjà commitées et les entités.", "Rejouer les scénarios de concurrence, bail et protection contre un ancien processus ; vérifier les verrous et l'API import."],
       "expected_result": {"SHA256_idempotence_preserved": true, "duplicate_business_entities_after_replay": false, "unvalidated_or_stale_plan_execution_rejected": true, "validated_plan_executed_without_recalculation": true, "failed_subbatch_rolled_back": true, "previously_committed_subbatches_preserved": true, "committed_records_skipped_on_resume": true, "single_execution_slot_and_lease_preserved": true, "obsolete_process_cannot_resume_with_stale_token": true, "locking_and_transaction_owner_changed": false, "existing_postgres_import_tests_pass": true},
-      "status": "not_run"
+      "status": "passed",
+      "execution": {
+        "scope": "existing transactional/API scenarios SQLite and disposable PostgreSQL; same-hash golden replay SQLite",
+        "tests": ["test_import_service_v2.py", "test_import_api_v2.py", "test_imports_module.py"],
+        "observed": "95 PostgreSQL canonical cases (56 + 39); chunk rollback/resume, 500-row default, stale plan/snapshot, active/expired lease and previous committed rows preserved; complete service/planner AST unchanged except imports",
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R9-validation.json",
+        "user_acceptance": "pending"
+      }
     },
     {
       "id": "TC-INT-121-03",
@@ -596,10 +612,17 @@
       "wave": "R9",
       "title": "Imports — formats, orphelins et historique sans chaîne commerciale fictive",
       "type": "integration",
-      "preconditions": ["Feu vert R9 distinct requis", "Pack .xlsx multi-feuilles et .csv latin1 avec anomalies attendues"],
+      "preconditions": ["Feu vert distinct R9 reçu", "Pack .xlsx multi-feuilles et .csv latin1 avec anomalies attendues"],
       "steps": ["Rejouer lecture, format/mapping, normalisation, validation, matching multi-niveaux et décisions explicites sur les formats du pack.", "Importer un équipement historique sans installation et une intervention sans équipement lorsque le contrat existant le permet.", "Vérifier erreurs/orphelins tracés, aucune vente/installation artificielle, puis snapshots et Alembic."],
       "expected_result": {"xlsx_csv_and_multisheet_support_preserved": true, "file_sheet_physical_line_provenance_preserved": true, "expected_anomalies_and_orphans_traced": true, "historical_equipment_installation_id": null, "historical_intervention_equipment_nullable_when_allowed": true, "fictitious_sale_or_installation_created": false, "imports_becomes_owner_of_business_entities": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
-      "status": "not_run"
+      "status": "passed",
+      "execution": {
+        "scope": "fixed XLSX/multisheet/Latin1 pack plus separate valid historical null-equipment service scenario on SQLite; metadata/Alembic separately",
+        "tests": ["test_importers_structure.py", "test_importers_v2.py", "test_matching_v2.py", "test_imports_module.py", "test_imports_bootstrap.py"],
+        "observed": "115 targeted, 371 SQLite; historic equipment without installation and additional intervention without equipment/commerce verified; 17 tables/OpenAPI unchanged, only known technician FK difference; all source pack hashes unchanged",
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R9-validation.json",
+        "user_acceptance": "pending"
+      }
     },
     {
       "id": "TC-INT-122-01",

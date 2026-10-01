@@ -9,7 +9,7 @@ import math
 import pandas as pd
 from openpyxl import load_workbook
 
-from app.importers.format_detector import FormatDetector
+from app.modules.imports.pipeline.format_detector import FormatDetector
 
 
 def json_value(value):

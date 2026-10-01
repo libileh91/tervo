@@ -22,8 +22,8 @@ import pkgutil
 from pathlib import Path
 from typing import Any, cast
 
-from app import importers
-from app.importers import (
+from app.modules.imports import pipeline as importers
+from app.modules.imports.pipeline import (
     AUTO_MATCH_THRESHOLD,
     DEFAULT_BATCH_SIZE,
     HUMAN_REVIEW_THRESHOLD,
@@ -41,7 +41,7 @@ from app.importers import (
     SheetPreview,
     ValidationResult,
 )
-from app.services.import_service import ImportService
+from app.modules.imports.service import ImportService
 
 # ── Helpers ────────────────────────────────────────────────
 
@@ -61,7 +61,7 @@ FORBIDDEN_APP_PREFIXES: tuple[str, ...] = (
 
 
 def _package_dir() -> Path:
-    """Répertoire du package `app.importers`."""
+    """Répertoire du package `app.modules.imports.pipeline`."""
     return Path(cast(str, importers.__file__)).parent
 
 
@@ -159,7 +159,7 @@ class TestPackageContract:
         for name, path in _importer_modules():
             for module in _imported_modules(path):
                 if module.startswith("app."):
-                    assert module.startswith("app.importers."), (
+                    assert module.startswith("app.modules.imports.pipeline."), (
                         f"{name} importe {module} hors du package importers"
                     )
 

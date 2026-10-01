@@ -14,16 +14,16 @@ from sqlalchemy import select, update, text, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from app.importers.ingestion import read_sources
-from app.importers.report import DEFAULT_BATCH_SIZE
+from app.modules.imports.pipeline.ingestion import read_sources
+from app.modules.imports.pipeline.report import DEFAULT_BATCH_SIZE
 from app.modules.customers.models import Client, Site
 from app.modules.catalog.models import Product
 from app.modules.equipment.models import Equipment
 from app.modules.interventions.models.intervention import Intervention
 from app.models.user import User
-from app.models.import_batch import ImportBatch, ImportRecord, ImportReference, ImportError
-from app.schemas.imports import ImportDecision, SheetSelection
-from app.services.import_planner import ImportPlanner
+from app.modules.imports.models import ImportBatch, ImportRecord, ImportReference, ImportError
+from app.modules.imports.schemas import ImportDecision, SheetSelection
+from app.modules.imports.planner import ImportPlanner
 
 MODELS = dict(clients=Client,sites=Site,products=Product,equipment=Equipment,interventions=Intervention)
 

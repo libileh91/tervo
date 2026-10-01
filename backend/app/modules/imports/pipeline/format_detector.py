@@ -166,7 +166,7 @@ class FormatDetector:
     @staticmethod
     def header(value: str) -> str:
         import re
-        from app.importers.normalizer import Normalizer
+        from app.modules.imports.pipeline.normalizer import Normalizer
         return " ".join(re.sub(r"[^a-z0-9]+", " ", Normalizer.name(value)).split())
 
     def detect(self, columns: list[str], kind: ImportKind = ImportKind.MIXED,

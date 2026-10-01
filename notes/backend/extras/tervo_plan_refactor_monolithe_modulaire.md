@@ -5,7 +5,7 @@
 > **Baseline Git :** `544a23d6cb2cbe878fbc8ddf2d962c7adf76c000`  
 > **Point de départ fonctionnel :** Sprint 7.3 terminé et poussé ; `Sale`, `SaleLine` et `Installation` sont maintenant dans le code.  
 > **Important :** l'historique Git ayant été réécrit, les anciens SHA ne doivent plus servir de baseline de comparaison.
-> **Avancement du chantier :** R0 à R7 validés et committés sur `refactor/modular-monolith` ; dernier commit : `7a52d03` (interventions), naming documentaire : `8f3e876`. R8 / INT-120 vérifié localement et accepté : [note et preuve](../refactor-monolithe-modulaire/INT-120-R8-reports.md), [planning technique](../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md). Commit R8 autorisé, feu vert distinct R9 reçu ; R10 à R11 non commencées. La [baseline R0](refactor-monolithe-modulaire/R0-baseline.md) et l'écart FK technicien sont conservés sans correction.
+> **Avancement du chantier :** R0 à R8 validés et committés sur `refactor/modular-monolith` ; dernier commit : `bb1fc14` (reports), naming documentaire : `8f3e876`. R9 / INT-121 vérifié localement et accepté : [note et preuve](../refactor-monolithe-modulaire/INT-121-R9-imports.md), [planning technique](../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md). Commit R9 autorisé, nettoyage technique demandé séparément ; R10 à R11 non autorisées/non commencées. La [baseline R0](refactor-monolithe-modulaire/R0-baseline.md) et l'écart FK technicien sont conservés sans correction.
 
 ### Décision de naming
 
@@ -1053,8 +1053,10 @@ Cible :
 
 ```text
 modules/imports/
+├── __init__.py
 ├── models.py
 ├── schemas.py
+├── planner.py
 ├── service.py
 ├── api.py
 └── pipeline/
@@ -1065,9 +1067,12 @@ modules/imports/
     ├── validators.py
     ├── matcher.py
     ├── multi_matcher.py
-    ├── planner.py
     └── report.py
 ```
+
+R9 conserve le planner à la racine : il dépend des schémas métier, contrairement
+au pipeline bas niveau, qui garde son contrat sans framework ni base. La capture
+sur les sources R8 puis le replay après cutover sont détaillés dans la note INT-121.
 
 À préserver absolument :
 
@@ -1248,7 +1253,7 @@ avec 80 fichiers déplacés et aucune frontière de validation intermédiaire.
 [x] installations est isolé
 [x] interventions est isolé
 [x] reports est isolé
-[ ] imports est isolé
+[x] imports est isolé
 [ ] identity est isolé
 [ ] dashboard reste une lecture transverse
 [ ] core ne contient que des préoccupations techniques

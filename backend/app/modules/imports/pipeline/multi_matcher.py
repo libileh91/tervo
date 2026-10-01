@@ -4,7 +4,7 @@ import math
 import re
 
 from rapidfuzz.fuzz import token_sort_ratio
-from app.importers.normalizer import Normalizer as N
+from app.modules.imports.pipeline.normalizer import Normalizer as N
 
 AUTO_MATCH_THRESHOLD = 95.0
 HUMAN_REVIEW_THRESHOLD = 80.0

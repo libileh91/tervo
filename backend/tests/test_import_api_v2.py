@@ -9,7 +9,7 @@ from app.core.security import create_access_token
 from app.main import app
 from app.models.user import User, Role
 from app.modules.customers.models import Client
-from app.models.import_batch import ImportBatch, ImportRecord
+from app.modules.imports.models import ImportBatch, ImportRecord
 from tests.test_import_service_v2 import environment, CLIENT_CSV, FIXTURES
 
 PREFIX = '/api/v1/admin/import'

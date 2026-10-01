@@ -1,9 +1,9 @@
 """Capture immutable source rows for a manifest; no database or web dependency."""
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from app.importers.excel_reader import ExcelReader
-from app.importers.format_detector import FormatDetector, ImportKind
-from app.importers.validators import Validator
+from app.modules.imports.pipeline.excel_reader import ExcelReader
+from app.modules.imports.pipeline.format_detector import FormatDetector, ImportKind
+from app.modules.imports.pipeline.validators import Validator
 
 
 def read_sources(content: bytes, filename: str, namespace: str, selections: list[dict]):

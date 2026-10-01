@@ -173,7 +173,7 @@ class ClientMatcher:
         self.weights = weights or MatchWeights()
         if any(w < 0 for w in self.weights.to_dict().values()) or self.weights.total <= 0:
             raise ValueError("Pondérations invalides")
-        from app.importers.multi_matcher import MultiLevelMatcher
+        from app.modules.imports.pipeline.multi_matcher import MultiLevelMatcher
         self.multi = MultiLevelMatcher(auto_threshold, review_threshold, max_candidates)
         self.multi.client_weights = (self.weights.name, self.weights.phone, self.weights.city)
         self.auto_threshold = auto_threshold
@@ -213,7 +213,7 @@ class ClientMatcher:
 
         """
         from rapidfuzz.fuzz import token_sort_ratio
-        from app.importers.normalizer import Normalizer as N
+        from app.modules.imports.pipeline.normalizer import Normalizer as N
         total = weight = 0.0
         for key, w in [('full_name', self.weights.name), ('phone', self.weights.phone), ('city', self.weights.city)]:
             normalizer = self.multi.phone if key == 'phone' else N.name

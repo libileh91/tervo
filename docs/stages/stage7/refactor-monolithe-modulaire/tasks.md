@@ -2,12 +2,12 @@
 
 > **Chantier transverse du Stage 7, avant 7.4 ; pas un sprint de features.**
 > **Branche :** `refactor/modular-monolith`, déjà créée. **R0 :** validé, sans nouvel INT.
-> **Autorisation :** R1 à R7 validés par l'utilisateur et committés ; R7 : `7a52d03`. R8 accepté, commit autorisé ; feu vert distinct R9 reçu. R10 à R11 non commencées, feu vert distinct par tâche.
+> **Autorisation :** R1 à R8 validés par l'utilisateur et committés ; R8 : `bb1fc14`. R9 accepté, commit autorisé. Nettoyage technique des dossiers vides demandé séparément ; R10 à R11 non commencées, aucun feu vert nouveau.
 > **Références :** [cadrage et baseline](README.md) · [plan](../../../../notes/backend/extras/tervo_plan_refactor_monolithe_modulaire.md) · [DAT](../../../DAT/new/00-sommaire.md).
 > **Estimations :** estimation à confirmer pour chaque tâche.
 > **Notes futures :** `notes/backend/refactor-monolithe-modulaire/`. La preuve R0 reste dans `notes/backend/extras/refactor-monolithe-modulaire/`.
 
-Les critères d'INT-113 à INT-120 sont cochés après validation locale et acceptation utilisateur. Les captures historiques restent intactes. R9 est autorisé, ses critères restent ouverts ; R10 à R11 sont non commencés. La création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
+Les critères d'INT-113 à INT-121 sont cochés après validation locale et acceptation utilisateur. Les captures historiques restent intactes. R10 à R11 sont non commencés ; le nettoyage des namespaces sans code actif ne clôture pas INT-123. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
 
 ## Garde-fous communs à toutes les tâches
 
@@ -211,7 +211,7 @@ Afin de **donner une frontière cohérente à 7.4 sans implémenter ses évoluti
 
 ## INT-120 — R8 — Déplacer `reports`
 
-**Statut :** implémenté et vérifié localement, accepté par l'utilisateur ; commit autorisé. Avant commit : 9 empreintes conformes et 49 tests ciblés rejoués (2 warnings, 24,53 s). Feu vert distinct R9 reçu.
+**Statut :** accepté et committé dans le worktree attaché sous `bb1fc14`. Avant commit : 9 empreintes conformes et 49 tests ciblés rejoués (2 warnings, 24,53 s). Feu vert distinct R9 reçu.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -237,7 +237,7 @@ Afin de **rendre la génération existante autonome dans son package sans change
 
 ## INT-121 — R9 — Déplacer `imports`
 
-**Statut :** feu vert distinct reçu après acceptation d'INT-120 ; capture fonctionnelle avant requise avant tout cutover.
+**Statut :** accepté par l'utilisateur, commit autorisé. Avant commit : 28 empreintes conformes ; 115 ciblés (1 warning, 34,32 s) et 371 SQLite (7 warnings, 88,34 s) rejoués après nettoyage technique. R10 non autorisé/non commencé.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -245,13 +245,14 @@ Je veux **regrouper le pipeline d'import et son cycle de vie dans imports**,
 Afin de **préserver le différenciateur Excel avec une preuve fonctionnelle avant/après sur les mêmes sources**.
 
 **Acceptance Criteria**
-- [ ] Avant le déplacement R9, vérifier les empreintes R0 du pack fixe et capturer ses résultats fonctionnels sur une base jetable avec état initial documenté.
-- [ ] Déplacer ImportBatch/ImportRecord/ImportReference/ImportError, schémas, APIs, planner, service et pipeline vers `app/modules/imports/` et `pipeline/`, sans devenir propriétaire des entités métier importées.
-- [ ] Rejouer exactement le même pack, mapping, décisions et état métier initial après déplacement ; comparer Batch/Record/Reference/Error et clients/sites/équipements/interventions créés ou rattachés (produits lorsqu'utilisés).
-- [ ] Résultats identiques : provenance fichier/feuille/ligne, brut/normalisé, anomalies, rapprochements, décisions, plans, compteurs, statuts, liens et erreurs/orphelins ; toute normalisation de champs volatils est documentée et n'efface aucune différence métier.
-- [ ] Préserver SHA-256, plan validé sans recalcul, reprise/idempotence, bail/verrouillage/sérialisation et transactions par sous-lots ; rollback sans perte des sous-lots déjà commitées.
-- [ ] Préserver `.xlsx`/`.csv`, multi-feuilles et sources intactes ; équipements historiques sans installation et interventions sans équipement acceptés selon le contrat existant ; aucune vente/installation fictive.
-- [ ] Tests pipeline/API SQLite et PostgreSQL sans régression ; cutover et garde-fous communs satisfaits ; note R9 avec preuves avant/après, validation puis attente du feu vert R10.
+- [x] Avant le déplacement R9, vérifier les empreintes R0 du pack fixe et capturer ses résultats fonctionnels sur une base jetable avec état initial documenté.
+- [x] Déplacer ImportBatch/ImportRecord/ImportReference/ImportError, schémas, APIs, planner, service et pipeline vers `app/modules/imports/` et `pipeline/`, sans devenir propriétaire des entités métier importées.
+- [x] Rejouer exactement le même pack, mapping, décisions et état métier initial après déplacement ; comparer Batch/Record/Reference/Error et clients/sites/équipements/interventions créés ou rattachés (produits lorsqu'utilisés).
+- [x] Résultats identiques : provenance fichier/feuille/ligne, brut/normalisé, anomalies, rapprochements, décisions, plans, compteurs, statuts, liens et erreurs/orphelins ; toute normalisation de champs volatils est documentée et n'efface aucune différence métier.
+- [x] Préserver SHA-256, plan validé sans recalcul, reprise/idempotence, bail/verrouillage/sérialisation et transactions par sous-lots ; rollback sans perte des sous-lots déjà commitées.
+- [x] Préserver `.xlsx`/`.csv`, multi-feuilles et sources intactes ; équipements historiques sans installation et interventions sans équipement acceptés selon le contrat existant ; aucune vente/installation fictive.
+- [x] Tests pipeline/API SQLite et PostgreSQL sans régression ; cutover et garde-fous communs satisfaits ; note R9 et clôture soumise avec preuves avant/après.
+- [x] Obtenir l'acceptation utilisateur avant commit R9 et tout feu vert R10.
 
 **Technical Notes**
 - Source : `backend/app/api/v1/imports.py`, `models/import_batch.py`, `schemas/imports.py`, `services/import_planner.py`, `services/import_service.py` et `importers/*` sous `backend/app/`.
@@ -259,6 +260,10 @@ Afin de **préserver le différenciateur Excel avec une preuve fonctionnelle ava
 - Comparer les identifiants directement si les états initiaux déterministes le permettent ; sinon utiliser une correspondance stable conservant les relations. Exclure seulement les identifiants techniques/horodatages/jetons volatils justifiés, jamais les décisions ou liens métier.
 - Ne pas convertir les transactions en « un commit par fichier », ni supprimer les erreurs ou rendre Sale/Installation obligatoires. La mesure sur volume représentatif TD-B016 reste distincte.
 - Cas : `TC-INT-121-01` à `TC-INT-121-03`.
+- Cible livrée : `imports/{models,schemas,planner,service,api}.py` et neuf fichiers `pipeline/`, init racine pur ; 14 anciennes sources retirées. Planner à la racine pour garder le pipeline bas niveau sans framework/base, contrat historique non affaibli.
+- [Note et preuve INT-121](../../../../notes/backend/refactor-monolithe-modulaire/INT-121-R9-imports.md) : **115 ciblés**, **371 SQLite** (11 nouveaux cas), **95 PostgreSQL** canoniques, snapshots R0 identiques, seule FK historique. 14 AST complets égaux après seuls chemins d'import et référence documentaire, 49 définitions top-level.
+- Oracle avant figé sur R8 : `tests/fixtures/imports_refactor/before.json`, JSON complet de **560 268 octets**, exactement égal au replay après normalisations techniques documentées. 4 clients/4 sites/3 équipements/4 interventions, 18 records/15 références/111 anomalies-erreurs ; pending conservés. IDs, FK, plan_token et fingerprint exacts, hashes et commit source épinglés par le test.
+- Golden replay SQLite-only ; PostgreSQL vérifié par les scénarios canoniques existants. Revue indépendante 114 ciblés, réserve de gel d'oracle corrigée puis dernier cas nullable et pins vérifiés dans la suite finale du parent.
 
 ---
 

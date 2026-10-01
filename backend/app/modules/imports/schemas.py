@@ -1,7 +1,7 @@
 """Admin import contracts. Decisions are explicit and scoped to source row keys."""
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
-from app.importers.format_detector import ImportKind
+from app.modules.imports.pipeline.format_detector import ImportKind
 
 
 class SheetSelection(BaseModel):

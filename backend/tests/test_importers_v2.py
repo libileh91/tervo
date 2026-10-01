@@ -8,7 +8,7 @@ from openpyxl import Workbook
 import pandas as pd
 import pytest
 
-from app.importers import ExcelReader, FormatDetector, ImportKind, Normalizer, Validator
+from app.modules.imports.pipeline import ExcelReader, FormatDetector, ImportKind, Normalizer, Validator
 
 FIXTURES = Path(__file__).parent / 'fixtures/excel'
 
@@ -200,7 +200,7 @@ def test_unmapped_values_lengths_and_original_are_preserved():
 
 
 def test_report_counts_sheet_coordinates_and_excludes_warnings():
-    from app.importers import ImportReport, RowError, ErrorStatus
+    from app.modules.imports.pipeline import ImportReport, RowError, ErrorStatus
     report = ImportReport(filename='multi.xlsx', file_hash='a' * 64)
     report.add_errors([
         RowError(row=2, source_sheet='Clients', status=ErrorStatus.VALIDATION_ERROR, error='x'),

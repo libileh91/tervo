@@ -1,6 +1,8 @@
 # INT-99 — Comment le code décide d’associer ou de demander une revue
 
-Le code principal est [MultiLevelMatcher](../../../backend/app/importers/multi_matcher.py). Il reçoit des dictionnaires et retourne un `EntityMatch` ; il ne lit ni n’écrit la base. [ClientMatcher](../../../backend/app/importers/matcher.py) conserve le contrat historique.
+> **Chemins actualisés par R9 / INT-121 :** les matchers sont dans `app/modules/imports/pipeline/`. Algorithmes et résultats historiques restent inchangés ; voir la [preuve avant/après R9](../refactor-monolithe-modulaire/INT-121-R9-imports.md#L1).
+
+Le code principal est [MultiLevelMatcher](../../../backend/app/modules/imports/pipeline/multi_matcher.py#L31). Il reçoit des dictionnaires et retourne un `EntityMatch` ; il ne lit ni n’écrit la base. [ClientMatcher](../../../backend/app/modules/imports/pipeline/matcher.py#L158) conserve le contrat historique.
 
 ```text
 parent résolu → référence historique → score → contrôle de cohérence → décision
@@ -10,7 +12,7 @@ Le score mesure une ressemblance. Le contrôle suivant décide si cette ressembl
 
 ## 1. Comparer dans le bon parent
 
-Extrait réel de [multi_matcher.py](../../../backend/app/importers/multi_matcher.py), à partir de la ligne 106 :
+Extrait réel de [multi_matcher.py](../../../backend/app/modules/imports/pipeline/multi_matcher.py#L106), à partir de la ligne 106 :
 
 ```python
 parent = PARENTS.get(kind)
@@ -23,7 +25,7 @@ pool = [e for e in existing if not parent or e.get(parent) == parent_id]
 
 ## 2. Chercher d’abord la référence historique
 
-Extrait réel de [multi_matcher.py](../../../backend/app/importers/multi_matcher.py), à partir de la ligne 111 :
+Extrait réel de [multi_matcher.py](../../../backend/app/modules/imports/pipeline/multi_matcher.py#L111), à partir de la ligne 111 :
 
 ```python
 key = (namespace, kind, N.text(incoming.get(SOURCE_FIELDS[kind])))
@@ -49,7 +51,7 @@ Le namespace empêche de confondre deux systèmes utilisant tous deux `C001`. M�
 
 ## 3. Comprendre le score pondéré
 
-Extrait réel de [multi_matcher.py](../../../backend/app/importers/multi_matcher.py), à partir de la ligne 71 :
+Extrait réel de [multi_matcher.py](../../../backend/app/modules/imports/pipeline/multi_matcher.py#L71), à partir de la ligne 71 :
 
 ```python
 total, weights = 0.0, 0.0
@@ -76,7 +78,7 @@ Les champs absents sont exclus du dénominateur. C’est pourquoi un nom seul pe
 
 ## 4. Un score élevé ne suffit pas
 
-Extrait réel de [multi_matcher.py](../../../backend/app/importers/multi_matcher.py), à partir de la ligne 129 :
+Extrait réel de [multi_matcher.py](../../../backend/app/modules/imports/pipeline/multi_matcher.py#L129), à partir de la ligne 129 :
 
 ```python
 strong = {
@@ -138,7 +140,7 @@ Les [tests](../../../backend/tests/test_matching_v2.py) couvrent homonymes, C001
 
 ## Lire le contrat de sortie et les conflits
 
-Extrait du fichier [multi_matcher.py](../../../backend/app/importers/multi_matcher.py), lignes 17 à 28 :
+Extrait du fichier [multi_matcher.py](../../../backend/app/modules/imports/pipeline/multi_matcher.py#L17-L28), lignes 17 à 28 :
 
 ```python
 @dataclass
@@ -159,7 +161,7 @@ class EntityMatch:
 
 Voici le contrôle complet des contradictions :
 
-Extrait du fichier [multi_matcher.py](../../../backend/app/importers/multi_matcher.py), lignes 82 à 101 :
+Extrait du fichier [multi_matcher.py](../../../backend/app/modules/imports/pipeline/multi_matcher.py#L82-L101), lignes 82 à 101 :
 
 ```python
 def conflict(self, kind, incoming, existing):

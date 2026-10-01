@@ -2,7 +2,7 @@
 
 > **Planning :** [INT-120](../../../docs/stages/stage7/refactor-monolithe-modulaire/tasks.md#int-120--r8--déplacer-reports).
 > **Parent R7 :** `7a52d03a8cc42292a8e944284ad31dee4425d4e8`, branche `refactor/modular-monolith`.
-> **État :** implémenté, vérifié et accepté par l'utilisateur ; commit autorisé dans le worktree Delta attaché. Feu vert distinct R9 reçu.
+> **État :** accepté et committé sous `bb1fc14` dans le worktree Delta attaché. R9 autorisé et vérifié localement ; voir la [note INT-121](INT-121-R9-imports.md#L1). Le manifeste conserve sa capture avant acceptation.
 > **Preuve :** [R8-validation.json](R8-validation.json), résultats observés et empreintes des sources/tests/fixtures.
 
 ## 1. Reprise de R7 et frontière de cette vague
@@ -410,3 +410,6 @@ sources/tests/fixtures du manifeste sont conformes. Bootstrap, reports et
 2 warnings, 24,53 s**, avec l'interpréteur et PYTHONPATH décrits plus haut.
 Ce contrôle ne prétend pas répéter PostgreSQL. Le commit regroupe R8 uniquement ;
 sa capture JSON avant acceptation est conservée.
+
+Le commit `bb1fc14` a ensuite été créé dans le worktree attaché ; la capture
+fonctionnelle des imports a été produite avant le déplacement R9, sur ce parent.

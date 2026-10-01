@@ -1,9 +1,9 @@
 """Build reviewable operations against a snapshot, including in-file dependencies."""
 from copy import deepcopy
 from pydantic import ValidationError
-from app.importers.format_detector import FormatDetector, ImportKind
-from app.importers.multi_matcher import MultiLevelMatcher, SOURCE_FIELDS
-from app.importers.normalizer import Normalizer as N
+from app.modules.imports.pipeline.format_detector import FormatDetector, ImportKind
+from app.modules.imports.pipeline.multi_matcher import MultiLevelMatcher, SOURCE_FIELDS
+from app.modules.imports.pipeline.normalizer import Normalizer as N
 from app.modules.customers.schemas import ClientCreate, SiteCreate
 from app.modules.equipment.schemas import EquipmentCreate
 from app.modules.catalog.schemas import ProductCreate

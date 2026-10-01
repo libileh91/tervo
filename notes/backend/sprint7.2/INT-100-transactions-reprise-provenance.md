@@ -1,11 +1,13 @@
 # INT-100 — Lire les transactions et la reprise dans le code
 
+> **Chemins actualisés par R9 / INT-121 :** journal, planner et service sont dans `app/modules/imports/`, ingestion dans son `pipeline/`. La [note R9](../refactor-monolithe-modulaire/INT-121-R9-imports.md#L1) vérifie les mêmes transactions, plans et audits ; les résultats INT-100 ci-dessous restent historiques.
+
 | Fichier | Responsabilité |
 | --- | --- |
-| [ingestion.py](../../../backend/app/importers/ingestion.py) | Capturer les sources et le manifeste |
-| [import_planner.py](../../../backend/app/services/import_planner.py) | Préparer les opérations et résoudre les dépendances |
-| [import_service.py](../../../backend/app/services/import_service.py) | Approuver, exécuter, reprendre et produire le rapport |
-| [import_batch.py](../../../backend/app/models/import_batch.py) | Conserver plans, références, traces et anomalies |
+| [ingestion.py](../../../backend/app/modules/imports/pipeline/ingestion.py#L9) | Capturer les sources et le manifeste |
+| [planner.py](../../../backend/app/modules/imports/planner.py#L20) | Préparer les opérations et résoudre les dépendances |
+| [service.py](../../../backend/app/modules/imports/service.py#L39) | Approuver, exécuter, reprendre et produire le rapport |
+| [models.py](../../../backend/app/modules/imports/models.py#L6) | Conserver plans, références, traces et anomalies |
 | [migration d100e0010001](../../../backend/alembic/versions/d100e0010001_add_import_journal.py) | Créer les quatre tables techniques |
 
 ```text
@@ -15,7 +17,7 @@ source   plan      transactions de 500 lignes maximum
 
 ## 1. Persister les correspondances entre fichiers
 
-Extrait réel de [import_batch.py](../../../backend/app/models/import_batch.py), à partir de la ligne 47 :
+Extrait réel de [models.py](../../../backend/app/modules/imports/models.py#L47), à partir de la ligne 47 :
 
 ```python
 class ImportReference(Base):
@@ -41,7 +43,7 @@ Les cibles techniques sont polymorphes : leur validité est contrôlée dans le 
 
 ## 2. Préparer les parents avant les enfants
 
-Extrait réel de [import_planner.py](../../../backend/app/services/import_planner.py), à partir de la ligne 203 :
+Extrait réel de [planner.py](../../../backend/app/modules/imports/planner.py#L203), à partir de la ligne 203 :
 
 ```python
 order = {'products':0,'clients':1,'sites':2,'equipment':3,'interventions':4}
@@ -61,7 +63,7 @@ Les produits éventuels précèdent les équipements ; les interventions suivent
 
 ## 3. Obtenir les vrais IDs sans commiter chaque ligne
 
-Extrait réel de [import_service.py](../../../backend/app/services/import_service.py), à partir de la ligne 181 :
+Extrait réel de [service.py](../../../backend/app/modules/imports/service.py#L181), à partir de la ligne 181 :
 
 ```python
 entity = MODELS[kind](**values)
@@ -75,7 +77,7 @@ target = entity.id
 
 ## 4. Ouvrir une transaction pour chaque sous-lot
 
-Extrait réel de [import_service.py](../../../backend/app/services/import_service.py), à partir de la ligne 237 :
+Extrait réel de [service.py](../../../backend/app/modules/imports/service.py#L237), à partir de la ligne 237 :
 
 ```python
 for index in range(0,len(entries),size):
@@ -105,7 +107,7 @@ L’erreur `BATCH_ROLLBACK` est ensuite enregistrée dans une **nouvelle transac
 
 ## 5. Reprendre sans rejouer les lignes commitées
 
-Extrait réel de [import_service.py](../../../backend/app/services/import_service.py), à partir de la ligne 234 :
+Extrait réel de [service.py](../../../backend/app/modules/imports/service.py#L234), à partir de la ligne 234 :
 
 ```python
 done = {r.row_key for r in records}
@@ -171,7 +173,7 @@ Validation initiale : 11 tests sur SQLite et PostgreSQL 17.4, migration montée/
 
 ## Comprendre le refus d’un plan devenu périmé
 
-Extrait du fichier [import_service.py](../../../backend/app/services/import_service.py), lignes 144 à 154 :
+Extrait du fichier [service.py](../../../backend/app/modules/imports/service.py#L144-L154), lignes 144 à 154 :
 
 ```python
 token = digest(dict(file_hash=batch.file_hash,namespace=batch.source_namespace,
@@ -193,7 +195,7 @@ L’UPDATE contient la révision précédemment lue. Si une autre validation a c
 
 Avant l’exécution, le service contrôle également le référentiel :
 
-Extrait du fichier [import_service.py](../../../backend/app/services/import_service.py), lignes 213 à 221 :
+Extrait du fichier [service.py](../../../backend/app/modules/imports/service.py#L213-L221), lignes 213 à 221 :
 
 ```python
 if batch.plan_token != plan_token or not batch.plan:

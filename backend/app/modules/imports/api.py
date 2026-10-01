@@ -6,11 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import Role, User
-from app.schemas.imports import (
+from app.modules.imports.schemas import (
     ExecuteImport, ImportBatchListResponse, ImportBatchResponse,
     ImportErrorListResponse, SheetSelection, ValidateImport,
 )
-from app.services.import_service import ImportService
+from app.modules.imports.service import ImportService
 
 router = APIRouter(prefix='/admin/import', tags=['admin-import'])
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024

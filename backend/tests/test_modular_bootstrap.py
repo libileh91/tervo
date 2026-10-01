@@ -27,7 +27,7 @@ ISOLATED_IMPORTS = (
     "fastapi",
 )
 ROUTER_REFERENCES = (
-    ("app.api.v1.imports", "router"),
+    ("app.modules.imports.api", "router"),
     ("app.api.v1.auth", "router"),
     ("app.modules.customers.api", "clients_router"),
     ("app.modules.interventions.api.interventions", "router"),

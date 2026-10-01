@@ -1,6 +1,8 @@
 # INT-101 — Suivre une requête de l’API jusqu’au service
 
-Le routeur [imports.py](../../../backend/app/api/v1/imports.py) est enregistré dans [app/main.py](../../../backend/app/main.py). Les réponses et requêtes sont typées dans [schemas/imports.py](../../../backend/app/schemas/imports.py).
+> **Chemins actualisés par R9 / INT-121 :** API/schémas/service vivent dans `app/modules/imports/`. Contrats et auth ADMIN inchangés ; les runs CI décrits ici restent historiques, pas un nouveau run distant. Voir la [note R9](../refactor-monolithe-modulaire/INT-121-R9-imports.md#L1).
+
+Le routeur [api.py](../../../backend/app/modules/imports/api.py#L17) est composé explicitement dans [app/router.py](../../../backend/app/router.py#L10-L22), puis inclus par [app/main.py](../../../backend/app/main.py#L45-L48). Les réponses et requêtes sont typées dans [schemas.py](../../../backend/app/modules/imports/schemas.py#L1).
 
 | Route sous `/api/v1/admin/import` | Résultat |
 | --- | --- |
@@ -13,7 +15,7 @@ Le routeur [imports.py](../../../backend/app/api/v1/imports.py) est enregistré 
 
 ## 1. Refuser un technicien avant toute opération d’import
 
-Extrait réel de [imports.py](../../../backend/app/api/v1/imports.py), à partir de la ligne 20 :
+Extrait réel de [api.py](../../../backend/app/modules/imports/api.py#L20), à partir de la ligne 20 :
 
 ```python
 async def import_admin(user: User = Depends(get_current_user)) -> User:
@@ -26,7 +28,7 @@ async def import_admin(user: User = Depends(get_current_user)) -> User:
 
 ## 2. Lire le manifeste multipart et borner le fichier
 
-Extrait réel de [imports.py](../../../backend/app/api/v1/imports.py), à partir de la ligne 34 :
+Extrait réel de [api.py](../../../backend/app/modules/imports/api.py#L34), à partir de la ligne 34 :
 
 ```python
 try:
@@ -56,7 +58,7 @@ Le retour contient `id`, `items`, `selections` et `total`. Chaque ligne expose `
 
 ## 3. Rendre les décisions explicites
 
-Extrait réel de [imports.py](../../../backend/app/schemas/imports.py), à partir de la ligne 18 :
+Extrait réel de [schemas.py](../../../backend/app/modules/imports/schemas.py#L18), à partir de la ligne 18 :
 
 ```python
 class ImportDecision(BaseModel):
@@ -103,7 +105,7 @@ Exemple de corps JSON pour `POST /validate` — adapter l’ID à celui de l’a
 
 ## 4. Exécuter seulement ce qui a été validé
 
-Extrait réel de [imports.py](../../../backend/app/schemas/imports.py), à partir de la ligne 44 :
+Extrait réel de [schemas.py](../../../backend/app/modules/imports/schemas.py#L44), à partir de la ligne 44 :
 
 ```python
 class ExecuteImport(BaseModel):
@@ -112,7 +114,7 @@ class ExecuteImport(BaseModel):
     plan_token: str = Field(pattern=r'^[a-f0-9]{64}$')
 ```
 
-Extrait réel de [imports.py](../../../backend/app/api/v1/imports.py), à partir de la ligne 65 :
+Extrait réel de [api.py](../../../backend/app/modules/imports/api.py#L65), à partir de la ligne 65 :
 
 ```python
 @router.post('/execute', response_model=ImportBatchResponse)
@@ -140,7 +142,7 @@ Un HTTP `200` signifie que le rapport est disponible ; il faut lire `status` pou
 ## 5. Pourquoi le service ouvre ses propres sessions
 
 L’authentification a déjà effectué un SELECT, donc la session de requête a une transaction ouverte. Le service crée une fabrique de sessions sur le même moteur :
-Extrait réel de [import_service.py](../../../backend/app/services/import_service.py), à partir de la ligne 44 :
+Extrait réel de [service.py](../../../backend/app/modules/imports/service.py#L44), à partir de la ligne 44 :
 
 ```python
 def __init__(self, db):
@@ -175,7 +177,7 @@ TD-B011 et TD-B015 sont clôturés. TD-B016 garde la mesure sur volume réel. Ce
 
 ## Suivre la validation HTTP jusqu’à la preuve du test
 
-Extrait du fichier [imports.py](../../../backend/app/api/v1/imports.py), lignes 50 à 62 :
+Extrait du fichier [api.py](../../../backend/app/modules/imports/api.py#L50-L62), lignes 50 à 62 :
 
 ```python
 @router.post('/validate', response_model=ImportBatchResponse)

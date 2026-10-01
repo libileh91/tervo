@@ -11,8 +11,8 @@ from app.models import Base
 from app.modules.customers.models import Client, Site
 from app.modules.equipment.models import Equipment
 from app.modules.interventions.models.intervention import Intervention
-from app.models.import_batch import ImportRecord, ImportReference
-from app.services.import_service import ImportService
+from app.modules.imports.models import ImportRecord, ImportReference
+from app.modules.imports.service import ImportService
 
 FIXTURES = Path(__file__).parent / 'fixtures' / 'excel'
 CLIENT_CSV = b'ID_ancien;Nom;Telephone;Adresse_facturation\nC1;Alpha;0612345678;Paris\nC2;Bravo;0623456789;Lyon\n'
@@ -230,8 +230,8 @@ async def test_missing_phone_association_preserves_existing_data(environment):
 @pytest.mark.asyncio
 async def test_active_lease_blocks_other_import_and_expired_lease_can_resume(environment):
     from datetime import timedelta
-    from app.models.import_batch import ImportBatch
-    from app.services.import_service import now
+    from app.modules.imports.models import ImportBatch
+    from app.modules.imports.service import now
     service, factory = environment
     first = await stage_clients(service)
     second = await stage_clients(service,CLIENT_CSV+b'\n')

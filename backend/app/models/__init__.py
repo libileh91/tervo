@@ -21,4 +21,4 @@ from app.modules.equipment.models import Equipment
 from app.modules.installations.models import Installation
 from app.modules.sales.models import Sale, SaleLine, SaleStatus
 
-from app.models.import_batch import ImportBatch, ImportRecord, ImportReference, ImportError
+from app.modules.imports.models import ImportBatch, ImportRecord, ImportReference, ImportError

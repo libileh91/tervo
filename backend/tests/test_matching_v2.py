@@ -1,6 +1,6 @@
 import pytest
-from app.importers.multi_matcher import MultiLevelMatcher
-from app.importers.matcher import ClientMatcher
+from app.modules.imports.pipeline.multi_matcher import MultiLevelMatcher
+from app.modules.imports.pipeline.matcher import ClientMatcher
 
 M = MultiLevelMatcher()
 CLIENTS = [dict(id=1, full_name='Jean Dupont', phone='0612345678', city='Massy')]
@@ -60,7 +60,7 @@ def test_reject_bad_configuration():
 
 def test_pack_duplicate_clients():
     from pathlib import Path
-    from app.importers import ExcelReader, FormatDetector, ImportKind, Validator
+    from app.modules.imports.pipeline import ExcelReader, FormatDetector, ImportKind, Validator
     path = Path(__file__).parent / 'fixtures/excel/01_clients_sites_equipements.xlsx'
     frame = ExcelReader().read(path, 'Clients')
     rows = Validator().validate(frame, FormatDetector().detect(list(frame.columns), ImportKind.CLIENTS), ImportKind.CLIENTS).records

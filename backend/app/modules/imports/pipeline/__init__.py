@@ -12,7 +12,7 @@ Le pipeline est découpé en étapes à responsabilité unique :
     ClientMatcher    → rapproche les clients (rapidfuzz, 3 zones)
     ImportReport     → agrège le résultat d'un import
 
-L'orchestration est assurée par `app.services.import_service.ImportService`,
+L'orchestration est assurée par `app.modules.imports.service.ImportService`,
 qui ne contient aucune logique bas niveau : il enchaîne les étapes ci-dessus
 et gère la persistance (repositories + transactions).
 
@@ -45,14 +45,14 @@ Flux complet :
     PostgreSQL + ImportReport
 """
 
-from app.importers.excel_reader import ExcelReader, SheetPreview
-from app.importers.format_detector import (
+from app.modules.imports.pipeline.excel_reader import ExcelReader, SheetPreview
+from app.modules.imports.pipeline.format_detector import (
     ColumnMapping,
     FormatDetector,
     ImportKind,
     InternalField,
 )
-from app.importers.matcher import (
+from app.modules.imports.pipeline.matcher import (
     AUTO_MATCH_THRESHOLD,
     HUMAN_REVIEW_THRESHOLD,
     ClientMatcher,
@@ -61,14 +61,14 @@ from app.importers.matcher import (
     MatchWeights,
     MatchZone,
 )
-from app.importers.normalizer import Normalizer
-from app.importers.report import (
+from app.modules.imports.pipeline.normalizer import Normalizer
+from app.modules.imports.pipeline.report import (
     DEFAULT_BATCH_SIZE,
     BatchResult,
     ImportReport,
     ImportStatus,
 )
-from app.importers.validators import (
+from app.modules.imports.pipeline.validators import (
     ErrorStatus,
     RowError,
     ValidationResult,

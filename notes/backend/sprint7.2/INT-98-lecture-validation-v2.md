@@ -1,13 +1,15 @@
 # INT-98 — Du fichier Excel à une ligne vérifiable
 
+> **Chemins actualisés par R9 / INT-121 :** le pipeline est dans `app/modules/imports/pipeline/`. Les résultats de cette note restent ceux de la livraison INT-98 ; la [note R9](../refactor-monolithe-modulaire/INT-121-R9-imports.md#L1) documente la comparaison fonctionnelle avant/après, sans nouveau déploiement.
+
 Cette tâche implémente la lecture, le mapping, la normalisation et la validation. Les extraits ci-dessous viennent du code du projet ; les exemples d’utilisation sont indiqués séparément.
 
 | Fichier | Ce qui a été implémenté |
 | --- | --- |
-| [excel_reader.py](../../../backend/app/importers/excel_reader.py) | Lecture XLSX/CSV et coordonnées des lignes |
-| [format_detector.py](../../../backend/app/importers/format_detector.py) | Colonne source → champ interne, selon la nature de la feuille |
-| [normalizer.py](../../../backend/app/importers/normalizer.py) | Téléphones, noms, dates, numéros de série |
-| [validators.py](../../../backend/app/importers/validators.py) | Anomalies et propositions par ligne |
+| [excel_reader.py](../../../backend/app/modules/imports/pipeline/excel_reader.py#L36) | Lecture XLSX/CSV et coordonnées des lignes |
+| [format_detector.py](../../../backend/app/modules/imports/pipeline/format_detector.py#L114) | Colonne source → champ interne, selon la nature de la feuille |
+| [normalizer.py](../../../backend/app/modules/imports/pipeline/normalizer.py#L9) | Téléphones, noms, dates, numéros de série |
+| [validators.py](../../../backend/app/modules/imports/pipeline/validators.py#L123) | Anomalies et propositions par ligne |
 
 ```text
 fichier → DataFrame + provenance → mapping → valeurs normalisées + anomalies
@@ -17,7 +19,7 @@ Aucune entité métier n’est écrite à cette étape.
 
 ## 1. Lire sans perdre la position dans le fichier
 
-Extrait réel de [excel_reader.py](../../../backend/app/importers/excel_reader.py), à partir de la ligne 128 :
+Extrait réel de [excel_reader.py](../../../backend/app/modules/imports/pipeline/excel_reader.py#L128), à partir de la ligne 128 :
 
 ```python
 frame = pd.DataFrame(data, columns=columns, dtype=object)
@@ -49,7 +51,7 @@ Le dictionnaire va du **champ interne vers la colonne source**. Le mot `Type` d�
 
 ## 3. Normaliser un téléphone sans inventer un chiffre
 
-Extrait réel de [normalizer.py](../../../backend/app/importers/normalizer.py), à partir de la ligne 30 :
+Extrait réel de [normalizer.py](../../../backend/app/modules/imports/pipeline/normalizer.py#L30), à partir de la ligne 30 :
 
 ```python
 def phone(value: object) -> str:
@@ -87,7 +89,7 @@ Les noms sont normalisés sans accents pour la comparaison ; les adresses garden
 
 ## 4. Une ligne produit un résultat, même si elle est invalide
 
-Extrait réel de [validators.py](../../../backend/app/importers/validators.py), à partir de la ligne 269 :
+Extrait réel de [validators.py](../../../backend/app/modules/imports/pipeline/validators.py#L269), à partir de la ligne 269 :
 
 ```python
 blocking = any(e.severity != 'warning' for e in issues)
@@ -140,7 +142,7 @@ Limites : lecture en mémoire, pas de XLS/OCR/PDF. La mesure sur volume réel re
 
 ## Voir comment les étapes sont assemblées
 
-Extrait du fichier [ingestion.py](../../../backend/app/importers/ingestion.py), lignes 9 à 37 :
+Extrait du fichier [ingestion.py](../../../backend/app/modules/imports/pipeline/ingestion.py#L9-L37), lignes 9 à 37 :
 
 ```python
 def read_sources(content: bytes, filename: str, namespace: str, selections: list[dict]):

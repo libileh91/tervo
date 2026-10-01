@@ -22,7 +22,7 @@ from typing import ClassVar
 
 import pandas as pd
 
-from app.importers.format_detector import ColumnMapping, ImportKind, InternalField
+from app.modules.imports.pipeline.format_detector import ColumnMapping, ImportKind, InternalField
 
 # ── Types ──────────────────────────────────────────────────
 
@@ -142,12 +142,12 @@ class Validator:
                  two_digit_year_base=None):
         import json
         import re
-        from app.importers.normalizer import Normalizer as N
-        from app.importers.excel_reader import json_value
+        from app.modules.imports.pipeline.normalizer import Normalizer as N
+        from app.modules.imports.pipeline.excel_reader import json_value
 
         if any(c not in df.columns for c in mapping.fields.values()):
             raise ValueError("Mapping incompatible avec les colonnes")
-        from app.importers.format_detector import FormatDetector
+        from app.modules.imports.pipeline.format_detector import FormatDetector
         if len(set(mapping.fields.values())) != len(mapping.fields):
             raise ValueError("Colonnes de mapping réutilisées")
         if any(k not in {f.value for f in FormatDetector.EXPECTED_FIELDS[kind]} for k in mapping.fields):

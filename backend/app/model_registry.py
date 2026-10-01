@@ -8,7 +8,7 @@ def load_models() -> None:
     from app.modules.interventions.models.checklist_item import ChecklistItem  # noqa: F401
     from app.modules.customers.models import Client, Site  # noqa: F401
     from app.modules.equipment.models import Equipment  # noqa: F401
-    from app.models.import_batch import (  # noqa: F401
+    from app.modules.imports.models import (  # noqa: F401
         ImportBatch,
         ImportError,
         ImportRecord,
