@@ -149,7 +149,7 @@ async def test_technician_replacement_keeps_historical_orm_links(context):
     from sqlalchemy import func, select
     from sqlalchemy.orm import selectinload
     from app.modules.installations.models import Installation
-    from app.models.intervention import Intervention
+    from app.modules.interventions.models.intervention import Intervention
     from app.modules.catalog.models import Product
     from app.modules.customers.models import Site
     from app.modules.equipment.models import Equipment, EquipmentStatus

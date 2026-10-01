@@ -11,7 +11,7 @@ from app.modules.customers.models import Client, Site
 from app.models.user import Role, User
 from app.modules.catalog.models import Product
 from app.modules.equipment.models import Equipment
-from app.models.intervention import Intervention
+from app.modules.interventions.models.intervention import Intervention
 
 
 @pytest.fixture

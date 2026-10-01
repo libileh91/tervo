@@ -2,12 +2,12 @@
 
 > **Chantier transverse du Stage 7, avant 7.4 ; pas un sprint de features.**
 > **Branche :** `refactor/modular-monolith`, déjà créée. **R0 :** validé, sans nouvel INT.
-> **Autorisation :** R1 à R5 validés par l'utilisateur et committés ; R5 : `7a453b8`. R6 accepté, commit autorisé ; feu vert distinct R7 reçu. R8 à R11 non commencées, feu vert distinct par tâche.
+> **Autorisation :** R1 à R6 validés par l'utilisateur et committés ; R6 : `90346f5`. R7 accepté, commit autorisé ; feu vert distinct R8 reçu. R9 à R11 non commencées, feu vert distinct par tâche.
 > **Références :** [cadrage et baseline](README.md) · [plan](../../../../notes/backend/extras/tervo_plan_refactor_monolithe_modulaire.md) · [DAT](../../../DAT/new/00-sommaire.md).
 > **Estimations :** estimation à confirmer pour chaque tâche.
 > **Notes futures :** `notes/backend/refactor-monolithe-modulaire/`. La preuve R0 reste dans `notes/backend/extras/refactor-monolithe-modulaire/`.
 
-Les critères d'INT-113 à INT-118 sont cochés après validation locale et acceptation utilisateur. Les captures historiques restent intactes. R7 est autorisé, ses critères restent ouverts ; R8 à R11 sont non commencés. La création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
+Les critères d'INT-113 à INT-119 sont cochés après validation locale et acceptation utilisateur. Les captures historiques restent intactes. R8 est autorisé, ses critères restent ouverts ; R9 à R11 sont non commencés. La création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
 
 ## Garde-fous communs à toutes les tâches
 
@@ -157,7 +157,7 @@ Afin de **préparer le déplacement d'Installation sans perdre l'historique phys
 
 ## INT-118 — R6 — Déplacer `installations`
 
-**Statut :** implémenté et vérifié localement, accepté par l'utilisateur ; commit autorisé. Avant commit : 17 empreintes conformes et 81 tests ciblés rejoués (1 warning, 21,27 s). Feu vert distinct R7 reçu.
+**Statut :** accepté et committé dans le worktree attaché sous `90346f5`. Avant commit : 17 empreintes conformes et 81 tests ciblés rejoués (1 warning, 21,27 s). Feu vert distinct R7 reçu.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -184,7 +184,7 @@ Afin de **préserver les parcours autonomes et commerciaux avec leur atomicité 
 
 ## INT-119 — R7 — Déplacer `interventions`
 
-**Statut :** feu vert distinct reçu après acceptation d'INT-118 ; à démarrer après son commit.
+**Statut :** implémenté et vérifié localement, accepté par l'utilisateur ; commit autorisé. Avant commit : 52 empreintes conformes et 57 tests ciblés rejoués (4 warnings, 20,55 s). Feu vert distinct R8 reçu.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -192,22 +192,26 @@ Je veux **rapprocher le contexte terrain existant dans interventions**,
 Afin de **donner une frontière cohérente à 7.4 sans implémenter ses évolutions métier pendant le déplacement**.
 
 **Acceptance Criteria**
-- [ ] Déplacer ensemble Intervention, ChecklistItem, InterventionPhoto, Material, Review et leurs schémas/repositories/services/APIs existants vers `app/modules/interventions/`.
-- [ ] Conserver les cinq familles de routes, règles, pièces jointes, auth, historique et relations ; aucun modèle renommé ou transformé.
-- [ ] Ne livrer aucune évolution INT-104 à INT-108 : ni snapshots de checklist, ni nouveaux Photo/MaterialUsage, ni clôture ou rapport versionné futur.
-- [ ] Tests terrain et consommateurs reports/imports sans régression ; cutover et garde-fous communs satisfaits.
-- [ ] Documenter les nouveaux chemins à reprendre dans le planning 7.4 avant ses features, dans une mise à jour ultérieure autorisée ; note R7, validation puis attente du feu vert R8.
+- [x] Déplacer ensemble Intervention, ChecklistItem, InterventionPhoto, Material, Review et leurs schémas/repositories/services/APIs existants vers `app/modules/interventions/`.
+- [x] Conserver les cinq familles de routes, règles, pièces jointes, auth, historique et relations ; aucun modèle renommé ou transformé.
+- [x] Ne livrer aucune évolution INT-104 à INT-108 : ni snapshots de checklist, ni nouveaux Photo/MaterialUsage, ni clôture ou rapport versionné futur.
+- [x] Tests terrain et consommateurs reports/imports sans régression ; cutover et garde-fous communs satisfaits.
+- [x] Documenter les nouveaux chemins à reprendre dans le planning 7.4 avant ses features, dans une mise à jour ultérieure autorisée (TD-B018) ; note R7 et clôture soumise.
+- [x] Obtenir l'acceptation utilisateur avant commit R7 et tout feu vert R8.
 
 **Technical Notes**
 - Source sous `backend/app/` : modèles `intervention`, `checklist_item`, `intervention_photo`, `material`, `review` ; couches associées aux routes `interventions`, `checklist`, `photos`, `materials`, `reviews`.
 - Le schéma réellement livré, pas le modèle futur du DAT, est la cible de non-régression. Conserver la FK technicien connue telle quelle.
 - Cas : `TC-INT-119-01` et `TC-INT-119-02`.
+- Cible livrée : 22 fichiers conservés sous les sous-packages locaux `models/`, `schemas/`, `repositories/`, `services/`, `api/` et six init purs. Anciennes sources supprimées ; imports consommateurs seulement, aucune modification métier.
+- [Note et preuve INT-119](../../../../notes/backend/refactor-monolithe-modulaire/INT-119-R7-interventions.md) : **154 ciblés**, **353 SQLite** (15 nouveaux cas), **95 PostgreSQL** canoniques (56 + 39), snapshots R0 identiques, seul écart FK historique, runtime 200 et revue sans finding. 22 AST complets égaux après substitution des seuls chemins d'import, 76 définitions top-level.
+- Parcours photo/disque/détail et checklist/matériel/clôture/PDF/avis public validés sur SQLite ; aucun parcours HTTP terrain PostgreSQL revendiqué. Commits historiques Intervention/checklist/Review conservés, pas de nouvelle atomicité globale.
 
 ---
 
 ## INT-120 — R8 — Déplacer `reports`
 
-**Statut :** non commencé — feu vert distinct requis après validation d'INT-119.
+**Statut :** feu vert distinct reçu après acceptation d'INT-119 ; à démarrer après son commit.
 
 **User Story**
 En tant que **mainteneur backend**,

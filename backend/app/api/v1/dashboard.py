@@ -11,8 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
-from app.schemas.intervention import DashboardSummaryResponse
-from app.services.intervention import InterventionService
+from app.modules.interventions.schemas.intervention import DashboardSummaryResponse
+from app.modules.interventions.services.intervention import InterventionService
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 

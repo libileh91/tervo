@@ -7,8 +7,8 @@ Business logic for material CRUD.
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories.material import MaterialRepository
-from app.schemas.intervention import MaterialCreate, MaterialResponse
+from app.modules.interventions.repositories.material import MaterialRepository
+from app.modules.interventions.schemas.intervention import MaterialCreate, MaterialResponse
 
 
 class MaterialService:

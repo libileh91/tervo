@@ -12,8 +12,8 @@
 | ------------- | ----------------------------------------------------------------------- |
 | **Créé dans** | INT-17 (Sprint 1.3)                                                     |
 | **Dépend de** | Aucune (modèle et seed existent déjà dans INT-09)                       |
-| **Fichiers**  | `app/repositories/job.py`, `app/services/checklist.py` (nouveau)        |
-|               | `app/repositories/checklist.py` (nouveau)                               |
+| **Fichiers**  | Sources actuelles : `app/modules/interventions/repositories/intervention.py`, `app/modules/interventions/services/checklist.py` |
+|               | `app/modules/interventions/repositories/checklist.py` (chemins actualisés par INT-119 ; réalisation historique inchangée) |
 | **Action**    | Extraire `_seed_checklist()` de `JobRepository` vers `ChecklistService` |
 |               | Extraire `validate_all_checked()` dans `ChecklistService`               |
 |               | Créer `ChecklistRepository` pour les accès DB checklist                 |
@@ -39,7 +39,7 @@
 | ------------- | ------------------------------------------------------------------ |
 | **Créé dans** | INT-08 (Modèle Job)                                                |
 | **Dépend de** | Modèle `Review` (Phase 2) — `JobPhoto` ✅ et `Material` ✅ activés |
-| **Fichiers**  | `app/models/job.py`                                                |
+| **Fichiers**  | Source actuelle : `app/modules/interventions/models/intervention.py` (ancien Job ; déplacé dans INT-119) |
 | **Action**    | Ajouter `job.review` quand le modèle `Review` sera créé            |
 | **Statut**    | ✅ Fait — `photos` (INT-22), `materials` (INT-25), `review` (INT-31) |
 
@@ -51,7 +51,7 @@
 | ------------- | -------------------------------------------------------------------------- |
 | **Créé dans** | INT-11 (spec)                                                              |
 | **Dépend de** | TD-B003 + Endpoint upload photos — ✅ upload (INT-23) + delete (INT-24) OK |
-| **Fichiers**  | `app/services/job.py` → méthode `complete_job()`                           |
+| **Fichiers**  | Source actuelle : `app/modules/interventions/services/intervention.py` → `complete_intervention()` (déplacé dans INT-119) |
 | **Action**    | Ajouter vérification : `min. 1 photo avant + 1 photo après`                |
 | **Statut**    | ⏳ Bloqué — Phase 2                                                        |
 
@@ -75,7 +75,7 @@
 | ------------- | ----------------------------------------------- |
 | **Créé dans** | Data model `review`                             |
 | **Dépend de** | Modèle `Review` (Phase 2)                       |
-| **Fichiers**  | `app/models/review.py`, `app/api/v1/reviews.py` |
+| **Fichiers**  | `app/modules/interventions/models/review.py`, `app/modules/interventions/api/reviews.py` (déplacés dans INT-119) |
 | **Action**    | Créer le modèle + endpoints publics             |
 | **Statut**    | ✅ Fait — Modèle (INT-31) + GET (INT-32) + POST submit (INT-33) |
 
@@ -210,3 +210,15 @@
 | **Contrat intermédiaire historique** | Avant INT-102 : aucun champ sale_line_id en ORM, migration ou réponse API ; sa présence donnait 422. Ce contrat est remplacé par le contrat actuel ci-dessous, pas réactivé par le refactor. |
 | **Contrat actuel** | Depuis INT-102 : FK nullable `Installation.sale_line_id → SaleLine.id`, parcours autonome absent/null accepté, provenance commerciale vérifiée. R4/INT-116 déplace SaleLine dans `app/modules/sales/models.py` ; R6/INT-118 déplace Installation et son orchestration dans `app/modules/installations/`, sans modifier ce contrat ni ses transactions. |
 | **Statut** | ✅ Fait avec INT-102 (29/09/2026) : FK nullable et réponse `sale_line_id: null` pour le parcours autonome ; référence confirmée vérifiée, cohérence site/produit/quantité appliquée et parcours vendu testé. TD-B014 reste réalisé. |
+
+---
+
+## TD-B018 — Reprendre les chemins terrain du planning 7.4 après le refactor
+
+| Champ | Valeur |
+|---|---|
+| **Créé dans** | INT-119 / R7, refactor monolithe modulaire |
+| **Dépend de** | Acceptation du cutover terrain ; mise à jour documentaire distincte autorisée avant les features 7.4 ; pour le rapport, vérifier les chemins après R8 |
+| **Fichiers** | `docs/stages/stage7/sprint7.4/tasks.md`, `test-cases.json`, DAT si autorisé dans son propre scope ; `app/modules/interventions/` et futur module reports |
+| **Action attendue** | Remplacer les anciens chemins horizontaux par les sources terrain actuelles, sans cocher ni implémenter INT-104 à INT-108. Reprendre le mapping de la note INT-119. Les nouveaux modèles/fichiers éventuels restent à cadrer par feature ; les cas détaillés INT-105/108 restent à compléter avant implémentation. |
+| **Statut** | ⏳ À traiter dans une reprise documentaire autorisée avant 7.4 ; aucune feature terrain nouvelle livrée par R7 |

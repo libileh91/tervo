@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from app.models import Base
 from app.modules.customers.models import Client, Site
 from app.modules.equipment.models import Equipment
-from app.models.intervention import Intervention
+from app.modules.interventions.models.intervention import Intervention
 from app.models.import_batch import ImportRecord, ImportReference
 from app.services.import_service import ImportService
 

@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories.review import ReviewRepository
+from app.modules.interventions.repositories.review import ReviewRepository
 
 
 class ReviewService:

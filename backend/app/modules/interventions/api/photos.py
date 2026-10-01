@@ -20,9 +20,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models.intervention import Intervention
+from app.modules.interventions.models.intervention import Intervention
 from app.models.user import User
-from app.services.photo import PhotoService
+from app.modules.interventions.services.photo import PhotoService
 
 router = APIRouter(prefix="/interventions", tags=["photos"])
 

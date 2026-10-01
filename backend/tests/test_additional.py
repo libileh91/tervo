@@ -18,9 +18,9 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.main import app
 from app.models import Base
-from app.models.checklist_item import ChecklistItem
+from app.modules.interventions.models.checklist_item import ChecklistItem
 from app.modules.customers.models import Client, Site
-from app.models.intervention import Intervention, InterventionStatus
+from app.modules.interventions.models.intervention import Intervention, InterventionStatus
 from app.models.user import Role, User
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"
@@ -186,7 +186,7 @@ class TestMaterialsExtra:
         self, client, other_auth_header, intervention_in_progress, db: AsyncSession
     ):
         """PUT material with wrong tech → 403."""
-        from app.models.material import Material
+        from app.modules.interventions.models.material import Material
 
         mat = Material(intervention_id=intervention_in_progress.id, name="Test", quantity="1")
         db.add(mat)
@@ -204,7 +204,7 @@ class TestMaterialsExtra:
         self, client, other_auth_header, intervention_in_progress, db: AsyncSession
     ):
         """DELETE material with wrong tech → 403."""
-        from app.models.material import Material
+        from app.modules.interventions.models.material import Material
 
         mat = Material(intervention_id=intervention_in_progress.id, name="Test", quantity="1")
         db.add(mat)

@@ -20,9 +20,9 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.main import app
 from app.models import Base
-from app.models.checklist_item import ChecklistItem
+from app.modules.interventions.models.checklist_item import ChecklistItem
 from app.modules.customers.models import Client, Site
-from app.models.intervention import Intervention, InterventionStatus
+from app.modules.interventions.models.intervention import Intervention, InterventionStatus
 from app.models.user import Role, User
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from jinja2 import Template
 
-from app.models.intervention import Intervention
+from app.modules.interventions.models.intervention import Intervention
 
 
 class ReportExporter:

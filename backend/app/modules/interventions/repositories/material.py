@@ -7,7 +7,7 @@ Data access layer for Material model.
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.material import Material
+from app.modules.interventions.models.material import Material
 
 
 class MaterialRepository:

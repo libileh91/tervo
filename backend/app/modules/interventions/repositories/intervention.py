@@ -8,7 +8,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.intervention import Intervention
+from app.modules.interventions.models.intervention import Intervention
 from app.modules.customers.models import Site
 
 

@@ -148,7 +148,7 @@ async def test_installation_blocks_deletion_without_losing_customer_data(context
 
 
 async def test_client_statistics_and_historical_site_routes(context):
-    from app.models.intervention import Intervention
+    from app.modules.interventions.models.intervention import Intervention
     from app.modules.customers.models import Client, Site
 
     ac, sessions, (owner, site, other_site, _), _ = context

@@ -10,7 +10,7 @@ from fastapi import HTTPException, status
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.intervention import Intervention
+from app.modules.interventions.models.intervention import Intervention
 from app.modules.equipment.models import Equipment
 from app.modules.installations.models import Installation
 from app.modules.customers.models import Client, Site

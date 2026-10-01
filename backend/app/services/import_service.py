@@ -19,7 +19,7 @@ from app.importers.report import DEFAULT_BATCH_SIZE
 from app.modules.customers.models import Client, Site
 from app.modules.catalog.models import Product
 from app.modules.equipment.models import Equipment
-from app.models.intervention import Intervention
+from app.modules.interventions.models.intervention import Intervention
 from app.models.user import User
 from app.models.import_batch import ImportBatch, ImportRecord, ImportReference, ImportError
 from app.schemas.imports import ImportDecision, SheetSelection

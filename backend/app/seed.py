@@ -19,7 +19,7 @@ from app.core.security import get_password_hash
 from app.core.base import Base
 from app.model_registry import load_models
 from app.modules.customers.models import Client, Site
-from app.models.intervention import Intervention, InterventionStatus, Priority
+from app.modules.interventions.models.intervention import Intervention, InterventionStatus, Priority
 
 from app.models.user import Role, User
 

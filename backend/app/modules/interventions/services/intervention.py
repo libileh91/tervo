@@ -12,13 +12,13 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.intervention import Intervention, InterventionStatus
+from app.modules.interventions.models.intervention import Intervention, InterventionStatus
 from app.modules.customers.models import Site
 from app.modules.equipment.models import Equipment
 from app.models.user import User
-from app.repositories.intervention import InterventionRepository
-from app.repositories.review import ReviewRepository
-from app.schemas.intervention import (
+from app.modules.interventions.repositories.intervention import InterventionRepository
+from app.modules.interventions.repositories.review import ReviewRepository
+from app.modules.interventions.schemas.intervention import (
     DashboardSummaryResponse,
     InProgressInterventionRef,
     InterventionCancelResponse,
@@ -35,7 +35,7 @@ from app.schemas.intervention import (
     OverdueInterventionRef,
     TodaySummary,
 )
-from app.services.checklist import ChecklistService
+from app.modules.interventions.services.checklist import ChecklistService
 
 
 class InterventionService:

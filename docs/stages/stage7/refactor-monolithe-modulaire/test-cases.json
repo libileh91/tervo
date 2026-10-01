@@ -499,10 +499,17 @@
       "wave": "R7",
       "title": "Interventions — cinq familles terrain déplacées sans évolution 7.4",
       "type": "integration",
-      "preconditions": ["INT-118 clôturée ; feu vert R7 distinct requis et pas encore donné", "Intervention avec checklist, photo, matériel et avis selon le modèle existant"],
+      "preconditions": ["INT-118 acceptée et committée sous 90346f5 ; feu vert distinct R7 reçu", "Intervention avec checklist, photo, matériel et avis selon le modèle existant"],
       "steps": ["Rejouer les tests existants des routes interventions/checklist/photos/materials/reviews et leurs autorisations.", "Vérifier les liens, historiques et intégration avec les consommateurs reports/imports.", "Inspecter les modèles pour confirmer qu'aucune feature INT-104 à INT-108 n'a été introduite."],
       "expected_result": {"all_existing_terrain_route_tests_pass": true, "five_existing_model_families_preserved": true, "authorization_and_history_unchanged": true, "new_checklist_snapshot_models_created": false, "InterventionPhoto_renamed_to_Photo": false, "Material_replaced_by_MaterialUsage": false, "future_report_versioning_or_closure_added": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
-      "status": "not_run"
+      "status": "passed",
+      "execution": {
+        "scope": "local attached worktree; terrain scenarios SQLite, PostgreSQL canonical groups and Alembic separately",
+        "tests": ["test_interventions_module.py", "test_interventions.py", "test_checklist_api.py", "test_checklist_service.py", "test_api.py", "test_additional.py", "test_services.py", "test_modular_bootstrap.py", "test_import_service_v2.py", "test_import_api_v2.py"],
+        "observed": "154 targeted, 353 SQLite, 95 PostgreSQL (56 + 39); complete terrain/PDF/public review SQLite only; no future model or behavior change",
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R7-validation.json",
+        "user_acceptance": "pending"
+      }
     },
     {
       "id": "TC-INT-119-02",
@@ -510,10 +517,17 @@
       "wave": "R7",
       "title": "Interventions — pièces jointes et FK technicien conservées",
       "type": "integration",
-      "preconditions": ["Feu vert R7 distinct requis", "Uploads temporaires avec une photo et registre complet hors API"],
+      "preconditions": ["Feu vert distinct R7 reçu", "Uploads temporaires avec une photo et registre complet hors API"],
       "steps": ["Vérifier stockage/lecture des photos existantes après adaptation des imports sans déplacer ni altérer les fichiers sources.", "Charger les mappers hors API et comparer les tables terrain à R0.", "Inspecter alembic check PostgreSQL et le cutover des anciens fichiers."],
       "expected_result": {"photo_content_and_links_preserved": true, "upload_contract_unchanged": true, "configure_mappers_succeeds": true, "orm_table_count": 17, "known_technician_FK_diff_preserved_only": true, "FK_correction_or_migration_generated": false, "duplicate_active_terrain_implementation": false},
-      "status": "not_run"
+      "status": "passed",
+      "execution": {
+        "scope": "temporary image/files + real SQLite database; isolated imports and disposable PostgreSQL schema checks",
+        "tests": ["test_interventions_module.py", "test_modular_bootstrap.py"],
+        "observed": "real original bytes preserved, thumbnail <=300px, ORM links/HTTP detail URLs; 22 legacy files absent, six pure inits, 17 tables/mappers; only known technician FK operations",
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R7-validation.json",
+        "user_acceptance": "pending"
+      }
     },
     {
       "id": "TC-INT-120-01",

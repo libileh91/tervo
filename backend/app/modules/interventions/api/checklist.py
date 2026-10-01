@@ -14,14 +14,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.models.user import User
-from app.repositories.intervention import InterventionRepository
-from app.schemas.intervention import (
+from app.modules.interventions.repositories.intervention import InterventionRepository
+from app.modules.interventions.schemas.intervention import (
     BatchUpdateRequest,
     BatchUpdateResponse,
     ChecklistItemRef,
     ChecklistItemUpdate,
 )
-from app.services.checklist import ChecklistService
+from app.modules.interventions.services.checklist import ChecklistService
 
 router = APIRouter(prefix="/interventions", tags=["checklist"])
 

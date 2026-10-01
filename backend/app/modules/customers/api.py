@@ -22,8 +22,8 @@ from app.modules.customers.schemas import (
     SiteUpdate,
 )
 from app.modules.customers.service import ClientService, SiteService
-from app.schemas.intervention import InterventionHistoryResponse
-from app.services.intervention import InterventionService
+from app.modules.interventions.schemas.intervention import InterventionHistoryResponse
+from app.modules.interventions.services.intervention import InterventionService
 from app.modules.equipment.schemas import EquipmentListResponse
 from app.modules.equipment.service import EquipmentService
 

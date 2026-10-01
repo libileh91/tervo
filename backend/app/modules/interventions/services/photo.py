@@ -12,7 +12,7 @@ from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.repositories.photo import PhotoRepository
+from app.modules.interventions.repositories.photo import PhotoRepository
 
 # Formats MIME acceptés — WebP inclus pour Android / Chrome mobile
 # HEIC est refusé volontairement (pas de support natif dans Pillow)

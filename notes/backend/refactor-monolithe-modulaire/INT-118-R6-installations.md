@@ -2,7 +2,7 @@
 
 > **Planning :** [INT-118](../../../docs/stages/stage7/refactor-monolithe-modulaire/tasks.md#int-118--r6--déplacer-installations).
 > **Parent R5 :** `7a453b8efcadd42c5a693a8c42956a5610d59163`, branche `refactor/modular-monolith`.
-> **État :** implémenté, vérifié et accepté par l'utilisateur ; commit autorisé dans le worktree Delta attaché. Feu vert distinct R7 reçu.
+> **État :** accepté et committé sous `90346f5` dans le worktree Delta attaché. R7 autorisé et vérifié localement ; voir la [note INT-119](INT-119-R7-interventions.md). Le manifeste conserve sa capture avant acceptation.
 > **Preuve :** [R6-validation.json](R6-validation.json). Les captures R0 à R5 restent intactes.
 
 ## 1. Reprise de R5 et périmètre strict de R6
@@ -467,3 +467,6 @@ PYTHONPATH décrits plus haut : **81 passed, 1 warning, 21,27 s**.
 La capture JSON initiale est conservée intacte ; ce contrôle ne prétend pas
 répéter PostgreSQL. Le commit regroupe la livraison R6, ses tests, notes et suivi,
 sans implémentation R7 ni écriture directe du checkout principal.
+
+Le commit `90346f5` a ensuite été créé dans le worktree attaché. Les indications
+pré-commit de cette capture ne décrivent pas l'état courant du planning.

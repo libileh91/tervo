@@ -7,7 +7,7 @@ from app.importers.normalizer import Normalizer as N
 from app.modules.customers.schemas import ClientCreate, SiteCreate
 from app.modules.equipment.schemas import EquipmentCreate
 from app.modules.catalog.schemas import ProductCreate
-from app.schemas.intervention import InterventionCreate
+from app.modules.interventions.schemas.intervention import InterventionCreate
 
 
 class PendingRow(ValueError):

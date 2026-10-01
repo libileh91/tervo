@@ -22,7 +22,7 @@ from app.core.security import create_access_token
 from app.main import app
 from app.models import Base
 from app.modules.customers.models import Client, Site
-from app.models.intervention import Intervention, InterventionStatus
+from app.modules.interventions.models.intervention import Intervention, InterventionStatus
 
 from app.models.user import Role, User
 

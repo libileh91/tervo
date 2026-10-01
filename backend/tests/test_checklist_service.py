@@ -9,7 +9,7 @@ Run:
 from unittest.mock import AsyncMock
 
 import pytest
-from app.services.checklist import ChecklistService
+from app.modules.interventions.services.checklist import ChecklistService
 
 
 @pytest.fixture

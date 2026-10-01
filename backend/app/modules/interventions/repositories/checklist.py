@@ -7,7 +7,7 @@ Data access layer for ChecklistItem.
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.checklist_item import ChecklistItem
+from app.modules.interventions.models.checklist_item import ChecklistItem
 
 
 class ChecklistRepository:

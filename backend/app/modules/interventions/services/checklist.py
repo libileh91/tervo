@@ -7,7 +7,7 @@ Business logic for checklist operations.
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories.checklist import ChecklistRepository
+from app.modules.interventions.repositories.checklist import ChecklistRepository
 
 # ── Default checklist items seeded on intervention creation ──
 
@@ -32,7 +32,7 @@ class ChecklistService:
 
     async def create_default_items(self, intervention_id: int) -> None:
         """Seed 5 default checklist items (3 pre + 2 post) for an intervention."""
-        from app.models.checklist_item import ChecklistItem
+        from app.modules.interventions.models.checklist_item import ChecklistItem
 
         items = []
         for label, pos in DEFAULT_PRE_ITEMS:
@@ -71,7 +71,7 @@ class ChecklistService:
         """Add a custom checklist item to an intervention."""
         from sqlalchemy import func, select
 
-        from app.models.checklist_item import ChecklistItem
+        from app.modules.interventions.models.checklist_item import ChecklistItem
 
         result = await self.db.execute(
             select(func.max(ChecklistItem.position)).where(

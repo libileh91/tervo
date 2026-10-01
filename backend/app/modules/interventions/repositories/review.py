@@ -8,8 +8,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.intervention import Intervention
-from app.models.review import Review
+from app.modules.interventions.models.intervention import Intervention
+from app.modules.interventions.models.review import Review
 
 
 class ReviewRepository:

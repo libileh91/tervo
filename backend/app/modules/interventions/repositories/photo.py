@@ -7,7 +7,7 @@ Data access layer for InterventionPhoto.
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.intervention_photo import InterventionPhoto
+from app.modules.interventions.models.intervention_photo import InterventionPhoto
 
 
 class PhotoRepository:

@@ -10,12 +10,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.schemas.review import (
+from app.modules.interventions.schemas.review import (
     ReviewPublicResponse,
     ReviewSubmitRequest,
     ReviewSubmitResponse,
 )
-from app.services.review import ReviewService
+from app.modules.interventions.services.review import ReviewService
 
 router = APIRouter(prefix="/review", tags=["reviews"])
 

@@ -11,8 +11,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.services.checklist import ChecklistService
-from app.services.photo import PhotoService
+from app.modules.interventions.services.checklist import ChecklistService
+from app.modules.interventions.services.photo import PhotoService
 
 
 class TestChecklistService:
@@ -59,7 +59,7 @@ class TestPhotoService:
 
     def test_allowed_formats(self):
         """Allowed content types match valid image formats."""
-        from app.services.photo import ALLOWED_CONTENT_TYPES, MAX_FILE_SIZE
+        from app.modules.interventions.services.photo import ALLOWED_CONTENT_TYPES, MAX_FILE_SIZE
 
         assert "image/jpeg" in ALLOWED_CONTENT_TYPES
         assert "image/png" in ALLOWED_CONTENT_TYPES
