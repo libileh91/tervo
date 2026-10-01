@@ -4,6 +4,8 @@
 
 > **État historique au 28 septembre :** les passages ci-dessous décrivent le contrat autonome initial. Depuis INT-102, la FK nullable `sale_line_id` existe, absent/null sont acceptés et la provenance commerciale est vérifiée. Voir [la note INT-102](INT-102-ventes-lignes-et-provenance.md) pour le contrat actuel et ses limites de validation.
 
+> **Chemins actuels depuis R6 / INT-118 :** les cinq couches Installation sont dans `backend/app/modules/installations/`. Le contrat et les transactions ne changent pas ; voir la [note de refactor R6](../refactor-monolithe-modulaire/INT-118-R6-installations.md). Les résultats ci-dessous restent la capture historique d'INT-103.
+
 Références : [tâches](../../../docs/stages/stage7/sprint7.3/tasks.md), [cas de test](../../../docs/stages/stage7/sprint7.3/test-cases.json), [DAT](../../../docs/DAT/new/00-revue/03-lot-commercial.md), [todos](../../../docs/todos/backend.md).
 
 ## 1. Installation n'est ni une vente ni un équipement planifié
@@ -201,13 +203,13 @@ Conditions de rattachement :
 
 ## 3. Pourquoi le service possède la transaction
 
-Fichiers :
+Fichiers (chemins actualisés par INT-118 ; responsabilités inchangées) :
 
-- `backend/app/models/installation.py` : état persistant et relations.
-- `backend/app/schemas/installation.py` : contrats d'entrée stricts et réponses.
-- `backend/app/repositories/installation.py` : requêtes et écritures **sans commit**.
-- `backend/app/services/installation.py` : règles métier, commit unique, rollback.
-- `backend/app/api/v1/installations.py` : HTTP et dépendances partagées.
+- `backend/app/modules/installations/models.py` : état persistant et relations.
+- `backend/app/modules/installations/schemas.py` : contrats d'entrée stricts et réponses.
+- `backend/app/modules/installations/repository.py` : requêtes et écritures **sans commit**.
+- `backend/app/modules/installations/service.py` : règles métier, commit unique, rollback.
+- `backend/app/modules/installations/api.py` : HTTP et dépendances partagées.
 
 Les anciens `EquipmentRepository.create()` et `replace()` possèdent leur propre commit. Les appeler au milieu de complete casserait l'atomicité : le nouveau repository fait seulement un flush pour vérifier les contraintes, puis le service valide l'ensemble.
 

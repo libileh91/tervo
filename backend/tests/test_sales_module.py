@@ -149,7 +149,7 @@ async def context(tmp_path, monkeypatch):
 async def test_authenticated_sale_relations_survive_site_rejection(context):
     from sqlalchemy import select
     from sqlalchemy.orm import selectinload
-    from app.models.installation import Installation
+    from app.modules.installations.models import Installation
     from app.modules.catalog.models import Product
     from app.modules.customers.models import Client, Site
     from app.modules.sales.models import Sale, SaleLine, SaleStatus

@@ -9,7 +9,7 @@ La référence métier et technique reste le [DAT unique](../../DAT/new/00-somma
 | [7.1](sprint7.1/tasks.md) | Socle physique | INT-94 à INT-97 | Terminé |
 | [7.2](sprint7.2/tasks.md) | Migration Excel | INT-98 à INT-101 | Terminé |
 | [7.3](sprint7.3/tasks.md) | Chaîne commerciale | INT-102 à INT-103 | INT-102 et raccordement commercial INT-103 implémentés ; validations PostgreSQL à exécuter |
-| [Chantier technique — refactor monolithe modulaire](refactor-monolithe-modulaire/README.md) | Transverse, avant 7.4 ; hors sprints fonctionnels | INT-113 à INT-123 (R1 à R11) | R0 à R4 validés et committés ; R5 accepté, commit autorisé ; R6 autorisé ; R7 à R11 non commencées, feu vert distinct requis |
+| [Chantier technique — refactor monolithe modulaire](refactor-monolithe-modulaire/README.md) | Transverse, avant 7.4 ; hors sprints fonctionnels | INT-113 à INT-123 (R1 à R11) | R0 à R5 validés et committés ; R6 accepté, commit autorisé ; R7 autorisé ; R8 à R11 non commencées, feu vert distinct requis |
 | [7.4](sprint7.4/tasks.md) | Cycle terrain | INT-104 à INT-108 | À traiter |
 | [7.5](sprint7.5/tasks.md) | Showroom et remplacement | INT-109 à INT-110 | À traiter |
 | [7.6](sprint7.6/tasks.md) | Déploiement VPS et documentation entretien | INT-111 à INT-112 | À traiter |

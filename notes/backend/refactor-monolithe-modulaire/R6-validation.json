@@ -1,0 +1,162 @@
+{
+  "task": "INT-118",
+  "wave": "R6",
+  "branch": "refactor/modular-monolith",
+  "source_parent_sha": "7a453b8efcadd42c5a693a8c42956a5610d59163",
+  "status": "implemented_locally_verified_pending_user_acceptance",
+  "validated_checkout": "attached Delta worktree",
+  "R6_committed": false,
+  "R7_started": false,
+  "environment": {
+    "python": "3.12.0",
+    "interpreter": "/home/lob/workspace/python/fastapi/Tervo/backend/.venv/bin/python",
+    "source": "PYTHONPATH points to attached worktree backend, not primary checkout",
+    "isolation": "temporary cwd, SQLite/uploads; disposable PostgreSQL 17.4 with loopback ephemeral port, no named volume",
+    "dependencies_and_lockfile_unchanged": true
+  },
+  "targeted": {
+    "files": [
+      "test_modular_bootstrap.py", "test_installations_module.py", "test_installations.py",
+      "test_sales.py", "test_sale_migration.py", "test_installation_migration.py",
+      "test_equipment_module.py", "test_customers_module.py", "test_sales_module.py",
+      "test_equipment.py", "test_sites.py"
+    ],
+    "command": "python -m pytest <absolute paths> -q -p no:cacheprovider",
+    "returncode": 0,
+    "passed": 132,
+    "warnings": 1,
+    "pytest_seconds": 36.19,
+    "wrapper_seconds": 37.83
+  },
+  "sqlite_suite": {
+    "command": "python -m pytest <absolute backend/tests> -q -p no:cacheprovider",
+    "returncode": 0,
+    "passed": 338,
+    "warnings": 5,
+    "pytest_seconds": 62.54,
+    "wrapper_seconds": 64.11,
+    "new_installations_cases": 14,
+    "new_cases_dialect": "SQLite",
+    "new_success_cases": "API setup/read with admin or technician JWT, direct service completion to observe shared session and single commit",
+    "new_rollback_cases": "create and attach commercial completion: assert both SQL writes before injected commit failure, inspect persisted state in a fresh session"
+  },
+  "earlier_runs": {
+    "existing_tests_only": {
+      "targeted": {"passed": 118, "warnings": 1, "pytest_seconds": 30.81},
+      "sqlite_suite": {"passed": 324, "warnings": 5, "pytest_seconds": 61.44}
+    },
+    "first_new_module_targeted_run": {
+      "passed": 131,
+      "failed": 1,
+      "reason": "new composition test inspected only direct APIRoutes, incompatible with deferred FastAPI 0.138 inclusions",
+      "fix": "test uses existing bootstrap effective-route context rule; no application routing behavior changed"
+    }
+  },
+  "postgresql": {
+    "executed_by": "independent scout on attached worktree; final report and count correction",
+    "image": "local postgres:17.4, --pull never",
+    "loopback_ephemeral_port": 32771,
+    "upgrade_head": {"returncode": 0, "seconds": 1.16},
+    "downgrade_last": {"returncode": 0, "seconds": 0.90, "target": "e103e0010001"},
+    "reupgrade_head": {"returncode": 0, "seconds": 1.00},
+    "head": "f102e0010001",
+    "alembic_check": {"returncode": 255, "seconds": 1.07},
+    "autogenerate_operations": [
+      {"operation": "remove_fk", "table": "intervention", "columns": ["technician_id"], "targets": ["user.id"], "name": "job_technician_id_fkey", "ondelete": null},
+      {"operation": "add_fk", "table": "intervention", "columns": ["technician_id"], "targets": ["user.id"], "ondelete": "SET NULL"}
+    ],
+    "operations_equal_known_baseline": true,
+    "new_operations": [],
+    "sales_installations_migrations": {
+      "files": ["test_installations.py", "test_sales.py", "test_installation_migration.py", "test_sale_migration.py"],
+      "command": "python -m pytest <four test files> -q -p no:cacheprovider",
+      "passed": 57,
+      "postgresql_cases": 56,
+      "auxiliary_sqlite_migration_cases": 1,
+      "warnings": 1,
+      "pytest_seconds": 24.02,
+      "count_note": "Historical three-file selection contains 56 PostgreSQL cases. R6 runner also selected test_sale_migration.py, one existing SQLite in-memory migration case: 57 = 56 PostgreSQL + 1 SQLite. Only imports changed, no new test definition in these files. Scout withdrew incorrect attribution of the extra count to R6."
+    },
+    "imports_service_and_API": {
+      "files": ["test_import_service_v2.py", "test_import_api_v2.py"],
+      "command": "python -m pytest <two test files> -q -p no:cacheprovider",
+      "passed": 39,
+      "warnings": 1,
+      "pytest_seconds": 25.56
+    },
+    "new_installations_module_tests_included": false,
+    "container_removed": true,
+    "raw_temporary_logs_retained": false,
+    "sources_modified_by_scout": false
+  },
+  "contracts": {
+    "snapshots_byte_identical_to_R0": true,
+    "reference_openapi": "notes/backend/extras/refactor-monolithe-modulaire/R0-openapi.json",
+    "reference_metadata": "notes/backend/extras/refactor-monolithe-modulaire/R0-metadata.json",
+    "openapi_sha256": "dcabfd245b80cbf3989f71049669c3a65e9766b3ed9512bbf58e22acea942fd7",
+    "metadata_sha256": "e86c52bc02519708beb34a3dd587ca566a222f54a04a3fe0b62bdd742ca2089a",
+    "serializer": "R0 metadata serializer; sorted UTF-8 JSON indent 2, ensure_ascii=False, final newline",
+    "paths": 46,
+    "operations": 63,
+    "tables": 17,
+    "snapshots_not_duplicated": true
+  },
+  "runtime": {
+    "docs_http_status": 200,
+    "openapi_http_status": 200,
+    "HTTP_openapi_equals_app_and_R0": true,
+    "startup_and_shutdown_complete": true,
+    "uvicorn_returncode_after_SIGTERM": -15,
+    "server_process_stopped": true
+  },
+  "source_invariants": {
+    "comparison": "whole-module AST equal to R5 except top-level Import/ImportFrom nodes, no name/decorator normalization",
+    "modules": 5,
+    "top_level_definitions": 17,
+    "retired_modules": [
+      "app.models.installation", "app.schemas.installation", "app.repositories.installation",
+      "app.services.installation", "app.api.v1.installations"
+    ],
+    "retired_files_absent": true,
+    "active_retired_imports_AST_scan": [],
+    "service_owned_commit_rollback_and_shared_session_preserved": true,
+    "row_locks_and_conditional_updates_unchanged": true,
+    "autonomous_and_commercial_contracts_unchanged": true,
+    "alembic_and_dependencies_unchanged": true,
+    "R0_R1_R2_R3_R4_R5_JSON_artifacts_unchanged": true,
+    "R0_import_fixture_hashes_unchanged": true
+  },
+  "source_sha256": {
+    "backend/app/model_registry.py": "7b7a2c0710f74fef401875acbf974aca42b959ff55c02185050762a533070cd9",
+    "backend/app/models/__init__.py": "04bd5fb06959662cf769845c7c71f3321c1fdc5b09b6876a1cdfe2c1c1ba0ce8",
+    "backend/app/modules/customers/service.py": "57707cd7c7f9dcf24f25b8d2278e9235a16fe28fe106d8fd441616032a94d301",
+    "backend/app/modules/installations/__init__.py": "70af8b0b8fea5b4d6587ec11b19107c32de9c7612a65b1bd2467bee07e946449",
+    "backend/app/modules/installations/api.py": "72646c5a3799a7b0b764f2b5ff9ea77c1d248bd0fc2809ff572fc10763225cb0",
+    "backend/app/modules/installations/models.py": "4cc2e098869f8dd3f14ddb34c0571bceffc3739fac5fd667836d09c4bb7f16cc",
+    "backend/app/modules/installations/repository.py": "457c81070540bb7a0242866c0233878d364cc3545bf9bbfc57ac2eeda38a203c",
+    "backend/app/modules/installations/schemas.py": "9d6fc0b41b2e54e2af7372b81c3682a779dc498c07793b4eec0ef5eb3e9dd46b",
+    "backend/app/modules/installations/service.py": "97d966a7a5baab14f43fa2bd3361c5b70534cb9717d4d286c879be19d284c3c8",
+    "backend/app/router.py": "7d9cfe7a2363bf936e45c06b6132aa79bf0a2719a0d761d168eac44a0693e262",
+    "backend/tests/test_customers_module.py": "353395e7f4afe2353b9dd6e5099891712b121555920827e869145cde070b3129",
+    "backend/tests/test_equipment_module.py": "475ad41661855cd3b6b7edccb4526544e198099e6ee7d747ee7c8ea634f8a026",
+    "backend/tests/test_installations.py": "12723a2ad630ed6233ff98ba37a508f324c31a27460211cf29ba40645890db1e",
+    "backend/tests/test_installations_module.py": "75a014d7ca467e68a95bee27fedceeff1ed317b9daacfb69d8bcfef826ffb748",
+    "backend/tests/test_modular_bootstrap.py": "138830e5f94575dbd8bb19a01ef52f03a55d80f2c7b483d3b6f3d6eb5a768fff",
+    "backend/tests/test_sales.py": "92e3f4bc862b93b684b65f82639b8e97f265cf04d7d4896144151228b00f2392",
+    "backend/tests/test_sales_module.py": "36c35db010a1a1b8efb94eaed8f06b9586d89e423ee3d75d6e2aead13ec25f4e"
+  },
+  "independent_review": {
+    "baseline_compared": "7a453b8",
+    "whole_module_AST_and_cutover_checked": true,
+    "snapshots_reexecuted_passed": 2,
+    "rollback_concurrency_auth_SQLite_reexecuted_passed": 11,
+    "finding": "composition test assumed direct APIRoutes; already corrected by parent before final 132/338 green runs",
+    "remaining_structural_or_business_findings": [],
+    "reviewer_snapshot_preceded_test_fix": true,
+    "canonical_postgresql_selection_collected": 56,
+    "fourth_selected_file_explains_57": "test_sale_migration.py, existing SQLite in-memory case",
+    "full_suite_or_PostgreSQL_repeated": false,
+    "files_modified_by_reviewer": false
+  },
+  "seed_or_remote_CI_or_deployment_or_push_executed": false
+}

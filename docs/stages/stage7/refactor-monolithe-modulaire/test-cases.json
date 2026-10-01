@@ -445,10 +445,17 @@
       "wave": "R6",
       "title": "Installation autonome — create/attach sans vente",
       "type": "api",
-      "preconditions": ["INT-117 clôturée ; feu vert R6 distinct requis et pas encore donné", "Site existant, équipement ACTIVE du même site non lié pour attach"],
+      "preconditions": ["INT-117 acceptée et committée sous 7a453b8 ; feu vert R6 distinct reçu", "Site existant, équipement ACTIVE du même site non lié pour attach"],
       "steps": ["Créer avec sale_line_id absent puis null ; essayer sans site, avec site null et site inconnu.", "Démarrer et terminer une installation avec equipment.mode=create, puis une autre avec attach.", "Vérifier dates/métadonnées, liens et absence de vente/ligne implicite ; refaire complete."],
       "expected_result": {"create_without_sale_line": 201, "sale_line_id": null, "missing_or_null_site": 422, "unknown_site": 404, "after_start": "IN_PROGRESS", "after_complete": "COMPLETED", "equipment_per_completed_installation": 1, "equipment_installation_id_set": true, "attach_preserves_existing_dates_and_metadata": true, "repeat_complete": 409, "fictitious_sale_or_line_created": false},
-      "status": "not_run"
+      "status": "passed",
+      "execution": {
+        "scope": "local worktree R6, SQLite and disposable PostgreSQL",
+        "tests": ["tests/test_installations.py", "tests/test_sales.py"],
+        "observed": "autonomous create/read/start/complete and attach, absent/null commercial reference, strict site/date contract, repeated complete 409",
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R6-validation.json",
+        "user_acceptance": "pending"
+      }
     },
     {
       "id": "TC-INT-118-02",
@@ -456,10 +463,17 @@
       "wave": "R6",
       "title": "Installation commerciale — référence, site, produit et quantité",
       "type": "integration",
-      "preconditions": ["Feu vert R6 distinct requis", "Ventes DRAFT et CONFIRMED, sites et produits distincts"],
+      "preconditions": ["Feu vert R6 distinct reçu", "Ventes DRAFT et CONFIRMED, sites et produits distincts"],
       "steps": ["Tester ligne inconnue, vente non confirmée, site incohérent et quantité dépassée.", "Clôturer une installation liée à une ligne valide ; tester produit contradictoire.", "Vérifier statut, équipement, provenance et conservation des équipements historiques sans installation."],
       "expected_result": {"unknown_sale_line": 404, "unconfirmed_sale_rejected": true, "incoherent_site_or_product_rejected": true, "quantity_exceeded": 409, "valid_completion_status": "COMPLETED", "equipment_product_matches_sale_line": true, "commercial_provenance_preserved": true, "historical_equipment_unchanged": true},
-      "status": "not_run"
+      "status": "passed",
+      "execution": {
+        "scope": "existing scenarios on SQLite/PostgreSQL; new module cases on SQLite only",
+        "tests": ["tests/test_sales.py", "tests/test_sales_module.py", "tests/test_installations_module.py"],
+        "observed": "confirmed commercial provenance, quantity three, rejected mismatches, create/attach preserved; shared session and service-owned commit",
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R6-validation.json",
+        "user_acceptance": "pending"
+      }
     },
     {
       "id": "TC-INT-118-03",
@@ -467,10 +481,17 @@
       "wave": "R6",
       "title": "Installation — rollback, concurrence et transitions inchangés",
       "type": "integration",
-      "preconditions": ["Feu vert R6 distinct requis", "PostgreSQL jetable ; installations IN_PROGRESS et équipement éligible"],
+      "preconditions": ["Feu vert R6 distinct reçu", "PostgreSQL jetable ; installations IN_PROGRESS et équipement éligible"],
       "steps": ["Injecter un échec après écriture Equipment en create puis attach ; relire dans une nouvelle session.", "Rejouer la matrice des transitions, deux complete concurrents, cancel/complete concurrents et deux installations visant le même équipement.", "Rejouer JWT actif et protections site/client, puis vérifier les garde-fous communs."],
       "expected_result": {"status_after_completion_failure": "IN_PROGRESS", "completed_at_after_failure": null, "partial_equipment_or_link_persisted": false, "same_session_and_transaction_preserved": true, "one_concurrent_action_committed": true, "duplicate_equipment_created": false, "forbidden_transition": 409, "active_JWT_required": true, "history_delete": 409, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
-      "status": "not_run"
+      "status": "passed",
+      "execution": {
+        "scope": "existing rollback/concurrency/JWT/history scenarios on SQLite and PostgreSQL; new commercial rollback cases SQLite only",
+        "tests": ["tests/test_installations.py", "tests/test_installations_module.py", "tests/test_modular_bootstrap.py"],
+        "observed": "132 targeted, 338 SQLite, 56 + 39 PostgreSQL; sales/installations runner also includes one existing SQLite migration case (57 total). OpenAPI/metadata identical, known technician FK only; no partial completion",
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R6-validation.json",
+        "user_acceptance": "pending"
+      }
     },
     {
       "id": "TC-INT-119-01",

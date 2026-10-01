@@ -127,7 +127,7 @@ async def context(tmp_path, monkeypatch):
 
 
 async def test_installation_blocks_deletion_without_losing_customer_data(context):
-    from app.models.installation import Installation
+    from app.modules.installations.models import Installation
     from app.modules.customers.models import Client, Site
 
     ac, sessions, (owner, site, other_site, _), _ = context

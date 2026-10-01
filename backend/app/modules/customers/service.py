@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.intervention import Intervention
 from app.modules.equipment.models import Equipment
-from app.models.installation import Installation
+from app.modules.installations.models import Installation
 from app.modules.customers.models import Client, Site
 from app.modules.customers.repository import ClientRepository, SiteRepository
 from app.modules.customers.schemas import (

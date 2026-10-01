@@ -14,7 +14,7 @@ def load_models() -> None:
         ImportRecord,
         ImportReference,
     )
-    from app.models.installation import Installation  # noqa: F401
+    from app.modules.installations.models import Installation  # noqa: F401
     from app.models.intervention import Intervention  # noqa: F401
     from app.models.intervention_photo import InterventionPhoto  # noqa: F401
     from app.models.material import Material  # noqa: F401

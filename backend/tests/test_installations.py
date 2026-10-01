@@ -13,11 +13,11 @@ from app.main import app
 from app.models import Base
 from app.modules.customers.models import Client, Site
 from app.modules.equipment.models import Equipment
-from app.models.installation import Installation
+from app.modules.installations.models import Installation
 from app.modules.catalog.models import Product
 
 from app.models.user import Role, User
-from app.repositories.installation import InstallationRepository
+from app.modules.installations.repository import InstallationRepository
 
 PREFIX = "/api/v1/installations"
 COMPLETE = {"installation_date": "2026-09-28", "commissioning_date": "2026-09-28",

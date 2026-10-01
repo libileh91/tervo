@@ -1,7 +1,7 @@
 """Installation persistence; the service owns the transaction, never this repository."""
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import selectinload
-from app.models.installation import Installation
+from app.modules.installations.models import Installation
 from app.modules.equipment.models import Equipment, EquipmentStatus
 
 

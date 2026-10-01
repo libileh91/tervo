@@ -2,7 +2,7 @@
 
 > **Planning :** [refactor monolithe modulaire](../../../docs/stages/stage7/refactor-monolithe-modulaire/tasks.md).
 > **Parent R4 :** `93be411b09b736df967bd22bd8f85b8bea1a5203`, branche `refactor/modular-monolith`.
-> **État :** R5 implémenté, vérifié et accepté par l'utilisateur ; commit autorisé dans le worktree Delta. Feu vert distinct R6 reçu.
+> **État :** R5 accepté et committé sous `7a453b8` dans le worktree Delta. R6 autorisé et vérifié localement ; voir la [note INT-118](INT-118-R6-installations.md). Le manifeste conserve sa capture avant acceptation.
 > **Preuve :** [R5-validation.json](R5-validation.json), résultats et empreintes des sources.
 
 ## 1. Checkpoint R4 et périmètre de R5
@@ -340,5 +340,7 @@ Une réexécution isolée de `test_modular_bootstrap.py`, `test_equipment_module
 `test_equipment.py` et `test_installations.py` a donné **76 passed, 1 warning,
 20,19 s**, avec le même interpréteur du checkout principal, un cwd SQLite/uploads
 temporaire et `-p no:cacheprovider`. Ce contrôle ne remplace ni ne prétend répéter
-les groupes PostgreSQL précédents. Le commit est créé dans le worktree attaché ;
-aucune écriture directe du checkout principal n'est effectuée dans ce fil.
+les groupes PostgreSQL précédents. Le commit `7a453b8` est créé dans le worktree
+attaché ; aucune écriture directe du checkout principal n'est effectuée dans ce
+fil. Les indications « sans commit » de la capture initiale ci-dessus décrivent
+l'état avant cette acceptation, pas l'état courant.

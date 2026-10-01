@@ -168,7 +168,7 @@
 | --- | --- |
 | **Créé dans** | INT-97 |
 | **Dépend de** | INT-103 — entité Installation |
-| **Fichiers** | `app/modules/equipment/models.py` (déplacé dans INT-117), `app/models/installation.py`, migration, services et tests |
+| **Fichiers** | `app/modules/equipment/models.py` (déplacé dans INT-117), `app/modules/installations/models.py` (déplacé dans INT-118), migration, services et tests |
 | **Action attendue** | Ajouter la FK Equipment.installation_id, son unicité (Installation 1 → 0..1 Equipment) et les relations ORM. Alimenter ce champ uniquement lors de la réalisation d’une installation, en vérifiant site et produit. La colonne reste nullable pour les imports historiques. |
 | **Statut** | ✅ Fait dans INT-103 autonome (28/09/2026) — FK nullable + unicité + relations ORM ; clôture atomique créer/rattacher, site vérifié et produit catalogue validé à la création/conservé au rattachement. Tests SQLite et PostgreSQL. Cohérence avec un produit vendu reportée à TD-B017. |
 
@@ -205,8 +205,8 @@
 | --- | --- |
 | **Créé dans** | INT-103 partielle, sprint7.3 ; inversion INT-103 avant INT-102 explicitement validée |
 | **Dépend de** | INT-102 — véritables entités Sale et SaleLine |
-| **Fichiers** | `app/models/installation.py`, `app/schemas/installation.py`, `app/services/installation.py`, migration Alembic, `tests/test_installations.py`, `docs/stages/stage7/sprint7.3/test-cases.json` |
+| **Fichiers** | `app/modules/installations/{models,schemas,service}.py` (déplacés dans INT-118), migration Alembic, `tests/test_installations.py`, `docs/stages/stage7/sprint7.3/test-cases.json` |
 | **Action attendue** | Ajouter sale_line_id comme FK nullable (pas d'entier libre), sans inventer de ventes pour les installations existantes. Exposer/accepter absent ou null ; vérifier les références non nulles et leur provenance commerciale, cohérence vente/site/produit et règles de quantité/statut validées pour INT-102. Tester le parcours vendu, la ligne inconnue (404), le produit du matériel créé/rattaché et la non-régression autonome. |
 | **Contrat intermédiaire historique** | Avant INT-102 : aucun champ sale_line_id en ORM, migration ou réponse API ; sa présence donnait 422. Ce contrat est remplacé par le contrat actuel ci-dessous, pas réactivé par le refactor. |
-| **Contrat actuel** | Depuis INT-102 : FK nullable `Installation.sale_line_id → SaleLine.id`, parcours autonome absent/null accepté, provenance commerciale vérifiée. R4/INT-116 déplace SaleLine dans `app/modules/sales/models.py` sans modifier ce contrat ni ses transactions. |
+| **Contrat actuel** | Depuis INT-102 : FK nullable `Installation.sale_line_id → SaleLine.id`, parcours autonome absent/null accepté, provenance commerciale vérifiée. R4/INT-116 déplace SaleLine dans `app/modules/sales/models.py` ; R6/INT-118 déplace Installation et son orchestration dans `app/modules/installations/`, sans modifier ce contrat ni ses transactions. |
 | **Statut** | ✅ Fait avec INT-102 (29/09/2026) : FK nullable et réponse `sale_line_id: null` pour le parcours autonome ; référence confirmée vérifiée, cohérence site/produit/quantité appliquée et parcours vendu testé. TD-B014 reste réalisé. |

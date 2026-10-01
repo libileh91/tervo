@@ -10,7 +10,7 @@ from app.core.deps import get_current_user
 from app.main import app
 from app.models import Base
 from app.modules.customers.models import Client, Site
-from app.models.installation import Installation
+from app.modules.installations.models import Installation
 from app.modules.catalog.models import Product
 from app.modules.sales.models import Sale, SaleLine, SaleStatus
 

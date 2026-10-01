@@ -2,6 +2,8 @@
 
 **29 septembre 2026 — INT-102 implémentée ; le raccordement différé d'INT-103 (TD-B017) est livré avec elle.** Le parcours d'installation sans vente reste pris en charge. La suite backend locale passe, mais PostgreSQL n'a pas été relancé pour INT-102 et aucune base de déploiement n'a été migrée.
 
+> **Capture historique :** ces résultats décrivent INT-102 au 29 septembre. Depuis R4 et R6, les couches Sale/SaleLine et Installation sont respectivement dans `app/modules/sales/` et `app/modules/installations/`, avec composition explicite dans `app/router.py`. Le contrat commercial nullable et les transactions sont inchangés. Les validations ultérieures sont documentées dans la [note R6 / INT-118](../refactor-monolithe-modulaire/INT-118-R6-installations.md), sans réécrire cette capture ni annoncer un déploiement.
+
 Références : [tâches sprint 7.3](../../../docs/stages/stage7/sprint7.3/tasks.md), [cas de test](../../../docs/stages/stage7/sprint7.3/test-cases.json), [DAT — modèle de données](../../../docs/DAT/new/02-techniques/02-data-model.md), [todo backend](../../../docs/todos/backend.md#td-b017--raccorder-les-installations-autonomes-à-saleline).
 
 ## 1. Ce que représente une vente
@@ -206,7 +208,7 @@ La règle « confirmée = au moins une ligne » est appliquée au moment de la t
 
 ## 6. Raccordement à Installation (TD-B017)
 
-Le lien a été livré en même temps que SaleLine existe réellement ; il n'y a pas de colonne entier libre. Les fichiers concernés sont `backend/app/models/installation.py`, `backend/app/schemas/installation.py`, `backend/app/services/installation.py` et la migration INT-102.
+Le lien a été livré en même temps que SaleLine existe réellement ; il n'y a pas de colonne entier libre. Les fichiers concernés sont désormais `backend/app/modules/installations/models.py`, `backend/app/modules/installations/schemas.py`, `backend/app/modules/installations/service.py` (chemins actualisés par INT-118) et la migration INT-102 inchangée.
 
 ```python
 sale_line_id = Column(

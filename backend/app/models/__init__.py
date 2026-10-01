@@ -18,7 +18,7 @@ from app.models.user import User
 from app.modules.catalog.models import Product
 
 from app.modules.equipment.models import Equipment
-from app.models.installation import Installation
+from app.modules.installations.models import Installation
 from app.modules.sales.models import Sale, SaleLine, SaleStatus
 
 from app.models.import_batch import ImportBatch, ImportRecord, ImportReference, ImportError

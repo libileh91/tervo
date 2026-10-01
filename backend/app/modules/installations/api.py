@@ -3,11 +3,11 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models.installation import InstallationStatus
-from app.schemas.installation import (
+from app.modules.installations.models import InstallationStatus
+from app.modules.installations.schemas import (
     InstallationCreate, InstallationComplete, InstallationResponse, InstallationListResponse,
 )
-from app.services.installation import InstallationService
+from app.modules.installations.service import InstallationService
 
 router = APIRouter(prefix="/installations", tags=["installations"],
                    dependencies=[Depends(get_current_user)])

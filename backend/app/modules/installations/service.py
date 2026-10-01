@@ -5,10 +5,10 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from app.modules.equipment.models import Equipment, EquipmentStatus
-from app.models.installation import Installation, InstallationStatus as Status
+from app.modules.installations.models import Installation, InstallationStatus as Status
 from app.modules.sales.models import SaleLine, SaleStatus
-from app.repositories.installation import InstallationRepository
-from app.schemas.installation import InstallationListResponse, InstallationResponse
+from app.modules.installations.repository import InstallationRepository
+from app.modules.installations.schemas import InstallationListResponse, InstallationResponse
 from app.modules.equipment.service import EquipmentService
 
 

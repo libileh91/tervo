@@ -2,12 +2,12 @@
 
 > **Chantier transverse du Stage 7, avant 7.4 ; pas un sprint de features.**
 > **Branche :** `refactor/modular-monolith`, déjà créée. **R0 :** validé, sans nouvel INT.
-> **Autorisation :** R1 à R4 validés par l'utilisateur et committés ; R4 : `93be411`. R5 accepté par l'utilisateur, commit autorisé. Feu vert distinct R6 reçu dans ce fil ; R7 à R11 non commencées, feu vert distinct par tâche.
+> **Autorisation :** R1 à R5 validés par l'utilisateur et committés ; R5 : `7a453b8`. R6 accepté, commit autorisé ; feu vert distinct R7 reçu. R8 à R11 non commencées, feu vert distinct par tâche.
 > **Références :** [cadrage et baseline](README.md) · [plan](../../../../notes/backend/extras/tervo_plan_refactor_monolithe_modulaire.md) · [DAT](../../../DAT/new/00-sommaire.md).
 > **Estimations :** estimation à confirmer pour chaque tâche.
 > **Notes futures :** `notes/backend/refactor-monolithe-modulaire/`. La preuve R0 reste dans `notes/backend/extras/refactor-monolithe-modulaire/`.
 
-Les critères d'INT-113 à INT-117 sont cochés après validation locale et acceptation utilisateur. Les captures historiques restent intactes. R6 est autorisé mais ses critères restent ouverts ; R7 à R11 sont non commencés. La création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
+Les critères d'INT-113 à INT-118 sont cochés après validation locale et acceptation utilisateur. Les captures historiques restent intactes. R7 est autorisé, ses critères restent ouverts ; R8 à R11 sont non commencés. La création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
 
 ## Garde-fous communs à toutes les tâches
 
@@ -133,7 +133,7 @@ Afin de **isoler la vente tout en préservant le raccordement commercial des ins
 
 ## INT-117 — R5 — Déplacer `equipment`
 
-**Statut :** implémenté et vérifié localement, accepté par l'utilisateur ; commit autorisé. Les 23 empreintes sources/tests sont conformes à la preuve R5 ; 76 tests ciblés rejoués avant commit (1 warning, 20,19 s). Feu vert R6 reçu distinctement.
+**Statut :** accepté et committé dans le worktree attaché sous `7a453b8`. Les 23 empreintes sources/tests étaient conformes à la preuve R5 ; 76 tests ciblés rejoués avant commit (1 warning, 20,19 s). Feu vert R6 reçu distinctement.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -157,7 +157,7 @@ Afin de **préparer le déplacement d'Installation sans perdre l'historique phys
 
 ## INT-118 — R6 — Déplacer `installations`
 
-**Statut :** feu vert distinct reçu après acceptation d'INT-117 ; à démarrer après son commit.
+**Statut :** implémenté et vérifié localement, accepté par l'utilisateur ; commit autorisé. Avant commit : 17 empreintes conformes et 81 tests ciblés rejoués (1 warning, 21,27 s). Feu vert distinct R7 reçu.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -165,23 +165,26 @@ Je veux **regrouper Installation et son orchestration dans installations**,
 Afin de **préserver les parcours autonomes et commerciaux avec leur atomicité actuelle**.
 
 **Acceptance Criteria**
-- [ ] Déplacer modèle, schémas, repository, service et API vers `app/modules/installations/` ; adapter imports, registre et router.
-- [ ] Parcours autonome inchangé : site requis, `sale_line_id` absent/null accepté, aucune vente fictive ; create/attach explicitement conservés.
-- [ ] Parcours commercial inchangé : vente confirmée, ligne connue, limite de quantité, cohérence site/produit et provenance.
-- [ ] Installation + Equipment restent dans la même transaction/session : rollback après écriture, clôture répétée et concurrence sans doublon ni écriture partielle.
-- [ ] Transitions, dates, métadonnées, auth et protections des historiques identiques ; tests SQLite et PostgreSQL critiques sans régression.
-- [ ] Cutover et garde-fous communs satisfaits ; note R6 et validation de clôture avant feu vert R7.
+- [x] Déplacer modèle, schémas, repository, service et API vers `app/modules/installations/` ; adapter imports, registre et router.
+- [x] Parcours autonome inchangé : site requis, `sale_line_id` absent/null accepté, aucune vente fictive ; create/attach explicitement conservés.
+- [x] Parcours commercial inchangé : vente confirmée, ligne connue, limite de quantité, cohérence site/produit et provenance.
+- [x] Installation + Equipment restent dans la même transaction/session : rollback après écriture, clôture répétée et concurrence sans doublon ni écriture partielle.
+- [x] Transitions, dates, métadonnées, auth et protections des historiques identiques ; tests SQLite et PostgreSQL critiques sans régression.
+- [x] Cutover et garde-fous communs satisfaits ; note R6 et clôture soumise avec preuves locales.
+- [x] Obtenir l'acceptation utilisateur avant commit R6 et tout feu vert R7.
 
 **Technical Notes**
 - Source : `models/installation.py`, `schemas/installation.py`, `repositories/installation.py`, `services/installation.py`, `api/v1/installations.py`, sous `backend/app/`.
 - Les appels Python vers equipment sont autorisés ; pas de bus ni d'UnitOfWork ajouté. Conserver le propriétaire des commits et les verrouillages.
 - Cas : `TC-INT-118-01` à `TC-INT-118-03` ; reprendre les scénarios détaillés INT-103/INT-102 sans modifier leur suivi historique.
+- Cible livrée : `installations/{models,schemas,repository,service,api}.py` et init pur ; cinq anciennes sources supprimées. Cinq AST complets égaux à R5 hors imports (17 définitions top-level), aucun changement de transaction/contrat.
+- [Note et preuve INT-118](../../../../notes/backend/refactor-monolithe-modulaire/INT-118-R6-installations.md) : **132 ciblés**, **338 SQLite** (14 nouveaux cas), PostgreSQL **56 + 39**, OpenAPI/metadata identiques à R0, seul écart FK historique ; runtime 200. Le groupe ventes/installations exécuté totalise 57 cas : 56 PostgreSQL + 1 migration SQLite existante sélectionnée en plus ; les captures historiques ne sont pas réécrites.
 
 ---
 
 ## INT-119 — R7 — Déplacer `interventions`
 
-**Statut :** non commencé — feu vert distinct requis après validation d'INT-118.
+**Statut :** feu vert distinct reçu après acceptation d'INT-118 ; à démarrer après son commit.
 
 **User Story**
 En tant que **mainteneur backend**,
