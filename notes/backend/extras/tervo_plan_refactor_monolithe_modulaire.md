@@ -5,7 +5,7 @@
 > **Baseline Git :** `544a23d6cb2cbe878fbc8ddf2d962c7adf76c000`  
 > **Point de départ fonctionnel :** Sprint 7.3 terminé et poussé ; `Sale`, `SaleLine` et `Installation` sont maintenant dans le code.  
 > **Important :** l'historique Git ayant été réécrit, les anciens SHA ne doivent plus servir de baseline de comparaison.
-> **Avancement du chantier :** R0 à R8 validés et committés sur `refactor/modular-monolith` ; dernier commit : `bb1fc14` (reports), naming documentaire : `8f3e876`. R9 / INT-121 vérifié localement et accepté : [note et preuve](../refactor-monolithe-modulaire/INT-121-R9-imports.md), [planning technique](../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md). Commit R9 autorisé, nettoyage technique demandé séparément ; R10 à R11 non autorisées/non commencées. La [baseline R0](refactor-monolithe-modulaire/R0-baseline.md) et l'écart FK technicien sont conservés sans correction.
+> **Avancement du chantier :** R0 à R9 validés et committés sur `refactor/modular-monolith` ; dernier commit de vague : `205969a` (imports), naming documentaire : `8f3e876`. [Note et preuve R9](../refactor-monolithe-modulaire/INT-121-R9-imports.md), [planning technique](../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md). Nettoyage technique demandé séparément ; R10 à R11 non autorisées/non commencées. La [baseline R0](refactor-monolithe-modulaire/R0-baseline.md) et l'écart FK technicien sont conservés sans correction.
 
 ### Décision de naming
 

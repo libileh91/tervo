@@ -2,7 +2,7 @@
 
 > **Stage 7 · chantier transverse avant 7.4, hors sprints fonctionnels**
 > **Branche :** `refactor/modular-monolith` (déjà créée).
-> **Décision utilisateur :** R0 à R8 validés et committés ; R8 : `bb1fc14`. R9 accepté, commit autorisé ; nettoyage technique demandé séparément. R10 à R11 restent non commencées et nécessitent chacune un feu vert distinct.
+> **Décision utilisateur :** R0 à R9 validés et committés ; R9 : `205969a`. Nettoyage technique demandé séparément. R10 à R11 restent non commencées et nécessitent chacune un feu vert distinct.
 
 ## Références et suivi
 
@@ -30,7 +30,9 @@ R7 est accepté et committé sous `7a52d03` : [note et preuve INT-119](../../../
 
 R8 est accepté et committé sous `bb1fc14` : [note et preuve INT-120](../../../../notes/backend/refactor-monolithe-modulaire/INT-120-R8-reports.md), **76 ciblés**, **360 SQLite**, **95 PostgreSQL** canoniques (56 + 39), contrats/schéma inchangés et revue sans finding. Template exact, HTML complets égaux aux références originales R7 et PDF réel ; aucun workflow reports HTTP PostgreSQL revendiqué. Avant commit : 9 empreintes conformes et 49 ciblés rejoués.
 
-R9 est accepté et son commit autorisé : [note et preuve INT-121](../../../../notes/backend/refactor-monolithe-modulaire/INT-121-R9-imports.md), **115 ciblés**, **371 SQLite**, **95 PostgreSQL**, contrats/schéma inchangés. Le pack a été capturé avant cutover ; JSON fonctionnel complet **560 268 octets** exactement égal après, IDs/liens/plans/erreurs conservés, ambiguïtés pending. La comparaison golden est SQLite-only ; réserve de revue sur gel d'oracle corrigée. Avant commit : 28 empreintes conformes et réexécution 115 ciblés/371 SQLite après nettoyage technique. R10 non autorisé/non commencé.
+R9 est accepté et committé sous `205969a` : [note et preuve INT-121](../../../../notes/backend/refactor-monolithe-modulaire/INT-121-R9-imports.md), **115 ciblés**, **371 SQLite**, **95 PostgreSQL**, contrats/schéma inchangés. Le pack a été capturé avant cutover ; JSON fonctionnel complet **560 268 octets** exactement égal après, IDs/liens/plans/erreurs conservés, ambiguïtés pending. La comparaison golden est SQLite-only ; réserve de revue sur gel d'oracle corrigée. Avant commit : 28 empreintes conformes et réexécution 115 ciblés/371 SQLite après nettoyage technique. R10 non autorisé/non commencé.
+
+Le [nettoyage demandé après R9](../../../../notes/backend/refactor-monolithe-modulaire/nettoyage-apres-R9.md#L1) retire les caches et les namespaces sans code actif dans un commit distinct. Ce retrait limité ne clôture pas R11.
 
 ## Ordre et attribution
 
@@ -47,7 +49,7 @@ R0 reste un checkpoint sans nouvel identifiant INT. Les identifiants INT-113 à 
 | R6 | [INT-118](tasks.md#int-118--r6--déplacer-installations) | Installation autonome et commerciale | Validé par l'utilisateur ; commit `90346f5` |
 | R7 | [INT-119](tasks.md#int-119--r7--déplacer-interventions) | Terrain existant, sans features 7.4 | Validé par l'utilisateur ; commit `7a52d03` |
 | R8 | [INT-120](tasks.md#int-120--r8--déplacer-reports) | Rapport/PDF/template existants | Validé par l'utilisateur ; commit `bb1fc14` |
-| R9 | [INT-121](tasks.md#int-121--r9--déplacer-imports) | Pipeline Excel et comparaison avant/après | Validé par l'utilisateur ; commit autorisé |
+| R9 | [INT-121](tasks.md#int-121--r9--déplacer-imports) | Pipeline Excel et comparaison avant/après | Validé par l'utilisateur ; commit `205969a` |
 | R10 | [INT-122](tasks.md#int-122--r10--déplacer-identity-dashboard-et-finaliser-la-composition) | Auth, dashboard, seed, composition | Non commencé ; feu vert distinct requis après R9 |
 | R11 | [INT-123](tasks.md#int-123--r11--retirer-les-couches-horizontales-legacy) | Nettoyage legacy et validation globale | Non commencé ; feu vert distinct requis après R10 |
 

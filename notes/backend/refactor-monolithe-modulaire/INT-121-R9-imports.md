@@ -2,7 +2,7 @@
 
 > **Planning :** [INT-121](../../../docs/stages/stage7/refactor-monolithe-modulaire/tasks.md#int-121--r9--déplacer-imports).
 > **Parent R8 :** `bb1fc14c4d8da80e9584eb1ed6de1f69cd96132e`, branche `refactor/modular-monolith`.
-> **État :** implémenté, vérifié et accepté par l'utilisateur ; commit autorisé dans le worktree Delta attaché. R10 non autorisé/non commencé.
+> **État :** accepté et committé sous `205969a` dans le worktree Delta attaché. R10 non autorisé/non commencé. Le manifeste conserve sa capture avant acceptation.
 > **Preuves :** [R9-validation.json](R9-validation.json) et [oracle fonctionnel avant](../../../backend/tests/fixtures/imports_refactor/README.md).
 
 ## 1. Reprise de R8 et ordre des opérations
@@ -458,3 +458,7 @@ Les validations PostgreSQL précédentes ne sont pas présentées comme répét�
 Le commit R9 regroupe sa livraison uniquement ; la suppression des trois
 init de namespaces devenus vides est isolée dans un commit de nettoyage.
 Les captures JSON historiques ne sont pas réécrites.
+
+Le commit R9 est `205969a`. Le [compte rendu du nettoyage](nettoyage-apres-R9.md#L1)
+décrit les caches/dossiers retirés et les éléments protégés, sans anticiper
+les derniers déplacements et la validation globale R10/R11.

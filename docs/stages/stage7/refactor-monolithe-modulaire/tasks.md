@@ -2,7 +2,7 @@
 
 > **Chantier transverse du Stage 7, avant 7.4 ; pas un sprint de features.**
 > **Branche :** `refactor/modular-monolith`, déjà créée. **R0 :** validé, sans nouvel INT.
-> **Autorisation :** R1 à R8 validés par l'utilisateur et committés ; R8 : `bb1fc14`. R9 accepté, commit autorisé. Nettoyage technique des dossiers vides demandé séparément ; R10 à R11 non commencées, aucun feu vert nouveau.
+> **Autorisation :** R1 à R9 validés par l'utilisateur et committés ; R9 : `205969a`. Nettoyage technique des dossiers vides demandé séparément ; R10 à R11 non commencées, aucun feu vert nouveau.
 > **Références :** [cadrage et baseline](README.md) · [plan](../../../../notes/backend/extras/tervo_plan_refactor_monolithe_modulaire.md) · [DAT](../../../DAT/new/00-sommaire.md).
 > **Estimations :** estimation à confirmer pour chaque tâche.
 > **Notes futures :** `notes/backend/refactor-monolithe-modulaire/`. La preuve R0 reste dans `notes/backend/extras/refactor-monolithe-modulaire/`.
@@ -237,7 +237,7 @@ Afin de **rendre la génération existante autonome dans son package sans change
 
 ## INT-121 — R9 — Déplacer `imports`
 
-**Statut :** accepté par l'utilisateur, commit autorisé. Avant commit : 28 empreintes conformes ; 115 ciblés (1 warning, 34,32 s) et 371 SQLite (7 warnings, 88,34 s) rejoués après nettoyage technique. R10 non autorisé/non commencé.
+**Statut :** accepté et committé sous `205969a`. Avant commit : 28 empreintes conformes ; 115 ciblés (1 warning, 34,32 s) et 371 SQLite (7 warnings, 88,34 s) rejoués après nettoyage technique. R10 non autorisé/non commencé.
 
 **User Story**
 En tant que **mainteneur backend**,
