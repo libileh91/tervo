@@ -20,8 +20,7 @@ from app.core.security import create_access_token
 from app.main import app
 from app.models import Base
 from app.models.checklist_item import ChecklistItem
-from app.models.client import Client
-from app.models.site import Site
+from app.modules.customers.models import Client, Site
 from app.models.intervention import Intervention, InterventionStatus
 from app.models.user import Role, User
 

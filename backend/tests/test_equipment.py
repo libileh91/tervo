@@ -7,8 +7,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.main import app
 from app.models import Base
-from app.models.client import Client
-from app.models.site import Site
+from app.modules.customers.models import Client, Site
 from app.models.user import Role, User
 from app.models.product import Product
 from app.models.equipment import Equipment

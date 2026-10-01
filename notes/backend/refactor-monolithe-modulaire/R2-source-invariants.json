@@ -1,0 +1,146 @@
+{
+  "source_parent_sha": "73e5ac9bed65112f0ca181cd1af3fcd6ece8ae4e",
+  "moved_definitions_AST_equal_except_router_names": [
+    {
+      "source": "backend/app/models/client.py",
+      "destination": "backend/app/modules/customers/models.py",
+      "definition": "Client"
+    },
+    {
+      "source": "backend/app/models/site.py",
+      "destination": "backend/app/modules/customers/models.py",
+      "definition": "Site"
+    },
+    {
+      "source": "backend/app/schemas/client.py",
+      "destination": "backend/app/modules/customers/schemas.py",
+      "definition": "ClientCreate"
+    },
+    {
+      "source": "backend/app/schemas/client.py",
+      "destination": "backend/app/modules/customers/schemas.py",
+      "definition": "ClientUpdate"
+    },
+    {
+      "source": "backend/app/schemas/client.py",
+      "destination": "backend/app/modules/customers/schemas.py",
+      "definition": "ClientResponse"
+    },
+    {
+      "source": "backend/app/schemas/client.py",
+      "destination": "backend/app/modules/customers/schemas.py",
+      "definition": "ClientDetailResponse"
+    },
+    {
+      "source": "backend/app/schemas/client.py",
+      "destination": "backend/app/modules/customers/schemas.py",
+      "definition": "ClientListResponse"
+    },
+    {
+      "source": "backend/app/schemas/site.py",
+      "destination": "backend/app/modules/customers/schemas.py",
+      "definition": "SiteCreate"
+    },
+    {
+      "source": "backend/app/schemas/site.py",
+      "destination": "backend/app/modules/customers/schemas.py",
+      "definition": "SiteUpdate"
+    },
+    {
+      "source": "backend/app/schemas/site.py",
+      "destination": "backend/app/modules/customers/schemas.py",
+      "definition": "SiteResponse"
+    },
+    {
+      "source": "backend/app/schemas/site.py",
+      "destination": "backend/app/modules/customers/schemas.py",
+      "definition": "SiteListResponse"
+    },
+    {
+      "source": "backend/app/repositories/client.py",
+      "destination": "backend/app/modules/customers/repository.py",
+      "definition": "ClientRepository"
+    },
+    {
+      "source": "backend/app/repositories/site.py",
+      "destination": "backend/app/modules/customers/repository.py",
+      "definition": "SiteRepository"
+    },
+    {
+      "source": "backend/app/services/client.py",
+      "destination": "backend/app/modules/customers/service.py",
+      "definition": "ClientService"
+    },
+    {
+      "source": "backend/app/services/site.py",
+      "destination": "backend/app/modules/customers/service.py",
+      "definition": "SiteService"
+    },
+    {
+      "source": "backend/app/api/v1/clients.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "list_clients"
+    },
+    {
+      "source": "backend/app/api/v1/clients.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "create_client"
+    },
+    {
+      "source": "backend/app/api/v1/clients.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "get_client"
+    },
+    {
+      "source": "backend/app/api/v1/clients.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "update_client"
+    },
+    {
+      "source": "backend/app/api/v1/clients.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "get_client_sites"
+    },
+    {
+      "source": "backend/app/api/v1/clients.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "delete_client"
+    },
+    {
+      "source": "backend/app/api/v1/sites.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "list_sites"
+    },
+    {
+      "source": "backend/app/api/v1/sites.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "create_site"
+    },
+    {
+      "source": "backend/app/api/v1/sites.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "get_site"
+    },
+    {
+      "source": "backend/app/api/v1/sites.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "update_site"
+    },
+    {
+      "source": "backend/app/api/v1/sites.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "delete_site"
+    },
+    {
+      "source": "backend/app/api/v1/sites.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "get_site_interventions"
+    },
+    {
+      "source": "backend/app/api/v1/sites.py",
+      "destination": "backend/app/modules/customers/api.py",
+      "definition": "get_site_equipment"
+    }
+  ],
+  "migration_revisions_unchanged": true
+}

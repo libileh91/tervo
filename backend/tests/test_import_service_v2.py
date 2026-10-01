@@ -8,8 +8,7 @@ from fastapi import HTTPException
 from sqlalchemy import event, select, func, text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from app.models import Base
-from app.models.client import Client
-from app.models.site import Site
+from app.modules.customers.models import Client, Site
 from app.models.equipment import Equipment
 from app.models.intervention import Intervention
 from app.models.import_batch import ImportRecord, ImportReference

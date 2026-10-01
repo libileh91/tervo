@@ -26,22 +26,22 @@ ISOLATED_IMPORTS = (
     "app.core.database",
     "fastapi",
 )
-LEGACY_ROUTER_MODULES = (
-    "imports",
-    "auth",
-    "clients",
-    "interventions",
-    "dashboard",
-    "checklist",
-    "photos",
-    "materials",
-    "reports",
-    "reviews",
-    "sites",
-    "products",
-    "equipment",
-    "installations",
-    "sales",
+ROUTER_REFERENCES = (
+    ("app.api.v1.imports", "router"),
+    ("app.api.v1.auth", "router"),
+    ("app.modules.customers.api", "clients_router"),
+    ("app.api.v1.interventions", "router"),
+    ("app.api.v1.dashboard", "router"),
+    ("app.api.v1.checklist", "router"),
+    ("app.api.v1.photos", "router"),
+    ("app.api.v1.materials", "router"),
+    ("app.api.v1.reports", "router"),
+    ("app.api.v1.reviews", "router"),
+    ("app.modules.customers.api", "sites_router"),
+    ("app.api.v1.products", "router"),
+    ("app.api.v1.equipment", "router"),
+    ("app.api.v1.installations", "router"),
+    ("app.api.v1.sales", "router"),
 )
 
 
@@ -320,6 +320,10 @@ def test_load_models_is_complete_without_legacy_package_reexports(tmp_path):
         assert sys.modules["app.models"] is models_package
         assert not hasattr(models_package, "Base")
         assert not hasattr(models_package, "Client")
+        assert not hasattr(models_package, "Site")
+        from app.modules.customers.models import Client, Site
+        assert Client.__table__ is tables["client"]
+        assert Site.__table__ is tables["site"]
         """,
     )
 
@@ -386,7 +390,10 @@ def test_legacy_and_registry_import_orders_share_one_registry(tmp_path, order):
         compatibility = importlib.import_module("app.models.base")
         load_models()
 
+        from app.modules.customers.models import Client, Site
         assert legacy.Base is compatibility.Base is Base
+        assert legacy.Client is Client
+        assert legacy.Site is Site
         assert_registry(Base)
         assert all(Base.metadata.tables[name] is table for name, table in tables.items())
         assert set(Base.registry.mappers) == mappers
@@ -458,8 +465,14 @@ def test_api_router_aggregates_exact_legacy_routes_in_order(tmp_path):
         # Un APIRouter témoin laisse FastAPI appliquer ses règles de copie et
         # d'inclusion, y compris sur les versions à inclusion différée.
         expected_router = APIRouter()
-        for name in {LEGACY_ROUTER_MODULES!r}:
-            expected_router.include_router(import_module("app.api.v1." + name).router)
+        for module, attribute in {ROUTER_REFERENCES!r}:
+            expected_router.include_router(getattr(import_module(module), attribute))
+
+        customers = import_module("app.modules.customers.api")
+        assert customers.clients_router.prefix == "/clients"
+        assert customers.clients_router.tags == ["clients"]
+        assert customers.sites_router.prefix == "/sites"
+        assert customers.sites_router.tags == ["sites"]
 
         def signatures(router):
             # FastAPI 0.138 conserve des inclusions différées dans .routes.

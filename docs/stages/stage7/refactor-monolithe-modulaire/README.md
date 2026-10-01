@@ -2,7 +2,7 @@
 
 > **Stage 7 · chantier transverse avant 7.4, hors sprints fonctionnels**
 > **Branche :** `refactor/modular-monolith` (déjà créée).
-> **Décision utilisateur :** R0 validé et R1 autorisé uniquement. R2 à R11 restent non commencées et nécessitent chacune un feu vert distinct.
+> **Décision utilisateur :** R0/R1 validés et committés localement ; R2 autorisé et validé localement, clôture soumise à l'utilisateur. R3 à R11 restent non commencées et nécessitent chacune un feu vert distinct.
 
 ## Références et suivi
 
@@ -14,7 +14,9 @@
 
 Les mentions « validation/branche encore attendues » dans le manifeste JSON R0 décrivent sa date de capture. **Le présent planning et la note R0 enregistrent la décision ultérieure : R0 validé, branche créée, feu vert R1 donné et écart FK technicien conservé sans correction.** Les captures JSON historiques restent intactes.
 
-R1 est implémenté et validé localement : [note pédagogique et preuves INT-113](../../../../notes/backend/refactor-monolithe-modulaire/INT-113-R1-socle-modulaire.md). Suite finale : **285 tests**, groupes PostgreSQL : **56 + 39** ; OpenAPI/metadata identiques à R0. R2 attend un feu vert distinct.
+R0 et R1 sont committés localement : `6754a50` et `73e5ac9`. [Note et preuves INT-113](../../../../notes/backend/refactor-monolithe-modulaire/INT-113-R1-socle-modulaire.md).
+
+R2 est implémenté et validé localement : [note pédagogique et preuves INT-114](../../../../notes/backend/refactor-monolithe-modulaire/INT-114-R2-customers.md). Suite finale : **292 tests**, groupes PostgreSQL : **56 + 39** ; OpenAPI/metadata identiques à R0/R1. R2 reste non committé dans cette capture ; R3 attend un feu vert distinct.
 
 ## Ordre et attribution
 
@@ -23,8 +25,8 @@ R0 reste un checkpoint sans nouvel identifiant INT. Les identifiants INT-113 à 
 | Vague | Tâche | Périmètre | Statut / autorisation |
 |---|---|---|---|
 | R0 | Checkpoint | Baseline et preuves | Validé ; branche créée |
-| R1 | [INT-113](tasks.md#int-113--r1--créer-le-squelette-modulaire) | Squelette, Base pure, registre et composition | Implémenté et validé localement ; clôture soumise à l'utilisateur |
-| R2 | [INT-114](tasks.md#int-114--r2--déplacer-customers) | Client + Site | Non commencé ; feu vert distinct requis après R1 |
+| R1 | [INT-113](tasks.md#int-113--r1--créer-le-squelette-modulaire) | Squelette, Base pure, registre et composition | Validé par l'utilisateur ; commit local `73e5ac9` |
+| R2 | [INT-114](tasks.md#int-114--r2--déplacer-customers) | Client + Site | Implémenté et validé localement ; clôture/commit soumis à l'utilisateur |
 | R3 | [INT-115](tasks.md#int-115--r3--déplacer-catalogue) | Product | Non commencé ; feu vert distinct requis après R2 |
 | R4 | [INT-116](tasks.md#int-116--r4--déplacer-sales) | Sale + SaleLine | Non commencé ; feu vert distinct requis après R3 |
 | R5 | [INT-117](tasks.md#int-117--r5--déplacer-equipment) | Équipement physique | Non commencé ; feu vert distinct requis après R4 |
@@ -73,7 +75,7 @@ Les snapshots R0 restent intacts. Produire des sorties après vague distinctes p
 
 Le JSON reprend le format de 7.3 (`test_cases`, `id`, `task`, `title`, `type`, `preconditions`, `steps`, `expected_result`, `status`), avec un champ `wave` pour distinguer les vagues des sprints. `status: "not_run"` signifie **non exécuté** ; aucun résultat R0 n'est reporté comme réussite d'une tâche R1 à R11.
 
-À chaque vague autorisée : tests ciblés puis suite, comparaison OpenAPI/metadata et contrôle Alembic PostgreSQL sans nouvelle diff ; conserver les preuves réelles, faire valider la clôture, puis attendre le feu vert de la suivante. Le feu vert R1 n'autorise aucune vague ultérieure. Les critères R1 sont cochés après validation locale ; ceux de R2 à R11 restent ouverts.
+À chaque vague autorisée : tests ciblés puis suite, comparaison OpenAPI/metadata et contrôle Alembic PostgreSQL sans nouvelle diff ; conserver les preuves réelles, faire valider la clôture, puis attendre le feu vert de la suivante. Le feu vert R1 n'autorise aucune vague ultérieure. Les critères R1/R2 sont cochés après validation locale ; ceux de R3 à R11 restent ouverts.
 
 R9 doit exécuter le même pack d'import avant et après son déplacement avec des états initiaux équivalents. R0 conserve les empreintes des fixtures, **pas encore une comparaison complète des journaux et entités**. La capture fonctionnelle « avant R9 » fait donc partie d'INT-121 ; elle ne doit pas être inventée à partir des hashes.
 

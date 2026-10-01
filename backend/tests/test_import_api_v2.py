@@ -8,7 +8,7 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.main import app
 from app.models.user import User, Role
-from app.models.client import Client
+from app.modules.customers.models import Client
 from app.models.import_batch import ImportBatch, ImportRecord
 from tests.test_import_service_v2 import environment, CLIENT_CSV, FIXTURES
 

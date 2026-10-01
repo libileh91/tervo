@@ -2,12 +2,12 @@
 
 > **Chantier transverse du Stage 7, avant 7.4 ; pas un sprint de features.**
 > **Branche :** `refactor/modular-monolith`, déjà créée. **R0 :** validé, sans nouvel INT.
-> **Autorisation :** R1 uniquement ; R2 à R11 non commencées, feu vert distinct par tâche.
+> **Autorisation :** R1 validé et committé ; R2 autorisé et validé localement. R3 à R11 non commencées, feu vert distinct par tâche.
 > **Références :** [cadrage et baseline](README.md) · [plan](../../../../notes/backend/extras/tervo_plan_refactor_monolithe_modulaire.md) · [DAT](../../../DAT/new/00-sommaire.md).
 > **Estimations :** estimation à confirmer pour chaque tâche.
 > **Notes futures :** `notes/backend/refactor-monolithe-modulaire/`. La preuve R0 reste dans `notes/backend/extras/refactor-monolithe-modulaire/`.
 
-Les critères d'INT-113 sont cochés après les validations locales réellement exécutées. R2 à R11 restent ouverts et non commencés ; la création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
+Les critères d'INT-113 et d'INT-114 sont cochés après les validations locales réellement exécutées. R3 à R11 restent ouverts et non commencés ; la création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
 
 ## Garde-fous communs à toutes les tâches
 
@@ -24,7 +24,7 @@ Les critères d'INT-113 sont cochés après les validations locales réellement 
 
 ## INT-113 — R1 — Créer le squelette modulaire
 
-**Statut :** implémenté et validé localement — clôture soumise à l'utilisateur ; R2 non commencé.
+**Statut :** validé par l'utilisateur et committé localement (`73e5ac9`) ; R2 autorisé séparément.
 **Dépendance :** R0 validé ; branche dédiée déjà créée.
 
 **User Story**
@@ -58,7 +58,7 @@ Afin de **préparer des déplacements progressifs en conservant une application 
 
 ## INT-114 — R2 — Déplacer `customers`
 
-**Statut :** non commencé — feu vert distinct requis après validation d'INT-113.
+**Statut :** implémenté, validé localement et accepté par l'utilisateur ; commit INT-114 demandé. R3 autorisé séparément après ce commit.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -66,16 +66,17 @@ Je veux **regrouper Client et Site dans le module customers**,
 Afin de **isoler la racine du modèle métier et éprouver les relations inter-modules sans changer les parcours existants**.
 
 **Acceptance Criteria**
-- [ ] Déplacer les modèles, schémas, repositories, services et APIs Client/Site existants vers `app/modules/customers/` ; adapter imports, registre et composition.
-- [ ] Conserver CRUD, contrats, pagination/filtres, erreurs et protections historiques Client/Site ; relations aux ventes, installations, équipements et interventions résolues.
-- [ ] Préserver les accès transverses nécessaires sans refonte SQL silencieuse ; supprimer les fichiers source devenus inutiles après cutover, sans double implémentation.
-- [ ] Tests Client/Site et relations aval sans régression ; garde-fous communs OpenAPI/ORM/PostgreSQL/suite satisfaits.
-- [ ] Produire la note R2, faire valider la clôture puis attendre le feu vert R3.
+- [x] Déplacer les modèles, schémas, repositories, services et APIs Client/Site existants vers `app/modules/customers/` ; adapter imports, registre et composition.
+- [x] Conserver CRUD, contrats, pagination/filtres, erreurs et protections historiques Client/Site ; relations aux ventes, installations, équipements et interventions résolues.
+- [x] Préserver les accès transverses nécessaires sans refonte SQL silencieuse ; supprimer les fichiers source devenus inutiles après cutover, sans double implémentation.
+- [x] Tests Client/Site et relations aval sans régression ; garde-fous communs OpenAPI/ORM/PostgreSQL/suite satisfaits.
+- [x] Produire la note R2 et soumettre sa clôture à l'utilisateur ; attendre le feu vert R3.
 
 **Technical Notes**
 - Source : `models/{client,site}.py`, `schemas/{client,site}.py`, `repositories/{client,site}.py`, `services/{client,site}.py`, `api/v1/{clients,sites}.py`, sous `backend/app/`.
 - Les deux entités appartiennent au même contexte ; aucune nouvelle façade générale obligatoire. Les modèles encore legacy doivent continuer à résoudre leurs FK et relations vers customers.
-- Cas : `TC-INT-114-01` et `TC-INT-114-02`. Les nouvelles notes sont rangées dans le dossier commun du chantier.
+- Cible livrée : `customers/{models,schemas,repository,service,api}.py` ; `api.py` exporte `clients_router` et `sites_router`, inclus aux positions historiques. Les dix anciens fichiers sont supprimés, sans wrappers. Les exports globaux `app.models.Client/Site` réutilisent les mêmes classes pendant la transition.
+- Cas : `TC-INT-114-01` et `TC-INT-114-02`, vérifiés localement. [Note et preuves INT-114](../../../../notes/backend/refactor-monolithe-modulaire/INT-114-R2-customers.md) : 43 tests ciblés, 292 dans la suite SQLite, groupes PostgreSQL 56 + 39, OpenAPI/metadata identiques à R0/R1, seule diff FK connue.
 
 ---
 

@@ -1,0 +1,13 @@
+{
+  "startup": "passed",
+  "openapi_http_status": 200,
+  "docs_http_status": 200,
+  "http_openapi_equals_app_and_R0_and_R1": true,
+  "metadata_equals_R0_and_R1": true,
+  "openapi_paths": 46,
+  "openapi_operations": 63,
+  "orm_tables": 17,
+  "shutdown_returncode": -15,
+  "shutdown_signal": "SIGTERM",
+  "uvicorn_log": "INFO:     Started server process [230448]\nINFO:     Waiting for application startup.\nINFO:     Application startup complete.\nINFO:     Uvicorn running on http://127.0.0.1:43669 (Press CTRL+C to quit)\nINFO:     127.0.0.1:34220 - \"GET /openapi.json HTTP/1.1\" 200 OK\nINFO:     127.0.0.1:34224 - \"GET /docs HTTP/1.1\" 200 OK\nINFO:     Shutting down\nINFO:     Waiting for application shutdown.\nINFO:     Application shutdown complete.\nINFO:     Finished server process [230448]\n"
+}

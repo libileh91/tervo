@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.intervention import Intervention
-from app.models.site import Site
+from app.modules.customers.models import Site
 
 
 class InterventionRepository:

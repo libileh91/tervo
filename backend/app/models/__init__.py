@@ -7,12 +7,12 @@ Entry points load models explicitly through app.model_registry.
 
 from app.core.base import Base
 from app.models.checklist_item import ChecklistItem
-from app.models.client import Client
+from app.modules.customers.models import Client, Site
 from app.models.intervention import Intervention
 from app.models.intervention_photo import InterventionPhoto
 from app.models.material import Material
 from app.models.review import Review
-from app.models.site import Site
+
 from app.models.user import User
 
 from app.models.product import Product

@@ -5,7 +5,7 @@
 > **Baseline Git :** `544a23d6cb2cbe878fbc8ddf2d962c7adf76c000`  
 > **Point de départ fonctionnel :** Sprint 7.3 terminé et poussé ; `Sale`, `SaleLine` et `Installation` sont maintenant dans le code.  
 > **Important :** l'historique Git ayant été réécrit, les anciens SHA ne doivent plus servir de baseline de comparaison.
-> **Avancement du chantier :** R0 validé ; branche `refactor/modular-monolith` créée. R1 / INT-113 implémenté et validé localement : [note et preuves](../refactor-monolithe-modulaire/INT-113-R1-socle-modulaire.md), [planning technique](../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md). R2 non commencé, feu vert distinct requis. La [baseline R0](refactor-monolithe-modulaire/R0-baseline.md) et l'écart préexistant d'`alembic check` sur la FK technicien sont conservés sans correction.
+> **Avancement du chantier :** R0/R1 validés et committés localement (`6754a50`, `73e5ac9`) sur `refactor/modular-monolith`. R2 / INT-114 validé localement : [note et preuves](../refactor-monolithe-modulaire/INT-114-R2-customers.md), [planning technique](../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md). Clôture/commit R2 soumis à l'utilisateur ; R3 non commencé, feu vert distinct requis. La [baseline R0](refactor-monolithe-modulaire/R0-baseline.md) et l'écart préexistant d'`alembic check` sur la FK technicien sont conservés sans correction.
 
 ---
 
@@ -1237,7 +1237,7 @@ avec 80 fichiers déplacés et aucune frontière de validation intermédiaire.
 ```text
 [x] baseline actuelle enregistrée après la réécriture Git
 [ ] chaque domaine actif possède une frontière explicite dans app/modules/
-[ ] customers est isolé
+[x] customers est isolé
 [ ] catalogue est isolé
 [ ] sales est isolé
 [ ] equipment est isolé

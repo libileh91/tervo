@@ -3,7 +3,7 @@
 > **Chantier :** [refactor monolithe modulaire](../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md), avant Sprint 7.4.
 > **Branche :** `refactor/modular-monolith`.
 > **Baseline source :** `544a23d6cb2cbe878fbc8ddf2d962c7adf76c000`.
-> **État :** R1 implémenté et validé localement ; R2 non commencé, feu vert distinct requis.
+> **État :** R1 validé par l'utilisateur et committé localement (`73e5ac9`). R2 a reçu son feu vert distinct ; voir la [note INT-114](INT-114-R2-customers.md) pour sa livraison.
 
 ## 1. Ce que R1 livre — et ne livre pas
 
@@ -332,9 +332,9 @@ Les ressources jetables ont été supprimées ; aucun conteneur de vérification
 ## 12. Suite autorisée et limites
 
 - R1 est livré localement ; les critères INT-113 sont cochés et les neuf scénarios documentaires associés sont renseignés avec leurs preuves.
-- R2 / INT-114 (`customers`) reste **non commencé** : création du module et déplacement vertical Client/Site attendent le feu vert.
+- Après validation utilisateur, R0 et R1 ont été committés localement (`6754a50` et `73e5ac9`) ; R2 a reçu son feu vert distinct. La [note INT-114](INT-114-R2-customers.md) décrit le déplacement Client/Site maintenant livré, sans réécrire les résultats capturés pour R1.
 - Aucun todo métier n'est débloqué par ce seul squelette. TD-B013 (rôles), TD-B016 (volume d'import) et TD-F007 (frontend) restent distincts.
 - La FK technicien reste explicitement hors correction du refactor.
 - Le seed n'est pas exécuté et son contenu métier n'est pas réécrit.
 - La comparaison complète des résultats du pack Excel avant/après sera réalisée dans R9, au-delà des empreintes et tests déjà conservés.
-- Aucun commit, push, tag ou réécriture d'historique effectué pendant R1.
+- Aucun commit au moment de la capture des preuves R1 ; les deux commits locaux ont été créés ensuite après accord utilisateur. Aucun push, tag ou réécriture d'historique.

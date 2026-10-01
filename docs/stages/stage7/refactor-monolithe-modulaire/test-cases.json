@@ -5,12 +5,13 @@
   "branch": "refactor/modular-monolith",
   "authorization": {
     "R0": "validated",
-    "R1": "implemented_locally_verified_pending_user_acceptance",
-    "R2_to_R11": "not_started_separate_user_approval_required_per_wave"
+    "R1": "user_accepted_locally_committed_73e5ac9",
+    "R2": "implemented_locally_verified_pending_user_acceptance",
+    "R3_to_R11": "not_started_separate_user_approval_required_per_wave"
   },
   "validation": {
-    "status": "R1_executed_remaining_not_run",
-    "scope": "R1 vérifié localement ; R2 à R11 non commencées et non exécutées.",
+    "status": "R1_R2_executed_remaining_not_run",
+    "scope": "R1 et R2 vérifiés localement ; R3 à R11 non commencées et non exécutées.",
     "R1_observed": {
       "bootstrap_passed": 14,
       "sqlite_suite_passed": 285,
@@ -24,6 +25,24 @@
       "startup_shutdown_and_HTTP_checks": "passed",
       "evidence": "notes/backend/refactor-monolithe-modulaire/R1-validation.json",
       "note": "notes/backend/refactor-monolithe-modulaire/INT-113-R1-socle-modulaire.md",
+      "remote_CI_or_deployment_executed": false
+    },
+    "R2_observed": {
+      "targeted_passed": 43,
+      "new_customers_test_cases": 7,
+      "sqlite_suite_passed": 292,
+      "sqlite_warnings": 5,
+      "postgres_sales_installations_passed": 56,
+      "postgres_imports_passed": 39,
+      "new_customers_API_tests_dialect": "SQLite",
+      "full_openapi_equals_R0_and_R1": true,
+      "full_metadata_equals_R0_and_R1": true,
+      "moved_definitions_AST_equal": 28,
+      "obsolete_customer_source_files_removed": 10,
+      "new_alembic_operations_beyond_R0_R1": [],
+      "startup_shutdown_and_HTTP_checks": "passed",
+      "evidence": "notes/backend/refactor-monolithe-modulaire/R2-validation.json",
+      "note": "notes/backend/refactor-monolithe-modulaire/INT-114-R2-customers.md",
       "remote_CI_or_deployment_executed": false
     },
     "baseline_source_sha": "544a23d6cb2cbe878fbc8ddf2d962c7adf76c000",
@@ -289,7 +308,7 @@
       "wave": "R2",
       "title": "Customers — CRUD et protection historique conservés",
       "type": "api",
-      "preconditions": ["INT-113 clôturée ; feu vert R2 distinct requis et pas encore donné", "Clients/sites de test, dont un site lié à une installation existante"],
+      "preconditions": ["INT-113 validée et committée ; feu vert R2 donné", "Clients/sites de test, dont un site lié à une installation existante"],
       "steps": ["Rejouer création, lecture, mise à jour, listes filtrées/paginées Client/Site et erreurs sur ressources inconnues.", "Tester suppression d'un site/client lié à une installation et relire les données historiques.", "Comparer contrats OpenAPI et schéma à R0 après déplacement."],
       "expected_result": {
         "CRUD_and_list_contracts_unchanged": true,
@@ -299,7 +318,8 @@
         "openapi_and_metadata_diff": [],
         "new_postgresql_schema_diff": []
       },
-      "status": "not_run"
+      "status": "passed",
+      "evidence": "tests/test_clients.py, test_sites.py, test_customers_module.py ; R2-targeted-results.json, R2-openapi.json, R2-metadata.json et R2-postgresql-results.json"
     },
     {
       "id": "TC-INT-114-02",
@@ -307,10 +327,11 @@
       "wave": "R2",
       "title": "Customers — coexistence avec modèles aval encore legacy",
       "type": "integration",
-      "preconditions": ["Feu vert R2 distinct requis", "Client/Site déplacés ; autres domaines pas encore tous déplacés"],
+      "preconditions": ["Feu vert R2 donné", "Client/Site déplacés ; autres domaines pas encore tous déplacés"],
       "steps": ["Importer le registre hors API en processus neuf et exécuter configure_mappers().", "Résoudre et exercer les liens Client/Site avec Sale, Installation, Equipment et Intervention.", "Rechercher les anciennes implémentations et vérifier le cutover des imports."],
       "expected_result": {"orm_tables": 17, "mapper_and_FK_resolution_succeeds": true, "downstream_relationships_preserved": true, "duplicate_Client_or_Site_definition": false, "obsolete_active_source_files": [], "new_postgresql_schema_diff": []},
-      "status": "not_run"
+      "status": "passed",
+      "evidence": "tests/test_customers_module.py et test_modular_bootstrap.py ; R2-source-invariants.json, R2-sqlite-results.json et R2-postgresql-results.json"
     },
     {
       "id": "TC-INT-115-01",

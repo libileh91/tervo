@@ -1,0 +1,4 @@
+{
+  "returncode": 0,
+  "output": "...........................................                              [100%]\n=============================== warnings summary ===============================\n../../home/lob/workspace/python/fastapi/Tervo/backend/.venv/lib/python3.12/site-packages/passlib/utils/__init__.py:854\n  /home/lob/workspace/python/fastapi/Tervo/backend/.venv/lib/python3.12/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13\n    from crypt import crypt as _crypt\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n43 passed, 1 warning in 19.13s\n"
+}

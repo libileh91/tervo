@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.intervention import Intervention, InterventionStatus
-from app.models.site import Site
+from app.modules.customers.models import Site
 from app.models.equipment import Equipment
 from app.models.user import User
 from app.repositories.intervention import InterventionRepository

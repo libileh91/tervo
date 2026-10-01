@@ -16,8 +16,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from app.importers.ingestion import read_sources
 from app.importers.report import DEFAULT_BATCH_SIZE
-from app.models.client import Client
-from app.models.site import Site
+from app.modules.customers.models import Client, Site
 from app.models.product import Product
 from app.models.equipment import Equipment
 from app.models.intervention import Intervention

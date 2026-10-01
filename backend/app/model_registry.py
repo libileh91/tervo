@@ -6,7 +6,7 @@ def load_models() -> None:
     # Local imports keep importing this registry independent of loading domains.
     # Python's module cache makes repeated calls safe without a second registry.
     from app.models.checklist_item import ChecklistItem  # noqa: F401
-    from app.models.client import Client  # noqa: F401
+    from app.modules.customers.models import Client, Site  # noqa: F401
     from app.models.equipment import Equipment  # noqa: F401
     from app.models.import_batch import (  # noqa: F401
         ImportBatch,
@@ -21,5 +21,5 @@ def load_models() -> None:
     from app.models.product import Product  # noqa: F401
     from app.models.review import Review  # noqa: F401
     from app.models.sale import Sale, SaleLine  # noqa: F401
-    from app.models.site import Site  # noqa: F401
+
     from app.models.user import User  # noqa: F401

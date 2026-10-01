@@ -2,10 +2,10 @@
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from app.models.client import Client
+from app.modules.customers.models import Client, Site
 from app.models.product import Product
 from app.models.sale import Sale, SaleLine, SaleStatus
-from app.models.site import Site
+
 
 
 class SaleService:

@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from app.api.v1.auth import router as auth_router
 from app.api.v1.checklist import router as checklist_router
-from app.api.v1.clients import router as clients_router
+from app.modules.customers.api import clients_router, sites_router
 from app.api.v1.dashboard import router as dashboard_router
 from app.api.v1.equipment import router as equipment_router
 from app.api.v1.imports import router as imports_router
@@ -16,7 +16,7 @@ from app.api.v1.products import router as products_router
 from app.api.v1.reports import router as reports_router
 from app.api.v1.reviews import router as reviews_router
 from app.api.v1.sales import router as sales_router
-from app.api.v1.sites import router as sites_router
+
 
 api_router = APIRouter()
 api_router.include_router(imports_router)

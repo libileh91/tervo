@@ -21,9 +21,9 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.main import app
 from app.models import Base
-from app.models.client import Client
+from app.modules.customers.models import Client, Site
 from app.models.intervention import Intervention, InterventionStatus
-from app.models.site import Site
+
 from app.models.user import Role, User
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"

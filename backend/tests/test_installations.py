@@ -11,11 +11,11 @@ from app.core.database import get_db
 from app.core.security import create_access_token
 from app.main import app
 from app.models import Base
-from app.models.client import Client
+from app.modules.customers.models import Client, Site
 from app.models.equipment import Equipment
 from app.models.installation import Installation
 from app.models.product import Product
-from app.models.site import Site
+
 from app.models.user import Role, User
 from app.repositories.installation import InstallationRepository
 
