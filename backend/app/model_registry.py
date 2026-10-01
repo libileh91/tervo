@@ -20,6 +20,6 @@ def load_models() -> None:
     from app.models.material import Material  # noqa: F401
     from app.modules.catalog.models import Product  # noqa: F401
     from app.models.review import Review  # noqa: F401
-    from app.models.sale import Sale, SaleLine  # noqa: F401
+    from app.modules.sales.models import Sale, SaleLine  # noqa: F401
 
     from app.models.user import User  # noqa: F401

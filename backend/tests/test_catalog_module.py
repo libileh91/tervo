@@ -138,7 +138,7 @@ async def context(tmp_path, monkeypatch):
 
 async def test_deactivation_preserves_historical_links_and_routes(context):
     from app.models.equipment import Equipment
-    from app.models.sale import Sale, SaleLine
+    from app.modules.sales.models import Sale, SaleLine
     from app.modules.catalog.models import Product
     from app.modules.customers.models import Client, Site
 

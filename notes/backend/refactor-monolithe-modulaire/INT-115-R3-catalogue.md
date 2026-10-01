@@ -3,7 +3,7 @@
 > **Planning :** [refactor monolithe modulaire](../../../docs/stages/stage7/refactor-monolithe-modulaire/tasks.md).
 > **Branche :** `refactor/modular-monolith`.
 > **Parent R2 :** `ed67168c5ddbda80a81fb1264f83ad3d8d0f8005`.
-> **État :** R3 accepté et revérifié après naming ; livraison dans le commit INT-115 contenant cette note, après le commit de naming documentaire `8f3e876`. R4 non commencé, feu vert distinct requis.
+> **État :** R3 accepté et committé sous `29f034e`, après le naming documentaire `8f3e876`. R4 a reçu son feu vert distinct ; voir la [note INT-116](INT-116-R4-sales.md). Les résultats et empreintes R3 restent ceux de leur capture avant R4.
 > **Preuve :** [R3-validation.json](R3-validation.json), capture avant naming conservée et section `post_naming` avec résultats et empreintes des sources finales.
 
 `app/modules` reste inchangé ; seul le package Python devient `catalog` (anglais américain), avec `tests/test_catalog_module.py`. Routes `/products`, classes et `catalogue_editor` restent inchangés. Le titre français et le nom historique de cette note sont conservés, ainsi que les captures R0/R1/R2, sans réécriture Git. Les résultats initiaux sont distingués des réexécutions après naming, détaillées en section 10.

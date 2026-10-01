@@ -2,12 +2,12 @@
 
 > **Chantier transverse du Stage 7, avant 7.4 ; pas un sprint de features.**
 > **Branche :** `refactor/modular-monolith`, déjà créée. **R0 :** validé, sans nouvel INT.
-> **Autorisation :** R1/R2 validés par l'utilisateur et committés ; R3 accepté et revérifié après naming, livraison dans le commit INT-115 associé à cette note. Naming documentaire : `8f3e876`. R4 à R11 non commencées, feu vert distinct par tâche.
+> **Autorisation :** R1/R2/R3 validés par l'utilisateur et committés ; R3 : `29f034e`, naming documentaire : `8f3e876`. R4 autorisé et vérifié localement, clôture soumise, non committé dans les deux checkouts. R5 à R11 non commencées, feu vert distinct par tâche.
 > **Références :** [cadrage et baseline](README.md) · [plan](../../../../notes/backend/extras/tervo_plan_refactor_monolithe_modulaire.md) · [DAT](../../../DAT/new/00-sommaire.md).
 > **Estimations :** estimation à confirmer pour chaque tâche.
 > **Notes futures :** `notes/backend/refactor-monolithe-modulaire/`. La preuve R0 reste dans `notes/backend/extras/refactor-monolithe-modulaire/`.
 
-Les critères d'INT-113 à INT-115 sont cochés après les validations locales réellement exécutées et l'acceptation utilisateur. R3 a été revérifié après le naming `catalog` ; les résultats et empreintes finaux sont dans `R3-validation.json → post_naming`, sans réécrire les captures initiales. R4 à R11 restent ouverts et non commencés ; la création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
+Les critères d'INT-113 à INT-115 sont cochés après validation locale et acceptation utilisateur. Les critères techniques INT-116 sont cochés après vérification locale sur le checkout principal ; son acceptation reste attendue. Les captures historiques restent intactes. R5 à R11 restent ouverts et non commencés ; la création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
 
 ## Garde-fous communs à toutes les tâches
 
@@ -82,7 +82,7 @@ Afin de **isoler la racine du modèle métier et éprouver les relations inter-m
 
 ## INT-115 — R3 — Déplacer `catalog`
 
-**Statut :** R3 accepté par l'utilisateur et revérifié après naming ; livraison dans le commit INT-115 associé à cette note, après le commit de naming documentaire `8f3e876`. R4 non commencé, feu vert distinct requis.
+**Statut :** R3 accepté par l'utilisateur et committé sous `29f034e`, après le commit de naming documentaire `8f3e876`. R4 a reçu son feu vert distinct.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -108,7 +108,7 @@ Afin de **rendre explicite la responsabilité de la référence commerciale dist
 
 ## INT-116 — R4 — Déplacer `sales`
 
-**Statut :** non commencé — feu vert distinct requis après validation d'INT-115.
+**Statut :** implémenté, vérifié localement et accepté par l'utilisateur ; commit INT-116 demandé dans le checkout principal. R5 autorisé distinctement après ce commit.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -116,16 +116,18 @@ Je veux **regrouper Sale, SaleLine et leur workflow dans sales**,
 Afin de **isoler la vente tout en préservant le raccordement commercial des installations**.
 
 **Acceptance Criteria**
-- [ ] Déplacer les modèles Sale/SaleLine, schémas, SaleService et API vers `app/modules/sales/` ; adapter imports, registre et composition, sans ajouter de repository artificiel.
-- [ ] Conserver création DRAFT, confirmation avec au moins une ligne, annulation, `quantity > 0`, prix Decimal/Numeric et vérifications Client/Site/Product.
-- [ ] Le lien `SaleLine 1 → N Installation` et sa limite de quantité restent identiques ; aucun rôle ni workflow commercial futur ajouté.
-- [ ] Tests ventes et raccordement commercial sans régression ; cutover et garde-fous communs satisfaits.
-- [ ] Produire la note R4, faire valider la clôture puis attendre le feu vert R5.
+- [x] Déplacer les modèles Sale/SaleLine, schémas, SaleService et API vers `app/modules/sales/` ; adapter imports, registre et composition, sans ajouter de repository artificiel.
+- [x] Conserver création DRAFT, confirmation avec au moins une ligne, annulation, `quantity > 0`, prix Decimal/Numeric et vérifications Client/Site/Product.
+- [x] Le lien `SaleLine 1 → N Installation` et sa limite de quantité restent identiques ; aucun rôle ni workflow commercial futur ajouté.
+- [x] Tests ventes et raccordement commercial sans régression ; cutover et garde-fous communs satisfaits.
+- [x] Produire la note R4 et soumettre sa clôture avec les preuves locales.
+- [x] Faire valider la clôture R4 par l'utilisateur avant commit ; feu vert distinct R5 reçu.
 
 **Technical Notes**
 - Source : `models/sale.py`, `schemas/sale.py`, `services/sale.py`, `api/v1/sales.py`, sous `backend/app/`. Aucun repository sales n'existe dans le périmètre de départ.
 - Garder les calculs/valeurs monétaires sans conversion flottante ; ne pas transformer le move en refonte des accès SQL ou de TD-B013.
-- Cas : `TC-INT-116-01` et `TC-INT-116-02`.
+- Cible livrée : `sales/{models,schemas,service,api}.py` et init pur ; quatre anciens fichiers supprimés, aucun repository. Réexports globaux Sale/SaleLine/SaleStatus identiques.
+- Cas : `TC-INT-116-01` et `TC-INT-116-02`, vérifiés localement. [Note et preuve INT-116](../../../../notes/backend/refactor-monolithe-modulaire/INT-116-R4-sales.md) : 100 tests ciblés, 315 SQLite, groupes PostgreSQL 56 + 39 ; OpenAPI/metadata identiques à R0 et références suivantes, seul écart FK connu. AST des quatre couches égal hors imports : 11 définitions. Auth ADMIN/TECHNICIAN conservée et testée.
 
 ---
 

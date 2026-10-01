@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from app.models.equipment import Equipment, EquipmentStatus
 from app.models.installation import Installation, InstallationStatus as Status
-from app.models.sale import SaleLine, SaleStatus
+from app.modules.sales.models import SaleLine, SaleStatus
 from app.repositories.installation import InstallationRepository
 from app.schemas.installation import InstallationListResponse, InstallationResponse
 from app.services.equipment import EquipmentService

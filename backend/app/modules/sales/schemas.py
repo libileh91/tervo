@@ -2,7 +2,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
-from app.models.sale import SaleStatus
+from app.modules.sales.models import SaleStatus
 
 
 class SaleLineCreate(BaseModel):

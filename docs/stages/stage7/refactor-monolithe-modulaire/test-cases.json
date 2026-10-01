@@ -7,12 +7,13 @@
     "R0": "validated",
     "R1": "user_accepted_locally_committed_73e5ac9",
     "R2": "user_accepted_locally_committed_ed67168",
-    "R3": "user_accepted_reverified_after_naming_delivery_in_associated_INT115_commit",
-    "R4_to_R11": "not_started_separate_user_approval_required_per_wave"
+    "R3": "user_accepted_committed_29f034e",
+    "R4": "authorized_implemented_locally_verified_pending_user_acceptance",
+    "R5_to_R11": "not_started_separate_user_approval_required_per_wave"
   },
   "validation": {
-    "status": "R1_R2_R3_executed_remaining_not_run",
-    "scope": "R1, R2 et R3 vérifiés localement ; capture initiale R3 conservée et revalidation après naming ajoutée dans R3-validation.json post_naming. R4 à R11 non commencées et non exécutées.",
+    "status": "R1_R2_R3_R4_executed_remaining_not_run",
+    "scope": "R1 à R4 vérifiés localement ; captures historiques conservées. R4 vérifié sur le checkout principal, non committé et acceptation attendue. R5 à R11 non commencées.",
     "R1_observed": {
       "bootstrap_passed": 14,
       "sqlite_suite_passed": 285,
@@ -65,6 +66,23 @@
       "startup_shutdown_and_HTTP_checks": "passed",
       "evidence": "notes/backend/refactor-monolithe-modulaire/R3-validation.json",
       "note": "notes/backend/refactor-monolithe-modulaire/INT-115-R3-catalogue.md",
+      "remote_CI_or_deployment_executed": false
+    },
+    "R4_observed": {
+      "validated_checkout": "primary",
+      "targeted_passed": 100,
+      "sqlite_suite_passed": 315,
+      "new_sales_cases": 16,
+      "new_sales_cases_dialect": "SQLite",
+      "postgres_sales_installations_passed": 56,
+      "postgres_imports_passed": 39,
+      "full_openapi_and_metadata_equal_baseline": true,
+      "moved_module_AST_equal_except_imports": 4,
+      "moved_definitions_AST_equal": 11,
+      "new_alembic_operations_beyond_baseline": [],
+      "startup_shutdown_and_HTTP_checks": "passed",
+      "evidence": "notes/backend/refactor-monolithe-modulaire/R4-validation.json",
+      "note": "notes/backend/refactor-monolithe-modulaire/INT-116-R4-sales.md",
       "remote_CI_or_deployment_executed": false
     },
     "baseline_source_sha": "544a23d6cb2cbe878fbc8ddf2d962c7adf76c000",
@@ -373,10 +391,11 @@
       "wave": "R4",
       "title": "Sales — brouillon, confirmation, annulation et validations",
       "type": "integration",
-      "preconditions": ["INT-115 clôturée ; feu vert R4 distinct requis et pas encore donné", "Client/site cohérents et produit existant"],
+      "preconditions": ["INT-115 validée et committée sous 29f034e ; feu vert R4 distinct donné", "Client/site cohérents et produit existant"],
       "steps": ["Créer un brouillon ; essayer de confirmer une vente sans ligne puis une vente avec ligne.", "Tester quantity=0 et négative, produit inconnu et site d'un autre client ; vérifier l'absence d'écriture invalide.", "Tester unit_price Decimal/Numeric sans perte de précision, puis annulation selon les transitions existantes."],
       "expected_result": {"initial_status": "DRAFT", "confirmation_with_line_status": "CONFIRMED", "confirmation_without_line_rejected": true, "non_positive_quantity_rejected": true, "unknown_product_or_incoherent_site_rejected": true, "invalid_sale_persisted": false, "Decimal_price_preserved_without_float_rounding": true, "valid_cancellation_status": "CANCELLED", "transitions_changed": false},
-      "status": "not_run"
+      "status": "passed",
+      "evidence": "test_sales.py et test_sales_module.py ; R4-validation.json : 100 ciblés, 315 SQLite ; refus sans persistance et droits ADMIN/TECHNICIAN vérifiés"
     },
     {
       "id": "TC-INT-116-02",
@@ -384,10 +403,11 @@
       "wave": "R4",
       "title": "Sales — quantité 3, raccordement installations et absence de repository artificiel",
       "type": "integration",
-      "preconditions": ["Feu vert R4 distinct requis", "SaleLine confirmée de quantité 3"],
+      "preconditions": ["Feu vert R4 distinct donné", "SaleLine confirmée de quantité 3"],
       "steps": ["Créer trois installations commerciales sur cette ligne puis tenter une quatrième.", "Vérifier une seule SaleLine de quantité 3, les liens et le service après déplacement.", "Inspecter le module : aucune couche repository sales ajoutée uniquement pour la symétrie ; comparer OpenAPI/metadata et Alembic."],
       "expected_result": {"SaleLine_count": 1, "SaleLine_quantity": 3, "accepted_installations": 3, "fourth_installation": 409, "commercial_provenance_preserved": true, "artificial_sales_repository_created": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
-      "status": "not_run"
+      "status": "passed",
+      "evidence": "test_sales.py quantité3, test_sales_module.py relations/layout et test_modular_bootstrap.py ; R4-validation.json, migrations et groupes PostgreSQL 56 + 39"
     },
     {
       "id": "TC-INT-117-01",

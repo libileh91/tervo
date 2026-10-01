@@ -1,0 +1,128 @@
+{
+  "task": "INT-116",
+  "wave": "R4",
+  "branch": "refactor/modular-monolith",
+  "source_parent_sha": "29f034e4597a33c65fcbf9a4afe15440a1a1e18e",
+  "status": "implemented_locally_verified_pending_user_acceptance",
+  "worktree_changes_uncommitted": true,
+  "primary_checkout": "/home/lob/workspace/python/fastapi/Tervo",
+  "primary_checkout_changes_uncommitted": true,
+  "primary_and_agent_changes_equal": true,
+  "R5_started": false,
+  "environment": {
+    "python": "3.12.0",
+    "interpreter": "primary checkout backend/.venv/bin/python",
+    "dependencies_and_lockfile_unchanged": true,
+    "isolation": "temporary cwd, SQLite/uploads, PostgreSQL container with loopback ephemeral port and no named volume",
+    "postgresql": "17.4 (Debian 17.4-1.pgdg120+2)"
+  },
+  "targeted": {
+    "files": [
+      "test_modular_bootstrap.py", "test_customers_module.py", "test_catalog_module.py",
+      "test_sales_module.py", "test_sales.py", "test_installations.py", "test_installation_migration.py"
+    ],
+    "command": "python -m pytest <absolute test paths> -q -p no:cacheprovider",
+    "returncode": 0,
+    "passed": 100,
+    "warnings": 1,
+    "seconds": 33.58
+  },
+  "sqlite_suite": {
+    "command": "python -m pytest <absolute backend/tests> -q -p no:cacheprovider",
+    "returncode": 0,
+    "passed": 315,
+    "warnings": 5,
+    "seconds": 64.56,
+    "new_sales_cases": 16,
+    "new_sales_cases_dialect": "SQLite"
+  },
+  "postgresql": {
+    "executed_by": "independent scout on primary checkout, existing test groups only",
+    "upgrade_head_returncode": 0,
+    "downgrade_last_returncode": 0,
+    "reupgrade_head_returncode": 0,
+    "head": "f102e0010001",
+    "downgrade_target": "e103e0010001",
+    "alembic_check_returncode": 255,
+    "autogenerate_operations": [
+      {"operation": "remove_fk", "table": "intervention", "columns": ["technician_id"], "targets": ["user.id"], "ondelete": null},
+      {"operation": "add_fk", "table": "intervention", "columns": ["technician_id"], "targets": ["user.id"], "ondelete": "SET NULL"}
+    ],
+    "operations_equal_R2_and_known_baseline": true,
+    "new_operations_beyond_baseline": [],
+    "sales_installations_migrations": {"returncode": 0, "passed": 56, "warnings": 1, "seconds": 27.79},
+    "imports_service_and_API": {"returncode": 0, "passed": 39, "warnings": 1, "seconds": 32.79},
+    "container_removed": true
+  },
+  "contracts": {
+    "openapi_and_metadata_equal_R0_R1_R2_and_R3_references": true,
+    "snapshots_serialized_byte_identical_to_R0_R1_R2": true,
+    "reference_openapi": "notes/backend/extras/refactor-monolithe-modulaire/R0-openapi.json",
+    "reference_metadata": "notes/backend/extras/refactor-monolithe-modulaire/R0-metadata.json",
+    "openapi_sha256": "dcabfd245b80cbf3989f71049669c3a65e9766b3ed9512bbf58e22acea942fd7",
+    "metadata_sha256": "e86c52bc02519708beb34a3dd587ca566a222f54a04a3fe0b62bdd742ca2089a",
+    "paths": 46,
+    "operations": 63,
+    "tables": 17,
+    "snapshots_not_duplicated": true
+  },
+  "runtime": {
+    "validated_checkout": "primary",
+    "docs_http_status": 200,
+    "openapi_http_status": 200,
+    "HTTP_openapi_equals_app_and_R0": true,
+    "startup_complete": true,
+    "shutdown_complete": true,
+    "uvicorn_returncode_after_SIGTERM": -15,
+    "server_process_stopped": true
+  },
+  "source_invariants": {
+    "comparison": "whole-module AST equal to parent except Import/ImportFrom nodes, without decorator/name normalization",
+    "modules": 4,
+    "definitions": 11,
+    "retired_modules": ["app.models.sale", "app.schemas.sale", "app.services.sale", "app.api.v1.sales"],
+    "retired_files_absent": true,
+    "active_retired_imports_AST_scan": [],
+    "artificial_repository_added": false,
+    "alembic_files_unchanged": true,
+    "R0_R1_R2_R3_JSON_artifacts_unchanged": true,
+    "R0_import_fixture_hashes_unchanged": true
+  },
+  "source_sha256": {
+    "backend/app/model_registry.py": "dbf54b13e1d7e57c648c869e09b1c0c0910a918f4a8ae7f7dc77f5ccc5b11f2d",
+    "backend/app/models/__init__.py": "a612f69c2438b34f9ba11301422f2792abb1c473787ffed02713fd65a18feb5c",
+    "backend/app/modules/sales/__init__.py": "6f4224cfad546a305275a935da132fc0efa71be360841d51d9e2c2b5fd0697aa",
+    "backend/app/modules/sales/api.py": "edb04fd2cf0aaeb9c1592881c0bad200b4b53d38ba90febd856eaf641f591107",
+    "backend/app/modules/sales/models.py": "06ceb2e3bd48306eaf0e4c3ec59374fbe78bd649a40cdb3dfc46f2c1b4240e78",
+    "backend/app/modules/sales/schemas.py": "5faf18e6367f5959daa0c3b58755420a19e73e46cc78ecca2e22382bfd209812",
+    "backend/app/modules/sales/service.py": "d24fdd6254a5e8abe9f89ea4363aaae5a3e9406fc5d69c48bbba5221c75b6481",
+    "backend/app/router.py": "c3e2fb0412f35c2ecce90e1a159803ee06a66fe6dad13812949ce3babb03db56",
+    "backend/app/services/installation.py": "957f9b7c11a12337647cbdc4ac20fb3521f195e742d554587b14123b64790041",
+    "backend/tests/test_catalog_module.py": "b3fbde57228b50e822d509340b4cf1354664a6572c86241fc5c0fcb3647f75c6",
+    "backend/tests/test_modular_bootstrap.py": "1c3a8f4e7d603d32be082f7afa98ac09bcf64aa58afe2b647f1663a39aa95869",
+    "backend/tests/test_sales.py": "20f57bedb4c566957ab95c182ddb833e42265a02935fdbdbb2921072e336e5dc",
+    "backend/tests/test_sales_module.py": "82345c9c543e3d0964397728ab7bc0657ae585cb71cfed091584626772bbfda1"
+  },
+  "prior_runs_before_review_fix": {
+    "targeted": {"passed": 99, "warnings": 1, "seconds": 37.81},
+    "sqlite_suite": {"passed": 314, "warnings": 5, "seconds": 62.65},
+    "new_cases": 15
+  },
+  "independent_review": {
+    "functional_or_ORM_blocking_findings": [],
+    "structural_import_tests_passed": 5,
+    "integration_tests_repeated": false,
+    "low_severity_finding": "new HTTP scenarios covered ADMIN only, not the existing TECHNICIAN sales permissions",
+    "resolution": "provenance creation/confirmation tested under TECHNICIAN ; cancellation parameterized ADMIN/TECHNICIAN ; final targeted and full suites rerun successfully",
+    "unresolved_findings": []
+  },
+  "requested_R2_stash_cleanup": {
+    "stash_sha": "9445318bd3d2b21eee93270d2b35363c61c4b81d",
+    "stash_entry_removed": true,
+    "dedicated_stash_backup_reference_removed": true,
+    "R1_backup_branch_and_untracked_file_copies_retained": true,
+    "no_stash_pop_or_clean_executed": true
+  },
+  "seed_executed": false,
+  "remote_CI_or_deployment_or_push_executed": false
+}

@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.modules.customers.models import Client, Site
 from app.modules.catalog.models import Product
-from app.models.sale import Sale, SaleLine, SaleStatus
+from app.modules.sales.models import Sale, SaleLine, SaleStatus
 
 
 
