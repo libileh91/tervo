@@ -13,7 +13,7 @@ from app.modules.interventions.api.interventions import router as interventions_
 from app.modules.interventions.api.materials import router as materials_router
 from app.modules.interventions.api.photos import router as photos_router
 from app.modules.catalog.api import router as products_router
-from app.api.v1.reports import router as reports_router
+from app.modules.reports.api import router as reports_router
 from app.modules.interventions.api.reviews import router as reviews_router
 from app.modules.sales.api import router as sales_router
 

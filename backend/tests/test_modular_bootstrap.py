@@ -35,7 +35,7 @@ ROUTER_REFERENCES = (
     ("app.modules.interventions.api.checklist", "router"),
     ("app.modules.interventions.api.photos", "router"),
     ("app.modules.interventions.api.materials", "router"),
-    ("app.api.v1.reports", "router"),
+    ("app.modules.reports.api", "router"),
     ("app.modules.interventions.api.reviews", "router"),
     ("app.modules.customers.api", "sites_router"),
     ("app.modules.catalog.api", "router"),

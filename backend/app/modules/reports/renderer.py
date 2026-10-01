@@ -17,7 +17,7 @@ class ReportExporter:
     """Generates a PDF report for a completed intervention."""
 
     def __init__(self):
-        template_path = Path(__file__).resolve().parent / "report_template.html"
+        template_path = Path(__file__).resolve().parent / "templates" / "report_template.html"
         with open(template_path, "r", encoding="utf-8") as f:
             self.template = Template(f.read())
 

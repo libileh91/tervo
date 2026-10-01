@@ -2,12 +2,12 @@
 
 > **Chantier transverse du Stage 7, avant 7.4 ; pas un sprint de features.**
 > **Branche :** `refactor/modular-monolith`, déjà créée. **R0 :** validé, sans nouvel INT.
-> **Autorisation :** R1 à R6 validés par l'utilisateur et committés ; R6 : `90346f5`. R7 accepté, commit autorisé ; feu vert distinct R8 reçu. R9 à R11 non commencées, feu vert distinct par tâche.
+> **Autorisation :** R1 à R7 validés par l'utilisateur et committés ; R7 : `7a52d03`. R8 accepté, commit autorisé ; feu vert distinct R9 reçu. R10 à R11 non commencées, feu vert distinct par tâche.
 > **Références :** [cadrage et baseline](README.md) · [plan](../../../../notes/backend/extras/tervo_plan_refactor_monolithe_modulaire.md) · [DAT](../../../DAT/new/00-sommaire.md).
 > **Estimations :** estimation à confirmer pour chaque tâche.
 > **Notes futures :** `notes/backend/refactor-monolithe-modulaire/`. La preuve R0 reste dans `notes/backend/extras/refactor-monolithe-modulaire/`.
 
-Les critères d'INT-113 à INT-119 sont cochés après validation locale et acceptation utilisateur. Les captures historiques restent intactes. R8 est autorisé, ses critères restent ouverts ; R9 à R11 sont non commencés. La création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
+Les critères d'INT-113 à INT-120 sont cochés après validation locale et acceptation utilisateur. Les captures historiques restent intactes. R9 est autorisé, ses critères restent ouverts ; R10 à R11 sont non commencés. La création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
 
 ## Garde-fous communs à toutes les tâches
 
@@ -184,7 +184,7 @@ Afin de **préserver les parcours autonomes et commerciaux avec leur atomicité 
 
 ## INT-119 — R7 — Déplacer `interventions`
 
-**Statut :** implémenté et vérifié localement, accepté par l'utilisateur ; commit autorisé. Avant commit : 52 empreintes conformes et 57 tests ciblés rejoués (4 warnings, 20,55 s). Feu vert distinct R8 reçu.
+**Statut :** accepté et committé dans le worktree attaché sous `7a52d03`. Avant commit : 52 empreintes conformes et 57 tests ciblés rejoués (4 warnings, 20,55 s). Feu vert distinct R8 reçu.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -211,7 +211,7 @@ Afin de **donner une frontière cohérente à 7.4 sans implémenter ses évoluti
 
 ## INT-120 — R8 — Déplacer `reports`
 
-**Statut :** feu vert distinct reçu après acceptation d'INT-119 ; à démarrer après son commit.
+**Statut :** implémenté et vérifié localement, accepté par l'utilisateur ; commit autorisé. Avant commit : 9 empreintes conformes et 49 tests ciblés rejoués (2 warnings, 24,53 s). Feu vert distinct R9 reçu.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -219,21 +219,25 @@ Je veux **regrouper l'API rapport, le rendu PDF et le template dans reports**,
 Afin de **rendre la génération existante autonome dans son package sans changer son contenu fonctionnel**.
 
 **Acceptance Criteria**
-- [ ] Déplacer API, ReportExporter/rendu et template existants vers `app/modules/reports/` ; adapter imports, composition et résolution du chemin du template.
-- [ ] Rapport existant généré avec les mêmes données métier et contrat HTTP ; chargement du template indépendant d'un ancien chemin ou du répertoire courant.
-- [ ] Aucun modèle Report/ReportVersion créé : versionnement réservé à INT-107 ; aucun nouveau service vide.
-- [ ] Tests rendu/route sans régression ; cutover et garde-fous communs satisfaits ; note R8, validation puis attente du feu vert R9.
+- [x] Déplacer API, ReportExporter/rendu et template existants vers `app/modules/reports/` ; adapter imports, composition et résolution du chemin du template.
+- [x] Rapport existant généré avec les mêmes données métier et contrat HTTP ; chargement du template indépendant d'un ancien chemin ou du répertoire courant.
+- [x] Aucun modèle Report/ReportVersion créé : versionnement réservé à INT-107 ; aucun nouveau service vide.
+- [x] Tests rendu/route sans régression ; cutover et garde-fous communs satisfaits ; note R8 et clôture soumise avec preuves locales.
+- [x] Obtenir l'acceptation utilisateur avant commit R8 et tout feu vert R9.
 
 **Technical Notes**
 - Source : `backend/app/api/v1/reports.py`, `backend/app/exporters/report.py`, `backend/app/exporters/report_template.html`.
 - Cible : `modules/reports/api.py`, rendu et `templates/` ; créer les couches uniquement si elles ont une responsabilité réelle. Comparer le contenu métier du PDF, pas une identité binaire artificielle liée aux métadonnées temporelles.
 - Cas : `TC-INT-120-01`.
+- Cible livrée : `modules/reports/{api,renderer}.py`, `templates/report_template.html` et init pur ; anciennes sources absentes. API AST hors un import et renderer AST hors le seul chemin template identiques au parent ; template exact de 5 432 octets.
+- [Note et preuve INT-120](../../../../notes/backend/refactor-monolithe-modulaire/INT-120-R8-reports.md) : **76 ciblés**, **360 SQLite** (7 nouveaux cas), **95 PostgreSQL** canoniques (56 + 39), snapshots R0 identiques, seule FK historique et revue sans finding. HTML complet/fallbacks reproduits avec le renderer original R7 puis comparés intégralement ; PDF réel depuis un cwd isolé et contrat JWT/headers inchangés.
+- Nouveaux scénarios renderer/API validés hors SQL et sur SQLite ; aucun téléchargement HTTP reports PostgreSQL ni build Docker revendiqué. TD-B005/TD-B018 actualisés, versionnement INT-107 non livré.
 
 ---
 
 ## INT-121 — R9 — Déplacer `imports`
 
-**Statut :** non commencé — feu vert distinct requis après validation d'INT-120.
+**Statut :** feu vert distinct reçu après acceptation d'INT-120 ; capture fonctionnelle avant requise avant tout cutover.
 
 **User Story**
 En tant que **mainteneur backend**,

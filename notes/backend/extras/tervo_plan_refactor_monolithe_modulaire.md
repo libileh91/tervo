@@ -5,7 +5,7 @@
 > **Baseline Git :** `544a23d6cb2cbe878fbc8ddf2d962c7adf76c000`  
 > **Point de départ fonctionnel :** Sprint 7.3 terminé et poussé ; `Sale`, `SaleLine` et `Installation` sont maintenant dans le code.  
 > **Important :** l'historique Git ayant été réécrit, les anciens SHA ne doivent plus servir de baseline de comparaison.
-> **Avancement du chantier :** R0 à R6 validés et committés sur `refactor/modular-monolith` ; dernier commit : `90346f5` (installations), naming documentaire : `8f3e876`. R7 / INT-119 vérifié localement et accepté : [note et preuve](../refactor-monolithe-modulaire/INT-119-R7-interventions.md), [planning technique](../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md). Commit R7 autorisé, feu vert distinct R8 reçu ; R9 à R11 non commencées. La [baseline R0](refactor-monolithe-modulaire/R0-baseline.md) et l'écart FK technicien sont conservés sans correction.
+> **Avancement du chantier :** R0 à R7 validés et committés sur `refactor/modular-monolith` ; dernier commit : `7a52d03` (interventions), naming documentaire : `8f3e876`. R8 / INT-120 vérifié localement et accepté : [note et preuve](../refactor-monolithe-modulaire/INT-120-R8-reports.md), [planning technique](../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md). Commit R8 autorisé, feu vert distinct R9 reçu ; R10 à R11 non commencées. La [baseline R0](refactor-monolithe-modulaire/R0-baseline.md) et l'écart FK technicien sont conservés sans correction.
 
 ### Décision de naming
 
@@ -1247,7 +1247,7 @@ avec 80 fichiers déplacés et aucune frontière de validation intermédiaire.
 [x] equipment est isolé
 [x] installations est isolé
 [x] interventions est isolé
-[ ] reports est isolé
+[x] reports est isolé
 [ ] imports est isolé
 [ ] identity est isolé
 [ ] dashboard reste une lecture transverse

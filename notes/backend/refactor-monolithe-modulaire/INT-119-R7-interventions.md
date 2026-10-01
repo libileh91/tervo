@@ -2,7 +2,7 @@
 
 > **Planning :** [INT-119](../../../docs/stages/stage7/refactor-monolithe-modulaire/tasks.md#int-119--r7--déplacer-interventions).
 > **Parent R6 :** `90346f54636d43dfcf3276eb451b960b2137d681`, branche `refactor/modular-monolith`.
-> **État :** implémenté, vérifié et accepté par l'utilisateur ; commit autorisé dans le worktree Delta attaché. Feu vert distinct R8 reçu.
+> **État :** accepté et committé sous `7a52d03` dans le worktree Delta attaché. R8 autorisé et vérifié localement ; voir la [note INT-120](INT-120-R8-reports.md). Le manifeste conserve sa capture avant acceptation.
 > **Preuve :** [R7-validation.json](R7-validation.json). Les captures historiques R0 à R6 restent intactes.
 
 ## 1. Reprise de R6 et portée du feu vert
@@ -459,3 +459,8 @@ rejoués sur SQLite/uploads temporaires, avec l'interpréteur et PYTHONPATH déc
 plus haut : **57 passed, 4 warnings, 20,55 s**. Ce contrôle ne prétend pas répéter
 PostgreSQL. Le commit regroupe livraison, tests, notes et suivi R7, sans
 implémentation R8 ni écriture directe du checkout principal.
+
+Le commit `7a52d03` a ensuite été créé dans le worktree attaché. Les mentions
+de renderer/template encore legacy décrivent la capture R7 ; depuis R8,
+`ReportExporter` et son template sont dans `app/modules/reports/`, sans
+changement métier ni versionnement.

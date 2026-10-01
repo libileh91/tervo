@@ -535,10 +535,19 @@
       "wave": "R8",
       "title": "Reports — template résolu et PDF fonctionnellement identique",
       "type": "integration",
-      "preconditions": ["INT-119 clôturée ; feu vert R8 distinct requis et pas encore donné", "Jeu d'intervention/checklist/photos/matériel identique avant/après, dépendances PDF existantes"],
+      "preconditions": ["INT-119 acceptée et committée sous 7a52d03 ; feu vert distinct R8 reçu", "Jeu d'intervention/checklist/photos/matériel identique avant/après, dépendances PDF existantes"],
       "steps": ["Générer le rapport via l'API existante et via le renderer depuis un répertoire courant différent.", "Comparer données métier et contenu rendu avant/après, sans imposer l'identité binaire des métadonnées PDF volatiles.", "Vérifier qu'aucun ancien chemin de template ni modèle Report/ReportVersion nouveau n'est requis, puis les garde-fous communs."],
       "expected_result": {"template_load_succeeds_from_new_package": true, "working_directory_dependency": false, "existing_PDF_route_succeeds": true, "PDF_response_contract_unchanged": true, "business_content_identical": true, "Report_or_ReportVersion_model_created": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
-      "status": "not_run"
+      "status": "passed",
+      "execution": {
+        "scope": "local attached worktree; full HTML comparisons and real PDF/JWT scenarios on SQLite or isolated renderer; PostgreSQL canonical groups and Alembic separately",
+        "tests": ["test_reports_module.py", "test_modular_bootstrap.py", "test_api.py", "test_additional.py", "test_interventions_module.py"],
+        "observed": "76 targeted, 360 SQLite, 95 PostgreSQL (56 + 39); both original R7 HTML baselines reproduced and matched exactly after move; template bytes unchanged and real PDF from unrelated cwd",
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R8-validation.json",
+        "user_acceptance": "pending",
+        "HTTP_reports_PostgreSQL_executed": false,
+        "Docker_build_executed": false
+      }
     },
     {
       "id": "TC-INT-121-01",

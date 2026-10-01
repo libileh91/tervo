@@ -1,0 +1,180 @@
+{
+  "task": "INT-120",
+  "wave": "R8",
+  "branch": "refactor/modular-monolith",
+  "source_parent_sha": "7a52d03a8cc42292a8e944284ad31dee4425d4e8",
+  "status": "implemented_locally_verified_pending_user_acceptance",
+  "validated_checkout": "attached Delta worktree",
+  "R8_committed": false,
+  "R9_started": false,
+  "environment": {
+    "python": "3.12.0",
+    "interpreter": "/home/lob/workspace/python/fastapi/Tervo/backend/.venv/bin/python",
+    "source": "PYTHONPATH points to attached worktree backend, not primary checkout",
+    "isolation": "temporary cwd, SQLite/uploads; disposable PostgreSQL 17.4 with loopback ephemeral port, no named volume",
+    "dependencies_and_lockfile_unchanged": true
+  },
+  "targeted": {
+    "files": [
+      "test_modular_bootstrap.py", "test_reports_module.py", "test_api.py",
+      "test_additional.py", "test_interventions_module.py"
+    ],
+    "command": "python -m pytest <absolute paths> -q -p no:cacheprovider",
+    "returncode": 0,
+    "passed": 76,
+    "warnings": 5,
+    "pytest_seconds": 26.08
+  },
+  "sqlite_suite": {
+    "command": "python -m pytest <absolute backend/tests> -q -p no:cacheprovider",
+    "returncode": 0,
+    "passed": 360,
+    "warnings": 7,
+    "pytest_seconds": 70.91,
+    "new_reports_cases": 7,
+    "new_cases_dialect": "SQLite and isolated non-SQL rendering",
+    "new_case_counts": {
+      "full_HTML_baselines": 2,
+      "real_PDF_isolated_cwd": 1,
+      "pure_init": 1,
+      "layout_cutover_AST": 1,
+      "unique_route_composition": 1,
+      "real_JWT_API_PDF_and_refusals": 1
+    },
+    "PDF_binary_equality_claimed": false,
+    "real_PDF_assertions": "%PDF-, length > 1000 and %%EOF; HTTP content type and attachment filename"
+  },
+  "earlier_run": {
+    "files": ["test_modular_bootstrap.py", "test_api.py", "test_additional.py", "test_interventions_module.py"],
+    "passed": 69,
+    "warnings": 5,
+    "pytest_seconds": 32.08,
+    "new_reports_file_included": false
+  },
+  "before_after_render": {
+    "baseline_source": "original renderer and template read through git show 7a52d03, materialized only in a temporary directory",
+    "fixed_datetime": "2026-09-28T14:35:00",
+    "same_recipe_inputs_before_and_after": true,
+    "original_renderer_reproduces_both_fixtures": true,
+    "moved_renderer_matches_full_HTML": true,
+    "complete": {
+      "fixture": "backend/tests/fixtures/reports/complete.html.zlib.b64",
+      "storage": "lossless zlib then base64; decoded HTML compared exactly",
+      "HTML_bytes": 6953,
+      "HTML_sha256": "32756ef001d98bce9ec6925eaaa225c2a5aa9caeffffa20b0271c05e0fa86057",
+      "coverage": "client/site/technician, date/time/observations, pre/post checklist plus legacy category, text materials, two actual photo data URIs and omitted missing/null photos"
+    },
+    "fallbacks": {
+      "fixture": "backend/tests/fixtures/reports/fallbacks.html",
+      "storage": "verbatim HTML plus final POSIX newline; only this storage newline removed for comparison",
+      "HTML_bytes": 3272,
+      "HTML_sha256": "ebcd76c80620eff838bd8b92722954d4c910de63cd83c652f93f414c09199daf",
+      "coverage": "missing relationships/date/time/observations/collections and unknown status",
+      "intentional_fixture_trailing_whitespace_lines": [57, 63, 69]
+    }
+  },
+  "postgresql": {
+    "executed_by": "independent scout on attached worktree",
+    "image": "local postgres:17.4, --pull never",
+    "postgresql": "17.4",
+    "alembic": "1.18.4",
+    "pytest": "9.1.1",
+    "sqlalchemy": "2.0.51",
+    "asyncpg": "0.31.0",
+    "loopback_ephemeral_port": 32775,
+    "upgrade_head_succeeded": true,
+    "downgrade_last_succeeded": true,
+    "downgrade_target": "e103e0010001",
+    "reupgrade_head_succeeded": true,
+    "head": "f102e0010001",
+    "alembic_check_result": "known preexisting FK difference only",
+    "autogenerate_operations": [
+      {"operation": "remove_fk", "table": "intervention", "columns": ["technician_id"], "targets": ["user.id"], "name": "job_technician_id_fkey", "ondelete": null},
+      {"operation": "add_fk", "table": "intervention", "columns": ["technician_id"], "targets": ["user.id"], "ondelete": "SET NULL"}
+    ],
+    "new_operations": [],
+    "canonical_combined_run": {
+      "files": [
+        "test_installations.py", "test_sales.py", "test_installation_migration.py",
+        "test_import_service_v2.py", "test_import_api_v2.py"
+      ],
+      "command": "python -m pytest -q <five canonical PostgreSQL test files>",
+      "returncode": 0,
+      "passed": 95,
+      "sales_installations_migration_cases": 56,
+      "import_service_API_cases": 39,
+      "warnings": 1,
+      "pytest_seconds": 52.46
+    },
+    "test_sale_migration_SQLite_not_selected": true,
+    "new_reports_module_tests_included": false,
+    "HTTP_reports_workflow_executed": false,
+    "container_and_resources_cleaned_up": true,
+    "sources_modified_by_scout": false
+  },
+  "contracts": {
+    "snapshots_byte_identical_to_R0": true,
+    "reference_openapi": "notes/backend/extras/refactor-monolithe-modulaire/R0-openapi.json",
+    "reference_metadata": "notes/backend/extras/refactor-monolithe-modulaire/R0-metadata.json",
+    "openapi_sha256": "dcabfd245b80cbf3989f71049669c3a65e9766b3ed9512bbf58e22acea942fd7",
+    "metadata_sha256": "e86c52bc02519708beb34a3dd587ca566a222f54a04a3fe0b62bdd742ca2089a",
+    "paths": 46,
+    "operations": 63,
+    "tables": 17,
+    "snapshots_not_duplicated": true
+  },
+  "runtime": {
+    "docs_http_status": 200,
+    "openapi_http_status": 200,
+    "HTTP_openapi_equals_R0": true,
+    "startup_and_shutdown_complete": true,
+    "uvicorn_returncode_after_SIGTERM": -15,
+    "server_process_stopped": true
+  },
+  "source_invariants": {
+    "API_comparison": "complete AST identical to R7 after only ReportExporter import path substitution",
+    "renderer_comparison": "complete AST identical to R7 after only expected template_path assignment substitution in __init__; all other nodes identical",
+    "template_bytes_equal_R7": true,
+    "template_bytes": 5432,
+    "template_sha256": "2d20665ba5ebdeb6c4c0555a3f99e74b2d3727644d0d0365519f012d71a983ee",
+    "retired_sources_absent": [
+      "backend/app/api/v1/reports.py",
+      "backend/app/exporters/report.py",
+      "backend/app/exporters/report_template.html"
+    ],
+    "active_retired_imports_AST_scan": [],
+    "one_ReportExporter_definition_active": true,
+    "pure_package_init": true,
+    "WeasyPrint_import_remains_lazy": true,
+    "ORM_registry_unchanged": true,
+    "auth_errors_headers_and_terrain_commits_unchanged": true,
+    "Report_ReportVersion_or_artificial_layers_added": false,
+    "Docker_source_copy_includes_new_template": true,
+    "Docker_build_executed": false,
+    "alembic_dependencies_and_sprint74_feature_plan_unchanged": true,
+    "R0_R1_R2_R3_R4_R5_R6_R7_JSON_artifacts_unchanged": true,
+    "R0_import_fixture_hashes_unchanged": true
+  },
+  "source_sha256": {
+    "backend/app/modules/reports/__init__.py": "909676956239ac647965191e41a9421e2e2a5738464155740964d6eeb909d98e",
+    "backend/app/modules/reports/api.py": "0bf57237d3a800b03ce9c6ab4c8ee09d537e729373ecab8b6645e1b5f7ceb167",
+    "backend/app/modules/reports/renderer.py": "79b0abe516640c646d4925d2ee9070353feea929aa32c452f042e5d1d33ce744",
+    "backend/app/modules/reports/templates/report_template.html": "2d20665ba5ebdeb6c4c0555a3f99e74b2d3727644d0d0365519f012d71a983ee",
+    "backend/app/router.py": "7a2f68dfd5f0ae47728450584c182d75f64499967488cb0f23fa201e8168e60a",
+    "backend/tests/fixtures/reports/complete.html.zlib.b64": "d3ec485d9ce3e3ebe99c2712e391a039448601f9303ad086505ed4aa22f69140",
+    "backend/tests/fixtures/reports/fallbacks.html": "e67d8c708bb49edeb9cfb6e5833260d89f2f19b1ffb212bf9717a3b00ebf5306",
+    "backend/tests/test_modular_bootstrap.py": "ac20f65ef35afe02e458ee740e0656ee1d19644f16cfcf1a1068f2c628b3f559",
+    "backend/tests/test_reports_module.py": "31c256473bebe80c3081c1774110c86c6160f0a7fbe37476099650694c6bbac2"
+  },
+  "independent_review": {
+    "baseline_compared": "7a52d03a8cc42292a8e944284ad31dee4425d4e8",
+    "whole_API_renderer_AST_template_and_cutover_checked": true,
+    "remaining_findings": [],
+    "existing_tests_reexecuted_passed": 8,
+    "new_worker_tests_present_in_reviewer_snapshot": false,
+    "new_worker_tests_executed_by_parent": true,
+    "full_suite_or_PostgreSQL_repeated": false,
+    "files_modified_by_reviewer": false
+  },
+  "seed_or_remote_CI_or_deployment_or_push_executed": false
+}

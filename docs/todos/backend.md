@@ -63,7 +63,7 @@
 | ------------- | ----------------------------------------------------------- |
 | **Créé dans** | Roadmap Phase 2                                             |
 | **Dépend de** | Modèle `JobPhoto`, installation WeasyPrint                  |
-| **Fichiers**  | `app/exporters/report.py`, `app/exporters/report_template.html` |
+| **Fichiers**  | `app/modules/reports/renderer.py`, `app/modules/reports/templates/report_template.html` (déplacés dans INT-120) |
 | **Action**    | Générer PDF avec client, checklist, photos, matériaux       |
 | **Statut**    | ✅ Fait (INT-29 — ReportExporter + template Jinja2)          |
 
@@ -218,7 +218,7 @@
 | Champ | Valeur |
 |---|---|
 | **Créé dans** | INT-119 / R7, refactor monolithe modulaire |
-| **Dépend de** | Acceptation du cutover terrain ; mise à jour documentaire distincte autorisée avant les features 7.4 ; pour le rapport, vérifier les chemins après R8 |
-| **Fichiers** | `docs/stages/stage7/sprint7.4/tasks.md`, `test-cases.json`, DAT si autorisé dans son propre scope ; `app/modules/interventions/` et futur module reports |
+| **Dépend de** | Cutover terrain accepté ; mise à jour documentaire distincte autorisée avant les features 7.4 ; chemins reports définis par R8, clôture R8 encore à accepter |
+| **Fichiers** | `docs/stages/stage7/sprint7.4/tasks.md`, `test-cases.json`, DAT si autorisé dans son propre scope ; `app/modules/interventions/`, `app/modules/reports/{api,renderer}.py`, `app/modules/reports/templates/report_template.html` |
 | **Action attendue** | Remplacer les anciens chemins horizontaux par les sources terrain actuelles, sans cocher ni implémenter INT-104 à INT-108. Reprendre le mapping de la note INT-119. Les nouveaux modèles/fichiers éventuels restent à cadrer par feature ; les cas détaillés INT-105/108 restent à compléter avant implémentation. |
 | **Statut** | ⏳ À traiter dans une reprise documentaire autorisée avant 7.4 ; aucune feature terrain nouvelle livrée par R7 |
