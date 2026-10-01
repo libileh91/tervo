@@ -15,7 +15,7 @@ from app.models.review import Review
 
 from app.models.user import User
 
-from app.models.product import Product
+from app.modules.catalog.models import Product
 
 from app.models.equipment import Equipment
 from app.models.installation import Installation

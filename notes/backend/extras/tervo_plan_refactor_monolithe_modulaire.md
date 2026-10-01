@@ -5,11 +5,11 @@
 > **Baseline Git :** `544a23d6cb2cbe878fbc8ddf2d962c7adf76c000`  
 > **Point de départ fonctionnel :** Sprint 7.3 terminé et poussé ; `Sale`, `SaleLine` et `Installation` sont maintenant dans le code.  
 > **Important :** l'historique Git ayant été réécrit, les anciens SHA ne doivent plus servir de baseline de comparaison.
-> **Avancement du chantier :** R0/R1 validés et committés localement (`6754a50`, `73e5ac9`) sur `refactor/modular-monolith`. R2 / INT-114 validé localement : [note et preuves](../refactor-monolithe-modulaire/INT-114-R2-customers.md), [planning technique](../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md). Clôture/commit R2 soumis à l'utilisateur ; R3 non commencé, feu vert distinct requis. La [baseline R0](refactor-monolithe-modulaire/R0-baseline.md) et l'écart préexistant d'`alembic check` sur la FK technicien sont conservés sans correction.
+> **Avancement du chantier :** R0/R1/R2 validés et committés localement (`6754a50`, `73e5ac9`, `ed67168`) sur `refactor/modular-monolith`. R3 / INT-115 accepté et revérifié après naming : [note et preuve](../refactor-monolithe-modulaire/INT-115-R3-catalogue.md), [planning technique](../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md). Le commit de naming documentaire `8f3e876` précède le commit de livraison R3 contenant cette note et les preuves finales. R4 non commencé, feu vert distinct requis. La [baseline R0](refactor-monolithe-modulaire/R0-baseline.md) et l'écart préexistant d'`alembic check` sur la FK technicien sont conservés sans correction.
 
 ### Décision de naming
 
-`app/modules` est conservé. Le package Python `catalog` (anglais américain) remplace `catalogue` : `app/modules/catalog` et `app.modules.catalog`. Les routes `/products`, noms de classes et `catalogue_editor` restent inchangés, comme le vocabulaire métier français « catalogue ». Aucun renommage rétroactif des captures JSON R0/R1/R2 ni réécriture Git. Les anciennes validations R3 restent une capture avant naming ; le parent ajoutera une nouvelle section au manifeste R3 avec les résultats après naming et les SHA des commits naming et R3 demandés.
+`app/modules` est conservé. Le package Python `catalog` (anglais américain) remplace `catalogue` : `app/modules/catalog` et `app.modules.catalog`. Les routes `/products`, noms de classes et `catalogue_editor` restent inchangés, comme le vocabulaire métier français « catalogue ». Aucun renommage rétroactif des captures JSON R0/R1/R2 ni réécriture Git. La capture R3 avant naming reste conservée ; la section `post_naming` du manifeste contient les validations et empreintes finales. Le choix documentaire est enregistré dans `8f3e876`, puis le cutover applicatif et sa validation dans le commit de livraison R3.
 
 ---
 
@@ -608,14 +608,14 @@ Après refactor, conserver une composition explicite, simple :
 from fastapi import APIRouter
 
 from app.modules.customers.api import router as customers_router
-from app.modules.catalog.api import router as catalogue_router
+from app.modules.catalog.api import router as catalog_router
 from app.modules.sales.api import router as sales_router
 from app.modules.equipment.api import router as equipment_router
 from app.modules.installations.api import router as installations_router
 
 api_router = APIRouter()
 api_router.include_router(customers_router)
-api_router.include_router(catalogue_router)
+api_router.include_router(catalog_router)
 api_router.include_router(sales_router)
 api_router.include_router(equipment_router)
 api_router.include_router(installations_router)
@@ -711,7 +711,7 @@ Vue simplifiée :
 ```text
 identity  ─────────────► garde d'accès des APIs
 
-customers       catalogue
+customers       catalog
     │               │
     ├──────┐   ┌────┘
     ▼      ▼   ▼
@@ -730,7 +730,7 @@ customers / equipment
           ▼
        reports
 
-imports ─────► customers / catalogue / equipment / interventions
+imports ─────► customers / catalog / equipment / interventions
 
 dashboard ───► lectures transverses
 ```
@@ -1242,7 +1242,7 @@ avec 80 fichiers déplacés et aucune frontière de validation intermédiaire.
 [x] baseline actuelle enregistrée après la réécriture Git
 [ ] chaque domaine actif possède une frontière explicite dans app/modules/
 [x] customers est isolé
-[ ] catalogue est isolé
+[x] catalog est isolé (vérifié avant et après naming)
 [ ] sales est isolé
 [ ] equipment est isolé
 [ ] installations est isolé
@@ -1283,7 +1283,7 @@ avec 80 fichiers déplacés et aucune frontière de validation intermédiaire.
                                  │
        ┌───────────────┬─────────┼──────────┬───────────────┐
        ▼               ▼         ▼          ▼               ▼
-  customers        catalogue    sales   installations    identity
+  customers        catalog      sales   installations    identity
        │               │          │          │
        └──────┬────────┘          └────┬─────┘
               ▼                        ▼
@@ -1295,7 +1295,7 @@ avec 80 fichiers déplacés et aucune frontière de validation intermédiaire.
               ▼
            reports
 
- imports ─────► customers / catalogue / equipment / interventions
+ imports ─────► customers / catalog / equipment / interventions
  dashboard ───► lectures transverses
 
               tous les modules
@@ -1320,7 +1320,7 @@ Même logique pour :
 
 ```text
 customers
-catalogue
+catalog
 sales
 equipment
 interventions

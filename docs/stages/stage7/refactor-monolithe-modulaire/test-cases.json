@@ -6,12 +6,13 @@
   "authorization": {
     "R0": "validated",
     "R1": "user_accepted_locally_committed_73e5ac9",
-    "R2": "implemented_locally_verified_pending_user_acceptance",
-    "R3_to_R11": "not_started_separate_user_approval_required_per_wave"
+    "R2": "user_accepted_locally_committed_ed67168",
+    "R3": "user_accepted_reverified_after_naming_delivery_in_associated_INT115_commit",
+    "R4_to_R11": "not_started_separate_user_approval_required_per_wave"
   },
   "validation": {
-    "status": "R1_R2_executed_remaining_not_run",
-    "scope": "R1 et R2 vérifiés localement ; R3 à R11 non commencées et non exécutées.",
+    "status": "R1_R2_R3_executed_remaining_not_run",
+    "scope": "R1, R2 et R3 vérifiés localement ; capture initiale R3 conservée et revalidation après naming ajoutée dans R3-validation.json post_naming. R4 à R11 non commencées et non exécutées.",
     "R1_observed": {
       "bootstrap_passed": 14,
       "sqlite_suite_passed": 285,
@@ -43,6 +44,27 @@
       "startup_shutdown_and_HTTP_checks": "passed",
       "evidence": "notes/backend/refactor-monolithe-modulaire/R2-validation.json",
       "note": "notes/backend/refactor-monolithe-modulaire/INT-114-R2-customers.md",
+      "remote_CI_or_deployment_executed": false
+    },
+    "R3_observed": {
+      "capture_phase": "before_catalog_package_naming",
+      "post_naming_validation": "passed ; R3-validation.json post_naming ; naming commit 8f3e876",
+      "targeted_passed": 128,
+      "new_catalog_test_cases": 7,
+      "sqlite_suite_passed": 299,
+      "sqlite_warnings": 5,
+      "postgres_sales_installations_passed": 56,
+      "postgres_imports_passed": 39,
+      "new_catalog_history_API_test_dialect": "SQLite",
+      "full_openapi_equals_R0_R1_R2": true,
+      "full_metadata_equals_R0_R1_R2": true,
+      "moved_module_AST_equal_except_imports": 5,
+      "moved_definitions_AST_equal": 13,
+      "obsolete_catalog_source_files_removed": 5,
+      "new_alembic_operations_beyond_baseline": [],
+      "startup_shutdown_and_HTTP_checks": "passed",
+      "evidence": "notes/backend/refactor-monolithe-modulaire/R3-validation.json",
+      "note": "notes/backend/refactor-monolithe-modulaire/INT-115-R3-catalogue.md",
       "remote_CI_or_deployment_executed": false
     },
     "baseline_source_sha": "544a23d6cb2cbe878fbc8ddf2d962c7adf76c000",
@@ -339,10 +361,11 @@
       "wave": "R3",
       "title": "Catalogue — référence produit, unicité et désactivation",
       "type": "integration",
-      "preconditions": ["INT-114 clôturée ; feu vert R3 distinct requis et pas encore donné", "Produit de référence lié à une ligne de vente et à un équipement"],
-      "steps": ["Rejouer les tests CRUD, unicité et désactivation Product existants.", "Relire SaleLine et Equipment après désactivation sans modifier leurs liens.", "Contrôler le cutover catalogue, OpenAPI, metadata et Alembic PostgreSQL."],
+      "preconditions": ["INT-114 acceptée et committée sous ed67168 ; feu vert R3 distinct donné", "Produit de référence lié à une ligne de vente et à un équipement"],
+      "steps": ["Rejouer les tests CRUD, unicité et désactivation Product existants.", "Relire SaleLine et Equipment après désactivation sans modifier leurs liens.", "Contrôler le cutover du package catalog, OpenAPI, metadata et Alembic PostgreSQL."],
       "expected_result": {"existing_product_tests_pass": true, "duplicate_product_rejected_as_before": true, "SaleLine_and_Equipment_links_preserved": true, "equipment_history_deleted": false, "Product_merged_with_Equipment": false, "stock_behavior_added": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
-      "status": "not_run"
+      "status": "passed",
+      "evidence": "tests/test_catalog_module.py, test_products.py, test_equipment.py et consommateurs ; R3-validation.json, capture initiale puis post_naming : 128 tests ciblés, 299 SQLite et groupes PostgreSQL 56 + 39 rejoués après naming."
     },
     {
       "id": "TC-INT-116-01",

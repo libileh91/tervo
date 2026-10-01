@@ -145,7 +145,7 @@
 | --- | --- |
 | **Créé dans** | INT-96 |
 | **Dépend de** | INT-97 — entité Equipment |
-| **Fichiers** | `app/models/product.py`, futur `app/models/equipment.py`, migrations, `tests/test_products.py` |
+| **Fichiers** | `app/modules/catalog/models.py` (déplacé dans INT-115), `app/models/equipment.py`, migrations, `tests/test_products.py` |
 | **Action attendue** | Ajouter Equipment.product_id (FK non unique), relations ORM bidirectionnelles ; tester deux équipements distincts du même produit puis la conservation des liens après désactivation. Valider les deux critères INT-96 restants. |
 | **Statut** | ✅ Fait dans INT-97 — relations ORM et test de deux appareils conservés après désactivation |
 
@@ -155,7 +155,7 @@
 | --- | --- |
 | **Créé dans** | INT-96 |
 | **Dépend de** | Introduction des rôles MANAGER et COMMERCIAL prévus par la DAT |
-| **Fichiers** | `app/models/user.py`, `app/api/v1/products.py`, migrations, tests |
+| **Fichiers** | `app/models/user.py`, `app/modules/catalog/api.py` (déplacé dans INT-115), migrations, tests |
 | **Action attendue** | Étendre le contrôle catalogue_editor à ces rôles et tester leurs droits. Actuellement ADMIN écrit, TECHNICIAN consulte. |
 | **Statut** | ⏳ Rôles absents du modèle actuel |
 

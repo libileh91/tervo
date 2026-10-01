@@ -1,7 +1,7 @@
 """Validate physical references and preserve history when replacing equipment."""
 from fastapi import HTTPException
 from app.modules.customers.models import Site
-from app.models.product import Product
+from app.modules.catalog.models import Product
 from app.models.equipment import EquipmentStatus
 from app.repositories.equipment import EquipmentRepository
 from app.schemas.equipment import EquipmentListResponse, EquipmentResponse

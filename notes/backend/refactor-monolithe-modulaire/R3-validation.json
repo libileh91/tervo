@@ -1,0 +1,191 @@
+{
+  "task": "INT-115",
+  "wave": "R3",
+  "capture_phase": "before_catalog_package_naming ; see post_naming for the accepted final sources and reruns",
+  "branch": "refactor/modular-monolith",
+  "source_parent_sha": "ed67168c5ddbda80a81fb1264f83ad3d8d0f8005",
+  "status": "implemented_locally_verified_pending_user_acceptance",
+  "worktree_changes_uncommitted": true,
+  "R4_started": false,
+  "environment": {
+    "python": "3.12.0",
+    "dependencies": "uv sync --frozen ; backend/uv.lock unchanged",
+    "postgresql": "17.4 (Debian 17.4-1.pgdg120+2)",
+    "isolation": "temporary cwd SQLite/uploads and disposable PostgreSQL container, no named volume"
+  },
+  "targeted": {
+    "files": [
+      "test_modular_bootstrap.py", "test_catalogue_module.py", "test_products.py",
+      "test_equipment.py", "test_sales.py", "test_installations.py",
+      "test_import_service_v2.py", "test_import_api_v2.py"
+    ],
+    "command": "python -m pytest <absolute test paths> -q -p no:cacheprovider",
+    "returncode": 0,
+    "passed": 128,
+    "warnings": 1,
+    "seconds": 38.25
+  },
+  "sqlite_suite": {
+    "command": "python -m pytest <absolute backend/tests> -q -p no:cacheprovider",
+    "returncode": 0,
+    "passed": 299,
+    "warnings": 5,
+    "seconds": 66.98,
+    "new_catalogue_cases": 7
+  },
+  "postgresql": {
+    "upgrade_head_returncode": 0,
+    "downgrade_last_returncode": 0,
+    "reupgrade_head_returncode": 0,
+    "head": "f102e0010001",
+    "downgrade_target": "e103e0010001",
+    "alembic_check_returncode": 255,
+    "known_constraint": "job_technician_id_fkey",
+    "autogenerate_operations": [
+      {"operation": "remove_fk", "table": "intervention", "columns": ["technician_id"], "targets": ["user.id"], "ondelete": null},
+      {"operation": "add_fk", "table": "intervention", "columns": ["technician_id"], "targets": ["user.id"], "ondelete": "SET NULL"}
+    ],
+    "operations_equal_R2": true,
+    "new_operations_beyond_baseline": [],
+    "sales_installations_migrations": {"returncode": 0, "passed": 56, "warnings": 1, "seconds": 23.52},
+    "imports_service_and_API": {"returncode": 0, "passed": 39, "warnings": 1, "seconds": 26.47},
+    "containers_removed": true
+  },
+  "contracts": {
+    "openapi_equals_R0_R1_R2": true,
+    "metadata_equals_R0_R1_R2": true,
+    "snapshots_serialized_byte_identical_to_R0": true,
+    "reference_openapi": "notes/backend/extras/refactor-monolithe-modulaire/R0-openapi.json",
+    "reference_metadata": "notes/backend/extras/refactor-monolithe-modulaire/R0-metadata.json",
+    "openapi_sha256": "dcabfd245b80cbf3989f71049669c3a65e9766b3ed9512bbf58e22acea942fd7",
+    "metadata_sha256": "e86c52bc02519708beb34a3dd587ca566a222f54a04a3fe0b62bdd742ca2089a",
+    "paths": 46,
+    "operations": 63,
+    "tables": 17,
+    "snapshots_not_duplicated": true
+  },
+  "runtime": {
+    "docs_http_status": 200,
+    "openapi_http_status": 200,
+    "HTTP_openapi_equals_app_and_R0": true,
+    "startup_complete": true,
+    "shutdown_complete": true,
+    "uvicorn_returncode_after_SIGTERM": -15,
+    "server_process_stopped": true
+  },
+  "source_invariants": {
+    "comparison": "whole-module AST equal to parent except Import/ImportFrom nodes ; no decorator/name normalization",
+    "modules": 5,
+    "definitions": 13,
+    "includes": "all ORM columns/index/default/relationship declarations, schema aliases/validators, API decorators, repository queries, service transactions and module assignments",
+    "retired_modules": [
+      "app.models.product", "app.schemas.product", "app.repositories.product",
+      "app.services.product", "app.api.v1.products"
+    ],
+    "retired_files_absent": true,
+    "active_retired_imports_AST_scan": [],
+    "alembic_files_unchanged": true,
+    "R0_R1_R2_JSON_artifacts_unchanged": true,
+    "R0_import_fixture_hashes_unchanged": true
+  },
+  "source_sha256": {
+    "backend/app/model_registry.py": "0f6a823819163f00e013f6232a8cae01dc80a72e8b77ab5c840af63945ae0fe8",
+    "backend/app/models/__init__.py": "e72091c03b35b5ada7d34a95ee386461b3de24613054adddf99bcf0843d682ef",
+    "backend/app/modules/catalogue/__init__.py": "7e0e931f23c817b89f9d4c07dc6d8c14ef52b9033984528c75e72baa33a4a3a7",
+    "backend/app/modules/catalogue/api.py": "f1010c36999fea6a0034fff5d408a7231d6acef1c7dc675f202da5ee9af0fd99",
+    "backend/app/modules/catalogue/models.py": "39a2489a51784be0844ba67f27c154e369d8c243be687156fab69949047ac6d9",
+    "backend/app/modules/catalogue/repository.py": "6ab9e81cf4589f86c913d00b22b3b6529b552c846cde65e39b5bf10985762035",
+    "backend/app/modules/catalogue/schemas.py": "58bf62df27392345611b749c8a29f5a77c391e82de42840816e1875be27a1177",
+    "backend/app/modules/catalogue/service.py": "8d376a7903c47dce51ea4c7234410496ec58af8198fc39d869fc303e744c028f",
+    "backend/app/router.py": "f3b45d300f22930f427dca93baf6d75c1c8e783489ed49af9db13abbc7304b43",
+    "backend/app/services/equipment.py": "0bc8e46e3a6efbd5c9566b4e8b68e2793fe63f5896cd2a628c26a3ab5d9b0520",
+    "backend/app/services/import_planner.py": "44a161bbf35fb581922df0eae36c0f84e12e4bfd5439793c36eabb7335873585",
+    "backend/app/services/import_service.py": "a0c63a3fd57ef534de57e5e4dfa2ccf2929dcbef02f5b316064a9a37f210066a",
+    "backend/app/services/sale.py": "6c012a1906f0b3ad6bb00460ca2d882540e6bd0e616fd5fd7589d7e153b3bd7e",
+    "backend/tests/test_catalogue_module.py": "f48fedb8ac87b58dc3b9d58e9a36b04d9bd0eff943a177c69084d92ca1d76a6b",
+    "backend/tests/test_equipment.py": "1f934a550d7581878da2d0b6e757d5b41aec36ea77a686e4e8c3bd242b481bb1",
+    "backend/tests/test_import_service_v2.py": "d7f6b34a5af466c68ffa3a2764414ea5f904f6bc3c0a32d3122c4b5640db2209",
+    "backend/tests/test_installations.py": "692fd66f1451468d4183d5580906ac7c6a17b20d85476231f29d4649af1ddaf8",
+    "backend/tests/test_modular_bootstrap.py": "e24321eae786675a73261fbc1eaee22ad3e53a490beec1fa6b72cde475f8ab75",
+    "backend/tests/test_sales.py": "1bf465c8405f860057bb120b5a95aab8f7cd242d07526ac30b54d0a8bfca3327"
+  },
+  "initial_attempts": [
+    "PostgreSQL readiness via pg_isready saw the temporary init server before the test database existed ; disposable container removed, corrected readiness uses TCP SQL query",
+    "First targeted run: 127 passed / 1 failed ; new history test incorrectly assumed GET /sales/{id} existed. Test now uses existing POST /sales/{id}/confirm ; no API added"
+  ],
+  "independent_review": {
+    "findings": [],
+    "compared_against": "ed67168",
+    "targeted_tests": ["test_catalogue_module.py", "test_products.py"],
+    "passed": 19,
+    "warnings": 1,
+    "full_suites_repeated": false
+  },
+  "post_naming": {
+    "status": "user_accepted_reverified_ready_for_R3_commit",
+    "naming_commit_sha": "8f3e87627b2c6c0cfc778f72ceae43228575968e",
+    "naming_commit_scope": "plan and naming decision only ; application cutover belongs to the subsequent R3 commit",
+    "R3_commit_reference": "the Git commit that contains this post_naming section ; no self-referential SHA embedded",
+    "package": "app.modules.catalog",
+    "modules_package_preserved": true,
+    "catalogue_editor_preserved": true,
+    "targeted": {"returncode": 0, "passed": 128, "warnings": 1, "seconds": 39.39},
+    "targeted_files": [
+      "test_modular_bootstrap.py", "test_catalog_module.py", "test_products.py",
+      "test_equipment.py", "test_sales.py", "test_installations.py",
+      "test_import_service_v2.py", "test_import_api_v2.py"
+    ],
+    "sqlite_suite": {"returncode": 0, "passed": 299, "warnings": 5, "seconds": 65.51},
+    "postgresql_version": "17.4 (Debian 17.4-1.pgdg120+2)",
+    "postgres_sales_installations_migrations": {"returncode": 0, "passed": 56, "warnings": 1, "seconds": 23.18},
+    "postgres_imports_service_and_API": {"returncode": 0, "passed": 39, "warnings": 1, "seconds": 25.41},
+    "migration_round_trip": {
+      "upgrade_head_returncode": 0,
+      "downgrade_last_returncode": 0,
+      "reupgrade_head_returncode": 0,
+      "head": "f102e0010001",
+      "downgrade_target": "e103e0010001"
+    },
+    "alembic_check_returncode": 255,
+    "autogenerate_operations_equal_R2_and_initial_R3": true,
+    "new_alembic_operations": [],
+    "snapshots_byte_identical_to_R0_R1_R2": true,
+    "openapi": {"paths": 46, "operations": 63, "HTTP_status": 200},
+    "metadata": {"tables": 17},
+    "docs_HTTP_status": 200,
+    "startup_and_shutdown_complete": true,
+    "uvicorn_returncode_after_SIGTERM": -15,
+    "disposable_containers_and_server_cleaned": true,
+    "whole_module_AST_except_imports_equal_to_R2": {"modules": 5, "definitions": 13},
+    "old_catalogue_source_files_absent": true,
+    "old_catalogue_imports": "only forbidden-path strings in test_catalog_module.py ; no active imports",
+    "initial_rename_attempt": "file tool reported moves but left the six source files under catalogue on disk ; SQLite collection returned 2 with 6 import errors and PostgreSQL verification was blocked. Explicit Add/Delete corrected paths before all successful reruns above.",
+    "source_sha256": {
+      "backend/app/model_registry.py": "958225b3e7571a8c5b7b36f0160c3faa60577ee4b41ae9e34b95d8cd0fbfd39d",
+      "backend/app/models/__init__.py": "fc5a22972e0afe4f14a68633970ea17be0395283db9ccb3470cbd4faca59a5c6",
+      "backend/app/modules/catalog/__init__.py": "657b58603934c9452c1161fc005abcf9374aa9ec94ebd6e7dfad850563ea6e5d",
+      "backend/app/modules/catalog/api.py": "faaca1e14b3506815d784e67ff844f9eb333aa4fb77ed26b42ded9861aa6c21b",
+      "backend/app/modules/catalog/models.py": "39a2489a51784be0844ba67f27c154e369d8c243be687156fab69949047ac6d9",
+      "backend/app/modules/catalog/repository.py": "5f52a1389f54feeed5c2522ef88b24131b03eeac10d9cf4c8d2ce534f07fa737",
+      "backend/app/modules/catalog/schemas.py": "58bf62df27392345611b749c8a29f5a77c391e82de42840816e1875be27a1177",
+      "backend/app/modules/catalog/service.py": "ee80441d1d056248c6b392afea1b00e7cd1f583a08b14c8547b9e5f7703733bd",
+      "backend/app/router.py": "be492d5df80bb7fa35f9b4e1eadf018a69782c53d882a1b632e3eda59a97e3ef",
+      "backend/app/services/equipment.py": "be17a2e03f9ac8db11bbb457616ca1e306112efb2409137f7eaae52cea233898",
+      "backend/app/services/import_planner.py": "5c12fcf62eb4b89dccdb5071cf9021e1d6580ccf03cfcfa4fee7d5ded927004f",
+      "backend/app/services/import_service.py": "e2f6ca4069d59b7ece05db85b872326aea0cadb026ba0d4ecde387271d4ea170",
+      "backend/app/services/sale.py": "7f2c900d54b7b63258467ef9e5931c0f92a190a6558298341fec514bce9b30a6",
+      "backend/tests/test_catalog_module.py": "efe97a9a19f30cbc151bbc2ce160c0ddd622ce112225b59bcb36cb6f0bb0f26b",
+      "backend/tests/test_equipment.py": "124a5290328d4a1b378a7af6d8f4c52385d00671ccec5e588829a788adb5c59f",
+      "backend/tests/test_import_service_v2.py": "787332e0719e066a9cc8f319a3fc658548b58cf0700db7dc18d7c2884677c50b",
+      "backend/tests/test_installations.py": "3f5810278e5ad3a8e780cba7b0c4ef09b168dc9b183cfbdf282d19806f6eeae6",
+      "backend/tests/test_modular_bootstrap.py": "c2d106a82df50ee1b8e3f2642f9bfe64e21498a71849da8b56c0b4d2f8e25e64",
+      "backend/tests/test_sales.py": "67c43ccf2a6fdd4e99b588d2fe68e385a994b71cbc98135fe259e7c6e8e720ce"
+    },
+    "R0_R1_R2_artifacts_and_import_fixture_hashes_unchanged": true,
+    "seed_or_remote_CI_or_deployment_or_push_executed": false,
+    "R4_started": false
+  },
+  "seed_executed": false,
+  "remote_CI_or_deployment_executed": false,
+  "push_executed": false
+}

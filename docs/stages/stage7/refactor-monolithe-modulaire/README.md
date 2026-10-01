@@ -2,7 +2,7 @@
 
 > **Stage 7 · chantier transverse avant 7.4, hors sprints fonctionnels**
 > **Branche :** `refactor/modular-monolith` (déjà créée).
-> **Décision utilisateur :** R0/R1 validés et committés localement ; R2 autorisé et validé localement, clôture soumise à l'utilisateur. R3 à R11 restent non commencées et nécessitent chacune un feu vert distinct.
+> **Décision utilisateur :** R0/R1/R2 validés et committés localement ; R3 accepté et revérifié après naming, livraison dans le commit INT-115 associé à cette note. Naming documentaire : `8f3e876`. R4 à R11 restent non commencées et nécessitent chacune un feu vert distinct.
 
 ## Références et suivi
 
@@ -16,7 +16,9 @@ Les mentions « validation/branche encore attendues » dans le manifeste JSON R0
 
 R0 et R1 sont committés localement : `6754a50` et `73e5ac9`. [Note et preuves INT-113](../../../../notes/backend/refactor-monolithe-modulaire/INT-113-R1-socle-modulaire.md).
 
-R2 est implémenté et validé localement : [note pédagogique et preuves INT-114](../../../../notes/backend/refactor-monolithe-modulaire/INT-114-R2-customers.md). Suite finale : **292 tests**, groupes PostgreSQL : **56 + 39** ; OpenAPI/metadata identiques à R0/R1. R2 reste non committé dans cette capture ; R3 attend un feu vert distinct.
+R2 est accepté par l'utilisateur et committé localement sous `ed67168` : [note pédagogique et preuves INT-114](../../../../notes/backend/refactor-monolithe-modulaire/INT-114-R2-customers.md). Les captures R2 restent inchangées.
+
+R3 est accepté par l'utilisateur et revérifié après naming : [note pédagogique et preuve INT-115](../../../../notes/backend/refactor-monolithe-modulaire/INT-115-R3-catalogue.md). Résultats après naming : **128 tests ciblés**, **299 tests SQLite**, groupes PostgreSQL : **56 + 39** ; OpenAPI/metadata identiques à R0/R1/R2. `app/modules` est conservé et le package est `catalog` ; `catalogue_editor` reste inchangé. La section `post_naming` du manifeste conserve les nouveaux résultats et empreintes, sans réécrire les captures antérieures. Le commit documentaire `8f3e876` précède le commit de livraison R3 contenant cette note ; R4 attend son feu vert distinct.
 
 ## Ordre et attribution
 
@@ -26,8 +28,8 @@ R0 reste un checkpoint sans nouvel identifiant INT. Les identifiants INT-113 à 
 |---|---|---|---|
 | R0 | Checkpoint | Baseline et preuves | Validé ; branche créée |
 | R1 | [INT-113](tasks.md#int-113--r1--créer-le-squelette-modulaire) | Squelette, Base pure, registre et composition | Validé par l'utilisateur ; commit local `73e5ac9` |
-| R2 | [INT-114](tasks.md#int-114--r2--déplacer-customers) | Client + Site | Implémenté et validé localement ; clôture/commit soumis à l'utilisateur |
-| R3 | [INT-115](tasks.md#int-115--r3--déplacer-catalogue) | Product | Non commencé ; feu vert distinct requis après R2 |
+| R2 | [INT-114](tasks.md#int-114--r2--déplacer-customers) | Client + Site | Validé par l'utilisateur ; commit local `ed67168` |
+| R3 | [INT-115](tasks.md#int-115--r3--déplacer-catalog) | Product | Accepté et revérifié après naming ; livraison par le commit INT-115 associé à la note |
 | R4 | [INT-116](tasks.md#int-116--r4--déplacer-sales) | Sale + SaleLine | Non commencé ; feu vert distinct requis après R3 |
 | R5 | [INT-117](tasks.md#int-117--r5--déplacer-equipment) | Équipement physique | Non commencé ; feu vert distinct requis après R4 |
 | R6 | [INT-118](tasks.md#int-118--r6--déplacer-installations) | Installation autonome et commerciale | Non commencé ; feu vert distinct requis après R5 |
@@ -75,7 +77,7 @@ Les snapshots R0 restent intacts. Produire des sorties après vague distinctes p
 
 Le JSON reprend le format de 7.3 (`test_cases`, `id`, `task`, `title`, `type`, `preconditions`, `steps`, `expected_result`, `status`), avec un champ `wave` pour distinguer les vagues des sprints. `status: "not_run"` signifie **non exécuté** ; aucun résultat R0 n'est reporté comme réussite d'une tâche R1 à R11.
 
-À chaque vague autorisée : tests ciblés puis suite, comparaison OpenAPI/metadata et contrôle Alembic PostgreSQL sans nouvelle diff ; conserver les preuves réelles, faire valider la clôture, puis attendre le feu vert de la suivante. Le feu vert R1 n'autorise aucune vague ultérieure. Les critères R1/R2 sont cochés après validation locale ; ceux de R3 à R11 restent ouverts.
+À chaque vague autorisée : tests ciblés puis suite, comparaison OpenAPI/metadata et contrôle Alembic PostgreSQL sans nouvelle diff ; conserver les preuves réelles, faire valider la clôture, puis attendre le feu vert de la suivante. Le feu vert R1 n'autorise aucune vague ultérieure. Les critères R1/R2/R3 sont cochés après validation locale et acceptation utilisateur, y compris revalidation R3 après naming ; ceux de R4 à R11 restent ouverts.
 
 R9 doit exécuter le même pack d'import avant et après son déplacement avec des états initiaux équivalents. R0 conserve les empreintes des fixtures, **pas encore une comparaison complète des journaux et entités**. La capture fonctionnelle « avant R9 » fait donc partie d'INT-121 ; elle ne doit pas être inventée à partir des hashes.
 

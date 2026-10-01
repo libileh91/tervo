@@ -254,7 +254,7 @@ async def test_active_lease_blocks_other_import_and_expired_lease_can_resume(env
 async def test_product_precedes_equipment_and_unknown_product_is_not_invented(environment):
     from io import BytesIO
     from openpyxl import Workbook
-    from app.models.product import Product
+    from app.modules.catalog.models import Product
     service, factory = environment
     await import_physical(service)
     book = Workbook()

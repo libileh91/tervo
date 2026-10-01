@@ -3,7 +3,7 @@
 > **Planning :** [refactor monolithe modulaire](../../../docs/stages/stage7/refactor-monolithe-modulaire/tasks.md).
 > **Branche :** `refactor/modular-monolith`.
 > **Parent R1 :** `73e5ac9bed65112f0ca181cd1af3fcd6ece8ae4e`.
-> **État :** R2 implémenté et validé localement ; clôture/commit soumis à l'utilisateur. R3 non commencé.
+> **État :** R2 accepté par l'utilisateur et committé localement sous `ed67168`. R3 a reçu son feu vert distinct ; voir la [note INT-115](INT-115-R3-catalogue.md). Les JSON R2 décrivent leur capture avant commit et restent inchangés.
 
 ## 1. Checkpoint Git avant le déplacement
 

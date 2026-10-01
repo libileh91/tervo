@@ -9,7 +9,7 @@ from app.main import app
 from app.models import Base
 from app.modules.customers.models import Client, Site
 from app.models.user import Role, User
-from app.models.product import Product
+from app.modules.catalog.models import Product
 from app.models.equipment import Equipment
 from app.models.intervention import Intervention
 

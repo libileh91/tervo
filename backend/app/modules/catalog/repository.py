@@ -1,7 +1,7 @@
 """Database access for catalogue products."""
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.product import Product
+from app.modules.catalog.models import Product
 
 
 class ProductRepository:

@@ -2,12 +2,12 @@
 
 > **Chantier transverse du Stage 7, avant 7.4 ; pas un sprint de features.**
 > **Branche :** `refactor/modular-monolith`, déjà créée. **R0 :** validé, sans nouvel INT.
-> **Autorisation :** R1 validé et committé ; R2 autorisé et validé localement. R3 à R11 non commencées, feu vert distinct par tâche.
+> **Autorisation :** R1/R2 validés par l'utilisateur et committés ; R3 accepté et revérifié après naming, livraison dans le commit INT-115 associé à cette note. Naming documentaire : `8f3e876`. R4 à R11 non commencées, feu vert distinct par tâche.
 > **Références :** [cadrage et baseline](README.md) · [plan](../../../../notes/backend/extras/tervo_plan_refactor_monolithe_modulaire.md) · [DAT](../../../DAT/new/00-sommaire.md).
 > **Estimations :** estimation à confirmer pour chaque tâche.
 > **Notes futures :** `notes/backend/refactor-monolithe-modulaire/`. La preuve R0 reste dans `notes/backend/extras/refactor-monolithe-modulaire/`.
 
-Les critères d'INT-113 et d'INT-114 sont cochés après les validations locales réellement exécutées. R3 à R11 restent ouverts et non commencés ; la création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
+Les critères d'INT-113 à INT-115 sont cochés après les validations locales réellement exécutées et l'acceptation utilisateur. R3 a été revérifié après le naming `catalog` ; les résultats et empreintes finaux sont dans `R3-validation.json → post_naming`, sans réécrire les captures initiales. R4 à R11 restent ouverts et non commencés ; la création du planning ne prouve ni livraison ni exécution de ces vagues. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
 
 ## Garde-fous communs à toutes les tâches
 
@@ -58,7 +58,7 @@ Afin de **préparer des déplacements progressifs en conservant une application 
 
 ## INT-114 — R2 — Déplacer `customers`
 
-**Statut :** implémenté, validé localement et accepté par l'utilisateur ; commit INT-114 demandé. R3 autorisé séparément après ce commit.
+**Statut :** implémenté, validé localement et accepté par l'utilisateur ; committé sous `ed67168`. R3 autorisé séparément après ce commit.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -80,25 +80,29 @@ Afin de **isoler la racine du modèle métier et éprouver les relations inter-m
 
 ---
 
-## INT-115 — R3 — Déplacer `catalogue`
+## INT-115 — R3 — Déplacer `catalog`
 
-**Statut :** non commencé — feu vert distinct requis après validation d'INT-114.
+**Statut :** R3 accepté par l'utilisateur et revérifié après naming ; livraison dans le commit INT-115 associé à cette note, après le commit de naming documentaire `8f3e876`. R4 non commencé, feu vert distinct requis.
 
 **User Story**
 En tant que **mainteneur backend**,
-Je veux **regrouper Product et ses couches existantes dans catalogue**,
+Je veux **regrouper Product et ses couches existantes dans `catalog`**,
 Afin de **rendre explicite la responsabilité de la référence commerciale distincte de l'équipement physique**.
 
 **Acceptance Criteria**
-- [ ] Déplacer Product, schémas, repository, service et API vers `app/modules/catalogue/` ; adapter consommateurs, registre et router.
-- [ ] Conserver CRUD, unicité, désactivation et liens Product → SaleLine/Equipment ; aucune notion de stock ajoutée, Product ne devient pas Equipment.
-- [ ] Tests catalogue et consommateurs sans régression ; anciens fichiers retirés après cutover ; garde-fous communs satisfaits.
-- [ ] Produire la note R3, faire valider la clôture puis attendre le feu vert R4.
+- [x] Déplacer Product, schémas, repository, service et API vers `app/modules/catalog/` ; adapter consommateurs, registre et router.
+- [x] Conserver CRUD, unicité, désactivation et liens Product → SaleLine/Equipment ; aucune notion de stock ajoutée, Product ne devient pas Equipment.
+- [x] Tests catalogue et consommateurs sans régression ; anciens fichiers retirés après cutover ; garde-fous communs satisfaits.
+- [x] Produire la note R3 et soumettre sa clôture avec les preuves locales.
+- [x] Faire valider la clôture R3 par l'utilisateur ; commit demandé.
+- [x] Vérifier après naming et compléter le manifeste R3 avec les résultats et empreintes des sources finales.
 
 **Technical Notes**
 - Source : `models/product.py`, `schemas/product.py`, `repositories/product.py`, `services/product.py`, `api/v1/products.py`, sous `backend/app/`.
 - Préserver les FK et contraintes de la référence produit, sans cascade destructrice ni réécriture des équipements historiques.
-- Cas : `TC-INT-115-01`.
+- Cible après naming : `catalog/{models,schemas,repository,service,api}.py` et init pur ; cinq fichiers source supprimés, pas de wrappers. Le réexport `app.models.Product` garde l'identité de classe pendant la transition.
+- Le déplacement ne modifie pas la politique d'activité : les services actuels autorisent un produit inactif pour une nouvelle vente et un nouvel équipement.
+- Cas : `TC-INT-115-01`, vérifié localement avant et après naming. [Note et preuve R3](../../../../notes/backend/refactor-monolithe-modulaire/INT-115-R3-catalogue.md) : 128 tests ciblés, 299 SQLite, groupes PostgreSQL 56 + 39 ; OpenAPI/metadata identiques à R0/R1/R2, seul écart FK connu ; 13 définitions et AST des modules hors imports identiques au parent R2. Le nouveau test est `tests/test_catalog_module.py` ; résultats finaux dans `R3-validation.json → post_naming`. R4 attend son propre feu vert.
 
 ---
 

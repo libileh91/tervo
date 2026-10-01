@@ -12,7 +12,7 @@ from app.api.v1.installations import router as installations_router
 from app.api.v1.interventions import router as interventions_router
 from app.api.v1.materials import router as materials_router
 from app.api.v1.photos import router as photos_router
-from app.api.v1.products import router as products_router
+from app.modules.catalog.api import router as products_router
 from app.api.v1.reports import router as reports_router
 from app.api.v1.reviews import router as reviews_router
 from app.api.v1.sales import router as sales_router

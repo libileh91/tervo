@@ -1,9 +1,9 @@
 """Catalogue rules: unique references and preservation of history."""
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
-from app.models.product import Product
-from app.repositories.product import ProductRepository
-from app.schemas.product import ProductListResponse, ProductResponse
+from app.modules.catalog.models import Product
+from app.modules.catalog.repository import ProductRepository
+from app.modules.catalog.schemas import ProductListResponse, ProductResponse
 
 
 class ProductService:
