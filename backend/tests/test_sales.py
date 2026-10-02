@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.core.database import get_db
-from app.core.deps import get_current_user
+from app.modules.identity.dependencies import get_current_user
 from app.main import app
 from app.models import Base
 from app.modules.customers.models import Client, Site
@@ -14,7 +14,7 @@ from app.modules.installations.models import Installation
 from app.modules.catalog.models import Product
 from app.modules.sales.models import Sale, SaleLine, SaleStatus
 
-from app.models.user import Role, User
+from app.modules.identity.models import Role, User
 
 
 @pytest.fixture

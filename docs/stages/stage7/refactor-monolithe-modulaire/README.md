@@ -2,7 +2,7 @@
 
 > **Stage 7 · chantier transverse avant 7.4, hors sprints fonctionnels**
 > **Branche :** `refactor/modular-monolith` (déjà créée).
-> **Décision utilisateur :** R0 à R9 validés et committés ; R9 : `205969a`. Nettoyage technique demandé séparément. R10 à R11 restent non commencées et nécessitent chacune un feu vert distinct.
+> **Décision utilisateur :** R0 à R9 validés et committés ; R9 : `205969a`, nettoyage : `17dfc11`. R10 accepté, commit autorisé ; feu vert distinct R11 reçu.
 
 ## Références et suivi
 
@@ -34,6 +34,8 @@ R9 est accepté et committé sous `205969a` : [note et preuve INT-121](../../../
 
 Le [nettoyage demandé après R9](../../../../notes/backend/refactor-monolithe-modulaire/nettoyage-apres-R9.md#L1) retire les caches et les namespaces sans code actif dans un commit distinct. Ce retrait limité ne clôture pas R11.
 
+R10 est accepté et son commit autorisé : [note et preuve INT-122](../../../../notes/backend/refactor-monolithe-modulaire/INT-122-R10-identity-dashboard.md), **92 ciblés**, **389 SQLite**, **95 PostgreSQL**, snapshots R0 et oracle R9 inchangés. Identity porte le guard unique, dashboard extrait sa lecture et cinq DTO ; seed conservé/testé seulement sur démo jetable. Avant commit : 45 empreintes conformes, 92 ciblés rejoués. Feu vert distinct R11 reçu.
+
 ## Ordre et attribution
 
 R0 reste un checkpoint sans nouvel identifiant INT. Les identifiants INT-113 à INT-123 sont réservés à ce chantier ; ils ne renumérotent ni ne remplacent INT-94 à INT-112 dans les sprints de features.
@@ -50,8 +52,8 @@ R0 reste un checkpoint sans nouvel identifiant INT. Les identifiants INT-113 à 
 | R7 | [INT-119](tasks.md#int-119--r7--déplacer-interventions) | Terrain existant, sans features 7.4 | Validé par l'utilisateur ; commit `7a52d03` |
 | R8 | [INT-120](tasks.md#int-120--r8--déplacer-reports) | Rapport/PDF/template existants | Validé par l'utilisateur ; commit `bb1fc14` |
 | R9 | [INT-121](tasks.md#int-121--r9--déplacer-imports) | Pipeline Excel et comparaison avant/après | Validé par l'utilisateur ; commit `205969a` |
-| R10 | [INT-122](tasks.md#int-122--r10--déplacer-identity-dashboard-et-finaliser-la-composition) | Auth, dashboard, seed, composition | Non commencé ; feu vert distinct requis après R9 |
-| R11 | [INT-123](tasks.md#int-123--r11--retirer-les-couches-horizontales-legacy) | Nettoyage legacy et validation globale | Non commencé ; feu vert distinct requis après R10 |
+| R10 | [INT-122](tasks.md#int-122--r10--déplacer-identity-dashboard-et-finaliser-la-composition) | Auth, dashboard, seed, composition | Validé par l'utilisateur ; commit autorisé |
+| R11 | [INT-123](tasks.md#int-123--r11--retirer-les-couches-horizontales-legacy) | Nettoyage legacy et validation globale | Autorisé ; à démarrer après commit R10 |
 
 **Estimations :** estimation à confirmer pour chaque tâche ; aucun nombre de points arbitraire n'est attribué.
 
@@ -91,7 +93,7 @@ Les snapshots R0 restent intacts. Produire des sorties après vague distinctes p
 
 Le JSON reprend le format de 7.3 (`test_cases`, `id`, `task`, `title`, `type`, `preconditions`, `steps`, `expected_result`, `status`), avec un champ `wave` pour distinguer les vagues des sprints. `status: "not_run"` signifie **non exécuté** ; aucun résultat R0 n'est reporté comme réussite d'une tâche R1 à R11.
 
-À chaque vague autorisée : tests ciblés puis suite, comparaison OpenAPI/metadata et contrôle Alembic PostgreSQL sans nouvelle diff ; conserver les preuves réelles, faire valider la clôture, puis attendre le feu vert de la suivante. Les critères R1 à R9 sont validés et acceptés ; R10 à R11 restent ouverts.
+À chaque vague autorisée : tests ciblés puis suite, comparaison OpenAPI/metadata et contrôle Alembic PostgreSQL sans nouvelle diff ; conserver les preuves réelles, faire valider la clôture, puis attendre le feu vert de la suivante. Les critères R1 à R10 sont validés et acceptés ; R11 reste ouvert.
 
 R9 a exécuté le même pack d'import avant et après son déplacement avec des états initiaux équivalents. R0 conserve les empreintes des fixtures, pas cette comparaison complète des journaux et entités. La capture fonctionnelle « avant R9 » a été produite dans INT-121 sur les sources R8 puis vérifiée après cutover, sans réécrire les preuves R0.
 

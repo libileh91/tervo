@@ -17,7 +17,7 @@ from app.core.database import get_db
 from app.core.security import create_access_token, get_password_hash
 from app.main import app
 from app.models import Base
-from app.models.user import Role, User
+from app.modules.identity.models import Role, User
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"
 test_engine = create_async_engine(TEST_DB_URL, echo=False)

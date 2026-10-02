@@ -13,7 +13,7 @@ from app.modules.interventions.models.intervention_photo import InterventionPhot
 from app.modules.interventions.models.material import Material
 from app.modules.interventions.models.review import Review
 
-from app.models.user import User
+from app.modules.identity.models import User
 
 from app.modules.catalog.models import Product
 

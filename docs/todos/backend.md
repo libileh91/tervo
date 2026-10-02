@@ -155,7 +155,7 @@
 | --- | --- |
 | **Créé dans** | INT-96 |
 | **Dépend de** | Introduction des rôles MANAGER et COMMERCIAL prévus par la DAT |
-| **Fichiers** | `app/models/user.py`, `app/modules/catalog/api.py` (déplacé dans INT-115), migrations, tests |
+| **Fichiers** | `app/modules/identity/models.py` (déplacé dans INT-122), `app/modules/catalog/api.py` (déplacé dans INT-115), migrations, tests |
 | **Action attendue** | Étendre le contrôle catalogue_editor à ces rôles et tester leurs droits. Actuellement ADMIN écrit, TECHNICIAN consulte. |
 | **Statut** | ⏳ Rôles absents du modèle actuel |
 
@@ -218,7 +218,19 @@
 | Champ | Valeur |
 |---|---|
 | **Créé dans** | INT-119 / R7, refactor monolithe modulaire |
-| **Dépend de** | Cutover terrain accepté ; mise à jour documentaire distincte autorisée avant les features 7.4 ; chemins reports définis par R8, clôture R8 encore à accepter |
+| **Dépend de** | Cutovers terrain/reports acceptés ; mise à jour documentaire distincte autorisée avant les features 7.4 |
 | **Fichiers** | `docs/stages/stage7/sprint7.4/tasks.md`, `test-cases.json`, DAT si autorisé dans son propre scope ; `app/modules/interventions/`, `app/modules/reports/{api,renderer}.py`, `app/modules/reports/templates/report_template.html` |
 | **Action attendue** | Remplacer les anciens chemins horizontaux par les sources terrain actuelles, sans cocher ni implémenter INT-104 à INT-108. Reprendre le mapping de la note INT-119. Les nouveaux modèles/fichiers éventuels restent à cadrer par feature ; les cas détaillés INT-105/108 restent à compléter avant implémentation. |
 | **Statut** | ⏳ À traiter dans une reprise documentaire autorisée avant 7.4 ; aucune feature terrain nouvelle livrée par R7 |
+
+---
+
+## TD-B019 — Cadrer l'usage sûr du seed de démonstration
+
+| Champ | Valeur |
+|---|---|
+| **Créé dans** | INT-122 / R10, vérification réelle du bootstrap démo |
+| **Dépend de** | Cadrage technique autorisé avant usage sur un environnement avec données ; à prendre en compte dans INT-111 |
+| **Fichiers** | `app/seed.py`, procédures de déploiement, futurs tests de protection si autorisés |
+| **Action attendue** | Séparer/cadrer l'usage démo de la migration/production, définir la protection contre un seed destructif accidentel et documenter les préconditions. Le script actuel effectue des DELETE et ne nettoie pas toute la chaîne V2 ; la répétition testée sur sa propre SQLite démo ne garantit pas la sûreté sur une base peuplée. Ne pas modifier ou vider une base existante pour valider ce todo. |
+| **Statut** | ⏳ À cadrer avant tout usage du seed avec des données existantes ; aucun changement de CLI/comportement dans R10 |

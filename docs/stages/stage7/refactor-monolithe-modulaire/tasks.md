@@ -2,12 +2,12 @@
 
 > **Chantier transverse du Stage 7, avant 7.4 ; pas un sprint de features.**
 > **Branche :** `refactor/modular-monolith`, déjà créée. **R0 :** validé, sans nouvel INT.
-> **Autorisation :** R1 à R9 validés par l'utilisateur et committés ; R9 : `205969a`. Nettoyage technique des dossiers vides demandé séparément ; R10 à R11 non commencées, aucun feu vert nouveau.
+> **Autorisation :** R1 à R9 validés et committés ; R9 : `205969a`, nettoyage : `17dfc11`. R10 accepté, commit autorisé ; feu vert distinct R11 reçu.
 > **Références :** [cadrage et baseline](README.md) · [plan](../../../../notes/backend/extras/tervo_plan_refactor_monolithe_modulaire.md) · [DAT](../../../DAT/new/00-sommaire.md).
 > **Estimations :** estimation à confirmer pour chaque tâche.
 > **Notes futures :** `notes/backend/refactor-monolithe-modulaire/`. La preuve R0 reste dans `notes/backend/extras/refactor-monolithe-modulaire/`.
 
-Les critères d'INT-113 à INT-121 sont cochés après validation locale et acceptation utilisateur. Les captures historiques restent intactes. R10 à R11 sont non commencés ; le nettoyage des namespaces sans code actif ne clôture pas INT-123. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
+Les critères d'INT-113 à INT-122 sont cochés après validation locale et acceptation utilisateur. Les captures historiques restent intactes. R11 est autorisé, ses critères restent ouverts ; le nettoyage des namespaces sans code actif ne clôture pas INT-123. Les cas correspondants et leurs preuves sont dans [test-cases.json](test-cases.json).
 
 ## Garde-fous communs à toutes les tâches
 
@@ -269,7 +269,7 @@ Afin de **préserver le différenciateur Excel avec une preuve fonctionnelle ava
 
 ## INT-122 — R10 — Déplacer `identity`, `dashboard` et finaliser la composition
 
-**Statut :** non commencé — feu vert distinct requis après validation d'INT-121.
+**Statut :** accepté par l'utilisateur, commit autorisé. Avant commit : 45 empreintes conformes, 92 ciblés rejoués (3 warnings, 42,51 s). Feu vert distinct R11 reçu.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -277,23 +277,27 @@ Je veux **isoler l'identité et les lectures transverses puis finaliser le wirin
 Afin de **conserver une authentification unique et une composition FastAPI explicite après les déplacements métier**.
 
 **Acceptance Criteria**
-- [ ] Déplacer User/Auth et leurs couches existantes vers `app/modules/identity/` ; garder JWT/hash/primitives génériques dans `core` et adapter deps sans cycle.
-- [ ] Auth et autorisations actuelles inchangées : utilisateur actif requis ; aucun rôle MANAGER/COMMERCIAL ni nouvelle règle d'affectation introduit.
-- [ ] Déplacer dashboard vers `app/modules/dashboard/` comme agrégation de lecture uniquement ; réponses inchangées, aucune écriture ou règle propriétaire absorbée.
-- [ ] Adapter imports et entrypoint du seed si nécessaire ; conserver `app/seed.py` si le déplacement n'apporte rien, sinon une seule implémentation sous `backend/scripts/seed.py` avec contrat d'exécution documenté.
-- [ ] Registre complet et composition finale explicite ; tests auth/dashboard/seed et garde-fous communs satisfaits, aucune seconde implémentation active.
-- [ ] Produire la note R10, faire valider la clôture puis attendre le feu vert R11.
+- [x] Déplacer User/Auth et leurs couches existantes vers `app/modules/identity/` ; garder JWT/hash/primitives génériques dans `core` et adapter deps sans cycle.
+- [x] Auth et autorisations actuelles inchangées : utilisateur actif requis ; aucun rôle MANAGER/COMMERCIAL ni nouvelle règle d'affectation introduit.
+- [x] Déplacer dashboard vers `app/modules/dashboard/` comme agrégation de lecture uniquement ; réponses inchangées, aucune écriture ou règle propriétaire absorbée.
+- [x] Adapter imports et entrypoint du seed si nécessaire ; conserver `app/seed.py` si le déplacement n'apporte rien, sinon une seule implémentation sous `backend/scripts/seed.py` avec contrat d'exécution documenté.
+- [x] Registre complet et composition finale explicite ; tests auth/dashboard/seed et garde-fous communs satisfaits, aucune seconde implémentation active.
+- [x] Produire la note R10 et soumettre la clôture avec preuves locales.
+- [x] Obtenir l'acceptation utilisateur avant commit R10 et tout feu vert R11.
 
 **Technical Notes**
 - Source : `backend/app/models/user.py`, `schemas/auth.py`, `api/v1/auth.py`, `api/v1/dashboard.py` et couches d'agrégation réellement présentes ; seed existant et `core/deps.py` à vérifier avant déplacement.
 - Aucun service/repository imposé à identity ou dashboard pour la symétrie. Le seed réutilise les règles existantes au lieu de les dupliquer.
 - Cas : `TC-INT-122-01` et `TC-INT-122-02`.
+- Cible livrée : `identity/{models,schemas,dependencies,api}.py` et init pur ; `dashboard/{schemas,service,api}.py` et init pur. Guard unique porté par identity, ancien core/deps retiré ; primitives core inchangées. Cinq DTO et méthode de lecture extraits du terrain sans réécriture.
+- [Note et preuve INT-122](../../../../notes/backend/refactor-monolithe-modulaire/INT-122-R10-identity-dashboard.md) : **92 ciblés**, **389 SQLite** (18 nouveaux cas), **95 PostgreSQL** canoniques, snapshots R0 et oracle import R9 identiques, seule FK historique ; revue 56 ciblés sans finding métier. Composition des quinze routers explicite, ordre conservé.
+- `app/seed.py` conservé avec seul import User/Role adapté ; vraie CLI deux runs sur ses propres SQLite démo : 2 User/8 Client/8 Site/7 Intervention, FK et bcrypt vérifiés. Aucun seed de base existante/V2 peuplée/production ; TD-B019 suit ce cadrage de sécurité. Façades API/Base/models gardées pour R11.
 
 ---
 
 ## INT-123 — R11 — Retirer les couches horizontales legacy
 
-**Statut :** non commencé — feu vert distinct requis après validation d'INT-122.
+**Statut :** feu vert distinct reçu après acceptation d'INT-122 ; à démarrer après son commit.
 
 **User Story**
 En tant que **mainteneur backend**,

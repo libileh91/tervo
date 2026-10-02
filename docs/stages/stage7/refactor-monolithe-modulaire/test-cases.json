@@ -630,10 +630,18 @@
       "wave": "R10",
       "title": "Identity — authentification unique, primitives core et rôles existants",
       "type": "api",
-      "preconditions": ["INT-121 clôturée ; feu vert R10 distinct requis et pas encore donné", "Utilisateurs ADMIN/TECHNICIAN actifs et utilisateur désactivé, comme le périmètre actuel"],
+      "preconditions": ["INT-121 acceptée et committée sous 205969a ; nettoyage 17dfc11 ; feu vert distinct R10 reçu", "Utilisateurs ADMIN/TECHNICIAN actifs et utilisateur désactivé, comme le périmètre actuel"],
       "steps": ["Rejouer les tests auth/JWT et accès aux routes protégées avec token absent/invalide et utilisateur désactivé.", "Exercer les accès des rôles existants et inspecter deps/security après déplacement User/Auth.", "Vérifier Base unique et absence de nouveaux rôles ou d'affectation métier ; comparer les garde-fous communs."],
       "expected_result": {"existing_auth_tests_pass": true, "active_authenticated_user_required": true, "existing_authorizations_unchanged": true, "new_MANAGER_or_COMMERCIAL_role_added": false, "new_assignment_rule_added": false, "generic_JWT_and_hash_primitives_remain_in_core": true, "single_User_mapping_and_Base": true, "dependency_cycle": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
-      "status": "not_run"
+      "status": "passed",
+      "execution": {
+        "scope": "real crypto/JWT and disposable SQLite identity scenarios; PostgreSQL canonical regressions separately",
+        "tests": ["test_identity_module.py", "test_auth.py", "test_core.py", "test_modular_bootstrap.py"],
+        "observed": "one User mapping and one guard across consumers, 12 new identity cases, token types/deactivation/profile preserved, no new role; complete identity AST equal except imports; core primitives unchanged",
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R10-validation.json",
+        "user_acceptance": "pending",
+        "new_HTTP_identity_PostgreSQL_cases_executed": false
+      }
     },
     {
       "id": "TC-INT-122-02",
@@ -641,10 +649,19 @@
       "wave": "R10",
       "title": "Dashboard, seed et composition finale sans responsabilités artificielles",
       "type": "integration",
-      "preconditions": ["Feu vert R10 distinct requis", "Base jetable avec jeu métier de référence et seed existant"],
+      "preconditions": ["Feu vert distinct R10 reçu", "Base jetable avec jeu métier de référence et seed existant"],
       "steps": ["Exécuter le seed via l'entrypoint retenu et comparer les données au comportement existant.", "Lire le dashboard avec un jeu métier identique et comparer les réponses/agrégats avant/après ; vérifier qu'il n'écrit pas de données.", "Inspecter composition explicite de tous les routers, registre hors API et absence de couches vides ou seconde implémentation du seed."],
       "expected_result": {"seed_entrypoint_succeeds": true, "seed_business_behavior_unchanged": true, "seed_implementation_count": 1, "dashboard_responses_identical_for_same_data": true, "dashboard_business_writes": false, "dashboard_absorbs_domain_rules": false, "router_composition_explicit_and_complete": true, "registry_table_count": 17, "artificial_service_or_repository_added": false, "openapi_and_metadata_diff": [], "new_postgresql_schema_diff": []},
-      "status": "not_run"
+      "status": "passed",
+      "execution": {
+        "scope": "real dashboard service/HTTP read-only SQLite; original method/DTOs loaded from Git for six full-JSON comparisons; true seed CLI only on own disposable demo database",
+        "tests": ["test_dashboard_module.py", "test_seed_bootstrap.py", "test_modular_bootstrap.py", "test_api.py"],
+        "observed": "92 targeted, 389 SQLite, 95 PostgreSQL canonical; five DTO/method AST exact, six identical original/new dashboard JSON results; seed two runs 2 User/8 Client/8 Site/7 Intervention, FK/bcrypt checked; fifteen routers explicit with unchanged order",
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R10-validation.json",
+        "user_acceptance": "pending",
+        "populated_V2_or_production_seed_executed": false,
+        "new_HTTP_dashboard_or_seed_PostgreSQL_cases_executed": false
+      }
     },
     {
       "id": "TC-INT-123-01",

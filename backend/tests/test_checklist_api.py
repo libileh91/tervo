@@ -22,7 +22,7 @@ from app.models import Base
 from app.modules.interventions.models.checklist_item import ChecklistItem
 from app.modules.customers.models import Client, Site
 from app.modules.interventions.models.intervention import Intervention, InterventionStatus
-from app.models.user import Role, User
+from app.modules.identity.models import Role, User
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"
 test_engine = create_async_engine(TEST_DB_URL, echo=False)

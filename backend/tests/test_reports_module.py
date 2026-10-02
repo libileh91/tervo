@@ -187,7 +187,7 @@ async def context(tmp_path, monkeypatch):
 
 async def test_report_api_real_jwt_and_pdf(context):
     from sqlalchemy import select
-    from app.models.user import User
+    from app.modules.identity.models import User
     from app.modules.interventions.models.intervention import Intervention, InterventionStatus
     from app.modules.reports.api import router
     assert router is not None

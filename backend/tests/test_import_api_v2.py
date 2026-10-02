@@ -7,7 +7,7 @@ from sqlalchemy import select, func
 from app.core.database import get_db
 from app.core.security import create_access_token
 from app.main import app
-from app.models.user import User, Role
+from app.modules.identity.models import User, Role
 from app.modules.customers.models import Client
 from app.modules.imports.models import ImportBatch, ImportRecord
 from tests.test_import_service_v2 import environment, CLIENT_CSV, FIXTURES

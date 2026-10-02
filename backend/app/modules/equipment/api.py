@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.core.deps import get_current_user
+from app.modules.identity.dependencies import get_current_user
 from app.modules.equipment.models import EquipmentStatus
 from app.modules.equipment.schemas import EquipmentCreate, EquipmentReplace, EquipmentResponse, EquipmentListResponse
 from app.modules.equipment.service import EquipmentService

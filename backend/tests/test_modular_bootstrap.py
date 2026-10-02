@@ -28,10 +28,10 @@ ISOLATED_IMPORTS = (
 )
 ROUTER_REFERENCES = (
     ("app.modules.imports.api", "router"),
-    ("app.api.v1.auth", "router"),
+    ("app.modules.identity.api", "router"),
     ("app.modules.customers.api", "clients_router"),
     ("app.modules.interventions.api.interventions", "router"),
-    ("app.api.v1.dashboard", "router"),
+    ("app.modules.dashboard.api", "router"),
     ("app.modules.interventions.api.checklist", "router"),
     ("app.modules.interventions.api.photos", "router"),
     ("app.modules.interventions.api.materials", "router"),

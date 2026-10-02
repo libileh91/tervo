@@ -5,6 +5,8 @@
 > **État :** accepté et committé sous `7a52d03` dans le worktree Delta attaché. R8 autorisé et vérifié localement ; voir la [note INT-120](INT-120-R8-reports.md). Le manifeste conserve sa capture avant acceptation.
 > **Preuve :** [R7-validation.json](R7-validation.json). Les captures historiques R0 à R6 restent intactes.
 
+> **Chemins et propriété depuis R10 :** le guard est dans `app/modules/identity/dependencies.py` ; l'agrégation dashboard et ses cinq DTO sont dans `app/modules/dashboard/`. Les mentions dashboard encore dans terrain ci-dessous décrivent la capture R7, pas une deuxième implémentation actuelle. Voir la [note INT-122](INT-122-R10-identity-dashboard.md#L1).
+
 ## 1. Reprise de R6 et portée du feu vert
 
 L'utilisateur a accepté R6 et demandé « commit & passe au R7 ». Les 17

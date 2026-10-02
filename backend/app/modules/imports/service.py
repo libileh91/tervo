@@ -20,7 +20,7 @@ from app.modules.customers.models import Client, Site
 from app.modules.catalog.models import Product
 from app.modules.equipment.models import Equipment
 from app.modules.interventions.models.intervention import Intervention
-from app.models.user import User
+from app.modules.identity.models import User
 from app.modules.imports.models import ImportBatch, ImportRecord, ImportReference, ImportError
 from app.modules.imports.schemas import ImportDecision, SheetSelection
 from app.modules.imports.planner import ImportPlanner

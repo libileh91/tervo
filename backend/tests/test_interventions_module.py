@@ -143,7 +143,7 @@ def test_interventions_identity_base_and_relations(tmp_path, order):
             assert inspect(classes[target]).relationships["intervention"].mapper.class_ is intervention
         from app.modules.customers.models import Site
         from app.modules.equipment.models import Equipment
-        from app.models.user import User
+        from app.modules.identity.models import User
         for relation, target in (("site", Site), ("equipment", Equipment), ("technician", User)):
             assert inspect(intervention).relationships[relation].mapper.class_ is target
             assert inspect(target).relationships["interventions"].mapper.class_ is intervention

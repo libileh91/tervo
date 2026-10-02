@@ -16,7 +16,7 @@ from app.modules.equipment.models import Equipment
 from app.modules.installations.models import Installation
 from app.modules.catalog.models import Product
 
-from app.models.user import Role, User
+from app.modules.identity.models import Role, User
 from app.modules.installations.repository import InstallationRepository
 
 PREFIX = "/api/v1/installations"

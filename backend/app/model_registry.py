@@ -22,4 +22,4 @@ def load_models() -> None:
     from app.modules.interventions.models.review import Review  # noqa: F401
     from app.modules.sales.models import Sale, SaleLine  # noqa: F401
 
-    from app.models.user import User  # noqa: F401
+    from app.modules.identity.models import User  # noqa: F401
