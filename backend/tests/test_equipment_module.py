@@ -78,27 +78,29 @@ def test_equipment_import_is_pure(tmp_path, module):
         ))
 
 
-@pytest.mark.parametrize("order", ["equipment-first", "legacy-first"])
+@pytest.mark.parametrize("order", ["equipment-first", "registry-first"])
 def test_equipment_import_orders_preserve_registry_and_relations(tmp_path, order):
     _run_python(tmp_path, f"""
         from importlib import import_module
         from sqlalchemy import inspect
         from app.core.base import Base
 
-        first = import_module(
-            "app.modules.equipment.models" if {order!r} == "equipment-first" else "app.models"
-        )
+        from app.model_registry import load_models
+        if {order!r} == "registry-first":
+            load_models()
+        first = import_module("app.modules.equipment.models")
         tables = dict(Base.metadata.tables)
         mappers = set(Base.registry.mappers)
         from app.model_registry import load_models
         load_models()
         assert_registry(Base)
         models = import_module("app.modules.equipment.models")
-        legacy = import_module("app.models")
+        from app.modules.installations.models import Installation
+        from app.modules.interventions.models.intervention import Intervention
         customers = import_module("app.modules.customers.models")
         catalog = import_module("app.modules.catalog.models")
-        assert first.Equipment is legacy.Equipment is models.Equipment
-        assert legacy.Base is Base
+        assert first.Equipment is models.Equipment
+        assert models.Base is Base
         assert len(Base.registry.mappers) == 17
         assert all(mapper.class_.metadata is Base.metadata for mapper in Base.registry.mappers)
         assert all(Base.metadata.tables[name] is table for name, table in tables.items())
@@ -119,16 +121,16 @@ def test_equipment_import_orders_preserve_registry_and_relations(tmp_path, order
             (customers.Site, "equipment", equipment),
             (equipment, "product", catalog.Product),
             (catalog.Product, "equipment", equipment),
-            (equipment, "installation", legacy.Installation),
-            (legacy.Installation, "equipment", equipment),
-            (equipment, "interventions", legacy.Intervention),
-            (legacy.Intervention, "equipment", equipment),
+            (equipment, "installation", Installation),
+            (Installation, "equipment", equipment),
+            (equipment, "interventions", Intervention),
+            (Intervention, "equipment", equipment),
             (equipment, "replaced_by", equipment),
         ):
             assert inspect(source).relationships[relation].mapper.class_ is target
         assert equipment.__table__.c.installation_id.nullable
         assert equipment.__table__.c.installation_id.unique
-        assert not inspect(legacy.Installation).relationships["equipment"].uselist
+        assert not inspect(Installation).relationships["equipment"].uselist
         """, forbidden=ISOLATED_IMPORTS + RETIRED_MODULES)
 
 

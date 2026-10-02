@@ -83,25 +83,27 @@ def test_catalog_import_is_pure(tmp_path, module):
         ))
 
 
-@pytest.mark.parametrize("order", ["catalog-first", "legacy-first"])
-def test_catalog_and_legacy_orders_preserve_registry_and_relations(tmp_path, order):
+@pytest.mark.parametrize("order", ["catalog-first", "registry-first"])
+def test_catalog_and_registry_orders_preserve_registry_and_relations(tmp_path, order):
     _run_python(tmp_path, f"""
         from importlib import import_module
         from sqlalchemy import inspect
         from app.core.base import Base
 
-        first = import_module(
-            "app.modules.catalog.models" if {order!r} == "catalog-first" else "app.models"
-        )
+        from app.model_registry import load_models
+        if {order!r} == "registry-first":
+            load_models()
+        first = import_module("app.modules.catalog.models")
         tables = dict(Base.metadata.tables)
         mappers = set(Base.registry.mappers)
         from app.model_registry import load_models
         load_models()
         assert_registry(Base)
         catalog = import_module("app.modules.catalog.models")
-        legacy = import_module("app.models")
-        assert first.Product is legacy.Product is catalog.Product
-        assert legacy.Base is Base
+        from app.modules.equipment.models import Equipment
+        from app.modules.sales.models import SaleLine
+        assert first.Product is catalog.Product
+        assert catalog.Base is Base
         assert all(Base.metadata.tables[name] is table for name, table in tables.items())
         assert mappers <= set(Base.registry.mappers)
         complete = set(Base.registry.mappers)
@@ -112,11 +114,11 @@ def test_catalog_and_legacy_orders_preserve_registry_and_relations(tmp_path, ord
             for fk in table.foreign_keys:
                 assert fk.column.table is Base.metadata.tables[fk.column.table.key]
         product = inspect(catalog.Product)
-        assert product.relationships["equipment"].mapper.class_ is legacy.Equipment
-        equipment = inspect(legacy.Equipment).relationships["product"]
+        assert product.relationships["equipment"].mapper.class_ is Equipment
+        equipment = inspect(Equipment).relationships["product"]
         assert equipment.mapper.class_ is catalog.Product
         assert equipment.back_populates == "equipment"
-        line = inspect(legacy.SaleLine).relationships["product"]
+        line = inspect(SaleLine).relationships["product"]
         assert line.mapper.class_ is catalog.Product
         assert line.back_populates is None
         assert set(product.relationships.keys()) == {{"equipment"}}

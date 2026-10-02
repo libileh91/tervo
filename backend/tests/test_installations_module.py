@@ -96,29 +96,28 @@ def test_installations_import_is_pure(tmp_path, module):
         ))
 
 
-@pytest.mark.parametrize("order", ["installations-first", "legacy-first"])
+@pytest.mark.parametrize("order", ["installations-first", "registry-first"])
 def test_installations_registry_identity_and_relations(tmp_path, order):
     _run_python(tmp_path, f"""
         from importlib import import_module
         from sqlalchemy import inspect
         from app.core.base import Base
 
-        first = import_module(
-            "app.modules.installations.models" if {order!r} == "installations-first"
-            else "app.models"
-        )
+        from app.model_registry import load_models
+        if {order!r} == "registry-first":
+            load_models()
+        first = import_module("app.modules.installations.models")
         tables = dict(Base.metadata.tables)
         mappers = set(Base.registry.mappers)
         from app.model_registry import load_models
         load_models()
         assert_registry(Base)
         models = import_module("app.modules.installations.models")
-        legacy = import_module("app.models")
         customers = import_module("app.modules.customers.models")
         sales = import_module("app.modules.sales.models")
         equipment = import_module("app.modules.equipment.models")
-        assert first.Installation is legacy.Installation is models.Installation
-        assert legacy.Base is models.Base is Base
+        assert first.Installation is models.Installation
+        assert models.Base is Base
         assert all(mapper.class_.metadata is Base.metadata for mapper in Base.registry.mappers)
         assert mappers <= set(Base.registry.mappers)
         assert all(Base.metadata.tables[name] is table for name, table in tables.items())

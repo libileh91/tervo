@@ -7,7 +7,8 @@ import sqlalchemy as sa
 from alembic import command
 from alembic.config import Config
 from app.config import settings
-from app.models import Base
+from app.core.base import Base
+from app.model_registry import load_models
 
 PREVIOUS = "d100e0010001"
 REVISION = "e103e0010001"
@@ -17,6 +18,7 @@ BACKEND = Path(__file__).resolve().parents[1]
 
 @pytest.fixture
 def migration(tmp_path, monkeypatch):
+    load_models()
     postgres = os.environ.get("TERVO_INSTALLATION_MIGRATION_TEST_URL")
     schema = "installation_migration_" + uuid4().hex
     admin = None

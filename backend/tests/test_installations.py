@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.core.database import get_db
 from app.core.security import create_access_token
 from app.main import app
-from app.models import Base
+from app.core.base import Base
 from app.modules.customers.models import Client, Site
 from app.modules.equipment.models import Equipment
 from app.modules.installations.models import Installation

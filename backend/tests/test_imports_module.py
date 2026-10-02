@@ -14,7 +14,8 @@ import pytest
 from sqlalchemy import event, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app.models import Base
+from app.core.base import Base
+from app.model_registry import load_models
 from app.modules.imports.models import ImportBatch, ImportRecord, ImportReference, ImportError
 from app.modules.imports.service import ImportService
 
@@ -80,6 +81,7 @@ async def replay():
             connection.execute("PRAGMA foreign_keys=ON")
 
         try:
+            load_models()
             async with engine.begin() as connection:
                 await connection.run_sync(Base.metadata.create_all)
             factory = async_sessionmaker(engine, expire_on_commit=False)

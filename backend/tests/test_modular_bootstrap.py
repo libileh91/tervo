@@ -7,6 +7,7 @@ serveur HTTP ni connexion SQL. Aucun module applicatif n'est importé à la coll
 from __future__ import annotations
 
 import ast
+from importlib.util import resolve_name
 import json
 import os
 import subprocess
@@ -19,6 +20,10 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND = REPO_ROOT / "backend"
 BASELINES = REPO_ROOT / "notes/backend/extras/refactor-monolithe-modulaire"
+RETIRED_PACKAGES = (
+    "app.models", "app.repositories", "app.schemas", "app.services",
+    "app.api", "app.importers", "app.exporters",
+)
 ISOLATED_IMPORTS = (
     "app.main",
     "app.router",
@@ -187,6 +192,7 @@ def _run_python(
     forbidden: tuple[str, ...] = ISOLATED_IMPORTS,
     block_engine: bool = True,
 ):
+    forbidden = tuple(dict.fromkeys(forbidden + RETIRED_PACKAGES))
     env = os.environ.copy()
     # Ne pas hériter d'un PYTHONPATH ou d'une URL PostgreSQL de la suite appelante.
     env.update(
@@ -238,6 +244,55 @@ def _run_python(
     return json.loads(output.read_text(encoding="utf-8"))
 
 
+def test_final_cutover_has_no_retired_packages_or_active_imports():
+    remaining = [
+        str(path.relative_to(BACKEND))
+        for package in RETIRED_PACKAGES
+        for path in (BACKEND / package.replace(".", "/")).rglob("*.py")
+    ]
+    paths = set(BACKEND.glob("*.py"))
+    for root in (
+        BACKEND / "app", BACKEND / "tests", BACKEND / "scripts",
+        BACKEND / "alembic", REPO_ROOT / "scripts",
+    ):
+        paths.update(root.rglob("*.py"))
+    violations = []
+    for path in sorted(paths):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if isinstance(node, ast.Import):
+                names = [alias.name for alias in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                if node.level:
+                    package = ".".join(path.parent.relative_to(REPO_ROOT).parts)
+                    module = resolve_name("." * node.level + module, package)
+                    if module.startswith("backend."):
+                        module = module.removeprefix("backend.")
+                names = [module, *(module + "." + alias.name for alias in node.names)]
+            elif isinstance(node, ast.Call) and node.args:
+                function = node.func
+                is_import = (
+                    isinstance(function, ast.Name)
+                    and function.id in {"__import__", "import_module"}
+                ) or (
+                    isinstance(function, ast.Attribute)
+                    and function.attr == "import_module"
+                )
+                target = node.args[0]
+                if not is_import or not isinstance(target, ast.Constant):
+                    continue
+                if not isinstance(target.value, str):
+                    continue
+                names = [target.value]
+            else:
+                continue
+            if any(name == root or name.startswith(root + ".")
+                   for name in names for root in RETIRED_PACKAGES):
+                violations.append(f"{path.relative_to(REPO_ROOT)}:{node.lineno}")
+    assert not remaining, f"Retired package files remain: {remaining}"
+    assert not violations, f"Retired package imports remain: {violations}"
+
+
 def test_core_base_is_pure_in_fresh_process(tmp_path):
     _run_python(
         tmp_path,
@@ -282,24 +337,15 @@ def test_load_models_registers_exact_r0_tables_without_web_or_engine(tmp_path):
     )
 
 
-def test_load_models_is_complete_without_legacy_package_reexports(tmp_path):
+def test_load_models_is_complete_without_legacy_packages(tmp_path):
     _run_python(
         tmp_path,
-        f"""
-        from types import ModuleType
-        import app
+        """
         from app.core.base import Base
 
         assert "app.models" not in sys.modules
         assert not Base.metadata.tables
         assert not set(Base.registry.mappers)
-        # Garder les vrais sous-modules, sans exécuter le __init__ legacy qui
-        # pourrait charger un modèle oublié par le registre explicite.
-        models_package = ModuleType("app.models")
-        models_package.__package__ = "app.models"
-        models_package.__path__ = [{str(BACKEND / 'app/models')!r}]
-        sys.modules["app.models"] = models_package
-        app.models = models_package
 
         from app.model_registry import load_models
 
@@ -317,10 +363,6 @@ def test_load_models_is_complete_without_legacy_package_reexports(tmp_path):
             assert Base.registry is registry
             assert all(metadata.tables[name] is table for name, table in tables.items())
             assert set(registry.mappers) == mappers
-        assert sys.modules["app.models"] is models_package
-        assert not hasattr(models_package, "Base")
-        assert not hasattr(models_package, "Client")
-        assert not hasattr(models_package, "Site")
         from app.modules.customers.models import Client, Site
         assert Client.__table__ is tables["client"]
         assert Site.__table__ is tables["site"]
@@ -353,52 +395,67 @@ def test_load_models_is_idempotent_for_tables_and_mappers(tmp_path):
     )
 
 
-def test_legacy_base_exports_are_the_core_base(tmp_path):
+def test_all_registered_domains_use_the_core_base(tmp_path):
     _run_python(
         tmp_path,
         """
         from app.core.base import Base
-        from app.models import Base as package_base
-        from app.models.base import Base as compatibility_base
+        from app.model_registry import load_models
 
-        assert package_base is compatibility_base is Base
+        load_models()
         assert_registry(Base)
+        from importlib import import_module
+        for mapper in Base.registry.mappers:
+            module = import_module(mapper.class_.__module__)
+            assert module.Base is Base
+            assert issubclass(mapper.class_, Base)
+            assert mapper.class_.registry is Base.registry
+            assert mapper.class_.metadata is Base.metadata
         """,
     )
 
 
-@pytest.mark.parametrize("order", ["legacy-first", "registry-first"])
-def test_legacy_and_registry_import_orders_share_one_registry(tmp_path, order):
+@pytest.mark.parametrize("order", ["domains-first", "registry-first"])
+def test_domains_and_registry_import_orders_share_one_registry(tmp_path, order):
     _run_python(
         tmp_path,
         f"""
         import importlib
         from app.core.base import Base
+        from app.model_registry import load_models
 
-        if {order!r} == "legacy-first":
-            legacy = importlib.import_module("app.models")
-        else:
-            from app.model_registry import load_models
+        domains = (
+            "customers", "catalog", "sales", "equipment", "installations",
+            "identity", "imports",
+        )
+        terrain = ("intervention", "checklist_item", "intervention_photo", "material", "review")
+        if {order!r} == "registry-first":
             load_models()
+        modules = [
+            importlib.import_module("app.modules." + name + ".models")
+            for name in domains
+        ] + [
+            importlib.import_module("app.modules.interventions.models." + name)
+            for name in terrain
+        ]
 
         assert_registry(Base)
         tables = dict(Base.metadata.tables)
         mappers = set(Base.registry.mappers)
-        from app.model_registry import load_models
         load_models()
-        legacy = importlib.import_module("app.models")
-        compatibility = importlib.import_module("app.models.base")
+        assert all(importlib.import_module(module.__name__) is module for module in modules)
         load_models()
 
         from app.modules.customers.models import Client, Site
-        assert legacy.Base is compatibility.Base is Base
-        assert legacy.Client is Client
-        assert legacy.Site is Site
+        assert all(module.Base is Base for module in modules)
+        assert Client.__table__ is tables["client"]
+        assert Site.__table__ is tables["site"]
         assert_registry(Base)
         assert all(Base.metadata.tables[name] is table for name, table in tables.items())
         assert set(Base.registry.mappers) == mappers
         assert all(
-            getattr(legacy, mapper.class_.__name__) is mapper.class_
+            getattr(importlib.import_module(mapper.class_.__module__), mapper.class_.__name__)
+            is mapper.class_
             for mapper in mappers
         )
         """,

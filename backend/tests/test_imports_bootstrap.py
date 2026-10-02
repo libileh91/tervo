@@ -130,23 +130,25 @@ def test_imports_models_and_schemas_without_api_or_database_io(tmp_path, module)
         ))
 
 
-@pytest.mark.parametrize("order", ["imports-first", "legacy-first"])
+@pytest.mark.parametrize("order", ["imports-first", "registry-first"])
 def test_imports_registry_identity_and_journal_constraints(tmp_path, order):
     _run_python(tmp_path, f"""
         from importlib import import_module
         from app.core.base import Base
-        first = import_module(
-            "app.modules.imports.models" if {order!r} == "imports-first" else "app.models"
-        )
+        from app.model_registry import load_models
+        if {order!r} == "registry-first":
+            load_models()
+        first = import_module("app.modules.imports.models")
         partial = dict(Base.metadata.tables)
+        partial_mappers = set(Base.registry.mappers)
         from app.model_registry import load_models
         load_models()
         assert_registry(Base)
         models = import_module("app.modules.imports.models")
-        legacy = import_module("app.models")
-        assert models.Base is legacy.Base is Base
+        assert models.Base is Base
         for name in {MODEL_NAMES!r}:
-            assert getattr(first, name) is getattr(legacy, name) is getattr(models, name)
+            assert getattr(first, name) is getattr(models, name)
+        assert partial_mappers <= set(Base.registry.mappers)
         complete = set(Base.registry.mappers)
         load_models()
         assert_registry(Base)

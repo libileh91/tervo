@@ -101,32 +101,34 @@ def test_interventions_packages_are_pure(tmp_path, subpackage):
         """, forbidden=ISOLATED_IMPORTS + RETIRED_MODULES + ("app.models",) + leaves)
 
 
-@pytest.mark.parametrize("order", ["terrain-first", "legacy-first"])
+@pytest.mark.parametrize("order", ["terrain-first", "registry-first"])
 def test_interventions_identity_base_and_relations(tmp_path, order):
     _run_python(tmp_path, f"""
         from importlib import import_module
         from sqlalchemy import inspect
         from app.core.base import Base
         names = {MODEL_NAMES!r}
+        from app.model_registry import load_models
         if {order!r} == "terrain-first":
             for name in names:
                 import_module({PACKAGE!r} + ".models." + name)
         else:
-            import_module("app.models")
+            load_models()
         tables = dict(Base.metadata.tables)
         mappers = set(Base.registry.mappers)
         from app.model_registry import load_models
         load_models()
         assert_registry(Base)
-        legacy = import_module("app.models")
         classes = {{}}
         for module_name, class_name in names.items():
             module = import_module({PACKAGE!r} + ".models." + module_name)
             cls = getattr(module, class_name)
             classes[class_name] = cls
-            assert getattr(legacy, class_name) is cls
+            assert inspect(cls) is next(
+                mapper for mapper in Base.registry.mappers if mapper.class_ is cls
+            )
             assert cls.__module__ == module.__name__
-            assert module.Base is legacy.Base is Base
+            assert module.Base is Base
             assert cls.metadata is Base.metadata
         assert mappers <= set(Base.registry.mappers)
         assert all(Base.metadata.tables[name] is table for name, table in tables.items())

@@ -75,26 +75,29 @@ def test_customers_import_is_pure(tmp_path, module):
         ))
 
 
-@pytest.mark.parametrize("order", ["customer-first", "legacy-first"])
-def test_customer_and_legacy_orders_preserve_registry_and_relations(tmp_path, order):
+@pytest.mark.parametrize("order", ["customer-first", "registry-first"])
+def test_customer_and_registry_orders_preserve_registry_and_relations(tmp_path, order):
     _run_python(tmp_path, f"""
         import importlib
         from sqlalchemy import inspect
         from app.core.base import Base
 
-        first = importlib.import_module(
-            "app.modules.customers.models" if {order!r} == "customer-first" else "app.models"
-        )
+        from app.model_registry import load_models
+        if {order!r} == "registry-first":
+            load_models()
+        first = importlib.import_module("app.modules.customers.models")
         tables = dict(Base.metadata.tables)
         mappers = set(Base.registry.mappers)
         from app.model_registry import load_models
         load_models()
         assert_registry(Base)
         customers = importlib.import_module("app.modules.customers.models")
-        legacy = importlib.import_module("app.models")
-        assert first.Client is legacy.Client is customers.Client
-        assert first.Site is legacy.Site is customers.Site
-        assert legacy.Base is Base
+        from app.modules.equipment.models import Equipment
+        from app.modules.installations.models import Installation
+        from app.modules.interventions.models.intervention import Intervention
+        assert first.Client is customers.Client
+        assert first.Site is customers.Site
+        assert customers.Base is Base
         assert all(Base.metadata.tables[name] is table for name, table in tables.items())
         assert mappers <= set(Base.registry.mappers)
         complete = set(Base.registry.mappers)
@@ -106,8 +109,8 @@ def test_customer_and_legacy_orders_preserve_registry_and_relations(tmp_path, or
                 assert fk.column.table is Base.metadata.tables[fk.column.table.key]
         assert inspect(customers.Client).relationships["sites"].mapper.class_ is customers.Site
         assert inspect(customers.Site).relationships["client"].mapper.class_ is customers.Client
-        for name, target in (("equipment", legacy.Equipment), ("installations", legacy.Installation),
-                             ("interventions", legacy.Intervention)):
+        for name, target in (("equipment", Equipment), ("installations", Installation),
+                             ("interventions", Intervention)):
             assert inspect(customers.Site).relationships[name].mapper.class_ is target
             assert inspect(target).relationships["site"].mapper.class_ is customers.Site
         """)

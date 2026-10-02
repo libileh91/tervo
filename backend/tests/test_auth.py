@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.core.database import get_db
 from app.core.security import create_access_token, get_password_hash
 from app.main import app
-from app.models import Base
+from app.core.base import Base
 from app.modules.identity.models import Role, User
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test_tervo.db"

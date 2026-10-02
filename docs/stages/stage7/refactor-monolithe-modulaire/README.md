@@ -2,7 +2,7 @@
 
 > **Stage 7 · chantier transverse avant 7.4, hors sprints fonctionnels**
 > **Branche :** `refactor/modular-monolith` (déjà créée).
-> **Décision utilisateur :** R0 à R9 validés et committés ; R9 : `205969a`, nettoyage : `17dfc11`. R10 accepté, commit autorisé ; feu vert distinct R11 reçu.
+> **Décision utilisateur :** R0 à R10 validés et committés ; R9 : `205969a`, nettoyage : `17dfc11`, R10 : `2f9e0c3`. R11 vérifié localement ; commit autorisé après contrôle final. Aucun push/déploiement.
 
 ## Références et suivi
 
@@ -34,7 +34,19 @@ R9 est accepté et committé sous `205969a` : [note et preuve INT-121](../../../
 
 Le [nettoyage demandé après R9](../../../../notes/backend/refactor-monolithe-modulaire/nettoyage-apres-R9.md#L1) retire les caches et les namespaces sans code actif dans un commit distinct. Ce retrait limité ne clôture pas R11.
 
-R10 est accepté et son commit autorisé : [note et preuve INT-122](../../../../notes/backend/refactor-monolithe-modulaire/INT-122-R10-identity-dashboard.md), **92 ciblés**, **389 SQLite**, **95 PostgreSQL**, snapshots R0 et oracle R9 inchangés. Identity porte le guard unique, dashboard extrait sa lecture et cinq DTO ; seed conservé/testé seulement sur démo jetable. Avant commit : 45 empreintes conformes, 92 ciblés rejoués. Feu vert distinct R11 reçu.
+R10 est accepté et committé sous `2f9e0c3` : [note et preuve INT-122](../../../../notes/backend/refactor-monolithe-modulaire/INT-122-R10-identity-dashboard.md), **92 ciblés**, **389 SQLite**, **95 PostgreSQL**, snapshots R0 et oracle R9 inchangés. Identity porte le guard unique, dashboard extrait sa lecture et cinq DTO ; seed conservé/testé seulement sur démo jetable. Avant commit : 45 empreintes conformes, 92 ciblés rejoués. Ses captures préacceptation restent intactes.
+
+R11 est implémenté et vérifié localement, commit autorisé par l'utilisateur si terminé :
+[note INT-123](../../../../notes/backend/refactor-monolithe-modulaire/INT-123-R11-retrait-legacy.md),
+[preuve R11](../../../../notes/backend/refactor-monolithe-modulaire/R11-validation.json),
+[bilan global](../../../../notes/backend/refactor-monolithe-modulaire/bilan-R0-R11.md).
+**390 SQLite**, **95 PostgreSQL** canoniques, migrations round-trip réussies,
+seule FK historique et `alembic check` 255 ; snapshots R0/oracle R9 conservés.
+Les cinq façades finales et dossiers vides sont retirés, aucun corps métier runtime
+changé. Frontend identique à R0, Bun frozen/typecheck/build réussis ; smoke parent
+transmis explicitement, non rejoué dans ce fil. Vente/installation/import restent
+backend-only. Incident `pip --user` antérieur et limites documentés.
+TD-B018 (docs 7.4), TD-B013/016/019 et TD-F007 restent ouverts.
 
 ## Ordre et attribution
 
@@ -52,8 +64,8 @@ R0 reste un checkpoint sans nouvel identifiant INT. Les identifiants INT-113 à 
 | R7 | [INT-119](tasks.md#int-119--r7--déplacer-interventions) | Terrain existant, sans features 7.4 | Validé par l'utilisateur ; commit `7a52d03` |
 | R8 | [INT-120](tasks.md#int-120--r8--déplacer-reports) | Rapport/PDF/template existants | Validé par l'utilisateur ; commit `bb1fc14` |
 | R9 | [INT-121](tasks.md#int-121--r9--déplacer-imports) | Pipeline Excel et comparaison avant/après | Validé par l'utilisateur ; commit `205969a` |
-| R10 | [INT-122](tasks.md#int-122--r10--déplacer-identity-dashboard-et-finaliser-la-composition) | Auth, dashboard, seed, composition | Validé par l'utilisateur ; commit autorisé |
-| R11 | [INT-123](tasks.md#int-123--r11--retirer-les-couches-horizontales-legacy) | Nettoyage legacy et validation globale | Autorisé ; à démarrer après commit R10 |
+| R10 | [INT-122](tasks.md#int-122--r10--déplacer-identity-dashboard-et-finaliser-la-composition) | Auth, dashboard, seed, composition | Validé par l'utilisateur ; commit `2f9e0c3` |
+| R11 | [INT-123](tasks.md#int-123--r11--retirer-les-couches-horizontales-legacy) | Nettoyage legacy et validation globale | Vérifié localement ; commit autorisé après contrôle final |
 
 **Estimations :** estimation à confirmer pour chaque tâche ; aucun nombre de points arbitraire n'est attribué.
 
@@ -61,7 +73,7 @@ R0 reste un checkpoint sans nouvel identifiant INT. Les identifiants INT-113 à 
 
 - Un backend FastAPI, un processus applicatif, une base PostgreSQL et un déploiement ; pas de microservice, bus, CQRS, HTTP interne ou UnitOfWork généralisé.
 - Déplacement structurel uniquement : URLs, payloads, statuts, autorisations actuelles, tables, colonnes, FK, contraintes et migrations restent inchangés.
-- Base SQLAlchemy unique, définie dans un module technique pur qui ne charge ni domaines ni API. Pendant la transition, `app.models.base.Base` réexporte le **même objet**, pas une deuxième Base.
+- Base SQLAlchemy unique, définie dans un module technique pur qui ne charge ni domaines ni API. Pendant la transition, `app.models.base.Base` réexportait le **même objet** ; ce shim est retiré en R11, chemin final `app.core.base.Base`.
 - Registre explicite complet, utilisable hors API et idempotent : **17 tables** présentes en R0, y compris checklist, photos, matériel, avis et les quatre tables d'import.
 - Pas de couches artificielles : en particulier **aucun repository ajouté à `sales` pour obtenir une symétrie de dossiers**. Aucun module futur vide.
 - Propriétaires des transactions, commits et `AsyncSession` partagée conservés : clôture Installation + Equipment atomique ; imports transactionnels par sous-lots avec reprise et verrouillage existants.

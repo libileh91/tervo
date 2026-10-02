@@ -7,7 +7,8 @@ import pytest_asyncio
 from fastapi import HTTPException
 from sqlalchemy import event, select, func, text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from app.models import Base
+from app.core.base import Base
+from app.model_registry import load_models
 from app.modules.customers.models import Client, Site
 from app.modules.equipment.models import Equipment
 from app.modules.interventions.models.intervention import Intervention
@@ -20,6 +21,7 @@ CLIENT_CSV = b'ID_ancien;Nom;Telephone;Adresse_facturation\nC1;Alpha;0612345678;
 
 @pytest_asyncio.fixture
 async def environment():
+    load_models()
     url = os.environ.get('TERVO_IMPORT_TEST_DATABASE_URL')
     schema = 'import_test_' + uuid4().hex
     if url:

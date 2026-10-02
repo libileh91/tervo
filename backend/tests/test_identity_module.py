@@ -86,18 +86,28 @@ def test_identity_leaf_import_is_pure(tmp_path, module):
         ) + ((IDENTITY + ".models",) if module == "schemas" else ()))
 
 
-@pytest.mark.parametrize("first", ["app.models", IDENTITY + ".models"])
-def test_identity_one_user_mapper_and_role_in_both_orders(tmp_path, first):
+@pytest.mark.parametrize("order", ["registry-first", "identity-first"])
+def test_identity_one_user_mapper_and_role_in_both_orders(tmp_path, order):
     _run_python(tmp_path, f"""
         from importlib import import_module
         from sqlalchemy import inspect
         from app.core.base import Base
-        import_module({first!r})
-        legacy = import_module("app.models")
+        from app.model_registry import load_models
+        if {order!r} == "registry-first":
+            load_models()
         identity = import_module("app.modules.identity.models")
+        tables = dict(Base.metadata.tables)
+        mappers = set(Base.registry.mappers)
+        load_models()
+        assert_registry(Base)
+        assert all(Base.metadata.tables[name] is table for name, table in tables.items())
+        assert mappers <= set(Base.registry.mappers)
+        complete = set(Base.registry.mappers)
+        load_models()
+        assert_registry(Base)
+        assert set(Base.registry.mappers) == complete
         User, Role = identity.User, identity.Role
-        assert legacy.User is User
-        assert legacy.Base is Base
+        assert identity.Base is Base
         assert issubclass(User, Base)
         assert User.__table__ is Base.metadata.tables["user"]
         assert inspect(User) is next(

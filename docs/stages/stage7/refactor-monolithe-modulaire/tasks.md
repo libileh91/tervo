@@ -269,7 +269,7 @@ Afin de **préserver le différenciateur Excel avec une preuve fonctionnelle ava
 
 ## INT-122 — R10 — Déplacer `identity`, `dashboard` et finaliser la composition
 
-**Statut :** accepté par l'utilisateur, commit autorisé. Avant commit : 45 empreintes conformes, 92 ciblés rejoués (3 warnings, 42,51 s). Feu vert distinct R11 reçu.
+**Statut :** accepté par l'utilisateur et committé sous `2f9e0c3530bdc5493c79b1c5a2d3e82fa722e732`. Avant commit : 45 empreintes conformes, 92 ciblés rejoués (3 warnings, 42,51 s). Feu vert distinct R11 reçu.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -297,7 +297,7 @@ Afin de **conserver une authentification unique et une composition FastAPI expli
 
 ## INT-123 — R11 — Retirer les couches horizontales legacy
 
-**Statut :** feu vert distinct reçu après acceptation d'INT-122 ; à démarrer après son commit.
+**Statut :** implémenté et vérifié localement ; commit autorisé par la demande « si t'as fini commit R11 & passe au suivant ». Capture de suivi préparée avant commit ; aucune feature suivante ni publication engagée.
 
 **User Story**
 En tant que **mainteneur backend**,
@@ -305,16 +305,21 @@ Je veux **retirer les packages horizontaux devenus inutiles après tous les cuto
 Afin de **terminer le monolithe modulaire sans références cassées et avec une validation globale traçable**.
 
 **Acceptance Criteria**
-- [ ] Vérifier toutes les références legacy dans runtime, tests, Alembic, seed, scripts et configuration ; résoudre les références exécutables avant suppression, sans réécrire les preuves historiques.
-- [ ] Supprimer `app/models`, `repositories`, `schemas`, `services`, `api/v1`, `importers`, `exporters` uniquement lorsqu'ils sont devenus inutiles/vides ; retirer le shim Base devenu inutile sans changer l'objet Base technique.
-- [ ] Aucun import exécutable legacy ni double implémentation métier restante ; chaque domaine actif possède sa frontière, `core` reste technique.
-- [ ] Suite backend et groupes PostgreSQL critiques sans régression ; migrations complètes et aller-retour PostgreSQL réussis avec uniquement la différence FK connue.
-- [ ] Snapshots OpenAPI/metadata identiques à R0 ; startup/shutdown et documentation HTTP valides ; parcours frontend critiques existants Client/Site, vente/installation autonome/commerciale, import et rapport sans régression.
-- [ ] Preuve d'import avant/après R9 conservée ; chemins des documents Stage 7 concernés repris avant les features 7.4 dans une scope ultérieure autorisée, sans changer leur historique de validation.
-- [ ] Note R11 et bilan global produits avec limites réelles ; clôture soumise à validation utilisateur, sans annoncer déploiement ou features futures livrés.
+- [x] Vérifier toutes les références legacy dans runtime, tests, Alembic, seed, scripts et configuration ; résoudre les références exécutables avant suppression, sans réécrire les preuves historiques.
+- [x] Supprimer `app/models`, `repositories`, `schemas`, `services`, `api/v1`, `importers`, `exporters` uniquement lorsqu'ils sont devenus inutiles/vides ; retirer le shim Base devenu inutile sans changer l'objet Base technique.
+- [x] Aucun import exécutable legacy ni double implémentation métier restante ; chaque domaine actif possède sa frontière, `core` reste technique.
+- [x] Suite backend et groupes PostgreSQL critiques sans régression ; migrations complètes et aller-retour PostgreSQL réussis avec uniquement la différence FK connue.
+- [x] Snapshots OpenAPI/metadata identiques à R0 ; startup/shutdown et documentation HTTP valides ; UI existante Client/Site, rapport et avis vérifiée par le smoke parent transmis ; vente/installation autonome/commerciale/import vérifiés par API, sans UI fictive.
+- [x] Preuve d'import avant/après R9 conservée ; reprise des chemins Stage 7 avant features 7.4 suivie dans TD-B018, dans une scope documentaire ultérieure autorisée, sans changer l'historique de validation. Cette reprise n'est pas exécutée dans R11.
+- [x] Note R11 et bilan global produits avec limites réelles ; clôture soumise, puis commit autorisé par l'utilisateur si terminé, sans annoncer déploiement ou features futures livrés.
 
 **Technical Notes**
 - Recherche finale : `app.models`, `app.repositories`, `app.schemas`, `app.services`, `app.api.v1`, `app.importers`, `app.exporters`. Distinguer référence exécutable et citation historique légitime.
 - Ne pas effacer un package encore requis par une migration historique : résoudre le chargement sans modifier les opérations SQL ni masquer la différence FK connue.
 - Les tests frontend concernent les parcours actuellement livrés ; aucun écran futur de 7.4/7.5 n'est créé dans le refactor.
 - Cas : `TC-INT-123-01` et `TC-INT-123-02`.
+- [Note INT-123](../../../../notes/backend/refactor-monolithe-modulaire/INT-123-R11-retrait-legacy.md), [preuve structurée](../../../../notes/backend/refactor-monolithe-modulaire/R11-validation.json), [bilan R0–R11](../../../../notes/backend/refactor-monolithe-modulaire/bilan-R0-R11.md).
+- Diff initial R11 récupéré en lecture depuis l'ancien checkout et transféré ici par `apply_patch`, égal octet par octet ; cinq façades retirées, aucun corps métier runtime changé. Gardes finales renforcées aux sept racines legacy et aux imports dynamiques littéraux.
+- **390 SQLite**, **95 PostgreSQL** canoniques ; fixtures seules **11 + 3**, bootstrap/identity/imports/golden **38**. Round-trip PostgreSQL réussi, `alembic check` **255** seulement pour FK technicien historique ; aucune nouvelle opération ni migration.
+- OpenAPI complet R0 égal dans tests/HTTP ; metadata R0 byte-identique ; docs HTTP 200 et serveur arrêté. Frontend/locks identiques à R0, Bun frozen/typecheck/build réussis sur copie temporaire. Smoke navigateur transmis après retrait des façades, non rejoué dans ce fil.
+- Incident `pip --user` de l'ancien fil documenté, aucune installation/désinstallation dans l'environnement utilisateur ici. TD-B013/016/018/019 et TD-F007 restent ouverts ; suite recommandée : reprise documentaire TD-B018, pas de nouvelle feature sans cadrage.

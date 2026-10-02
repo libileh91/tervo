@@ -80,29 +80,30 @@ def test_sales_import_is_pure(tmp_path, module):
         ))
 
 
-@pytest.mark.parametrize("order", ["sales-first", "legacy-first"])
-def test_sales_and_legacy_orders_preserve_registry_and_relations(tmp_path, order):
+@pytest.mark.parametrize("order", ["sales-first", "registry-first"])
+def test_sales_and_registry_orders_preserve_registry_and_relations(tmp_path, order):
     _run_python(tmp_path, f"""
         from importlib import import_module
         from sqlalchemy import inspect
         from app.core.base import Base
 
-        first = import_module(
-            "app.modules.sales.models" if {order!r} == "sales-first" else "app.models"
-        )
+        from app.model_registry import load_models
+        if {order!r} == "registry-first":
+            load_models()
+        first = import_module("app.modules.sales.models")
         tables = dict(Base.metadata.tables)
         mappers = set(Base.registry.mappers)
         from app.model_registry import load_models
         load_models()
         assert_registry(Base)
         sales = import_module("app.modules.sales.models")
-        legacy = import_module("app.models")
+        from app.modules.installations.models import Installation
         customers = import_module("app.modules.customers.models")
         catalog = import_module("app.modules.catalog.models")
-        assert first.Sale is legacy.Sale is sales.Sale
-        assert first.SaleLine is legacy.SaleLine is sales.SaleLine
-        assert first.SaleStatus is legacy.SaleStatus is sales.SaleStatus
-        assert legacy.Base is Base
+        assert first.Sale is sales.Sale
+        assert first.SaleLine is sales.SaleLine
+        assert first.SaleStatus is sales.SaleStatus
+        assert sales.Base is Base
         assert len(Base.registry.mappers) == 17
         assert all(mapper.class_.metadata is Base.metadata for mapper in Base.registry.mappers)
         assert all(Base.metadata.tables[name] is table for name, table in tables.items())
@@ -125,9 +126,9 @@ def test_sales_and_legacy_orders_preserve_registry_and_relations(tmp_path, order
             (sales.Sale, "lines", sales.SaleLine),
             (sales.SaleLine, "sale", sales.Sale),
             (sales.SaleLine, "product", catalog.Product),
-            (sales.SaleLine, "installations", legacy.Installation),
-            (legacy.Installation, "sale_line", sales.SaleLine),
-            (legacy.Installation, "site", customers.Site),
+            (sales.SaleLine, "installations", Installation),
+            (Installation, "sale_line", sales.SaleLine),
+            (Installation, "site", customers.Site),
         ):
             assert inspect(source).relationships[relation].mapper.class_ is target
         """, forbidden=ISOLATED_IMPORTS + RETIRED_MODULES)

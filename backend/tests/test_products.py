@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.core.database import get_db
 from app.modules.identity.dependencies import get_current_user
 from app.main import app
-from app.models import Base
+from app.core.base import Base
 from app.modules.identity.models import Role, User
 
 PAYLOAD = dict(reference="DAI-35", name="Perfera", brand="Daikin", model="FTXM35",

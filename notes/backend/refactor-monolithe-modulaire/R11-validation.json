@@ -1,0 +1,231 @@
+{
+  "task": "INT-123",
+  "wave": "R11",
+  "branch": "refactor/modular-monolith",
+  "source_parent_sha": "2f9e0c3530bdc5493c79b1c5a2d3e82fa722e732",
+  "status": "locally_verified_commit_authorized_capture_before_commit",
+  "capture_phase": "before authorized R11 commit",
+  "conditional_user_commit_authorization_received": true,
+  "R10_already_accepted_and_committed": true,
+  "R11_committed_in_this_thread": false,
+  "push_remote_CI_or_deployment_executed": false,
+  "resumption": {
+    "attached_initial_HEAD": "544a23d6cb2cbe878fbc8ddf2d962c7adf76c000",
+    "attached_initial_branch": "main",
+    "local_refactor_initial_HEAD": "93be411b09b736df967bd22bd8f85b8bea1a5203",
+    "source_checkout_read_only": true,
+    "source_R11_changed_files": 28,
+    "transferred_diff_byte_equal_before_final_guard_extension": true,
+    "transfer_method": "apply_patch in attached worktree only",
+    "project_skill_loaded": "fuliyeh",
+    "AGENT_or_AGENTS_files_found": []
+  },
+  "environment": {
+    "python": "3.12.0",
+    "interpreter": "/home/lob/workspace/python/fastapi/Tervo/backend/.venv/bin/python",
+    "source": "attached backend via PYTHONPATH",
+    "parent_tests_cwd_SQLite_uploads": "temporary scratch",
+    "postgres_runner_cwd": "attached backend; disposable PostgreSQL only; uploads/logs in scratch",
+    "dependencies_and_lockfiles_unchanged": true,
+    "user_python_install_or_uninstall_in_this_thread": false
+  },
+  "deleted_runtime_files": [
+    "backend/app/models/__init__.py",
+    "backend/app/models/base.py",
+    "backend/app/schemas/__init__.py",
+    "backend/app/api/__init__.py",
+    "backend/app/api/v1/__init__.py"
+  ],
+  "retired_roots_absent": [
+    "app.models", "app.repositories", "app.schemas", "app.services",
+    "app.api", "app.importers", "app.exporters"
+  ],
+  "source_invariants": {
+    "runtime_changes_are_only_five_facade_deletions": true,
+    "business_runtime_function_changes": [],
+    "canonical_Base_import": "app.core.base",
+    "standalone_fixtures_explicit_load_models": [
+      "test_import_service_v2.py", "test_installation_migration.py"
+    ],
+    "golden_replay_explicit_load_models": true,
+    "legacy_first_tests_replaced_by_domain_first_and_registry_first": true,
+    "fake_legacy_package_removed": true,
+    "fresh_process_guard_forbids_all_seven_retired_roots": true,
+    "final_AST_test_scans_absolute_relative_and_literal_dynamic_imports": true,
+    "manual_Python_files_scanned_including_literal_dynamic_imports": 148,
+    "executable_legacy_import_violations": [],
+    "new_migration_or_FK_correction": false,
+    "R0_to_R10_JSON_snapshots_fixtures_and_historical_notes_unchanged": true,
+    "frontend_identical_to_R0_544a23d": true,
+    "CI_deploy_dependencies_and_migration_versions_unchanged": true
+  },
+  "sqlite_suite": {
+    "command": "python -m pytest <absolute backend/tests> -q -p no:cacheprovider --junitxml=<scratch>",
+    "returncode": 0,
+    "passed": 390,
+    "warnings": 7,
+    "pytest_seconds": 95.49,
+    "earlier_exact_transfer_run": {"passed": 390, "warnings": 7, "pytest_seconds": 99.43},
+    "earlier_seven_root_guard_run": {"passed": 390, "warnings": 7, "pytest_seconds": 103.0},
+    "new_case_since_R10": "test_final_cutover_has_no_retired_packages_or_active_imports",
+    "previous_thread_interrupted_full_suite_counted_as_success": false
+  },
+  "standalone": {
+    "import_service": {"passed": 11, "warnings": 0, "pytest_seconds": 10.62},
+    "installation_migration": {"passed": 3, "warnings": 0, "pytest_seconds": 1.43},
+    "bootstrap_identity_imports_bootstrap_golden": {
+      "passed": 38, "warnings": 1, "pytest_seconds": 30.51
+    }
+  },
+  "guard_probes": {
+    "location": "scratch synthetic Python sources",
+    "rejected_samples": [
+      "import app.models",
+      "from app.schemas import x",
+      "from .models import Base",
+      "importlib.import_module(\"app.models\")",
+      "__import__(\"app.services.x\")",
+      "import_module(\"app.importers\")"
+    ],
+    "historical_string_citation_allowed": true,
+    "included_in_390_test_count": false
+  },
+  "review": {
+    "status": "intermediate_report_received_then_quota_failure",
+    "final_reviewer_approval_claimed": false,
+    "reported_boundary_tests_passed": 103,
+    "reported_import_migration_tests_passed": 17,
+    "reported_independent_148_file_legacy_audit_violations": [],
+    "reviewer_snapshot_preceded_final_guard_extensions": true,
+    "literal_dynamic_import_gap_addressed_by_parent": true,
+    "non_Python_config_validation": "manual project search, not AST",
+    "parent_final_suite_and_synthetic_guard_probes_passed": true
+  },
+  "postgresql": {
+    "executed_by": "dedicated scout using existing venv and attached sources",
+    "version": "17.4",
+    "image": "local postgres:17.4 --pull never",
+    "docker_version": "29.8.0",
+    "loopback_ephemeral_port": 32771,
+    "upgrade_head_returncode": 0,
+    "downgrade_last_returncode": 0,
+    "downgrade_target": "e103e0010001",
+    "reupgrade_head_returncode": 0,
+    "head": "f102e0010001",
+    "alembic_check_returncode": 255,
+    "structured_compare_metadata_checked": true,
+    "autogenerate_operations": [
+      {
+        "operation": "remove_fk", "table": "intervention",
+        "columns": ["technician_id"], "targets": ["user.id"],
+        "name": "job_technician_id_fkey", "ondelete": null
+      },
+      {
+        "operation": "add_fk", "table": "intervention",
+        "columns": ["technician_id"], "targets": ["user.id"],
+        "name": null, "ondelete": "SET NULL"
+      }
+    ],
+    "new_operations": [],
+    "canonical_run": {
+      "files": [
+        "test_installations.py", "test_sales.py", "test_installation_migration.py",
+        "test_import_service_v2.py", "test_import_api_v2.py"
+      ],
+      "passed": 95,
+      "sales_installations_migration_cases": 56,
+      "import_service_API_cases": 39,
+      "warnings": 1,
+      "pytest_seconds": 50.08,
+      "returncode": 0
+    },
+    "new_HTTP_identity_dashboard_or_seed_PostgreSQL_executed": false,
+    "container_and_own_anonymous_volume_removed": true,
+    "named_volume_used": false,
+    "parent_confirmed_no_R11_postgres_container_remaining": true,
+    "existing_database_or_resources_modified": false
+  },
+  "contracts": {
+    "full_openapi_equals_R0_in_tests_and_HTTP": true,
+    "metadata_serialization_byte_identical_to_R0": true,
+    "reference_openapi": "notes/backend/extras/refactor-monolithe-modulaire/R0-openapi.json",
+    "reference_metadata": "notes/backend/extras/refactor-monolithe-modulaire/R0-metadata.json",
+    "openapi_reference_sha256": "dcabfd245b80cbf3989f71049669c3a65e9766b3ed9512bbf58e22acea942fd7",
+    "metadata_sha256": "e86c52bc02519708beb34a3dd587ca566a222f54a04a3fe0b62bdd742ca2089a",
+    "paths": 46,
+    "operations": 63,
+    "tables_and_mappers": 17,
+    "R9_golden_full_payload_equal": true,
+    "R9_oracle_reference": "backend/tests/fixtures/imports_refactor/before.json",
+    "R9_oracle_file_sha256": "6fea24321f71239649f57be88e0270c5e704cce12a23ff1722d3aad0431d6279",
+    "R9_decoded_bytes": 560268,
+    "R9_decoded_sha256": "f98dd88686d7efc6446187e5507a8c49be5fe3be66453acc014b1fcbec502db2"
+  },
+  "runtime": {
+    "docs_http_status": 200,
+    "openapi_http_status": 200,
+    "HTTP_openapi_equals_R0": true,
+    "loopback_ephemeral_port": 35945,
+    "startup_shutdown_complete": true,
+    "uvicorn_returncode_after_SIGTERM": -15,
+    "server_process_stopped": true
+  },
+  "frontend": {
+    "all_tracked_source_and_locks_identical_to_R0": true,
+    "temporary_copy": true,
+    "bun_version": "1.2.20",
+    "bun_install_frozen_lockfile_returncode": 0,
+    "typecheck_returncode": 0,
+    "build_returncode": 0,
+    "vite_version": "6.4.3",
+    "transformed_modules": 450,
+    "npm_lock_repaired": false,
+    "sales_installations_import_UI_exists": false,
+    "sales_installations_import_validation": "existing backend API tests only"
+  },
+  "browser_evidence": {
+    "provenance": "parent smoke after facade removal, supplied in user handoff; not rerun in this thread",
+    "durable_script_available": false,
+    "runtime_diff_identical_to_transferred_smoke_state": true,
+    "playwright_version": "1.63.0",
+    "chrome_headless_shell_version": "153.0.8010.12",
+    "login_dashboard": true,
+    "client_UI_create_status": 201,
+    "client_detail_and_readonly_site": true,
+    "COMPLETED_intervention_setup": "fictional ORM dataset, not app.seed",
+    "PDF_blob_preview_and_real_download": true,
+    "PDF_bytes": 15464,
+    "PDF_signature": "%PDF-",
+    "PDF_filename": "rapport-intervention-1.pdf",
+    "public_review_new_unauthenticated_context": true,
+    "public_review_stars": 4,
+    "public_review_comment_and_POST_status": 200,
+    "public_confirmation": "Merci!",
+    "authenticated_console_page_HTTP_errors": 0,
+    "backend_route_interception_not_Vite_proxy_edit": true,
+    "cleanup_reported_in_handoff": true
+  },
+  "incident": {
+    "provenance": "previous thread scout, disclosed to user before resumption",
+    "wrong_interpreter": "/home/lob/.pyenv/versions/3.12.0/bin/python",
+    "operation": "pip install --user",
+    "affected_directory": "/home/lob/.local/lib/python3.12/site-packages",
+    "before_snapshot_available": false,
+    "added_vs_upgraded_packages_determined": false,
+    "bcrypt_4_2_1_preexisting_not_installed_by_scout": true,
+    "accidental_root_package_json_removed_before_transfer": true,
+    "user_environment_repaired_or_modified_in_this_thread": false,
+    "package_report": "See INT-123-R11-retrait-legacy.md section 8; versions supplied in handoff, not reaudited"
+  },
+  "limits": [
+    "alembic check remains nonzero for known technician FK",
+    "complete PostgreSQL-only migrations not claimed portable to SQLite",
+    "browser proof inherited explicitly, not rerun in this thread",
+    "sales/installations/import are backend-only; no fictitious UI",
+    "no real representative-volume import benchmark",
+    "no seed safety claim for existing or production V2 data",
+    "TD-B018 documentation 7.4 remains in separately authorized scope",
+    "no remote CI, push or deployment"
+  ],
+  "open_followups": ["TD-B013", "TD-B016", "TD-B018", "TD-B019", "TD-F007"]
+}

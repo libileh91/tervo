@@ -9,12 +9,33 @@
     "R2": "user_accepted_locally_committed_ed67168",
     "R3": "user_accepted_committed_29f034e",
     "R4": "user_accepted_committed_in_primary_93be411",
-    "R5": "authorized_implemented_locally_verified_pending_user_acceptance",
-    "R6_to_R11": "not_started_separate_user_approval_required_per_wave"
+    "R5": "user_accepted_committed_7a453b8",
+    "R6": "user_accepted_committed_90346f5",
+    "R7": "user_accepted_committed_7a52d03",
+    "R8": "user_accepted_committed_bb1fc14",
+    "R9": "user_accepted_committed_205969a",
+    "R10": "user_accepted_committed_2f9e0c3",
+    "R11": "locally_verified_conditional_user_commit_authorization_received"
   },
   "validation": {
-    "status": "R1_R2_R3_R4_R5_executed_remaining_not_run",
-    "scope": "R1 à R5 vérifiés localement ; captures historiques conservées. R4 committé, R5 vérifié sur le checkout principal, non committé et acceptation attendue. R6 à R11 non commencées.",
+    "status": "R0_to_R11_locally_executed_R11_commit_authorized",
+    "scope": "Suivi courant : R0 à R10 acceptés et committés ; R11 vérifié localement et commit autorisé si terminé. Les blocs observed R1-R5 et execution des vagues précédentes restent leurs captures historiques ; voir les preuves R6-R11 et README pour les décisions ultérieures.",
+    "R11_observed": {
+      "sqlite_suite_passed": 390,
+      "sqlite_warnings": 7,
+      "postgres_canonical_passed": 95,
+      "postgres_warnings": 1,
+      "full_openapi_and_metadata_equal_R0": true,
+      "postgres_migration_round_trip": true,
+      "alembic_check_returncode": 255,
+      "new_schema_operations_beyond_known_FK": [],
+      "bun_frozen_typecheck_build_pass": true,
+      "browser_smoke_provenance": "parent handoff after facade removal, not rerun in this thread",
+      "sales_installations_import_backend_only": true,
+      "docs_74_followup": "TD-B018 remains open in separately authorized scope",
+      "evidence": "notes/backend/refactor-monolithe-modulaire/R11-validation.json",
+      "remote_CI_or_deployment_executed": false
+    },
     "R1_observed": {
       "bootstrap_passed": 14,
       "sqlite_suite_passed": 285,
@@ -669,10 +690,17 @@
       "wave": "R11",
       "title": "Nettoyage legacy conditionnel et recherche finale des imports",
       "type": "integration",
-      "preconditions": ["INT-122 clôturée ; feu vert R11 distinct requis et pas encore donné", "Tous les domaines ont subi leur cutover validé"],
+      "preconditions": ["INT-122 acceptée et committée sous 2f9e0c3 ; feu vert distinct R11 reçu", "Tous les domaines ont subi leur cutover validé"],
       "steps": ["Chercher app.models, app.repositories, app.schemas, app.services, app.api.v1, app.importers et app.exporters dans runtime/tests/Alembic/seed/scripts/configuration.", "Résoudre les références exécutables puis supprimer uniquement les packages devenus inutiles ; retirer le shim Base lorsque plus aucun appelant ne l'utilise.", "Distinguer les citations historiques des imports exécutables et conserver les preuves R0 ; charger registre/application/Alembic sans anciens packages."],
       "expected_result": {"remaining_executable_legacy_imports": [], "required_package_deleted_prematurely": false, "duplicate_active_business_implementation": false, "historical_R0_evidence_rewritten": false, "technical_Base_identity_changed": false, "all_active_domains_have_explicit_modules": true, "core_contains_only_technical_concerns": true, "registry_table_count": 17},
-      "status": "not_run"
+      "status": "passed",
+      "execution": {
+        "scope": "all seven retired roots, runtime/tests/Alembic/seed/scripts/configuration; historical citations retained",
+        "tests": ["test_modular_bootstrap.py", "domain bootstrap tests"],
+        "observed": "five final facades removed; one Base/17 mappers, domain-first/registry-first stable; manual 148-Python-file static/relative/literal-dynamic import audit found no executable legacy references; configuration search clear",
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R11-validation.json",
+        "user_commit_authorization": "received if work finished"
+      }
     },
     {
       "id": "TC-INT-123-02",
@@ -681,9 +709,19 @@
       "title": "Validation globale backend/PostgreSQL/HTTP et parcours frontend existants",
       "type": "e2e",
       "preconditions": ["Feu vert R11 distinct requis", "Nettoyage legacy terminé, ressources de test isolées", "Preuves de comparaison pack avant/après R9 conservées"],
-      "steps": ["Exécuter suite backend et groupes PostgreSQL critiques ; migrations upgrade/dernier downgrade/upgrade et comparaison schéma/ORM sur PostgreSQL neuf.", "Comparer les snapshots complets OpenAPI/metadata à R0 ; démarrer/arrêter FastAPI et vérifier /openapi.json et /docs.", "Rejouer les parcours frontend actuellement livrés : clients/sites, vente, installation autonome et commerciale, import et rapport ; consigner résultats et limites réels.", "Vérifier que les adaptations documentaires autorisées reprennent les nouveaux chemins avant 7.4 sans réécrire son historique ou celui de 7.3 ; soumettre le bilan de clôture."],
-      "expected_result": {"backend_suite_and_postgres_groups_pass": true, "postgres_migration_round_trip_succeeds": true, "only_schema_diff_is_known_technician_FK": true, "migration_generated_for_refactor": false, "full_openapi_diff": [], "full_metadata_diff": [], "startup_and_shutdown_succeed": true, "openapi_and_docs_http_status": 200, "existing_frontend_critical_flows_preserved": true, "R9_fixed_pack_business_diff": [], "stage7_paths_ready_before_future_features": true, "historical_validation_status_rewritten": false, "deployment_or_future_features_claimed": false},
-      "status": "not_run"
+      "steps": ["Exécuter suite backend et groupes PostgreSQL critiques ; migrations upgrade/dernier downgrade/upgrade et comparaison schéma/ORM sur PostgreSQL neuf.", "Comparer les snapshots complets OpenAPI/metadata à R0 ; démarrer/arrêter FastAPI et vérifier /openapi.json et /docs.", "Vérifier les parcours UI livrés clients/sites/rapport/avis et construire le frontend par Bun frozen ; vente/installation autonome et commerciale/import sont backend-only et doivent être exercés par API. Consigner la provenance du smoke et les limites réelles.", "Conserver la reprise documentaire des chemins 7.4 dans TD-B018, dans son scope ultérieur autorisé avant les features, sans réécrire son historique ou celui de 7.3 ; soumettre le bilan de clôture."],
+      "expected_result": {"backend_suite_and_postgres_groups_pass": true, "postgres_migration_round_trip_succeeds": true, "only_schema_diff_is_known_technician_FK": true, "migration_generated_for_refactor": false, "full_openapi_diff": [], "full_metadata_diff": [], "startup_and_shutdown_succeed": true, "openapi_and_docs_http_status": 200, "existing_frontend_critical_flows_preserved": true, "R9_fixed_pack_business_diff": [], "stage7_paths_followup_before_future_features": "TD-B018, separately authorized scope", "historical_validation_status_rewritten": false, "deployment_or_future_features_claimed": false},
+      "status": "passed",
+      "execution": {
+        "scope": "disposable SQLite/PostgreSQL; actual HTTP runtime; copied frontend Bun; browser evidence explicitly inherited from parent handoff",
+        "observed": "390 SQLite, 95 PostgreSQL canonical; full round-trip and only known FK delta, check 255; full R0 contracts and R9 golden unchanged; docs/openapi HTTP 200 and server stopped; Bun frozen/typecheck/build PASS",
+        "browser": "parent real smoke after five-facade removal: login/dashboard, client UI 201/detail/site readonly, PDF preview/download 15464 bytes, unauthenticated public review POST 200; not rerun here",
+        "backend_only": ["sales", "standalone/commercial installations", "imports"],
+        "evidence": "notes/backend/refactor-monolithe-modulaire/R11-validation.json",
+        "user_commit_authorization": "received if work finished",
+        "TD_B018_completed_in_R11": false,
+        "remote_CI_or_deployment_executed": false
+      }
     }
   ]
 }
