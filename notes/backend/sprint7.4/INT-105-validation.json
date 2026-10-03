@@ -70,7 +70,20 @@
     "other_todos": ["TD-B013", "TD-B016", "TD-B019", "TD-F005", "TD-F007", "TD-F008"]
   },
   "browser": {
-    "status": "separate scout smoke in progress; no success inferred from API tests or build"
+    "status": "real smoke passed; follow-up after implementation commit",
+    "playwright": "1.49.1",
+    "chromium": "131.0.6778.33 v1148",
+    "photo_upload": "ANOMALY/EQUIPMENT 201, real thumbnails/preview",
+    "invalid_upload": "intentional TXT 400; existing photos preserved",
+    "delete_photo": 204,
+    "material_post": {"status": 201, "quantity": 0.5, "unit": "m"},
+    "material_put": {"status": 200, "quantity": 0.75, "unit": "free"},
+    "empty_unit": "frontend refuses; zero PUT requests, initial false observation explicitly withdrawn",
+    "PDF_limit": "iframe loaded, no text extraction",
+    "processes_stopped": true,
+    "browser_cache_added": "/home/lob/.cache/ms-playwright",
+    "cache_reexecution": "read-only, no removal or further download",
+    "existing_database_or_seed": false
   },
   "real_database_or_seed_used": false,
   "remote_ci_success_claimed": false,

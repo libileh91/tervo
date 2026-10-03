@@ -755,7 +755,7 @@ La chaîne PostgreSQL vide signalée ne vaut pas migration d'une base existante.
 | Suite backend finale parent | **539 passed, 7 skipped, 7 warnings** | SQLite/schémas et uploads temporaires ; 115,23 s |
 | Run PostgreSQL final parent | **200 passed, 2 warnings** | Cible PostgreSQL 17.4 jetable ; 64,59 s |
 | Frontend final parent | **10 tests, 36 assertions**, typecheck/build réussis | Bun 1.2.20, Vite 6.4.3, 452 modules |
-| Smoke navigateur parent | **À renseigner après run parent** | Travail en parallèle, pas annoncé terminé |
+| Smoke navigateur média | Réussi, avec rectification et réexécution du PUT | Détails et réserves ci-dessous |
 | CI distante | Non établie | Aucun run distant réussi attesté ici |
 | Déploiement | Non réalisé dans cette rédaction | Aucun effet sur une instance réelle |
 
@@ -780,7 +780,7 @@ Frontend : bun test tests (10 pass/36 assertions), typecheck et build réussis.
 Pattern Decimal : borné sur la chaîne complète sans recopier les limites numériques.
 Serializer : type de retour explicite ; réponse JSON et OpenAPI number|null concordent.
 Revue : aucun bloqueur comportemental ; tests des deux chemins hors UPLOAD_DIR ajoutés.
-Smoke navigateur : suivi séparément, sans déduire son succès du build.
+Smoke navigateur : login, photos/miniatures/preview, matériel POST/PUT/DELETE vérifiés.
 Réserve : DB et filesystem ne forment pas une transaction distribuée.
 ```
 
@@ -854,6 +854,36 @@ Le parent doit inscrire ses commandes exactes, avec le runner réellement utilis
 Les tests PostgreSQL nécessitent la configuration prévue par leurs fixtures.
 Ne pas substituer l'URL de la base applicative à une cible jetable.
 Ne pas lancer un seed pour « préparer » une base existante à ces tests.
+
+### 13.5 Preuve navigateur ajoutée après le commit de développement
+
+Le commit INT-105 `5b8eb36` a été réalisé avant réception complète du smoke ;
+cet enrichissement documentaire ne prétend pas à une nouvelle implémentation.
+Playwright 1.49.1, Chromium 131.0.6778.33 / v1148, SQLite/uploads fictifs,
+backend avec le venv existant et frontend build isolé.
+
+- Login UI réel réussi.
+- PNG ANOMALY et EQUIPMENT : 201, groupes corrects, vraies miniatures et preview.
+- TXT volontairement invalide : 400, message visible, photos existantes conservées.
+- Suppression photo : 204 et disparition ligne/fichier.
+- Matériel POST : `{designation: "Câble", quantity: 0.5, unit: "m"}`, réponse 201
+  avec ces valeurs numériques/unités.
+- Matériel PUT réexécuté et capturé : `{designation: "Câble", quantity: 0.75,
+  unit: "free"}`, réponse JSON 200 avec `quantity: 0.75` et `unit: "free"`.
+- Unité vide : message de validation frontend et **zéro requête PUT**.
+  Une première observation du scout avait annoncé à tort un PUT 200 ; elle
+  est retirée. La preuve positive ci-dessus repose sur payload/réponse capturés.
+- Brouillon non sauvegardé conservé au changement d'onglet ; DELETE matériel 204.
+- Iframe PDF chargée, mais pas d'extraction textuelle des usages/unités dans ce smoke.
+
+Aucun pageerror ; le HTTP 400 injecté par le fichier invalide est distingué
+des erreurs inattendues. Tous les processus de recette sont arrêtés.
+Les preuves restent fictives, sans seed/base applicative.
+
+Écart de procédure déclaré : le fallback du scout a téléchargé Chromium dans
+`/home/lob/.cache/ms-playwright`, plutôt que dans son scratch. Ce cache est
+conservé, sans suppression/désinstallation ; les réexécutions l'utilisent en
+lecture seule. Aucune installation Python utilisateur n'a été effectuée.
 
 ## 14. Limites et sujets différés
 
