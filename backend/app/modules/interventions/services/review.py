@@ -84,24 +84,15 @@ class ReviewService:
         Raises 404 if token invalid/expired.
         Raises 400 if already submitted.
         """
-        review = await self._get_valid_review(token)
-
-        # Already submitted?
-        if review.submitted_at is not None:
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        if not await self.repo.submit_once(token, rating, comment, reviewer_name, now):
+            review = await self._get_valid_review(token)
+            if review.submitted_at is None:
+                # The token can expire between the conditional UPDATE and this read.
+                raise HTTPException(status_code=404, detail="Lien invalide ou expiré")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Avis déjà soumis",
             )
-
-        # Update the review
-        await self.repo.update(
-            review,
-            {
-                "rating": rating,
-                "comment": comment,
-                "reviewer_name": reviewer_name,
-                "submitted_at": datetime.now(timezone.utc).replace(tzinfo=None),
-            },
-        )
 
         return {"message": "Merci pour votre avis !"}

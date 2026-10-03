@@ -8,6 +8,7 @@ Each intervention can have at most one review (intervention_id is UNIQUE).
 from datetime import datetime
 
 from sqlalchemy import (
+    CheckConstraint,
     Column,
     DateTime,
     ForeignKey,
@@ -24,6 +25,13 @@ from app.core.base import Base
 
 class Review(Base):
     __tablename__ = "review"
+    __table_args__ = (
+        CheckConstraint(
+            "(submitted_at IS NULL AND rating IS NULL) OR "
+            "(submitted_at IS NOT NULL AND rating BETWEEN 1 AND 5)",
+            name="ck_review_submission_rating",
+        ),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     intervention_id = Column(
@@ -33,7 +41,7 @@ class Review(Base):
         unique=True,  # un seul avis par intervention
         index=True,
     )
-    rating = Column(Integer, nullable=False)  # 1-5
+    rating = Column(Integer, nullable=True)  # NULL until the client submits a rating (1-5)
     comment = Column(Text, nullable=True)
     reviewer_name = Column(String(255), nullable=True)
     share_token = Column(String(64), unique=True, nullable=False, index=True)

@@ -251,7 +251,6 @@ class InterventionService:
             await ReviewRepository(self.db).create(
                 {
                     "intervention_id": intervention.id,
-                    "rating": 5,  # valeur par défaut, sera écrasée par le client
                     "share_token": share_token,
                     "share_token_expires_at": intervention.completed_at + timedelta(days=30),
                 },

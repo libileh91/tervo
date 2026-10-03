@@ -260,8 +260,11 @@ client reçoit une erreur, mais intervention déjà terminée
 
 INT-106 regroupe la transition et l'avis automatique.
 La génération du token n'est pas un envoi de SMS ou d'email.
-Le champ rating initial de l'avis reste un comportement préexistant ;
-il ne prouve pas que le client a répondu, ni que l'intervention est résolue.
+**Mise à jour INT-108 :** la note fictive initiale du comportement historique a
+été supprimée. Un avis créé à la clôture a `rating = NULL` et `submitted_at = NULL` ;
+la migration remet à NULL les notes des invitations non soumises. Seule une
+soumission client attribue une note ; celle-ci ne prouve toujours pas la
+résolution de l'intervention.
 
 ### 6.2 Le repository respecte la transaction de l'appelant
 

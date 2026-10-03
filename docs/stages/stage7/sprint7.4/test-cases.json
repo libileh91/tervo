@@ -501,6 +501,60 @@
         "observed": "Roundtrip PG, comparaison structurée, downgrade peuplé refusé avant DDL ; deux versions demeurent ; replay import/guard validé en ciblé",
         "known_limit": "Alembic check reste non nul pour la FK technicien préexistante"
       }
+    },
+    {
+      "id": "TC-INT-108-01",
+      "task": "INT-108",
+      "title": "Clôture et avis non encore soumis",
+      "type": "api",
+      "preconditions": ["Intervention en cours, checklist complète, technicien assigné"],
+      "steps": ["Clôturer avec résultat explicite", "Lire l'avis en base puis GET public avec le token"],
+      "expected_result": {
+        "creation": "Un seul avis lié à l'intervention, rating NULL et submitted_at NULL",
+        "public": "GET /review/{token} sans auth retourne already_reviewed=false sans exposer la note ni le token"
+      },
+      "actual_result": {"status": "passed_local_sqlite", "observed": "API clôture 200, Review.rating/submitted_at NULL, GET public 200 sans note exposée ; test_api.py ciblé 29 réussis"}
+    },
+    {
+      "id": "TC-INT-108-02",
+      "task": "INT-108",
+      "title": "Soumission publique et rejouabilité",
+      "type": "api",
+      "preconditions": ["Token non expiré obtenu après clôture"],
+      "steps": ["POST /reviews sans JWT avec share_token, rating=4, comment et reviewer_name", "Relire GET public, POST à nouveau via l'ancienne URL"],
+      "expected_result": {
+        "first": "200, rating 4 et submitted_at persistés ; GET already_reviewed=true",
+        "second": "400 et première note/commentaire/date inchangés",
+        "compatibility": "POST /review/{token}/submit partage les mêmes règles"
+      },
+      "actual_result": {"status": "passed_local_sqlite", "observed": "POST /reviews 200 sans JWT, GET already_reviewed=true ; POST legacy répété 400, rating et commentaire initiaux préservés"}
+    },
+    {
+      "id": "TC-INT-108-03",
+      "task": "INT-108",
+      "title": "Token et note invalides",
+      "type": "api",
+      "preconditions": ["Avis en attente, token expiré et token inconnu"],
+      "steps": ["POST /reviews sans share_token ou avec rating 0/6", "POST avec token invalide ou expiré"],
+      "expected_result": {
+        "validation": "422, aucun avis modifié",
+        "privacy": "404 pour token invalide/expiré, aucun avis modifié"
+      },
+      "actual_result": {"status": "passed_local_sqlite", "observed": "Absence de token et notes hors plage 422 ; token inconnu/expiré 404, invitation toujours sans note"}
+    },
+    {
+      "id": "TC-INT-108-04",
+      "task": "INT-108",
+      "title": "Migration des avis historiques",
+      "type": "integration",
+      "preconditions": ["Base jetable migrée à INT-107, avis soumis et en attente"],
+      "steps": ["Migrer à INT-108", "Relire les deux avis et la contrainte UNIQUE", "Tester le downgrade peuplé"],
+      "expected_result": {
+        "pending": "Note fictive supprimée (NULL), token et ID préservés",
+        "submitted": "Note réelle et date préservées",
+        "downgrade": "Refus si une note NULL devrait redevenir une note fictive"
+      },
+      "actual_result": {"status": "passed_targeted_sqlite_migration", "observed": "Migration ciblée depuis schéma INT-107 stampé : invitation sans note, avis soumis conservé, check SQL présent ; downgrade refusé avant DDL", "limit": "Pas de roundtrip PostgreSQL INT-108 ; chaîne Alembic SQLite complète bloquée par ALTER TYPE historique"}
     }
   ]
 }

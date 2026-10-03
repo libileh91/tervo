@@ -1,6 +1,6 @@
 # Sprint 7.4 — Cycle terrain
 
-> **Tervo V2** · INT-104 à INT-108 · **Statut :** INT-104 à INT-106 implémentées et vérifiées localement ; INT-107 et INT-108 à traiter
+> **Tervo V2** · INT-104 à INT-108 · **Statut :** INT-104 à INT-108 implémentées et vérifiées localement
 > **Dépendances :** Sprint 7.1 ; réutiliser les modules terrain existants.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.4/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -222,16 +222,35 @@ Je veux **laisser un avis après intervention**,
 Afin de **donner un retour sur l'expérience**.
 
 **Acceptance Criteria**
-- [ ] `Review` : `intervention_id` (UNIQUE), `rating`, `comment`
-- [ ] `Intervention 1 → 0..1 Review`
-- [ ] API publique `POST /reviews` (share_token) conservée
+- [x] `Review` : `intervention_id` (UNIQUE), `rating`, `comment`
+- [x] `Intervention 1 → 0..1 Review`
+- [x] API publique `POST /reviews` (share_token) conservée
+
+**Validation locale**
+- Recette directe API SQLite : clôture → invitation sans note → GET public →
+  soumission sans JWT → répétition via l'ancienne URL, token expiré/inconnu,
+  notes invalides. `test_api.py` : 29 réussis, 1 warning.
+- Migration ciblée SQLite (base jetable stampée INT-107) : invitation historique
+  remise à NULL, avis soumis intact, contrainte créée, downgrade peuplé refusé.
+  La chaîne complète Alembic SQLite depuis zéro échoue dans une ancienne
+  migration PostgreSQL-only (`ALTER TYPE`) avant INT-108 ; PostgreSQL INT-108
+  et déploiement non exécutés.
+- Frontend : typecheck et build Bun réussis ; pas de smoke navigateur ni CI
+  distante. [Note pédagogique](../../../../notes/backend/sprint7.4/INT-108-avis-client.md).
 
 **Technical Notes**
-- Reshape l'existant `Review` → FK `intervention` (aujourd'hui `job`)
+- Le reshaping historique `job` → `intervention` est déjà livré.
 - Sources actuelles : `app/modules/interventions/models/review.py`,
   `services/review.py`, `repositories/review.py`, `api/reviews.py`.
-- La FK actuelle cible déjà `intervention` ; INT-108 doit vérifier les critères
-  restants et compléter ses tests, pas refaire un renommage livré.
+- La FK cible `intervention` et son unicité existante est conservée.
+- Soumission sur `/api/v1/reviews` avec `share_token` dans le corps ;
+  ancienne route `/api/v1/review/{token}/submit` et GET conservés pour les
+  anciens liens. Mise à jour conditionnelle atomique pour empêcher deux
+  soumissions de se remplacer mutuellement. La page publique utilise la route
+  canonique.
+- À la clôture, l'invitation garde `rating` NULL tant qu'aucun client n'a
+  répondu. Migration `k108e0010001` : remet à NULL les notes artificielles
+  non soumises, conserve les avis réels, refuse le downgrade destructif.
 
 ---
 
@@ -239,4 +258,5 @@ Afin de **donner un retour sur l'expérience**.
 
 Voir [test-cases.json](test-cases.json).
 
-**À compléter avant implémentation :** cas détaillés pour INT-108. Les cas INT-105 sont désormais cadrés ; leurs résultats restent à renseigner après exécution.
+Les cas INT-108 sont détaillés et vérifiés localement ci-dessus ; aucune
+validation de déploiement ou de migration PostgreSQL n'est déduite.

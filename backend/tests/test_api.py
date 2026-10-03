@@ -19,6 +19,7 @@ import httpx
 import pytest
 from httpx import ASGITransport
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import settings
@@ -495,7 +496,6 @@ class TestReview:
         """Create a valid, unsubmitted review."""
         r = Review(
             intervention_id=intervention_completed.id,
-            rating=5,
             share_token=uuid.uuid4().hex,
             share_token_expires_at=datetime.now(timezone.utc) + timedelta(days=30),
         )
@@ -509,7 +509,6 @@ class TestReview:
         """Create an expired review."""
         r = Review(
             intervention_id=intervention_planned.id,
-            rating=5,
             share_token=uuid.uuid4().hex,
             share_token_expires_at=datetime.now(timezone.utc) - timedelta(days=1),
         )
@@ -622,6 +621,66 @@ class TestIntegration:
             review = result.scalar_one_or_none()
             assert review is not None
             assert review.share_token == data["review_share_token"]
+            assert review.rating is None and review.submitted_at is None
+
+    async def test_int108_public_review_scenario(self, client, auth_header, intervention_in_progress):
+        """One direct API recipe: completion, public token, submission and rejection."""
+        completed = await client.put(
+            f"/api/v1/interventions/{intervention_in_progress.id}/complete",
+            json={"result": "RESOLVED"}, headers=auth_header,
+        )
+        assert completed.status_code == 200, completed.text
+        token = completed.json()["review_share_token"]
+        public = await client.get(f"/api/v1/review/{token}")
+        assert public.status_code == 200
+        assert public.json()["already_reviewed"] is False
+        assert "rating" not in public.json() and "share_token" not in public.json()
+        async with TestSessionLocal() as db:
+            db.add(Review(
+                intervention_id=intervention_in_progress.id,
+                share_token=uuid.uuid4().hex,
+                share_token_expires_at=datetime.now(timezone.utc) + timedelta(days=30),
+            ))
+            with pytest.raises(IntegrityError):
+                await db.commit()  # 1 → 0..1 enforced by the database, not just the ORM
+            await db.rollback()
+
+        for payload in ({}, {"share_token": token, "rating": 0},
+                        {"share_token": token, "rating": 6}):
+            invalid = await client.post("/api/v1/reviews", json=payload)
+            assert invalid.status_code == 422, invalid.text
+        for bad_token in ("unknown", "expired"):
+            if bad_token == "expired":
+                async with TestSessionLocal() as db:
+                    review = (await db.execute(select(Review).where(Review.share_token == token))).scalar_one()
+                    review.share_token_expires_at = datetime.now(timezone.utc) - timedelta(days=1)
+                    await db.commit()
+            else:
+                response = await client.post("/api/v1/reviews", json={
+                    "share_token": bad_token, "rating": 4,
+                })
+                assert response.status_code == 404
+        assert (await client.post("/api/v1/reviews", json={
+            "share_token": token, "rating": 4,
+        })).status_code == 404
+        async with TestSessionLocal() as db:
+            review = (await db.execute(select(Review).where(Review.share_token == token))).scalar_one()
+            assert review.rating is None and review.submitted_at is None
+            review.share_token_expires_at = datetime.now(timezone.utc) + timedelta(days=30)
+            await db.commit()
+
+        submitted = await client.post("/api/v1/reviews", json={
+            "share_token": token, "rating": 4, "comment": "Très bien",
+            "reviewer_name": "Client",
+        })
+        assert submitted.status_code == 200, submitted.text
+        assert (await client.get(f"/api/v1/review/{token}")).json()["already_reviewed"] is True
+        repeated = await client.post(f"/api/v1/review/{token}/submit", json={"rating": 1})
+        assert repeated.status_code == 400
+        async with TestSessionLocal() as db:
+            review = (await db.execute(select(Review).where(Review.share_token == token))).scalar_one()
+            assert review.rating == 4 and review.comment == "Très bien"
+            assert review.reviewer_name == "Client" and review.submitted_at is not None
 
     async def test_complete_intervention_not_in_progress(self, client, auth_header, intervention_planned):
         """Intervention planifié → 400."""

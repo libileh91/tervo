@@ -135,10 +135,11 @@ async function handleSubmit() {
 
     submitting.value = true;
     try {
-        const res = await fetch(`/api/v1/review/${token}/submit`, {
+        const res = await fetch("/api/v1/reviews", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+                share_token: token,
                 rating: rating.value,
                 comment: comment.value || null,
                 reviewer_name: reviewerName.value || null,

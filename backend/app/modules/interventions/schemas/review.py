@@ -44,6 +44,11 @@ class ReviewSubmitRequest(BaseModel):
         None, max_length=255, description="Nom du client (optionnel)"
     )
 
+class ReviewCreateRequest(ReviewSubmitRequest):
+    """Canonical public submission; token comes from the completion link."""
+
+    share_token: str = Field(..., min_length=1, max_length=64)
+
 
 class ReviewSubmitResponse(BaseModel):
     """Response after successful review submission."""
