@@ -118,6 +118,10 @@ class ImportPlanner:
         result = schemas[kind](**values).model_dump(mode='json')
         result.update(virtual)
         if kind == 'interventions':
+            # This is an ORM import body, not the interactive creation request.
+            # Historical rows carry no reusable checklist selection; their empty
+            # snapshot is persisted by the import transaction itself.
+            result.pop('checklist_template_id')
             result.update({k:body[k] for k in ('status','technician_id','observations')})
         if replacement is not None:
             result.update(lifecycle_status='REPLACED',replaced_by_id=replacement)

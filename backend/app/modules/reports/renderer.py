@@ -19,7 +19,7 @@ class ReportExporter:
     def __init__(self):
         template_path = Path(__file__).resolve().parent / "templates" / "report_template.html"
         with open(template_path, "r", encoding="utf-8") as f:
-            self.template = Template(f.read())
+            self.template = Template(f.read(), autoescape=True)
 
     def _embed_photo(self, file_path: str | None) -> str | None:
         """Read a photo file and return a base64 data URI."""
@@ -55,7 +55,7 @@ class ReportExporter:
         pre_items = []
         post_items = []
         for item in intervention.checklist_items or []:
-            entry = {"label": item.label, "checked": item.checked, "note": item.note}
+            entry = {"label": item.label, "result": item.result, "comment": item.comment}
             if item.category == "pre_intervention":
                 pre_items.append(entry)
             else:

@@ -20,6 +20,7 @@ from app.core.base import Base
 from app.model_registry import load_models
 from app.modules.customers.models import Client, Site
 from app.modules.interventions.models.intervention import Intervention, InterventionStatus, Priority
+from app.modules.interventions.services.checklist import ChecklistService
 
 from app.modules.identity.models import Role, User
 
@@ -38,6 +39,8 @@ async def seed():
             "material",
             "intervention_photo",
             "checklist_item",
+            "intervention_checklist",
+            "checklist_template",
             "intervention",
             "site",
             "client",
@@ -269,6 +272,9 @@ async def seed():
         for i in interventions_data:
             session.add(i)
 
+        await session.flush()
+        for i in interventions_data:
+            await ChecklistService(session).create_snapshot(i.id)
         await session.commit()
 
         print(f"  ✅ {len(interventions_data)} interventions created")

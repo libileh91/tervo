@@ -221,7 +221,7 @@
 | **Dépend de** | Cutovers terrain/reports acceptés ; mise à jour documentaire distincte autorisée avant les features 7.4 |
 | **Fichiers** | `docs/stages/stage7/sprint7.4/tasks.md`, `test-cases.json`, DAT si autorisé dans son propre scope ; `app/modules/interventions/`, `app/modules/reports/{api,renderer}.py`, `app/modules/reports/templates/report_template.html` |
 | **Action attendue** | Remplacer les anciens chemins horizontaux par les sources terrain actuelles, sans cocher ni implémenter INT-104 à INT-108. Reprendre le mapping de la note INT-119. Les nouveaux modèles/fichiers éventuels restent à cadrer par feature ; les cas détaillés INT-105/108 restent à compléter avant implémentation. |
-| **Statut** | ⏳ À traiter dans une reprise documentaire autorisée avant 7.4 ; aucune feature terrain nouvelle livrée par R7 |
+| **Statut** | ✅ Chemins du planning 7.4 repris au démarrage d'INT-104 : sources terrain/rapports modulaires et distinction des fichiers futurs ; aucun critère INT-105 à INT-108 coché, aucun changement du DAT ni réalisation métier déduit de cette reprise |
 
 ---
 

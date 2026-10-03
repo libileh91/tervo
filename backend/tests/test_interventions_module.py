@@ -11,8 +11,8 @@ from tests.test_modular_bootstrap import BACKEND, ISOLATED_IMPORTS, _run_python
 
 
 LAYOUT = {
-    "models": ("intervention", "checklist_item", "intervention_photo", "material", "review"),
-    "schemas": ("intervention", "review"),
+    "models": ("intervention", "checklist", "checklist_item", "intervention_photo", "material", "review"),
+    "schemas": ("intervention", "checklist", "review"),
     "repositories": ("intervention", "checklist", "photo", "material", "review"),
     "services": ("intervention", "checklist", "photo", "material", "review"),
     "api": ("interventions", "checklist", "photos", "materials", "reviews"),
@@ -44,7 +44,7 @@ def test_interventions_layout_and_cutover_imports():
     )]:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         assert len(tree.body) == 1 and ast.get_docstring(tree) is not None, path
-    assert len(RETIRED_MODULES) == 22
+    assert len(RETIRED_MODULES) == 24
     assert not [name for name in RETIRED_MODULES
                 if (BACKEND / (name.replace(".", "/") + ".py")).exists()]
     violations = []
@@ -137,12 +137,27 @@ def test_interventions_identity_base_and_relations(tmp_path, order):
         assert_registry(Base)
         assert set(Base.registry.mappers) == complete
         intervention = classes["Intervention"]
+        from app.modules.interventions.models.checklist import (
+            ChecklistTemplate, InterventionChecklist,
+        )
+        for cls in (ChecklistTemplate, InterventionChecklist):
+            assert cls.metadata is Base.metadata
+            assert cls.__module__ == {PACKAGE!r} + ".models.checklist"
+        snapshot = inspect(intervention).relationships["checklist"]
+        assert snapshot.mapper.class_ is InterventionChecklist
+        assert not snapshot.uselist
+        assert InterventionChecklist.__table__.c.intervention_id.unique
+        assert inspect(InterventionChecklist).relationships["intervention"].mapper.class_ is intervention
+        assert inspect(InterventionChecklist).relationships["items"].mapper.class_ is classes["ChecklistItem"]
+        assert inspect(classes["ChecklistItem"]).relationships["checklist"].mapper.class_ is InterventionChecklist
+        assert inspect(intervention).relationships["checklist_items"].viewonly
         for relation, target in (
             ("checklist_items", "ChecklistItem"), ("photos", "InterventionPhoto"),
             ("materials", "Material"), ("review", "Review"),
         ):
             assert inspect(intervention).relationships[relation].mapper.class_ is classes[target]
-            assert inspect(classes[target]).relationships["intervention"].mapper.class_ is intervention
+            if relation != "checklist_items":
+                assert inspect(classes[target]).relationships["intervention"].mapper.class_ is intervention
         from app.modules.customers.models import Site
         from app.modules.equipment.models import Equipment
         from app.modules.identity.models import User
@@ -182,7 +197,7 @@ def test_five_terrain_routers_are_composed_once(tmp_path):
 def test_existing_schema_contracts():
     from pydantic import ValidationError
     from app.modules.interventions.schemas.intervention import (
-        BatchUpdateRequest, InterventionCreate, InterventionUpdate, MaterialCreate,
+        ChecklistItemUpdate, InterventionCreate, InterventionUpdate, MaterialCreate,
         PhotoRef,
     )
     from app.modules.interventions.schemas.review import ReviewSubmitRequest
@@ -196,7 +211,9 @@ def test_existing_schema_contracts():
     # Historical strings are not replaced with stricter enums or numeric quantities.
     assert InterventionCreate(**{**body.model_dump(), "priority": "libre"}).priority == "libre"
     assert MaterialCreate(name="Joint", quantity="2 mètres").quantity == "2 mètres"
-    assert BatchUpdateRequest(items=[{"id": 1, "checked": True}]).items[0].note is None
+    assert ChecklistItemUpdate(result="OK").comment is None
+    with pytest.raises(ValidationError):
+        ChecklistItemUpdate(checked=True)
     assert PhotoRef(id=1, category="avant", file_url="/uploads/photos/a.jpg").thumbnail_url is None
     for payload in ({"rating": 0}, {"rating": 6}, {"rating": 5, "comment": "x" * 2001}):
         with pytest.raises(ValidationError):
@@ -279,9 +296,14 @@ async def test_checklist_material_completion_public_review_and_report(context):
         checklist = ChecklistService(db)
         items = await checklist.get_items(intervention_id)
         assert len(items) == 5
-        assert await checklist.batch_update(intervention_id, [
-            {"id": item.id, "checked": True, "note": "R7"} for item in items
-        ]) == 5
+        for item in items:
+            patched = await ac.patch(
+                f"/api/v1/checklist-items/{item.id}",
+                json={"result": "OK", "comment": "R7"},
+            )
+            assert patched.status_code == 200, patched.text
+            assert patched.json()["result"] == "OK"
+            assert patched.json()["comment"] == "R7"
         assert (await checklist.validate_all_checked(intervention_id))["is_valid"]
         material = await MaterialService(db).create_material(
             intervention_id, MaterialCreate(name="Joint R7", quantity="2 mètres"),
@@ -293,7 +315,9 @@ async def test_checklist_material_completion_public_review_and_report(context):
     response = await ac.get(url)
     assert response.status_code == 200, response.text
     detail = response.json()
-    assert all(item["checked"] and item["note"] == "R7" for item in detail["checklist_items"])
+    assert len(detail["checklist_items"]) == 5
+    assert all(item["result"] == "OK" and item["comment"] == "R7"
+               for item in detail["checklist_items"])
     assert detail["materials"] == [material.model_dump()]
     response = await ac.get(complete["report_url"])
     assert response.status_code == 200, response.text

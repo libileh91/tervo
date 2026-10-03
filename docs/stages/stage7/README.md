@@ -2,19 +2,19 @@
 
 Tervo V2 est réparti en six sprints. Ils reprennent les lots auparavant regroupés dans `sprint-6.2-v2`, puis `sprint7`, en conservant les identifiants INT, critères validés et cas de test.
 
-La référence métier et technique reste le [DAT unique](../../DAT/new/00-sommaire.md). L'utilisateur a validé **INT-103 autonome avant INT-102**, dans **sprint7.3**. Le parcours autonome et son raccordement commercial INT-102 / TD-B017 sont désormais implémentés ; la validation PostgreSQL d'INT-102 reste à exécuter.
+La référence métier et technique reste le [DAT unique](../../DAT/new/00-sommaire.md). L'utilisateur a validé **INT-103 autonome avant INT-102**, dans **sprint7.3**. Le parcours autonome et son raccordement commercial INT-102 / TD-B017 sont implémentés et testés sur PostgreSQL, notamment dans la non-régression R11 puis INT-104.
 
 | Sprint | Périmètre | Tâches | Avancement |
 |---|---|---|---|
 | [7.1](sprint7.1/tasks.md) | Socle physique | INT-94 à INT-97 | Terminé |
 | [7.2](sprint7.2/tasks.md) | Migration Excel | INT-98 à INT-101 | Terminé |
-| [7.3](sprint7.3/tasks.md) | Chaîne commerciale | INT-102 à INT-103 | INT-102 et raccordement commercial INT-103 implémentés ; validations PostgreSQL à exécuter |
-| [Chantier technique — refactor monolithe modulaire](refactor-monolithe-modulaire/README.md) | Transverse, avant 7.4 ; hors sprints fonctionnels | INT-113 à INT-123 (R1 à R11) | R0 à R10 validés et committés (`2f9e0c3`) ; R11 vérifié localement, commit autorisé après contrôle final ; reprise docs 7.4 TD-B018 encore ouverte |
-| [7.4](sprint7.4/tasks.md) | Cycle terrain | INT-104 à INT-108 | À traiter |
+| [7.3](sprint7.3/tasks.md) | Chaîne commerciale | INT-102 à INT-103 | Implémentés ; non-régression SQLite/PostgreSQL vérifiée |
+| [Chantier technique — refactor monolithe modulaire](refactor-monolithe-modulaire/README.md) | Transverse, avant 7.4 ; hors sprints fonctionnels | INT-113 à INT-123 (R1 à R11) | Terminé et poussé sur main (`adc5954`), CI verte ; TD-B018 traité au démarrage d'INT-104 |
+| [7.4](sprint7.4/tasks.md) | Cycle terrain | INT-104 à INT-108 | INT-104 implémentée et vérifiée localement ; INT-105 à INT-108 non démarrées |
 | [7.5](sprint7.5/tasks.md) | Showroom et remplacement | INT-109 à INT-110 | À traiter |
 | [7.6](sprint7.6/tasks.md) | Déploiement VPS et documentation entretien | INT-111 à INT-112 | À traiter |
 
-Chaque dossier contient son `tasks.md` et son `test-cases.json`. Les notes terminées sont classées dans [sprint7.1](../../../notes/backend/sprint7.1/) et [sprint7.2](../../../notes/backend/sprint7.2/).
+Chaque dossier contient son `tasks.md` et son `test-cases.json`. Les notes suivent les mêmes noms de sprint dans `notes/backend/`, dont [sprint7.4](../../../notes/backend/sprint7.4/) pour INT-104.
 
 ## Dépendances et suivi
 

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, time
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ── Enums (matching the DB model) ─────────────────────────
 
@@ -32,6 +32,7 @@ class PriorityEnum(str):
 
 class InterventionCreate(BaseModel):
     under_warranty: bool = False
+    checklist_template_id: int | None = Field(None, gt=0)
     site_id: int
     equipment_id: int | None = Field(None, gt=0)
     title: str = Field(..., min_length=1, max_length=255)
@@ -71,10 +72,12 @@ class TechnicianRef(BaseModel):
 
 class ChecklistItemRef(BaseModel):
     id: int
+    intervention_checklist_id: int
     category: str
     label: str
-    checked: bool
-    note: str | None = None
+    result: str | None = None
+    comment: str | None = None
+    completed_at: datetime | None = None
     position: int
 
     model_config = {"from_attributes": True}
@@ -97,24 +100,18 @@ class PhotoRef(BaseModel):
 
 
 class ChecklistItemUpdate(BaseModel):
-    """Schema for single item update (checked, note)."""
+    """Only completion data is mutable; snapshot structure is immutable."""
 
-    checked: bool | None = None
-    note: str | None = None
+    model_config = {"extra": "forbid"}
+    result: str | None = Field(None, max_length=100)
+    comment: str | None = None
 
-
-class BatchItemUpdate(ChecklistItemUpdate):
-    """Schema for batch item update (with id)."""
-
-    id: int
-
-
-class BatchUpdateRequest(BaseModel):
-    items: list[BatchItemUpdate]
-
-
-class BatchUpdateResponse(BaseModel):
-    updated: int
+    @field_validator("result")
+    @classmethod
+    def nonblank_result(cls, value):
+        if value is not None and not value.strip():
+            raise ValueError("result must be nonblank or null")
+        return value
 
 
 # ── Material schemas (INT-26) ──────────────────────────────

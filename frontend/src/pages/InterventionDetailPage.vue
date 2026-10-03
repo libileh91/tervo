@@ -50,7 +50,6 @@
                     @click="showCancelDialog = true"
                 />
                 <Button
-                    v-if="intervention.status === 'IN_PROGRESS'"
                     label="📋 Checklist"
                     severity="info"
                     fluid
@@ -58,11 +57,11 @@
                 />
                 <Button
                     v-if="intervention.status === 'IN_PROGRESS'"
-                    label="✅ Terminer"
+                    label="✅ Vérifier et terminer"
                     severity="danger"
                     fluid
                     :loading="actionLoading"
-                    @click="handleComplete"
+                    @click="router.push({ name: 'Inspection', params: { id: intervention.id } })"
                 />
                 <Button
                     v-if="intervention.status === 'PLANNED' || intervention.status === 'CANCELLED'"
@@ -553,27 +552,6 @@ async function handleStart() {
             severity: "error",
             summary: "Erreur",
             detail: err.detail || "Impossible de demarrer",
-            life: 5000,
-        });
-    } finally {
-        actionLoading.value = false;
-    }
-}
-
-async function handleComplete() {
-    actionLoading.value = true;
-    try {
-        await api.put(`/interventions/${interventionId}/complete`, { observations: null }, auth.token);
-        toast.add({ severity: "success", summary: "Intervention terminee", life: 3000 });
-        // Muter directement le intervention affiche
-        intervention.value = { ...intervention.value!, status: "COMPLETED" as any, completed_at: new Date().toISOString() as any };
-        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-        queryClient.invalidateQueries({ queryKey: ["interventions"] });
-    } catch (err: any) {
-        toast.add({
-            severity: "error",
-            summary: "Erreur",
-            detail: err.detail || "Impossible de terminer",
             life: 5000,
         });
     } finally {

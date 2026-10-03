@@ -79,8 +79,15 @@ class Intervention(Base):
     # ── Relationships ───────────────────────────────────────
     site = relationship("Site", backref="interventions")
     technician = relationship("User", backref="interventions")
+    checklist = relationship(
+        "InterventionChecklist", back_populates="intervention", uselist=False,
+        cascade="all, delete-orphan",
+    )
     checklist_items = relationship(
-        "ChecklistItem", back_populates="intervention", cascade="all, delete-orphan"
+        "ChecklistItem", secondary="intervention_checklist",
+        primaryjoin="Intervention.id == InterventionChecklist.intervention_id",
+        secondaryjoin="InterventionChecklist.id == ChecklistItem.intervention_checklist_id",
+        viewonly=True, order_by="ChecklistItem.position",
     )
     photos = relationship(
         "InterventionPhoto",

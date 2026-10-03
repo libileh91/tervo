@@ -148,7 +148,9 @@ async def replay():
 
 
 async def dump_database(db):
-    """Every column of every registered table, sorted by primary key."""
+    """Every column, then the explicit empty-checklist INT-104 projection."""
+    from tests.contract_int104 import project_import_database
+
     result = {}
     for table in sorted(Base.metadata.tables.values(), key=lambda t: t.name):
         rows = (await db.execute(select(table).order_by(*table.primary_key.columns))).mappings().all()
@@ -156,7 +158,7 @@ async def dump_database(db):
             {key: normalized_column(table.name, key, v) for key, v in row.items()}
             for row in rows
         ]
-    return result
+    return project_import_database(result)
 
 
 def test_snapshot_normalization_preserves_business_completion_dates():

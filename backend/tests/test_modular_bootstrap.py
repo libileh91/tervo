@@ -1,4 +1,4 @@
-"""Contrats R1 : bootstrap isolé et conservation exacte des snapshots R0.
+"""Bootstrap isolé : preuves R0 immuables et delta courant INT-104 explicite.
 
 Chaque scénario importe l'application dans un nouvel interpréteur, sans lifespan,
 serveur HTTP ni connexion SQL. Aucun module applicatif n'est importé à la collecte.
@@ -16,6 +16,8 @@ import textwrap
 from pathlib import Path
 
 import pytest
+
+from tests.contract_int104 import assert_metadata_contract, assert_openapi_contract
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND = REPO_ROOT / "backend"
@@ -111,24 +113,28 @@ if block_engine:
     patches.enter_context(patch.object(Engine, "__init__", reject_database_io))
     patches.enter_context(patch.object(AsyncEngine, "__init__", reject_database_io))
 
-expected_tables = frozenset(json.loads(metadata_baseline.read_text(encoding="utf-8")))
-assert len(expected_tables) == 17
+historical_tables = frozenset(json.loads(metadata_baseline.read_text(encoding="utf-8")))
+assert len(historical_tables) == 17
+expected_tables = historical_tables | {"checklist_template", "intervention_checklist"}
 
 
 def assert_registry(Base):
     from sqlalchemy.orm import configure_mappers
 
     assert set(Base.metadata.tables) == expected_tables
-    assert len(Base.metadata.tables) == 17
+    assert len(Base.metadata.tables) == 19
     configure_mappers()
     mappers = set(Base.registry.mappers)
-    assert len(mappers) == 17
+    assert len(mappers) == 19
     assert all(mapper.configured for mapper in mappers)
     assert {mapper.local_table.key for mapper in mappers} == expected_tables
     assert all(
         mapper.local_table is Base.metadata.tables[mapper.local_table.key]
         for mapper in mappers
     )
+    for table in Base.metadata.tables.values():
+        for foreign_key in table.foreign_keys:
+            assert foreign_key.column.table is Base.metadata.tables[foreign_key.column.table.key]
 
 
 result = None
@@ -323,7 +329,7 @@ def test_registry_import_does_not_eagerly_load_models(tmp_path):
     )
 
 
-def test_load_models_registers_exact_r0_tables_without_web_or_engine(tmp_path):
+def test_load_models_registers_exact_current_tables_without_web_or_engine(tmp_path):
     _run_python(
         tmp_path,
         """
@@ -428,7 +434,7 @@ def test_domains_and_registry_import_orders_share_one_registry(tmp_path, order):
             "customers", "catalog", "sales", "equipment", "installations",
             "identity", "imports",
         )
-        terrain = ("intervention", "checklist_item", "intervention_photo", "material", "review")
+        terrain = ("intervention", "checklist", "checklist_item", "intervention_photo", "material", "review")
         if {order!r} == "registry-first":
             load_models()
         modules = [
@@ -462,7 +468,7 @@ def test_domains_and_registry_import_orders_share_one_registry(tmp_path, order):
     )
 
 
-def test_metadata_matches_r0_exactly(tmp_path):
+def test_metadata_matches_r0_with_only_authorized_int104_delta(tmp_path):
     actual = _run_python(
         tmp_path,
         _METADATA_SERIALIZER
@@ -476,10 +482,10 @@ result = serialize_metadata(Base.metadata)
 """,
     )
     expected = json.loads((BASELINES / "R0-metadata.json").read_text(encoding="utf-8"))
-    assert actual == expected
+    assert_metadata_contract(actual, expected)
 
 
-def test_openapi_matches_r0_exactly_without_startup_or_sql(tmp_path):
+def test_openapi_matches_r0_with_only_authorized_int104_delta_without_startup_or_sql(tmp_path):
     actual = _run_python(
         tmp_path,
         """
@@ -493,7 +499,7 @@ def test_openapi_matches_r0_exactly_without_startup_or_sql(tmp_path):
         block_engine=False,
     )
     expected = json.loads((BASELINES / "R0-openapi.json").read_text(encoding="utf-8"))
-    assert actual == expected
+    assert_openapi_contract(actual, expected)
 
 
 def test_api_router_aggregates_exact_legacy_routes_in_order(tmp_path):

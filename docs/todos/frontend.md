@@ -124,3 +124,15 @@
 | **Fichiers** | `frontend/src/pages/`, `frontend/src/router/`, `docs/stages/stage7/sprint7.5/tasks.md` |
 | **Action attendue** | Vérifier l’existant et planifier les écrans V2 : catalogue, détail et édition, visites showroom, navigation, recherche/filtres et états loading/empty/error avec réessai. Adapter les cas E2E de l’ancien INT-83 au modèle V2 ; ne pas reprendre implicitement exposition physique, prix catalogue ou badges essai/vendable. |
 | **Statut** | ⏳ À cadrer avant livraison des interfaces V2 ; aucune réalisation frontend déduite de la clôture backend d’INT-96 |
+
+---
+
+## TD-F008 — Cadrer l'administration des modèles de checklist
+
+| Champ | Valeur |
+|---|---|
+| **Créé dans** | INT-104, sprint7.4 |
+| **Dépend de** | Validation INT-104 et cadrage frontend explicitement autorisé |
+| **Fichiers** | `frontend/src/pages/`, `frontend/src/router/`, `backend/app/modules/interventions/api/checklist.py` |
+| **Action attendue** | Cadrer l'écran ADMIN de création, modification et désactivation des modèles, affichage des versions et items. L'API est livrée ; la sélection d'un modèle et l'inspection V2 sont adaptées, mais aucun écran d'administration n'est déduit de ces réalisations. Ne pas introduire de rôle MANAGER avant son cadrage (TD-B013). |
+| **Statut** | ⏳ À cadrer ; hors périmètre de l'adaptation des consommateurs existants INT-104 |

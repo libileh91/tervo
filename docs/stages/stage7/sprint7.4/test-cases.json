@@ -21,7 +21,130 @@
         "nouvel_item_absent_historique": "true",
         "deux_niveaux": "true (template vs snapshot)"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed_local",
+        "evidence": "test_templates_permissions_and_snapshot_history, SQLite et PostgreSQL",
+        "observed": "Snapshot v1 identique après PATCH du modèle ; nouvelle intervention en v2 avec ses nouveaux items",
+        "remote_ci_claimed": false
+      }
+    },
+    {
+      "id": "TC-INT-104-02",
+      "task": "INT-104",
+      "title": "Sélection explicite et fallback par défaut",
+      "type": "integration",
+      "preconditions": ["Un site et un technicien authentifié", "Un modèle actif"],
+      "steps": [
+        "Créer une intervention avec checklist_template_id",
+        "Créer une intervention sans sélection",
+        "Créer avec un modèle inconnu puis désactivé"
+      ],
+      "expected_result": {
+        "selection": "Snapshot contenant nom, version et items copiés du modèle",
+        "fallback": "Snapshot des cinq contrôles par défaut",
+        "unknown": "404 et aucune intervention partiellement créée",
+        "inactive": "422 et aucune intervention partiellement créée"
+      },
+      "actual_result": {
+        "status": "passed_local",
+        "evidence": "test_default_result_comment_permissions_and_locked_status, test_template_selection_and_creation_rollback",
+        "observed": "Sélection explicite copiée ; fallback de cinq items ; ID non positif 422, inconnu 404, inactif 422 ; rollback sans création partielle"
+      }
+    },
+    {
+      "id": "TC-INT-104-03",
+      "task": "INT-104",
+      "title": "Permissions et immutabilité structurelle",
+      "type": "api",
+      "preconditions": ["ADMIN", "Deux techniciens", "Une intervention avec snapshot"],
+      "steps": [
+        "Consulter les modèles sans authentification",
+        "Créer et modifier un modèle comme technicien puis ADMIN",
+        "Modifier un résultat comme technicien non assigné",
+        "Modifier un résultat comme assigné",
+        "Tenter de modifier le label ou la position d'un item",
+        "Tenter de modifier le résultat après clôture ou annulation"
+      ],
+      "expected_result": {
+        "anonymous": "401",
+        "template_write": "403 pour le technicien ; succès ADMIN",
+        "unassigned": "403",
+        "assigned": "PATCH result/comment enregistré, completed_at géré par serveur",
+        "structure": "422 pour les champs structurels interdits",
+        "closed": "Modification refusée"
+      },
+      "actual_result": {
+        "status": "passed_local",
+        "observed": "Anonyme 401 ; écritures modèles réservées ADMIN ; autre technicien 403 ; champs structurels 422 ; statuts terminaux 422",
+        "timestamp": "Commentaire seul ou résultat répété conserve completed_at ; result null efface completed_at",
+        "concurrency": "Quatre tests PostgreSQL vérifient les deux ordres PATCH/clôture et PATCH/annulation avec verrou commun"
+      }
+    },
+    {
+      "id": "TC-INT-104-04",
+      "task": "INT-104",
+      "title": "Transaction et historique existant",
+      "type": "integration",
+      "preconditions": ["Une base de test jetable", "Des items historiques cochés et commentés"],
+      "steps": [
+        "Migrer depuis le schéma précédent",
+        "Vérifier les IDs, libellés, positions, résultats et commentaires",
+        "Injecter une erreur pendant la création du snapshot",
+        "Vérifier absence d'intervention et d'items partiellement persistés",
+        "Faire un round trip sur des données compatibles",
+        "Tenter un downgrade avec des métadonnées V2 non représentables"
+      ],
+      "expected_result": {
+        "migration": "checked vrai converti en OK, faux en null ; note convertie en comment ; IDs conservés",
+        "empty_history": "Snapshot sans contrôles inventés pour une intervention historique sans items",
+        "rollback": "Aucune création partielle",
+        "roundtrip": "Données compatibles conservées",
+        "lossy_downgrade": "Refus explicite avant suppression"
+      },
+      "actual_result": {
+        "status": "passed_local",
+        "evidence": "test_checklist_migration.py et injection après flush dans test_int104_checklists.py",
+        "observed": "IDs, libellés, positions et commentaires conservés ; conversion checked vers OK/null ; historique vide sans contrôles inventés ; downgrade destructif refusé avant DDL",
+        "postgresql": "Chaîne réelle upgrade head, downgrade -1 et re-upgrade réussie ; comparaison metadata sans nouvel écart INT-104",
+        "alembic_check": "255 uniquement pour la FK technicien historique, non présenté comme check vert"
+      }
+    },
+    {
+      "id": "TC-INT-104-05",
+      "task": "INT-104",
+      "title": "Contrat V2 et parcours d'inspection",
+      "type": "integration",
+      "preconditions": ["Frontend adapté", "Une intervention assignée"],
+      "steps": [
+        "Lire le snapshot sans provoquer d'écriture",
+        "Vérifier le retrait des anciennes routes PUT checklist et POST item",
+        "Renseigner result/comment depuis l'inspection",
+        "Effacer un résultat puis vérifier le blocage de clôture",
+        "Simuler un échec partiel de sauvegarde",
+        "Vérifier les gardes metadata/OpenAPI et l'oracle d'import historique"
+      ],
+      "expected_result": {
+        "GET": "Objet snapshot avec items ; aucune création implicite",
+        "legacy": "Routes et champs checked/note retirés",
+        "completion": "Un résultat null reste non réalisé et bloque la clôture",
+        "partial_save": "Les saisies non sauvegardées restent visibles ; clôture empêchée",
+        "historical_evidence": "Fixtures et SHA R0–R11 inchangés ; delta courant INT-104 contrôlé séparément"
+      },
+      "actual_result": {
+        "status": "passed_api_frontend_helpers_and_browser",
+        "observed": "GET sans effet ; contrat legacy retiré ; résultats et commentaires persistés ; clôture refusée si résultat null",
+        "frontend": "4 tests Bun (11 assertions), typecheck et build réussis ; drafts dirty conservés après échec partiel et saisie pendant PATCH",
+        "history": "Gardes metadata/OpenAPI et replay d'import réussis sans réécriture des fixtures historiques",
+        "browser": {
+          "status": "passed_real_playwright_smoke",
+          "observed": "Login 200 ; snapshot v1, deux résultats null ; première sauvegarde PATCH 500 injecté/second item 200 ; saisie conservée, réessai 200 ; clôture empêchée avant sauvegarde puis complete 200 et statut COMPLETED",
+          "pdf": "200 application/pdf, rapport-intervention-1.pdf, 13032 octets",
+          "pageerrors": 0,
+          "limits": "Sélection du modèle dans le formulaire de création non exécutée dans ce smoke ; écran d'administration absent"
+        },
+        "backend_suite": "450 passed, 6 skipped, 7 warnings",
+        "postgresql_canonical_suite": "132 passed, 2 warnings"
+      }
     },
     {
       "id": "TC-INT-106-01",

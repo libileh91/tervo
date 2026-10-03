@@ -1,0 +1,154 @@
+{
+  "task": "INT-104",
+  "status": "locally_verified",
+  "capture_phase": "before authorized INT-104 commit; execution evidence, not a live Git status",
+  "base_commit": "adc5954bd22bacc1f23601f2e0af6d9737fc5f80",
+  "work_branch": "main",
+  "working_checkout": "/home/lob/workspace/python/fastapi/Tervo",
+  "task_commit_or_push_performed_by_parent": false,
+  "remote_ci_int104_verified_by_parent": false,
+  "deployment_performed": false,
+  "database_existing_or_production_modified": false,
+  "decisions": {
+    "template_selection": "explicit optional checklist_template_id at intervention creation",
+    "automatic_selection_by_type": false,
+    "legacy_checked_note_and_checklist_put_batch_post_compatibility": false,
+    "result": "nullable nonblank string max 100; no invented enum",
+    "template_version": "server-owned initial 1",
+    "empty_template_patch": "422",
+    "interactive_without_selection": "five pending default items",
+    "historical_import": "one empty historical snapshot per intervention; no fabricated controls/results"
+  },
+  "backend_suite": {
+    "command": "existing backend venv python -m pytest <absolute tests> -q --tb=short -p no:cacheprovider",
+    "cwd_database_uploads": "scratch",
+    "passed": 450,
+    "skipped": 6,
+    "warnings": 7,
+    "seconds": 103.95,
+    "skip_reason": "PostgreSQL migration chain plus five PostgreSQL row-lock tests; executed in dedicated PostgreSQL runs"
+  },
+  "postgresql": {
+    "image": "local postgres:17.4 --pull never",
+    "ports": "loopback ephemeral only",
+    "existing_volumes_used": false,
+    "parent_containers_stopped": true,
+    "canonical_suite": {
+      "files": [
+        "test_installations.py",
+        "test_sales.py",
+        "test_installation_migration.py",
+        "test_import_service_v2.py",
+        "test_import_api_v2.py",
+        "test_int104_checklists.py",
+        "test_checklist_migration.py"
+      ],
+      "passed": 132,
+      "warnings": 2,
+      "seconds": 55.98
+    },
+    "focused_runtime_and_migration": {
+      "passed": 37,
+      "warnings": 2,
+      "seconds": 12.16
+    },
+    "full_alembic_env_chain": {
+      "upgrade_head": 0,
+      "downgrade_last": 0,
+      "reupgrade_head": 0,
+      "head": "g104e0010001"
+    },
+    "alembic_check_returncode": 255,
+    "structured_metadata_comparison": "only preexisting remove/add technician FK, no new INT-104 delta",
+    "known_fk": {
+      "table": "intervention",
+      "column": "technician_id",
+      "target": "user.id",
+      "historical_ondelete": null,
+      "orm_ondelete": "SET NULL"
+    }
+  },
+  "regressions": {
+    "create_snapshot_items_atomic_rollback_after_flush": true,
+    "template_snapshot_coherent_version_postgresql": true,
+    "concurrent_template_compare_and_swap": true,
+    "patch_complete_cancel_shared_intervention_lock": "four PostgreSQL orderings passed",
+    "refresh_orm_state_after_lock": true,
+    "unchanged_result_or_comment_preserves_completed_at": true,
+    "null_result_clears_completed_at": true,
+    "historical_migration_preserves_ids_labels_positions_comments": true,
+    "lossy_downgrade_refused_before_ddl": true,
+    "GET_has_no_side_effects": true,
+    "report_free_text_escaped": true
+  },
+  "review": {
+    "initial_blocker": "item PATCH could commit after completion/cancellation",
+    "fix": "shared intervention row lock, fresh ORM state, refresh item before writing",
+    "final_targeted_review": "no new blocker identified",
+    "reviewer_reran_suites": false,
+    "stale_test_case_pointer_reported_in_reviewer_snapshot": "already corrected to test_default_result_comment_permissions_and_locked_status in parent",
+    "empty_patch_distinction": "template PATCH empty rejected 422; item PATCH empty remains an authorized no-op"
+  },
+  "frontend": {
+    "bun_version": "1.2.20",
+    "worker_frozen_install_temporary_copy": "passed",
+    "parent_tests_passed": 4,
+    "parent_test_assertions": 11,
+    "parent_typecheck": 0,
+    "parent_build": 0,
+    "vite_version": "6.4.3",
+    "transformed_modules": 451,
+    "dependencies_and_lockfiles_changed": false,
+    "model_admin_screen_delivered": false,
+    "followup": "TD-F008"
+  },
+  "browser": {
+    "provenance": "dedicated scout real Playwright smoke in this INT-104 task",
+    "temporary_location": "/tmp/tervo-smoke-int104",
+    "playwright_npm_version": "1.49.1",
+    "chromium_version": "131.0.6778.33",
+    "playwright_browser_build": "v1148 ubuntu20.04-x64 fallback",
+    "backend_frontend_browser_processes_stopped": true,
+    "test_ports_8765_4173_free": true,
+    "temporary_evidence_directory_retained": true,
+    "setup": "fictional ORM users/site/intervention; SQLite/uploads isolated; no app.seed",
+    "user_python_modified": false,
+    "login_and_me_http_status": 200,
+    "snapshot_name": "Template Inspection Smoke",
+    "snapshot_version": 1,
+    "initial_pending_items": 2,
+    "free_results_and_comments": true,
+    "partial_save": "first PATCH 500 intentionally intercepted, second PATCH 200",
+    "failed_item_draft_preserved": true,
+    "retry_patch_status": 200,
+    "dirty_blocks_completion": true,
+    "completion_status": 200,
+    "final_intervention_status": "COMPLETED",
+    "admin_template_get_status": 200,
+    "admin_template_post_status": 201,
+    "pdf_http_status": 200,
+    "pdf_content_type": "application/pdf",
+    "pdf_filename": "rapport-intervention-1.pdf",
+    "pdf_bytes": 13032,
+    "pageerrors": 0,
+    "console_limits": "Vite messages, autofocus info, intentional HTTP 500 and PrimeVue Tabs deprecation",
+    "model_selection_in_create_ui_executed": false,
+    "initial_browser_download_timeout": true
+  },
+  "historical_evidence": {
+    "R0_R11_notes_artifacts_fixtures_unchanged": true,
+    "R0_metadata_sha256": "e86c52bc02519708beb34a3dd587ca566a222f54a04a3fe0b62bdd742ca2089a",
+    "R0_openapi_sha256": "dcabfd245b80cbf3989f71049669c3a65e9766b3ed9512bbf58e22acea942fd7",
+    "R9_import_oracle_sha256": "6fea24321f71239649f57be88e0270c5e704cce12a23ff1722d3aad0431d6279",
+    "current_registry_tables_and_mappers": 19,
+    "explicit_contract_projection_tests_passed": 27
+  },
+  "planning": {
+    "TD_B018_paths_updated": true,
+    "INT104_acceptance_criteria_checked": 5,
+    "INT105_to_INT108_started": false,
+    "INT106_INT107_original_test_cases_unchanged": true,
+    "DAT_changed": false,
+    "other_open_followups": ["TD-B013", "TD-B016", "TD-B019", "TD-F005", "TD-F007", "TD-F008"]
+  }
+}

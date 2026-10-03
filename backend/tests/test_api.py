@@ -27,6 +27,7 @@ from app.core.security import create_access_token
 from app.main import app
 from app.core.base import Base
 from app.modules.interventions.models.checklist_item import ChecklistItem
+from app.modules.interventions.models.checklist import InterventionChecklist
 from app.modules.customers.models import Client, Site
 from app.modules.interventions.models.intervention import Intervention, InterventionStatus
 from app.modules.interventions.models.intervention_photo import InterventionPhoto
@@ -197,7 +198,8 @@ async def intervention_in_progress(
     await db.commit()
     await db.refresh(j)
 
-    # Seed checklist items (all checked)
+    # V2 completion requires a non-null result for every snapshot item.
+    items = []
     for i, (cat, label) in enumerate(
         [
             ("pre_intervention", "Check item A"),
@@ -205,9 +207,13 @@ async def intervention_in_progress(
         ]
     ):
         item = ChecklistItem(
-            intervention_id=j.id, category=cat, label=label, checked=True, position=i
+            category=cat, label=label, result="OK", position=i
         )
-        db.add(item)
+        items.append(item)
+    db.add(InterventionChecklist(
+        intervention_id=j.id, template_name="Completion fixture",
+        template_version=1, items=items,
+    ))
     await db.commit()
 
     return j

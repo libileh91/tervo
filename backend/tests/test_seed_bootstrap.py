@@ -48,6 +48,25 @@ def test_real_seed_cli_twice_on_its_own_demo_only(tmp_path):
                 for table in ("user", "client", "site", "intervention")
             } == {"user": 2, "client": 8, "site": 8, "intervention": 7}
             assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+            # Demo intervention creation now persists immutable V2 snapshots.
+            assert connection.execute(
+                "SELECT count(*) FROM intervention_checklist"
+            ).fetchone()[0] == 7
+            assert connection.execute(
+                "SELECT count(*) FROM intervention_checklist "
+                "WHERE template_name IS NULL OR template_version IS NULL"
+            ).fetchone()[0] == 0
+            assert connection.execute(
+                "SELECT count(*) FROM intervention_checklist s "
+                "WHERE (SELECT count(*) FROM checklist_item i "
+                "WHERE i.intervention_checklist_id = s.id) != 5"
+            ).fetchone()[0] == 0
+            # Seed does not fabricate results, even for completed demo jobs.
+            assert connection.execute(
+                "SELECT count(*) FROM checklist_item "
+                "WHERE result IS NOT NULL OR comment IS NOT NULL "
+                "OR completed_at IS NOT NULL"
+            ).fetchone()[0] == 0
             users = connection.execute('SELECT role, hashed_password FROM "user"').fetchall()
             assert {role.lower() for role, _ in users} == {"admin", "technician"}
             from passlib.hash import bcrypt

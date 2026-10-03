@@ -53,6 +53,7 @@ export const api = {
   get: <T>(path: string, token?: string | null) => request<T>("GET", path, undefined, token),
   post: <T>(path: string, body: unknown, token?: string | null) => request<T>("POST", path, body, token),
   put: <T>(path: string, body: unknown, token?: string | null) => request<T>("PUT", path, body, token),
+  patch: <T>(path: string, body: unknown, token?: string | null) => request<T>("PATCH", path, body, token),
   delete: <T>(path: string, token?: string | null) => request<T>("DELETE", path, undefined, token),
   upload: <T>(path: string, formData: FormData, token?: string | null) => uploadFile<T>(path, formData, token),
 };
@@ -348,9 +349,10 @@ export const materialsApi = {
 // ── Checklist API (INT-20) ───────────────────────────────────
 
 export const checklistApi = {
-  getItems: (token: string, interventionId: number) => api.get<ChecklistItemRef[]>(`/interventions/${interventionId}/checklist`, token),
-  batchUpdate: (token: string, interventionId: number, items: { id: number; checked?: boolean; note?: string | null }[]) =>
-    api.put<{ updated: number }>(`/interventions/${interventionId}/checklist/batch`, { items }, token),
+  getSnapshot: (token: string, interventionId: number) => api.get<ChecklistSnapshot>(`/interventions/${interventionId}/checklist`, token),
+  updateItem: (token: string, id: number, data: { result: string | null; comment: string | null }) =>
+    api.patch<ChecklistItemRef>(`/checklist-items/${id}`, data, token),
+  listTemplates: (token: string) => api.get<ChecklistTemplate[]>("/checklist-templates", token),
 };
 
 // ── Intervention types ───────────────────────────────────────────────
@@ -389,11 +391,32 @@ export const interventionsApi = {
 
 export interface ChecklistItemRef {
   id: number;
+  intervention_checklist_id: number;
   category: string;
   label: string;
-  checked: boolean;
-  note: string | null;
+  result: string | null;
+  comment: string | null;
+  completed_at: string | null;
   position: number;
+}
+
+export interface ChecklistSnapshot {
+  id: number;
+  intervention_id: number;
+  template_id: number | null;
+  template_name: string;
+  template_version: number;
+  created_at: string;
+  items: ChecklistItemRef[];
+}
+
+export interface ChecklistTemplate {
+  id: number;
+  name: string;
+  intervention_type: string;
+  version: number;
+  active: boolean;
+  items: { category: string; label: string; position: number }[];
 }
 
 export interface InterventionDetailResponse {
@@ -417,10 +440,10 @@ export interface InterventionDetailResponse {
   updated_at: string;
   site: { id: number; name: string; address: string } | null;
   technician: { id: number; full_name: string | null } | null;
-  checklist_items: ChecklistItemRef[];
 }
 
 export interface InterventionCreateRequest {
+  checklist_template_id?: number | null;
   equipment_id?: number | null;
   under_warranty?: boolean;
   site_id: number;

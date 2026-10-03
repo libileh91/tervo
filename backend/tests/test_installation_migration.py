@@ -12,7 +12,7 @@ from app.model_registry import load_models
 
 PREVIOUS = "d100e0010001"
 REVISION = "e103e0010001"
-HEAD = "f102e0010001"
+HEAD = "g104e0010001"
 BACKEND = Path(__file__).resolve().parents[1]
 
 
@@ -41,8 +41,21 @@ def migration(tmp_path, monkeypatch):
         # the previous schema for SQLite; the full chain is tested on PostgreSQL.
         previous = sa.MetaData()
         for table in Base.metadata.sorted_tables:
-            if table.name not in {"installation", "sale", "sale_line"}:
+            if table.name not in {"installation", "sale", "sale_line",
+                                  "checklist_template", "intervention_checklist", "checklist_item"}:
                 table.to_metadata(previous)
+        # Reconstruct the checklist that actually existed at PREVIOUS, rather
+        # than leaking current tables into a stamped historical schema.
+        sa.Table("checklist_item", previous,
+            sa.Column("id", sa.Integer(), primary_key=True, index=True),
+            sa.Column("intervention_id", sa.Integer(),
+                      sa.ForeignKey("intervention.id", ondelete="CASCADE"),
+                      nullable=False, index=True),
+            sa.Column("category", sa.String(20), nullable=False),
+            sa.Column("label", sa.String(255), nullable=False),
+            sa.Column("checked", sa.Boolean(), nullable=False),
+            sa.Column("note", sa.Text()),
+            sa.Column("position", sa.Integer(), nullable=False))
         equipment = previous.tables["equipment"]
         for constraint in list(equipment.constraints):
             if isinstance(constraint, (sa.ForeignKeyConstraint, sa.UniqueConstraint)) and list(constraint.columns.keys()) == ["installation_id"]:

@@ -13,6 +13,7 @@ from types import SimpleNamespace as NS
 from unittest.mock import patch
 
 import pytest
+from markupsafe import escape
 
 BACKEND = Path(__file__).resolve().parents[1]
 BASELINES = Path(__file__).parent / "fixtures" / "reports"
@@ -40,10 +41,10 @@ def recipe(directory, omissions=False):
                 client=NS(full_name="Élodie Martin", phone="0102030405")),
         technician=NS(full_name="Noé Durand"),
         checklist_items=[
-            NS(category="pre_intervention", label="Sécurité électrique", checked=True, note="Consignation"),
-            NS(category="pre_intervention", label="Accès dégagé", checked=False, note=None),
-            NS(category="post_intervention", label="Essai fonctionnement", checked=True, note="Conforme"),
-            NS(category="legacy", label="Nettoyage", checked=False, note="À revoir"),
+            NS(category="pre_intervention", label="Sécurité électrique", result="OK", comment="Consignation"),
+            NS(category="pre_intervention", label="Accès dégagé", result=None, comment=None),
+            NS(category="post_intervention", label="Essai fonctionnement", result="OK", comment="Conforme"),
+            NS(category="legacy", label="Nettoyage", result=None, comment="À revoir"),
         ],
         photos=[NS(category="avant", file_path=str(before)),
                 NS(category="apres", file_path=str(after)),
@@ -62,7 +63,7 @@ def recipe(directory, omissions=False):
 
 
 @pytest.mark.parametrize("omissions", [False, True], ids=["complete", "fallbacks"])
-def test_full_html_matches_frozen_r7(tmp_path, omissions):
+def test_full_html_matches_frozen_r7_with_explicit_int104_delta(tmp_path, omissions):
     renderer = importlib.import_module("app.modules.reports.renderer")
     exporter = renderer.ReportExporter()
     with patch.object(renderer, "datetime", FrozenDatetime):
@@ -76,7 +77,39 @@ def test_full_html_matches_frozen_r7(tmp_path, omissions):
         expected = zlib.decompress(base64.b64decode(
             (BASELINES / "complete.html.zlib.b64").read_bytes(),
         )).decode("utf-8")
+    # The R7 artifacts remain immutable. INT-104 intentionally replaces the
+    # boolean/note representation and escapes data, not static report markup.
+    for value in (
+        "Maintenance PAC <b>R8</b> & contrôle",
+        "Pression vérifiée & réglage effectué.\nRetour client : satisfait.",
+        "Joint Ø 20 & raccord",
+    ):
+        expected = expected.replace(value, str(escape(value)))
+    expected = expected.replace(
+        "<tr><th>Etat</th><th>Point</th><th>Note</th></tr>",
+        "<tr><th>Résultat</th><th>Point</th><th>Commentaire</th></tr>",
+    ).replace(
+        '<td class="check-yes">O</td>', '<td class="check-yes">OK</td>',
+    ).replace(
+        '<td class="check-no">X</td>', '<td class="check-no">Non réalisé</td>',
+    )
     assert actual == expected
+
+
+def test_checklist_result_and_comment_are_visible_but_never_html(tmp_path):
+    renderer = importlib.import_module("app.modules.reports.renderer")
+    exporter = renderer.ReportExporter()
+    intervention = recipe(tmp_path)
+    result = "<script>alert('result')</script>"
+    comment = '<img src="https://invalid.example/tracker">'
+    intervention.checklist_items[0].result = result
+    intervention.checklist_items[0].comment = comment
+    with patch.object(exporter, "_html_to_pdf", side_effect=lambda html: html):
+        actual = exporter.generate_pdf(intervention)
+    assert str(escape(result)) in actual
+    assert str(escape(comment)) in actual
+    assert result not in actual
+    assert comment not in actual
 
 
 def run_isolated(tmp_path, source):

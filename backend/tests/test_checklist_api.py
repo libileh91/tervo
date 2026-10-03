@@ -1,7 +1,7 @@
 """
 Tests for Checklist API endpoints (INT-18, INT-19, INT-21).
 
-Covers: GET checklist, PUT single item, PUT batch, validation.
+Covers: immutable snapshot reads, assigned technician result patches, validation.
 
 Run:
     cd backend/
@@ -20,6 +20,7 @@ from app.core.security import create_access_token
 from app.main import app
 from app.core.base import Base
 from app.modules.interventions.models.checklist_item import ChecklistItem
+from app.modules.interventions.models.checklist import InterventionChecklist
 from app.modules.customers.models import Client, Site
 from app.modules.interventions.models.intervention import Intervention, InterventionStatus
 from app.modules.identity.models import Role, User
@@ -128,9 +129,12 @@ async def intervention_with_checklist(
         ("post_intervention", "Client informé", 1),
     ]:
         items.append(
-            ChecklistItem(intervention_id=j.id, category=cat, label=label, position=pos)
+            ChecklistItem(category=cat, label=label, position=pos)
         )
-        db.add(items[-1])
+    db.add(InterventionChecklist(
+        intervention_id=j.id, template_name="Checklist fixture",
+        template_version=1, items=items,
+    ))
     await db.commit()
 
     for item in items:
@@ -149,7 +153,16 @@ class TestChecklistAPI:
         )
         assert resp.status_code == 200, resp.text
         data = resp.json()
-        assert len(data) == 5
+        assert data["intervention_id"] == intervention_with_checklist.id
+        assert data["template_name"] == "Checklist fixture"
+        assert data["template_version"] == 1
+        assert len(data["items"]) == 5
+        assert all(item["result"] is None for item in data["items"])
+        again = await client.get(
+            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist",
+            headers=auth_header,
+        )
+        assert again.json() == data  # Reads must not rebuild the snapshot.
 
     async def test_get_checklist_not_found(self, client, auth_header):
         """GET /interventions/99999/checklist → 404."""
@@ -164,7 +177,7 @@ class TestChecklistAPI:
     async def test_update_item(
         self, client, auth_header, intervention_with_checklist, db: AsyncSession
     ):
-        """PUT single item → 200."""
+        """Assigned technician patches result/comment without changing structure."""
         # Fetch the first checklist item
         from sqlalchemy import select
 
@@ -172,65 +185,93 @@ class TestChecklistAPI:
 
         result = await db.execute(
             select(ChecklistItem)
-            .where(ChecklistItem.intervention_id == intervention_with_checklist.id)
+            .join(InterventionChecklist)
+            .where(InterventionChecklist.intervention_id == intervention_with_checklist.id)
             .limit(1)
         )
         item = result.scalar_one()
-        resp = await client.put(
-            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist/{item.id}",
-            json={"checked": True, "note": "OK"},
+        resp = await client.patch(
+            f"/api/v1/checklist-items/{item.id}",
+            json={"result": "OK", "comment": "Verified"},
             headers=auth_header,
         )
         assert resp.status_code == 200, resp.text
         data = resp.json()
-        assert data["checked"] is True
-        assert data["note"] == "OK"
+        assert data["result"] == "OK"
+        assert data["comment"] == "Verified"
+        assert data["label"] == item.label
+        assert data["category"] == item.category
+        assert data["completed_at"] is not None
+        cleared = await client.patch(
+            f"/api/v1/checklist-items/{item.id}",
+            json={"result": None}, headers=auth_header,
+        )
+        assert cleared.status_code == 200, cleared.text
+        assert cleared.json()["result"] is None
+        assert cleared.json()["completed_at"] is None
+        assert cleared.json()["comment"] == "Verified"
 
     async def test_update_item_not_found(self, client, auth_header, intervention_with_checklist):
-        """PUT non-existent item → 404."""
-        resp = await client.put(
-            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist/99999",
-            json={"checked": True},
+        """PATCH non-existent item → 404."""
+        resp = await client.patch(
+            "/api/v1/checklist-items/99999",
+            json={"result": "OK"},
             headers=auth_header,
         )
         assert resp.status_code == 404
 
-    async def test_batch_update(
+    async def test_patch_multiple_results(
         self, client, auth_header, intervention_with_checklist, db: AsyncSession
     ):
-        """PUT batch → 200."""
+        """Independent V2 patches persist each result; no retired batch route."""
         from sqlalchemy import select
 
         from app.modules.interventions.models.checklist_item import ChecklistItem
 
         result = await db.execute(
             select(ChecklistItem)
-            .where(ChecklistItem.intervention_id == intervention_with_checklist.id)
+            .join(InterventionChecklist)
+            .where(InterventionChecklist.intervention_id == intervention_with_checklist.id)
             .limit(3)
         )
         items = list(result.scalars().all())
-        payload = [
-            {"id": item.id, "checked": True, "note": f"OK-{i}"}
-            for i, item in enumerate(items)
-        ]
-        resp = await client.put(
-            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist/batch",
-            json={"items": payload},
+        for i, item in enumerate(items):
+            resp = await client.patch(
+                f"/api/v1/checklist-items/{item.id}",
+                json={"result": "OK", "comment": f"OK-{i}"},
+                headers=auth_header,
+            )
+            assert resp.status_code == 200, resp.text
+            assert resp.json()["result"] == "OK"
+            assert resp.json()["comment"] == f"OK-{i}"
+        resp = await client.get(
+            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist",
             headers=auth_header,
         )
         assert resp.status_code == 200, resp.text
-        data = resp.json()
-        assert data["updated"] == 3
+        stored = {item["id"]: item for item in resp.json()["items"]}
+        assert len(stored) == 5
+        assert sum(item["result"] is not None for item in stored.values()) == 3
+        for i, item in enumerate(items):
+            assert stored[item.id]["comment"] == f"OK-{i}"
 
-    async def test_batch_update_empty(self, client, auth_header, intervention_with_checklist):
-        """Empty batch → 200 + updated=0."""
-        resp = await client.put(
-            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist/batch",
-            json={"items": []},
+    async def test_patch_rejects_structure(self, client, auth_header, intervention_with_checklist):
+        """Snapshot labels are immutable, even for the assigned technician."""
+        snapshot = await client.get(
+            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist",
             headers=auth_header,
         )
-        assert resp.status_code == 200
-        assert resp.json()["updated"] == 0
+        item = snapshot.json()["items"][0]
+        resp = await client.patch(
+            f"/api/v1/checklist-items/{item['id']}",
+            json={"label": "Mutated", "result": "OK"}, headers=auth_header,
+        )
+        assert resp.status_code == 422
+        after = await client.get(
+            f"/api/v1/interventions/{intervention_with_checklist.id}/checklist",
+            headers=auth_header,
+        )
+        assert after.json() == snapshot.json()
 
     async def test_complete_without_checklist(
         self, client, auth_header, intervention_with_checklist, db
@@ -243,4 +284,29 @@ class TestChecklistAPI:
             headers=auth_header,
         )
         assert resp.status_code == 400
-        assert "items non cochés" in resp.json()["detail"]
+        assert "items non réalisés" in resp.json()["detail"]
+
+    async def test_historical_missing_snapshot_read_is_pure(
+        self, client, auth_header, intervention_with_checklist, db
+    ):
+        """Historical direct ORM rows return 404, never lazy-create defaults."""
+        from sqlalchemy import func, select
+
+        historical = Intervention(
+            site_id=intervention_with_checklist.site_id,
+            technician_id=intervention_with_checklist.technician_id,
+            title="Historical without snapshot", scheduled_date=date.today(),
+            status=InterventionStatus.PLANNED,
+        )
+        db.add(historical)
+        await db.commit()
+        before = await db.scalar(select(func.count()).select_from(InterventionChecklist))
+        for _ in range(2):
+            response = await client.get(
+                f"/api/v1/interventions/{historical.id}/checklist",
+                headers=auth_header,
+            )
+            assert response.status_code == 404
+        assert await db.scalar(
+            select(func.count()).select_from(InterventionChecklist)
+        ) == before

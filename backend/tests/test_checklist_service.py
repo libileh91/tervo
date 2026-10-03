@@ -42,7 +42,7 @@ async def test_some_unchecked(service):
     assert len(result["errors"]) == 2
     assert "pré-intervention" in result["errors"][0]
     assert "post-intervention" in result["errors"][1]
-    assert "2 items non cochés" in result["detail"]
+    assert "2 items non réalisés" in result["detail"]
 
 
 @pytest.mark.asyncio

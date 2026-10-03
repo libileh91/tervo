@@ -65,8 +65,8 @@ class InterventionRepository:
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
-    async def get_by_id(self, intervention_id: int) -> Intervention | None:
-        result = await self.db.execute(
+    async def get_by_id(self, intervention_id: int, *, for_update: bool = False) -> Intervention | None:
+        query = (
             select(Intervention)
             .options(
                 selectinload(Intervention.site).selectinload(Site.client),
@@ -77,13 +77,17 @@ class InterventionRepository:
             )
             .where(Intervention.id == intervention_id)
         )
+        if for_update:
+            # Checklist writes and workflow transitions share this lock first.
+            # Refresh cached ORM state after a concurrent writer has committed.
+            query = query.with_for_update().execution_options(populate_existing=True)
+        result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def create(self, data: dict) -> Intervention:
         intervention = Intervention(**data)
         self.db.add(intervention)
-        await self.db.commit()
-        await self.db.refresh(intervention)
+        await self.db.flush()
         return intervention  # type: ignore[arg-type]
 
     async def update(self, intervention: Intervention, data: dict) -> Intervention:

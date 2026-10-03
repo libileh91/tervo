@@ -19,6 +19,7 @@ from app.core.security import create_access_token
 from app.main import app
 from app.core.base import Base
 from app.modules.interventions.models.checklist_item import ChecklistItem
+from app.modules.interventions.models.checklist import InterventionChecklist
 from app.modules.customers.models import Client, Site
 from app.modules.interventions.models.intervention import Intervention, InterventionStatus
 from app.modules.identity.models import Role, User
@@ -296,32 +297,44 @@ class TestChecklistExtra:
     ):
         """Update checklist with wrong tech → 403."""
         item = ChecklistItem(
-            intervention_id=intervention_in_progress.id,
             category="pre_intervention",
             label="Test",
             position=0,
         )
-        db.add(item)
+        db.add(InterventionChecklist(
+            intervention_id=intervention_in_progress.id,
+            template_name="Authorization fixture", template_version=1, items=[item],
+        ))
         await db.commit()
         await db.refresh(item)
 
-        resp = await client.put(
-            f"/api/v1/interventions/{intervention_in_progress.id}/checklist/{item.id}",
-            json={"checked": True},
+        resp = await client.patch(
+            f"/api/v1/checklist-items/{item.id}",
+            json={"result": "OK"},
             headers=other_auth_header,
         )
         assert resp.status_code == 403
 
-    async def test_batch_update_wrong_tech(
-        self, client, other_auth_header, intervention_in_progress
+    async def test_clear_result_wrong_tech(
+        self, client, other_auth_header, intervention_in_progress, db
     ):
-        """Batch update with wrong tech → 403."""
-        resp = await client.put(
-            f"/api/v1/interventions/{intervention_in_progress.id}/checklist/batch",
-            json={"items": []},
+        """Clearing results is also restricted to the assigned technician."""
+        item = ChecklistItem(category="pre_intervention", label="Test", position=0,
+                             result="OK", comment="Preserved")
+        db.add(InterventionChecklist(
+            intervention_id=intervention_in_progress.id,
+            template_name="Authorization fixture", template_version=1, items=[item],
+        ))
+        await db.commit()
+        resp = await client.patch(
+            f"/api/v1/checklist-items/{item.id}",
+            json={"result": None, "comment": None},
             headers=other_auth_header,
         )
         assert resp.status_code == 403
+        await db.refresh(item)
+        assert item.result == "OK"
+        assert item.comment == "Preserved"
 
 
 class TestPhotosExtra:

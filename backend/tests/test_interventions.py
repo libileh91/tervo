@@ -21,6 +21,7 @@ from app.core.security import create_access_token
 from app.main import app
 from app.core.base import Base
 from app.modules.interventions.models.checklist_item import ChecklistItem
+from app.modules.interventions.models.checklist import InterventionChecklist
 from app.modules.customers.models import Client, Site
 from app.modules.interventions.models.intervention import Intervention, InterventionStatus
 from app.modules.identity.models import Role, User
@@ -299,16 +300,21 @@ class TestInterventions:
         await db.commit()
         await db.refresh(j)
 
-        # Add checked checklist items
+        # Snapshot results, not the retired checked flag, gate completion.
+        items = []
         for cat, label in [
             ("pre_intervention", "Pre A"),
             ("post_intervention", "Post B"),
         ]:
-            db.add(
+            items.append(
                 ChecklistItem(
-                    intervention_id=j.id, category=cat, label=label, checked=True, position=0
+                    category=cat, label=label, result="OK", position=0
                 )
             )
+        db.add(InterventionChecklist(
+            intervention_id=j.id, template_name="Completion fixture",
+            template_version=1, items=items,
+        ))
         await db.commit()
 
         resp = await client.put(

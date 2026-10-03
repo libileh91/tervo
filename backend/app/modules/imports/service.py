@@ -180,6 +180,15 @@ class ImportService:
             entity = MODELS[kind](**values)
             db.add(entity)
             await db.flush()
+            if kind == 'interventions':
+                # Historical imports have no source checklist controls/results.
+                # Record an empty snapshot, never fabricate successful checks.
+                from app.modules.interventions.models.checklist import InterventionChecklist
+                db.add(InterventionChecklist(
+                    intervention_id=entity.id, template_id=None,
+                    template_name="Checklist historique", template_version=1,
+                    items=[],
+                ))
             ids[target] = entity.id
             target = entity.id
         elif action == 'associate':

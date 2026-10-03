@@ -95,6 +95,13 @@
                         <!-- Nouveau intervention Dialog -->
         <Dialog v-model:visible="showNewDialog" header="Nouvelle intervention" modal :style="{ width: '450px' }">
             <form @submit.prevent="onSubmitIntervention">
+                <div class="field">
+                    <label>Modèle de checklist (facultatif)</label>
+                    <Select v-model="selectedTemplateId" :options="templateOptions"
+                        optionLabel="label" optionValue="id" showClear fluid
+                        :loading="templatesLoading" placeholder="Sans modèle" />
+                    <small v-if="templatesError">Modèles indisponibles : création sans modèle possible.</small>
+                </div>
                 <!-- Client : recherche ou sélectionné -->
                 <div class="field">
                     <label>Client</label>
@@ -273,7 +280,7 @@ import Chip from "primevue/chip";
 import Skeleton from "primevue/skeleton";
 import Message from "primevue/message";
 import { useAuthStore } from "@/stores/auth";
-import { interventionsApi, clientsApi, sitesApi, statusSeverity, statusLabel, prioritySeverity, priorityLabel, type SiteListItem } from "@/api/client";
+import { interventionsApi, checklistApi, clientsApi, sitesApi, statusSeverity, statusLabel, prioritySeverity, priorityLabel, type SiteListItem } from "@/api/client";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
@@ -346,6 +353,25 @@ const { data, isLoading, isError, error, refetch } = useQuery({
 const clientsList = ref<{ id: number; full_name: string; phone: string }[]>([]);
 const clientsLoading = ref(false);
 const interventionSubmitting = ref(false);
+const selectedTemplateId = ref<number | null>(null);
+const templateOptions = ref<{ id: number; label: string }[]>([]);
+const templatesLoading = ref(false);
+const templatesError = ref(false);
+
+async function loadTemplates() {
+    templatesLoading.value = true;
+    templatesError.value = false;
+    try {
+        templateOptions.value = (await checklistApi.listTemplates(auth.token!))
+            .filter(template => template.active)
+            .map(template => ({ id: template.id, label: `${template.name} — v${template.version} (${template.intervention_type})` }));
+    } catch {
+        templateOptions.value = [];
+        templatesError.value = true;
+    } finally {
+        templatesLoading.value = false;
+    }
+}
 
 // Form fields
 const newInterventionTitle = ref("");
@@ -424,6 +450,8 @@ function cancelNewClient() {
 // Fetch clients when dialog opens
 watch(showNewDialog, async (open) => {
     if (open) {
+        selectedTemplateId.value = null;
+        void loadTemplates();
         if (clientsList.value.length === 0) {
             clientsLoading.value = true;
             try {
@@ -544,6 +572,7 @@ async function onSubmitIntervention() {
     interventionSubmitting.value = true;
     try {
         const newIntervention = await interventionsApi.create(auth.token!, {
+            ...(selectedTemplateId.value !== null ? { checklist_template_id: selectedTemplateId.value } : {}),
             site_id: siteId,
             title,
             description: newInterventionDescription.value || undefined,

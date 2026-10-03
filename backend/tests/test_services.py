@@ -49,9 +49,12 @@ class TestChecklistService:
         """update_item → calls repo methods."""
         service.repo.get_item = AsyncMock()
         service.repo.update_item = AsyncMock()
-        await service.update_item(1, {"checked": True})
+        await service.update_item(1, {"result": "OK", "comment": "Verified"})
         service.repo.get_item.assert_awaited_once_with(1)
-        service.repo.update_item.assert_awaited_once()
+        service.repo.update_item.assert_awaited_once_with(
+            service.repo.get_item.return_value,
+            {"result": "OK", "comment": "Verified"},
+        )
 
 
 class TestPhotoService:

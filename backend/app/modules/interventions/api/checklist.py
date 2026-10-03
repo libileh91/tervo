@@ -1,112 +1,62 @@
-"""
-Tervo — Checklist API router.
-
-Endpoints:
-- GET    /interventions/{intervention_id}/checklist         → list items
-- POST   /interventions/{intervention_id}/checklist         → add custom item
-- PUT    /interventions/{intervention_id}/checklist/{item_id} → update single item
-- PUT    /interventions/{intervention_id}/checklist/batch     → batch update
-"""
-
-from fastapi import APIRouter, Depends, HTTPException, status
+"""Checklist definitions, immutable snapshots and technician completion."""
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.database import get_db
 from app.modules.identity.dependencies import get_current_user
-from app.modules.identity.models import User
+from app.modules.identity.models import Role, User
+from app.modules.interventions.models.checklist import InterventionChecklist
+from app.modules.interventions.models.intervention import InterventionStatus
 from app.modules.interventions.repositories.intervention import InterventionRepository
-from app.modules.interventions.schemas.intervention import (
-    BatchUpdateRequest,
-    BatchUpdateResponse,
-    ChecklistItemRef,
-    ChecklistItemUpdate,
+from app.modules.interventions.schemas.checklist import (
+    ChecklistTemplateCreate, ChecklistTemplateUpdate, ChecklistTemplateResponse,
+    InterventionChecklistResponse,
 )
+from app.modules.interventions.schemas.intervention import ChecklistItemRef, ChecklistItemUpdate
 from app.modules.interventions.services.checklist import ChecklistService
 
-router = APIRouter(prefix="/interventions", tags=["checklist"])
+router = APIRouter(tags=["checklist"])
 
 
-async def _get_intervention_or_404(db: AsyncSession, intervention_id: int):
-    """Return the intervention ORM object or raise 404."""
-    repo = InterventionRepository(db)
-    intervention = await repo.get_by_id(intervention_id)
-    if intervention is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Intervention non trouvée",
-        )
-    return intervention
+async def require_admin(user: User = Depends(get_current_user)):
+    if user.role != Role.ADMIN:
+        raise HTTPException(403, "Accès administrateur requis")
+    return user
 
 
-def _check_assignation(intervention, current_user: User) -> None:
-    """Raise 403 if the technician is not assigned to the intervention."""
-    if intervention.technician_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Vous n'êtes pas assigné à cette intervention",
-        )
+@router.get("/checklist-templates", response_model=list[ChecklistTemplateResponse])
+async def list_templates(user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    return await ChecklistService(db).list_templates()
 
 
-@router.get("/{intervention_id}/checklist", response_model=list[ChecklistItemRef])
-async def get_checklist(
-    intervention_id: int,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Get all checklist items for an intervention, ordered by position."""
-    await _get_intervention_or_404(db, intervention_id)
+@router.post("/checklist-templates", response_model=ChecklistTemplateResponse, status_code=201)
+async def create_template(body: ChecklistTemplateCreate, user: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
+    return await ChecklistService(db).create_template(body)
+
+
+@router.patch("/checklist-templates/{template_id}", response_model=ChecklistTemplateResponse)
+async def update_template(template_id: int, body: ChecklistTemplateUpdate, user: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
+    return await ChecklistService(db).update_template(template_id, body)
+
+
+@router.get("/interventions/{intervention_id}/checklist", response_model=InterventionChecklistResponse)
+async def get_checklist(intervention_id: int, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    if await InterventionRepository(db).get_by_id(intervention_id) is None:
+        raise HTTPException(404, "Intervention non trouvée")
+    return await ChecklistService(db).get_snapshot(intervention_id)
+
+
+@router.patch("/checklist-items/{item_id}", response_model=ChecklistItemRef)
+async def update_item(item_id: int, body: ChecklistItemUpdate, user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     service = ChecklistService(db)
-    items = await service.get_items(intervention_id)
-    return [ChecklistItemRef.model_validate(item) for item in items]
-
-
-@router.post("/{intervention_id}/checklist", response_model=ChecklistItemRef, status_code=201)
-async def create_checklist_item(
-    intervention_id: int,
-    body: dict,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Add a custom checklist item."""
-    intervention = await _get_intervention_or_404(db, intervention_id)
-    _check_assignation(intervention, current_user)
-    service = ChecklistService(db)
-    item = await service.add_custom_item(
-        intervention_id, body.get("label", ""), body.get("category", "post_intervention")
-    )
-    return ChecklistItemRef.model_validate(item)
-
-
-@router.put("/{intervention_id}/checklist/batch", response_model=BatchUpdateResponse)
-async def batch_update_checklist(
-    intervention_id: int,
-    body: BatchUpdateRequest,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Update multiple checklist items at once."""
-    intervention = await _get_intervention_or_404(db, intervention_id)
-    _check_assignation(intervention, current_user)
-
-    service = ChecklistService(db)
-    items_data = [item.model_dump(exclude_unset=True) for item in body.items]
-    updated = await service.batch_update(intervention_id, items_data)
-    return BatchUpdateResponse(updated=updated)
-
-
-@router.put("/{intervention_id}/checklist/{item_id}", response_model=ChecklistItemRef)
-async def update_checklist_item(
-    intervention_id: int,
-    item_id: int,
-    body: ChecklistItemUpdate,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Update a single checklist item (checked, note)."""
-    intervention = await _get_intervention_or_404(db, intervention_id)
-    _check_assignation(intervention, current_user)
-
-    service = ChecklistService(db)
-    data = body.model_dump(exclude_unset=True)
-    item = await service.update_item(item_id, data)
-    return ChecklistItemRef.model_validate(item)
+    item = await service.repo.get_item(item_id)
+    if item is None:
+        raise HTTPException(404, "Item de checklist non trouvé")
+    snapshot = await db.get(InterventionChecklist, item.intervention_checklist_id)
+    intervention = await InterventionRepository(db).get_by_id(snapshot.intervention_id, for_update=True)
+    # The item may have been read before waiting for the intervention lock.
+    await db.refresh(item)
+    if intervention.technician_id != user.id:
+        raise HTTPException(403, "Vous n'êtes pas assigné à cette intervention")
+    if intervention.status not in (InterventionStatus.PLANNED, InterventionStatus.IN_PROGRESS):
+        raise HTTPException(422, "La checklist est verrouillée pour ce statut")
+    return await service.update_item(item_id, body.model_dump(exclude_unset=True))

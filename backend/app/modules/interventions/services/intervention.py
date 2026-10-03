@@ -82,6 +82,7 @@ class InterventionService:
 
         await self._check_equipment_site(data.equipment_id, data.site_id)
         create_data = data.model_dump()
+        template_id = create_data.pop("checklist_template_id")
 
         # Auto-assign the current user as technician
         create_data["technician_id"] = current_user.id
@@ -96,11 +97,13 @@ class InterventionService:
                 str(create_data["scheduled_end_time"])
             )
 
-        intervention = await self.repo.create(create_data)
-
-        # Seed default checklist items via ChecklistService
-        checklist_service = ChecklistService(self.repo.db)
-        await checklist_service.create_default_items(intervention.id)
+        try:
+            intervention = await self.repo.create(create_data)
+            await ChecklistService(self.db).create_snapshot(intervention.id, template_id)
+            await self.db.commit()
+        except Exception:
+            await self.db.rollback()
+            raise
 
         # Re-fetch with relationships loaded
         return await self.get_intervention(intervention.id)
@@ -126,7 +129,7 @@ class InterventionService:
         self, intervention_id: int, current_user: User
     ) -> InterventionStartResponse:
         """Start an intervention: status → IN_PROGRESS, started_at = now."""
-        intervention = await self._find_or_404(intervention_id)
+        intervention = await self._find_or_404(intervention_id, for_update=True)
 
         # 1. Vérifier que l'intervention est planifiée
         if intervention.status != InterventionStatus.PLANNED:
@@ -174,7 +177,7 @@ class InterventionService:
         self, intervention_id: int, current_user: User
     ) -> InterventionCancelResponse:
         """Cancel an intervention: status → CANCELLED."""
-        intervention = await self._find_or_404(intervention_id)
+        intervention = await self._find_or_404(intervention_id, for_update=True)
 
         # 1. Vérifier que l'intervention est planifiée
         if intervention.status != InterventionStatus.PLANNED:
@@ -206,7 +209,7 @@ class InterventionService:
         self, intervention_id: int, current_user: User, body: InterventionCompleteRequest
     ) -> InterventionCompleteResponse:
         """Complete an intervention: status → COMPLETED, completed_at = now."""
-        intervention = await self._find_or_404(intervention_id)
+        intervention = await self._find_or_404(intervention_id, for_update=True)
 
         # 1. Vérifier que l'intervention est en cours
         if intervention.status != InterventionStatus.IN_PROGRESS:
@@ -299,8 +302,8 @@ class InterventionService:
 
     # ── Internal helpers ───────────────────────────────────
 
-    async def _find_or_404(self, intervention_id: int):
-        intervention = await self.repo.get_by_id(intervention_id)
+    async def _find_or_404(self, intervention_id: int, *, for_update: bool = False):
+        intervention = await self.repo.get_by_id(intervention_id, for_update=for_update)
         if intervention is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

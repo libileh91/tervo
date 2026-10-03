@@ -77,12 +77,12 @@
 {% if checklist_pre %}
 <h3 class="section-label pre">Pre-intervention</h3>
 <table>
-  <tr><th>Etat</th><th>Point</th><th>Note</th></tr>
+  <tr><th>Résultat</th><th>Point</th><th>Commentaire</th></tr>
   {% for item in checklist_pre %}
   <tr>
-    <td class="{{ 'check-yes' if item.checked else 'check-no' }}">{{ 'O' if item.checked else 'X' }}</td>
+    <td class="{{ 'check-yes' if item.result is not none else 'check-no' }}">{{ item.result if item.result is not none else 'Non réalisé' }}</td>
     <td>{{ item.label }}</td>
-    <td>{{ item.note or '' }}</td>
+    <td>{{ item.comment or '' }}</td>
   </tr>
   {% endfor %}
 </table>
@@ -91,12 +91,12 @@
 {% if checklist_post %}
 <h3 class="section-label post">Post-intervention</h3>
 <table>
-  <tr><th>Etat</th><th>Point</th><th>Note</th></tr>
+  <tr><th>Résultat</th><th>Point</th><th>Commentaire</th></tr>
   {% for item in checklist_post %}
   <tr>
-    <td class="{{ 'check-yes' if item.checked else 'check-no' }}">{{ 'O' if item.checked else 'X' }}</td>
+    <td class="{{ 'check-yes' if item.result is not none else 'check-no' }}">{{ item.result if item.result is not none else 'Non réalisé' }}</td>
     <td>{{ item.label }}</td>
-    <td>{{ item.note or '' }}</td>
+    <td>{{ item.comment or '' }}</td>
   </tr>
   {% endfor %}
 </table>
