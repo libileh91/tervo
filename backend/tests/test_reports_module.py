@@ -120,6 +120,8 @@ def test_full_html_matches_frozen_r7_with_explicit_int104_delta(tmp_path, omissi
         r'\1      <span>Issue: Non renseigné</span>\n',
         expected,
     )
+    # INT-107 corrects only the live customer-facing PDF name; R7 fixtures remain frozen.
+    expected = expected.replace("ResQ - Rapport", "Tervo - Rapport")
     assert actual == expected
 
 
@@ -242,7 +244,7 @@ assert "app.modules.reports.api" not in sys.modules
 def test_cutover_layout_and_ast():
     module = BACKEND / "app/modules/reports"
     assert {p.name for p in module.iterdir() if p.name != "__pycache__"} == {
-        "__init__.py", "api.py", "renderer.py", "templates",
+        "__init__.py", "api.py", "renderer.py", "models.py", "schemas.py", "service.py", "templates",
     }
     init = ast.parse((module / "__init__.py").read_text(encoding="utf-8"))
     assert len(init.body) == 1
@@ -322,15 +324,18 @@ async def test_report_api_real_jwt_and_pdf(context):
         await db.commit()
         completed_id, planned_id, other_id = completed.id, planned.id, other.id
     url = f"/api/v1/interventions/{completed_id}/report/download"
+    created = await ac.post(f"/api/v1/interventions/{completed_id}/reports")
+    assert created.status_code == 201, created.text
     response = await ac.get(url)
     assert response.status_code == 200, response.text
     assert response.headers["content-type"] == "application/pdf"
     assert response.headers["content-disposition"] == f'attachment; filename="rapport-intervention-{completed_id}.pdf"'
     assert response.content.startswith(b"%PDF-") and b"%%EOF" in response.content[-1024:]
-    assert (await ac.get(f"/api/v1/interventions/{planned_id}/report/download")).status_code == 400
+    assert (await ac.post(f"/api/v1/interventions/{planned_id}/reports")).status_code == 400
+    assert (await ac.get(f"/api/v1/interventions/{planned_id}/report/download")).status_code == 404
     from app.core.security import create_access_token
-    for headers in (tokens["admin"], {"Authorization": "Bearer " + create_access_token(other_id)}):
-        assert (await ac.get(url, headers=headers)).status_code == 403
+    assert (await ac.get(url, headers=tokens["admin"])).status_code == 200
+    assert (await ac.get(url, headers={"Authorization": "Bearer " + create_access_token(other_id)})).status_code == 403
     assert (await ac.get("/api/v1/interventions/999999/report/download")).status_code == 404
     # Override AsyncClient's technician default, rather than accidentally retaining it.
     for authorization in (None, "Bearer invalid.jwt"):

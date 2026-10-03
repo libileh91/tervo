@@ -127,6 +127,11 @@ jobs:
           TERVO_RESULT_MIGRATION_TEST_URL: postgresql+psycopg2://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
         run: uv run pytest tests/test_int106_completion.py tests/test_intervention_result_migration.py -q
 
+      - name: PostgreSQL private report version scenario
+        env:
+          TERVO_REPORT_TEST_DATABASE_URL: postgresql+asyncpg://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
+        run: uv run pytest tests/test_report_versions_api.py -q
+
   # ── Frontend : build ────────────────────────────────────
   frontend-build:
     name: Frontend — build

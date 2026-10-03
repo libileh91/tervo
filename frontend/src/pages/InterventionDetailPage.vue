@@ -286,14 +286,28 @@
                         <i class="pi pi-lock" />
                         <span>Rapport disponible après complétion</span>
                     </div>
+                    <Message v-else-if="!canAccessReport" severity="info">
+                        Rapport réservé à l'administrateur ou au technicien assigné.
+                    </Message>
 
                     <div v-else class="report-tab">
                         <div class="report-actions">
+                            <Button :label="reportMetadata ? 'Générer une nouvelle version' : 'Générer le rapport'"
+                                :loading="reportLoading" @click="generateReport" />
+                            <select v-if="reportMetadata" v-model.number="reportVersion" aria-label="Version du rapport"
+                                :disabled="reportLoading" @change="loadReport">
+                                <option v-for="version in reportMetadata.versions" :key="version.id" :value="version.version">
+                                    Version {{ version.version }} — {{ version.transmitted_at ? 'Transmission confirmée' : 'Générée' }}
+                                </option>
+                            </select>
+                            <Button v-if="selectedReportVersion && !selectedReportVersion.transmitted_at"
+                                label="Confirmer la transmission externe" :disabled="reportLoading" @click="confirmReportTransmission" />
                             <Button
                                 label="📥 Télécharger le PDF"
                                 icon="pi pi-download"
                                 severity="primary"
                                 :loading="reportLoading"
+                                :disabled="!reportMetadata || reportLoading"
                                 @click="downloadReport"
                             />
                         </div>
@@ -309,9 +323,12 @@
                             title="Aperçu du rapport"
                         />
 
-                        <Message v-else-if="reportError" severity="error">
-                            Impossible de charger le rapport.
-                        </Message>
+                        <div v-else-if="reportError">
+                            <Message severity="error">Impossible de charger le rapport.</Message>
+                            <Button label="Réessayer" @click="loadReport" />
+                        </div>
+                        <Message v-else-if="!reportMetadata" severity="info">Aucune version archivée. Générer explicitement le premier rapport.</Message>
+                        <p v-if="selectedReportVersion?.transmitted_at">Transmission confirmée manuellement le {{ formatDate(selectedReportVersion.transmitted_at) }}. Aucun email envoyé par Tervo.</p>
                     </div>
                 </TabPanel>
             </TabView>
@@ -359,6 +376,7 @@ import {
     interventionsApi,
     materialsApi,
     photosApi,
+    reportsApi,
     statusSeverity,
     statusLabel,
     prioritySeverity,
@@ -618,6 +636,12 @@ async function handleDelete() {
 const reportLoading = ref(false);
 const reportError = ref(false);
 const reportBlobUrl = ref<string | null>(null);
+const reportMetadata = ref<import("@/api/client").ReportMetadata | null>(null);
+const reportVersion = ref<number | null>(null);
+const reportRequestKey = ref<string | null>(null);
+const selectedReportVersion = computed(() => reportMetadata.value?.versions.find(v => v.version === reportVersion.value));
+const canAccessReport = computed(() => auth.user?.role === "admin"
+    || auth.user?.id === intervention.value?.technician?.id);
 
 /** Télécharge le PDF avec le token d'auth et crée une blob URL pour l'iframe. */
 async function loadReport() {
@@ -625,40 +649,64 @@ async function loadReport() {
 
     reportLoading.value = true;
     reportError.value = false;
+    if (reportBlobUrl.value) URL.revokeObjectURL(reportBlobUrl.value);
     reportBlobUrl.value = null;
 
     try {
-        const response = await fetch(`/api/v1/interventions/${interventionId}/report/download`, {
-            headers: { Authorization: `Bearer ${auth.token}` },
-        });
-
-        if (!response.ok) throw new Error("Erreur chargement PDF");
-
-        const blob = await response.blob();
+        reportMetadata.value = await reportsApi.getForIntervention(auth.token!, interventionId);
+        if (!reportMetadata.value.versions.some(v => v.version === reportVersion.value)) {
+            reportVersion.value = reportMetadata.value.versions[reportMetadata.value.versions.length - 1]?.version ?? null;
+        }
+        if (reportVersion.value === null) return;
+        const blob = await reportsApi.file(auth.token!, reportMetadata.value.id, reportVersion.value);
         reportBlobUrl.value = URL.createObjectURL(blob);
-    } catch {
-        reportError.value = true;
+    } catch (error: unknown) {
+        if ((error as { status?: number }).status === 404) {
+            reportMetadata.value = null;
+            reportVersion.value = null;
+        } else reportError.value = true;
     } finally {
         reportLoading.value = false;
     }
 }
 
+async function generateReport() {
+    if (reportLoading.value || !canAccessReport.value) return;
+    reportLoading.value = true;
+    reportRequestKey.value ??= crypto.randomUUID();
+    try {
+        const version = await reportsApi.generate(auth.token!, interventionId, reportRequestKey.value);
+        reportVersion.value = version.version;
+        reportRequestKey.value = null;
+        await loadReport();
+    } catch (error: unknown) {
+        toast.add({ severity: "error", summary: "Génération refusée", detail: (error as { detail?: string }).detail || "Réessayer avec la même clé", life: 5000 });
+    } finally { reportLoading.value = false; }
+}
+
+async function confirmReportTransmission() {
+    if (reportLoading.value || !canAccessReport.value || !reportMetadata.value || reportVersion.value === null) return;
+    if (!window.confirm("Confirmer que cette version précise a été transmise hors de Tervo ? Aucun email ne sera envoyé.")) return;
+    reportLoading.value = true;
+    try {
+        await reportsApi.confirmTransmission(auth.token!, reportMetadata.value.id, reportVersion.value);
+        await loadReport();
+    } catch (error: unknown) {
+        toast.add({ severity: "error", summary: "Confirmation refusée", detail: (error as { detail?: string }).detail || "Erreur", life: 5000 });
+    } finally { reportLoading.value = false; }
+}
+
 /** Télécharger le PDF via blob + anchor temporaire */
 async function downloadReport() {
-    if (!intervention.value || intervention.value.status !== "COMPLETED") return;
+    if (!canAccessReport.value || !reportMetadata.value || reportVersion.value === null) return;
 
     reportLoading.value = true;
     try {
-        const response = await fetch(`/api/v1/interventions/${interventionId}/report/download`, {
-            headers: { Authorization: `Bearer ${auth.token}` },
-        });
-        if (!response.ok) throw new Error();
-
-        const blob = await response.blob();
+        const blob = await reportsApi.file(auth.token!, reportMetadata.value.id, reportVersion.value);
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement("a");
         anchor.href = url;
-        anchor.download = `rapport-intervention-${interventionId}.pdf`;
+        anchor.download = `rapport-${reportMetadata.value.id}-v${reportVersion.value}.pdf`;
         anchor.click();
         URL.revokeObjectURL(url);
     } catch {

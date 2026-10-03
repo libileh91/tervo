@@ -1,0 +1,36 @@
+{
+  "task": "INT-107",
+  "capture_phase": "before task commit",
+  "base_commit": "684340ac173c116d2ca03889de62624e3f5392c0",
+  "status": "verified_with_direct_api_scenarios",
+  "policy": "manual confirmation for a specific externally transmitted version, no email/SMTP",
+  "storage": "SQLAlchemy LargeBinary/BYTEA private database rows, no public uploads report paths",
+  "sqlite": {
+    "direct_api": "passed: 2 distinct versions, unchanged first bytes/SHA, repeat key same ID, first confirmation date/actor preserved, scoped 401/403, rollback after renderer fault, parent delete 409",
+    "populated_downgrade": "refused before DDL, two versions unchanged"
+  },
+  "postgresql": {
+    "image": "local postgres:17.4 --pull never",
+    "loopback_ephemeral_only": true,
+    "existing_volumes_used": false,
+    "container_stopped": true,
+    "alembic_upgrade_downgrade_reupgrade_empty": "passed",
+    "metadata": "only preexisting intervention.technician_id FK remove/add, no new INT-107 drift",
+    "api_fixture": "1 passed, 1 passlib warning, isolated random schema"
+  },
+  "regression": {
+    "targeted_before_template_name_correction": "67 passed, 1 passlib warning",
+    "targeted_after_template_name_correction": "3 passed, 1 passlib warning",
+    "full_backend_suite_executed": false,
+    "historical_R0_R11_import_and_report_fixtures_changed": false
+  },
+  "frontend": {
+    "typecheck": 0,
+    "build": 0,
+    "vite": "6.4.3",
+    "modules": 455,
+    "browser_or_E2E_claimed": false
+  },
+  "limits": ["no actual external transmission", "no remote CI or deployment", "no real database or app.seed", "no representative PDF volume or PostgreSQL backup restoration", "Client/Site deletion errors not yet translated to a domain conflict"],
+  "followups": ["TD-B004", "TD-B013", "TD-B016", "TD-B019", "TD-B020", "TD-B021", "TD-B022"]
+}

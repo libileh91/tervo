@@ -441,6 +441,10 @@ class TestReport:
 
     async def test_report_download_terminated(self, client, auth_header, intervention_completed):
         """Intervention terminé → 200 + PDF."""
+        generated = await client.post(
+            f"/api/v1/interventions/{intervention_completed.id}/reports", headers=auth_header
+        )
+        assert generated.status_code == 201, generated.text
         resp = await client.get(
             f"/api/v1/interventions/{intervention_completed.id}/report/download",
             headers=auth_header,
@@ -453,13 +457,16 @@ class TestReport:
     async def test_report_download_not_terminated(
         self, client, auth_header, intervention_in_progress
     ):
-        """Intervention non terminé → 400."""
+        """POST generation refuses an unfinished intervention; GET never creates a report."""
+        generated = await client.post(
+            f"/api/v1/interventions/{intervention_in_progress.id}/reports", headers=auth_header
+        )
+        assert generated.status_code == 400
         resp = await client.get(
             f"/api/v1/interventions/{intervention_in_progress.id}/report/download",
             headers=auth_header,
         )
-        assert resp.status_code == 400
-        assert "terminée" in resp.json()["detail"]
+        assert resp.status_code == 404
 
     async def test_report_download_not_found(self, client, auth_header):
         """Intervention inexistant → 404."""

@@ -120,7 +120,10 @@ class InterventionService:
         return InterventionResponse.model_validate(intervention)
 
     async def delete_intervention(self, intervention_id: int) -> None:
-        intervention = await self._find_or_404(intervention_id)
+        from app.modules.reports.models import Report
+        intervention = await self._find_or_404(intervention_id, for_update=True)
+        if await self.db.scalar(select(Report.id).where(Report.intervention_id == intervention_id)) is not None:
+            raise HTTPException(409, "Un rapport archivé protège l'historique de cette intervention")
         await self.repo.delete(intervention)
 
     # ── Workflow: start ────────────────────────────────────

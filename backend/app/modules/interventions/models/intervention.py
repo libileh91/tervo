@@ -117,6 +117,7 @@ class Intervention(Base):
     review = relationship(
         "Review", back_populates="intervention", uselist=False, cascade="all, delete-orphan"
     )
+    report = relationship("Report", back_populates="intervention", uselist=False, passive_deletes="all")
 
     def __repr__(self) -> str:
         return (

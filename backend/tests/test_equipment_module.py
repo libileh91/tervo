@@ -101,7 +101,7 @@ def test_equipment_import_orders_preserve_registry_and_relations(tmp_path, order
         catalog = import_module("app.modules.catalog.models")
         assert first.Equipment is models.Equipment
         assert models.Base is Base
-        assert len(Base.registry.mappers) == 19
+        assert len(Base.registry.mappers) == 21
         assert all(mapper.class_.metadata is Base.metadata for mapper in Base.registry.mappers)
         assert all(Base.metadata.tables[name] is table for name, table in tables.items())
         assert mappers <= set(Base.registry.mappers)

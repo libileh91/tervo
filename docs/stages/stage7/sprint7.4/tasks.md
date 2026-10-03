@@ -170,16 +170,47 @@ Je veux **générer et transmettre un rapport historisé**,
 Afin de **ne pas réécrire un document déjà envoyé au client**.
 
 **Acceptance Criteria**
-- [ ] `Report` (document logique) + `ReportVersion` (version physique)
-- [ ] Un rapport transmis reste stable ; une correction → nouvelle version
-- [ ] API : `POST /interventions/{id}/reports`, `GET /reports/{id}`, `GET /reports/{id}/versions/{v}`
-- [ ] PDF réutilisé (WeasyPrint)
+- [x] `Report` (document logique) + `ReportVersion` (version physique)
+- [x] Un rapport transmis reste stable ; une correction → nouvelle version
+- [x] API : `POST /interventions/{id}/reports`, `GET /reports/{id}`, `GET /reports/{id}/versions/{v}`
+- [x] PDF réutilisé (WeasyPrint)
+
+**Validation locale**
+- Scénario API direct sur SQLite et PostgreSQL jetables : génération, relecture
+  binaire/empreinte, approbation manuelle, correction v2, droits et rollback ;
+  une seule recette d'intégration automatisée, sans nouvelle batterie unitaire.
+- Migration PostgreSQL `upgrade head → downgrade -1 → upgrade head` réussie.
+  Avec archive présente, downgrade SQLite refusé avant DDL. Comparaison de
+  metadata sans nouvel écart ; `alembic check` demeure non nul pour la seule
+  FK technicien historique.
+- Typecheck/build frontend réussis. Pas de smoke navigateur, de CI distante
+  ni de déploiement revendiqué.
+- [Note pédagogique et limites](../../../../notes/backend/sprint7.4/INT-107-rapports-versionnes.md).
 
 **Technical Notes**
 - Reshape `ReportExporter` existant → versionnement
 - Sources actuelles : `app/modules/reports/{api,renderer}.py`,
-  `templates/report_template.html`. Les modèles/migrations de versionnement
-  restent à créer et à cadrer dans INT-107, pas livrés par le refactor.
+  `templates/report_template.html`. Cibles INT-107 :
+  `app/modules/reports/{models,schemas,service,api}.py`, registre ORM
+  et migration `j107e0010001`.
+- Décision validée : une **confirmation manuelle** d'une transmission hors
+  Tervo marque une version précise et son auteur/date. Pas d'envoi email/SMTP,
+  ni de notification réelle déguisée en `send`. La confirmation réitérée
+  conserve la première date et le premier auteur.
+- `Report` logique unique par intervention, `ReportVersion` physique numérotée
+  et jamais écrasée. PDF binaire archivé dans la DB (accès privé par API,
+  aucune URL statique `/uploads`), empreinte SHA-256 vérifiée avant téléchargement
+  ou confirmation. Ce choix transactionnel évite le coût caché DB/fichiers
+  sans prétendre valider un volume de production représentatif.
+- Génération POST explicite après clôture. GET metadata/download n'écrit rien ;
+  l'ancienne URL PDF ne fait que lire la dernière version existante. Une
+  correction crée une nouvelle version sans changer l'ancienne, transmise
+  ou non. Clé `Idempotency-Key` facultative pour rejouer une génération ;
+  numérotation et clé protégées par unicité DB/verrou parent.
+- ADMIN ou technicien assigné ; pas de rôle MANAGER inventé (TD-B013).
+  Le frontend expose génération, historique de versions, aperçu/téléchargement
+  et confirmation externe explicite. Adapter tests/guards historiques sans
+  réécrire leurs fixtures et actualiser les notes dépendantes.
 
 ---
 

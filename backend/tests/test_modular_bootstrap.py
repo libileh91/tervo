@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.contract_int106 import assert_metadata_contract, assert_openapi_contract
+from tests.contract_int107 import assert_metadata_contract, assert_openapi_contract
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND = REPO_ROOT / "backend"
@@ -116,7 +116,8 @@ if block_engine:
 historical_tables = frozenset(json.loads(metadata_baseline.read_text(encoding="utf-8")))
 assert len(historical_tables) == 17
 expected_tables = (historical_tables - {"intervention_photo", "material"}) | {
-    "checklist_template", "intervention_checklist", "photo", "material_usage"
+    "checklist_template", "intervention_checklist", "photo", "material_usage",
+    "report", "report_version",
 }
 
 
@@ -124,10 +125,10 @@ def assert_registry(Base):
     from sqlalchemy.orm import configure_mappers
 
     assert set(Base.metadata.tables) == expected_tables
-    assert len(Base.metadata.tables) == 19
+    assert len(Base.metadata.tables) == 21
     configure_mappers()
     mappers = set(Base.registry.mappers)
-    assert len(mappers) == 19
+    assert len(mappers) == 21
     assert all(mapper.configured for mapper in mappers)
     assert {mapper.local_table.key for mapper in mappers} == expected_tables
     assert all(
@@ -445,7 +446,7 @@ def test_domains_and_registry_import_orders_share_one_registry(tmp_path, order):
         ] + [
             importlib.import_module("app.modules.interventions.models." + name)
             for name in terrain
-        ]
+        ] + [importlib.import_module("app.modules.reports.models")]
 
         assert_registry(Base)
         tables = dict(Base.metadata.tables)

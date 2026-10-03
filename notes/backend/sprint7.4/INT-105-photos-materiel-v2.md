@@ -1,5 +1,10 @@
 # INT-105 — Photos et matériel utilisés : contrat V2, migration et limites
 
+> Le smoke PDF de cette note a été exécuté avant
+> [INT-107](INT-107-rapports-versionnes.md). Le parcours actuel exige une
+> génération explicite, puis lit le PDF de la version archivée ; le smoke
+> INT-105 ne constitue pas une validation navigateur d'INT-107.
+
 ## 1. Statut de cette note
 
 Cette note décrit les sources INT-105 présentes dans le checkout pendant la

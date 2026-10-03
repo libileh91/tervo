@@ -424,7 +424,83 @@
         "v2_nouvelle_version": "true",
         "document_logique_unique": "true"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed_direct_api_sqlite_and_postgresql",
+        "observed": "Un Report logique, v1 marquée TRANSMITTED manuellement puis v2 GENERATED après correction ; bytes/SHA de v1 inchangés et v2 différente",
+        "limits": "Marquage manuel confirmé hors Tervo ; aucun email envoyé"
+      }
+    },
+    {
+      "id": "TC-INT-107-02",
+      "task": "INT-107",
+      "title": "Rapports — accès privé et lectures sans génération",
+      "type": "api",
+      "preconditions": ["Trois comptes fictifs : assigné, autre technicien, ADMIN", "Une intervention achevée"],
+      "steps": [
+        "Lire PDF avant le premier POST de génération",
+        "Générer et consulter v1 avec assigné et ADMIN",
+        "Essayer métadonnées et PDF sans JWT ou avec un autre technicien",
+        "Lire l'ancienne URL de téléchargement après création de v2"
+      ],
+      "expected_result": {
+        "GET_sans_archive": "404, aucun rapport créé",
+        "autorisé": "PDF 200 par routes authentifiées, octets absents des réponses JSON",
+        "refus": "401 ou 403, aucune lecture du PDF privé",
+        "ancien_lien": "Dernière version archivée, sans recalcul"
+      },
+      "actual_result": {
+        "status": "passed_direct_api_sqlite_and_postgresql",
+        "observed": "GET initial 404 sans écriture ; JWT manquant 401, autre technicien 403, ADMIN/assigné autorisés ; ancienne URL lit exactement v2"
+      }
+    },
+    {
+      "id": "TC-INT-107-03",
+      "task": "INT-107",
+      "title": "Génération idempotente, confirmation et rollback",
+      "type": "integration",
+      "preconditions": ["Interventions fictives achevée et planifiée, bases de test jetables"],
+      "steps": [
+        "Rejouer POST avec la même Idempotency-Key et vérifier l'ID",
+        "Refuser POST sur une intervention non achevée",
+        "Refuser confirmed=false ; confirmer deux fois avec acteurs différents",
+        "Injecter un échec de rendu après le flush du Report logique",
+        "Essayer la suppression de l'intervention avec rapport"
+      ],
+      "expected_result": {
+        "idempotence": "Même version/ID, pas de doublon",
+        "statut": "400 si intervention planifiée",
+        "confirmation": "422 pour false ; première date/auteur conservés au rejeu",
+        "rollback": "Aucun Report/ReportVersion partiel",
+        "historique": "Suppression intervention avec rapport refusée 409"
+      },
+      "actual_result": {
+        "status": "passed_direct_api_sqlite_and_postgresql",
+        "observed": "Même ID avec clé répétée, 400 planifiée, 422 confirmed=false, confirmation répétée conservée, échec injecté rollback, suppression 409"
+      }
+    },
+    {
+      "id": "TC-INT-107-04",
+      "task": "INT-107",
+      "title": "Migration et garde documentaire",
+      "type": "integration",
+      "preconditions": ["PostgreSQL 17.4 jetable et SQLite scratch peuplée"],
+      "steps": [
+        "Upgrade head, downgrade -1 et re-upgrade head sur PostgreSQL vide",
+        "Comparer metadata ORM et schéma SQL",
+        "Refuser le downgrade SQLite avec deux versions et vérifier qu'elles restent accessibles",
+        "Rejouer l'oracle historique import sans créer de faux rapports"
+      ],
+      "expected_result": {
+        "migration": "Chaîne PostgreSQL vide réussie",
+        "drift": "Aucun nouvel écart, à part FK technicien historique",
+        "protection": "Refus avant DDL si versions présentes",
+        "oracle": "Rapports historiques absents, fixtures/SHA R0–R11 inchangés"
+      },
+      "actual_result": {
+        "status": "passed_direct_api_and_migration",
+        "observed": "Roundtrip PG, comparaison structurée, downgrade peuplé refusé avant DDL ; deux versions demeurent ; replay import/guard validé en ciblé",
+        "known_limit": "Alembic check reste non nul pour la FK technicien préexistante"
+      }
     }
   ]
 }

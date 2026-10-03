@@ -104,7 +104,7 @@ def test_sales_and_registry_orders_preserve_registry_and_relations(tmp_path, ord
         assert first.SaleLine is sales.SaleLine
         assert first.SaleStatus is sales.SaleStatus
         assert sales.Base is Base
-        assert len(Base.registry.mappers) == 19
+        assert len(Base.registry.mappers) == 21
         assert all(mapper.class_.metadata is Base.metadata for mapper in Base.registry.mappers)
         assert all(Base.metadata.tables[name] is table for name, table in tables.items())
         assert mappers <= set(Base.registry.mappers)

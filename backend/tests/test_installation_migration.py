@@ -12,7 +12,7 @@ from app.model_registry import load_models
 
 PREVIOUS = "d100e0010001"
 REVISION = "e103e0010001"
-HEAD = "i106e0010001"
+HEAD = "j107e0010001"
 BACKEND = Path(__file__).resolve().parents[1]
 
 
@@ -43,7 +43,7 @@ def migration(tmp_path, monkeypatch):
         for table in Base.metadata.sorted_tables:
             if table.name not in {"installation", "sale", "sale_line",
                                   "checklist_template", "intervention_checklist", "checklist_item",
-                                  "photo", "material_usage"}:
+                                  "photo", "material_usage", "report", "report_version"}:
                 table.to_metadata(previous)
         sa.Table("intervention_photo", previous,
             sa.Column("id", sa.Integer(), primary_key=True, index=True),

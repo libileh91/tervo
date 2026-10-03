@@ -245,7 +245,7 @@
 | **Dépend de** | Cadrage dédié des métadonnées/audits prévus au DAT ; INT-107 pour les règles après transmission d'un rapport |
 | **Fichiers** | `app/modules/interventions/models/photo.py`, `services/photo.py`, `app/modules/reports/`, migrations et procédures de maintenance |
 | **Action attendue** | Cadrer la persistance du nom original, MIME, taille et l'audit/contrôle des suppressions historiques. Définir une réconciliation sûre DB/filesystem : les compensations d'upload contrôlé existent, mais un crash ou une erreur filesystem après commit peut laisser un orphelin. Ne jamais supprimer arbitrairement des fichiers d'un répertoire réel pour tester ce sujet. |
-| **Statut** | ⏳ Différé ; les usages, miniatures, scopes parent et validations INT-105 ne valent ni métadonnées étendues, ni atomicité distribuée, ni maintenance automatique |
+| **Statut** | ⏳ Différé ; INT-107 archive les octets PDF séparément des photos et garde ses versions stables, mais ne livre ni audit/suppression contrôlée des originaux photo, ni réconciliation du filesystem. Politique métier restante à cadrer. |
 
 ---
 
@@ -258,3 +258,15 @@
 | **Fichiers** | `app/modules/imports/{planner,service}.py`, sources archivées, tests et éventuelles migrations de données |
 | **Action attendue** | Cadrer l'utilisation des issues présentes dans les archives sans inférer RESOLVED d'un statut COMPLETED ou d'une note client. Conserver provenance et décisions, tester les valeurs inconnues et l'invalidation des approbations quand un résultat réel change. |
 | **Statut** | ⏳ À cadrer ; INT-106 conserve result null dans l'historique, n'effectue aucun backfill fictif et protège les empreintes d'import |
+
+---
+
+## TD-B022 — Mesurer et sauvegarder les PDF versionnés en base
+
+| Champ | Valeur |
+|---|---|
+| **Créé dans** | INT-107, sprint7.4 |
+| **Dépend de** | Volumétrie documentaire représentative et procédure de sauvegarde/restauration PostgreSQL d'INT-111 |
+| **Fichiers** | `app/modules/reports/{models,service}.py`, `deploy/`, procédure PostgreSQL INT-111 |
+| **Action attendue** | Mesurer taille cumulée des versions PDF `BYTEA`, temps de génération/lecture et volume des sauvegardes. Vérifier une restauration qui conserve PDF, empreinte et date de confirmation. Selon les mesures, décider si un stockage privé externe avec réconciliation transactionnelle est requis ; ne pas exposer les fichiers dans `/uploads`. |
+| **Statut** | ⏳ Ouvert ; les tests jetables INT-107 ne prouvent ni tenue au volume ni restauration/déploiement VPS |

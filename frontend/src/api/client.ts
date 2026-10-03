@@ -13,8 +13,9 @@ interface ApiError {
   detail: string;
 }
 
-async function request<T>(method: string, path: string, body?: unknown, token?: string | null): Promise<T> {
+async function request<T>(method: string, path: string, body?: unknown, token?: string | null, extraHeaders: Record<string, string> = {}, responseMode: "json" | "blob" = "json"): Promise<T> {
   const headers: Record<string, string> = {
+  ...extraHeaders,
     "Content-Type": "application/json",
   };
   if (token) {
@@ -46,6 +47,7 @@ async function request<T>(method: string, path: string, body?: unknown, token?: 
   // 204 No Content
   if (res.status === 204) return undefined as T;
 
+  if (responseMode === "blob") return await res.blob() as T;
   return res.json();
 }
 
@@ -365,6 +367,37 @@ export const checklistApi = {
   updateItem: (token: string, id: number, data: { result: string | null; comment: string | null }) =>
     api.patch<ChecklistItemRef>(`/checklist-items/${id}`, data, token),
   listTemplates: (token: string) => api.get<ChecklistTemplate[]>("/checklist-templates", token),
+};
+
+export interface ReportVersion {
+  id: number;
+  report_id: number;
+  version: number;
+  status: "GENERATED" | "TRANSMITTED";
+  sha256: string;
+  size: number;
+  generated_at: string;
+  generated_by_id: number | null;
+  transmitted_at: string | null;
+  transmitted_by_id: number | null;
+  storage_key: string;
+}
+
+export interface ReportMetadata {
+  id: number;
+  intervention_id: number;
+  created_at: string;
+  versions: ReportVersion[];
+}
+
+export const reportsApi = {
+  getForIntervention: (token: string, id: number) => api.get<ReportMetadata>(`/interventions/${id}/reports`, token),
+  generate: (token: string, id: number, key: string) =>
+    request<ReportVersion>("POST", `/interventions/${id}/reports`, undefined, token, { "Idempotency-Key": key }),
+  confirmTransmission: (token: string, id: number, version: number) =>
+    api.post<ReportVersion>(`/reports/${id}/versions/${version}/transmit`, { confirmed: true }, token),
+  file: (token: string, id: number, version: number) =>
+    request<Blob>("GET", `/reports/${id}/versions/${version}`, undefined, token, {}, "blob"),
 };
 
 // ── Intervention types ───────────────────────────────────────────────

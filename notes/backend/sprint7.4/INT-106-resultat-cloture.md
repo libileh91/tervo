@@ -1,5 +1,10 @@
 # INT-106 — Résultat global et clôture atomique
 
+> Cette note et son smoke décrivent le contrat au commit INT-106.
+> Depuis [INT-107](INT-107-rapports-versionnes.md), l'URL historique de PDF
+> lit la dernière version déjà archivée ; elle ne génère plus à la lecture.
+> Une génération explicite est requise avant le premier téléchargement.
+
 ## 1. Le problème métier : terminée ne veut pas dire résolue
 
 Cette tâche prolonge INT-104 (`74f05a6`) et INT-105 (`5b8eb36`).

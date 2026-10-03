@@ -8,6 +8,10 @@
 > Depuis [INT-106](INT-106-resultat-cloture.md), la clôture exige également un
 > résultat **global** explicite. Les résultats libres des items ne suffisent
 > plus à déclencher seuls la clôture ; les preuves INT-104 restent historiques.
+> Depuis [INT-107](INT-107-rapports-versionnes.md), le PDF doit être généré
+> explicitement en version avant le premier GET ; ce GET ne rend plus un
+> nouveau document à la volée. Le smoke PDF ci-dessous reste la preuve de
+> l'état INT-104, pas du parcours navigateur INT-107 non exécuté.
 
 ## 1. Ce qui change, et pourquoi
 
