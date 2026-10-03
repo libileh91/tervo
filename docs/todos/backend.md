@@ -53,7 +53,7 @@
 | **Dépend de** | TD-B003 + Endpoint upload photos — ✅ upload (INT-23) + delete (INT-24) OK |
 | **Fichiers**  | Source actuelle : `app/modules/interventions/services/intervention.py` → `complete_intervention()` (déplacé dans INT-119) |
 | **Action**    | Ajouter vérification : `min. 1 photo avant + 1 photo après`                |
-| **Statut**    | ⏳ Bloqué — Phase 2                                                        |
+| **Statut**    | ⏳ Différé — Phase 2 ; INT-105 livre les usages BEFORE/AFTER mais ne valide pas cette règle supplémentaire de clôture |
 
 ---
 
@@ -234,3 +234,15 @@
 | **Fichiers** | `app/seed.py`, procédures de déploiement, futurs tests de protection si autorisés |
 | **Action attendue** | Séparer/cadrer l'usage démo de la migration/production, définir la protection contre un seed destructif accidentel et documenter les préconditions. Le script actuel effectue des DELETE et ne nettoie pas toute la chaîne V2 ; la répétition testée sur sa propre SQLite démo ne garantit pas la sûreté sur une base peuplée. Ne pas modifier ou vider une base existante pour valider ce todo. |
 | **Statut** | ⏳ À cadrer avant tout usage du seed avec des données existantes ; aucun changement de CLI/comportement dans R10 |
+
+---
+
+## TD-B020 — Compléter la traçabilité et la maintenance du stockage photo
+
+| Champ | Valeur |
+|---|---|
+| **Créé dans** | INT-105, sprint7.4 |
+| **Dépend de** | Cadrage dédié des métadonnées/audits prévus au DAT ; INT-107 pour les règles après transmission d'un rapport |
+| **Fichiers** | `app/modules/interventions/models/photo.py`, `services/photo.py`, `app/modules/reports/`, migrations et procédures de maintenance |
+| **Action attendue** | Cadrer la persistance du nom original, MIME, taille et l'audit/contrôle des suppressions historiques. Définir une réconciliation sûre DB/filesystem : les compensations d'upload contrôlé existent, mais un crash ou une erreur filesystem après commit peut laisser un orphelin. Ne jamais supprimer arbitrairement des fichiers d'un répertoire réel pour tester ce sujet. |
+| **Statut** | ⏳ Différé ; les usages, miniatures, scopes parent et validations INT-105 ne valent ni métadonnées étendues, ni atomicité distribuée, ni maintenance automatique |

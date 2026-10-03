@@ -1,6 +1,6 @@
 # Sprint 7.4 — Cycle terrain
 
-> **Tervo V2** · INT-104 à INT-108 · **Statut :** INT-104 implémentée et vérifiée localement ; INT-105 à INT-108 à traiter
+> **Tervo V2** · INT-104 à INT-108 · **Statut :** INT-104 et INT-105 implémentées et vérifiées localement ; INT-106 à INT-108 à traiter
 > **Dépendances :** Sprint 7.1 ; réutiliser les modules terrain existants.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.4/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -76,16 +76,42 @@ Je veux **documenter l'intervention (photos avant/après, matériel posé)**,
 Afin de **garder la traçabilité de ce qui a été fait**.
 
 **Acceptance Criteria**
-- [ ] `Photo` : `intervention_id`, `usage` (avant/après/équipement/anomalie/pièce)
-- [ ] `MaterialUsage` : `intervention_id`, `designation`, `quantity`, `unit`
-- [ ] Reshape `job_photo` → `Photo`, `material` → `MaterialUsage` (FK intervention)
-- [ ] API upload/suppression photos + CRUD matériel conservés
+- [x] `Photo` : `intervention_id`, `usage` (avant/après/équipement/anomalie/pièce)
+- [x] `MaterialUsage` : `intervention_id`, `designation`, `quantity`, `unit`
+- [x] Reshape `job_photo` → `Photo`, `material` → `MaterialUsage` (FK intervention)
+- [x] API upload/suppression photos + CRUD matériel conservés
+
+**Validation locale**
+- Backend : 539 tests réussis, 7 cas PostgreSQL ignorés dans ce run, 7 warnings.
+- PostgreSQL dédié : 200 tests réussis, incluant migrations et cas ignorés ci-dessus.
+- Frontend : 10 tests Bun (36 assertions), typecheck et build réussis.
+- Migrations `head → -1 → head` réussies ; `alembic check` reste à 255 pour
+  la seule FK technicien historique, comparaison structurée sans nouvel écart.
+- Note : [INT-105 — Photos et matériel V2](../../../../notes/backend/sprint7.4/INT-105-photos-materiel-v2.md).
+- La configuration CI n'est pas présentée comme un run distant réussi.
 
 **Technical Notes**
 - Réutilise l'upload existant (`UPLOAD_DIR`) + thumbnails
-- Sources actuelles : `app/modules/interventions/models/{intervention_photo,material}.py`,
+- Contrat canonique : `Photo.usage` prend `BEFORE / AFTER / EQUIPMENT / ANOMALY / PART / OTHER`.
+  Le champ `usage` du planning remplace `category` ; `OTHER` est conservé comme
+  prévu dans le DAT. Pas d'alias legacy dans le nouveau multipart ou les réponses.
+- `MaterialUsage` : désignation non blanche (255 caractères), quantité positive
+  numérique (12 chiffres, 3 décimales), unité libre non blanche (50 caractères).
+  La création exige quantité/unité ; l'historique peut conserver `null` pour les
+  valeurs inconnues, sans inventer d'unité.
+- Les routes photos et matériel restent utilisables ; adapter leurs consommateurs
+  frontend/rapport/seed. Vérifier le parent réel des IDs enfants avant toute
+  modification/suppression ; un ID d'une autre intervention donne 404.
+- Migration dédiée après `g104e0010001`, préflight des usages/quantités avant DDL,
+  conservation des IDs et chemins de fichiers, refus d'un downgrade destructif.
+- TD-B004 (minimum une photo BEFORE et AFTER pour clôturer) reste différé :
+  INT-105 ne transforme pas cette règle de phase 2 en critère de clôture.
+- Sources initiales : `app/modules/interventions/models/{intervention_photo,material}.py`,
   `services/{photo,material}.py`, `repositories/{photo,material}.py`,
-  `api/{photos,materials}.py`. Les nouveaux noms éventuels sont à cadrer dans INT-105.
+  `api/{photos,materials}.py`. Cibles ORM : `models/{photo,material_usage}.py`.
+- Tests détaillés INT-105 dans `test-cases.json`, note à produire dans
+  `notes/backend/sprint7.4/`. Ne pas déduire le stockage des métadonnées étendues
+  du DAT ni un audit de suppression de la seule adaptation de ces endpoints.
 
 ---
 
@@ -154,4 +180,4 @@ Afin de **donner un retour sur l'expérience**.
 
 Voir [test-cases.json](test-cases.json).
 
-**À compléter avant implémentation :** cas détaillés pour INT-105, INT-108. Ils étaient absents du fichier de tests initial ; les critères d’acceptation ci-dessus restent la référence.
+**À compléter avant implémentation :** cas détaillés pour INT-108. Les cas INT-105 sont désormais cadrés ; leurs résultats restent à renseigner après exécution.

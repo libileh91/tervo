@@ -7,8 +7,10 @@ Request/response models for Intervention CRUD + dashboard.
 from __future__ import annotations
 
 from datetime import date, datetime, time
+from decimal import Decimal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
+from app.modules.interventions.models.photo import PhotoUsage
 
 # ── Enums (matching the DB model) ─────────────────────────
 
@@ -88,7 +90,7 @@ class ChecklistItemRef(BaseModel):
 
 class PhotoRef(BaseModel):
     id: int
-    category: str
+    usage: PhotoUsage
     file_url: str
     thumbnail_url: str | None = None
     taken_at: datetime | None = None
@@ -117,24 +119,54 @@ class ChecklistItemUpdate(BaseModel):
 # ── Material schemas (INT-26) ──────────────────────────────
 
 
+def _bounded_quantity_schema(schema: dict) -> None:
+    """Anchor Pydantic's generated Decimal pattern over the entire string."""
+    for variant in schema.get("anyOf", []):
+        if variant.get("type") == "string" and "pattern" in variant:
+            variant["pattern"] = "(?:" + variant["pattern"] + ")$"
+
+
 class MaterialCreate(BaseModel):
-    name: str = Field(..., min_length=1, max_length=255)
-    quantity: str | None = Field(None, max_length=50)
+    model_config = {"extra": "forbid"}
+    designation: str = Field(..., min_length=1, max_length=255)
+    quantity: Decimal = Field(..., gt=0, max_digits=12, decimal_places=3, json_schema_extra=_bounded_quantity_schema)
+    unit: str = Field(..., min_length=1, max_length=50)
+
+    @field_validator("designation", "unit")
+    @classmethod
+    def nonblank(cls, value):
+        if not value.strip():
+            raise ValueError("must be nonblank")
+        return value
 
 
 class MaterialUpdate(BaseModel):
-    name: str | None = Field(None, min_length=1, max_length=255)
-    quantity: str | None = Field(None, max_length=50)
+    model_config = {"extra": "forbid"}
+    designation: str = Field(default=None, min_length=1, max_length=255)
+    quantity: Decimal = Field(default=None, gt=0, max_digits=12, decimal_places=3, json_schema_extra=_bounded_quantity_schema)
+    unit: str = Field(default=None, min_length=1, max_length=50)
+
+    @field_validator("designation", "unit")
+    @classmethod
+    def nonblank(cls, value):
+        if not value.strip():
+            raise ValueError("must be nonblank")
+        return value
 
 
 class MaterialResponse(BaseModel):
     id: int
     intervention_id: int
-    name: str
-    quantity: str | None = None
+    designation: str
+    quantity: Decimal | None = None
+    unit: str | None = None
     position: int
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("quantity", when_used="json")
+    def quantity_number(self, value) -> float | None:
+        return float(value) if value is not None else None
 
 
 # ── Intervention response (with all relations) ──────────────

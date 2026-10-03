@@ -47,7 +47,9 @@ async def _get_test_db():
 
 
 @pytest.fixture
-async def client():
+async def client(tmp_path, monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "UPLOAD_DIR", str(tmp_path / "uploads"))
     await _create_tables()
     app.dependency_overrides[get_db] = _get_test_db
     transport = ASGITransport(app=app)
@@ -187,9 +189,9 @@ class TestMaterialsExtra:
         self, client, other_auth_header, intervention_in_progress, db: AsyncSession
     ):
         """PUT material with wrong tech → 403."""
-        from app.modules.interventions.models.material import Material
+        from app.modules.interventions.models.material_usage import MaterialUsage
 
-        mat = Material(intervention_id=intervention_in_progress.id, name="Test", quantity="1")
+        mat = MaterialUsage(intervention_id=intervention_in_progress.id, designation="Test", quantity=1, unit="pièce")
         db.add(mat)
         await db.commit()
         await db.refresh(mat)
@@ -205,9 +207,9 @@ class TestMaterialsExtra:
         self, client, other_auth_header, intervention_in_progress, db: AsyncSession
     ):
         """DELETE material with wrong tech → 403."""
-        from app.modules.interventions.models.material import Material
+        from app.modules.interventions.models.material_usage import MaterialUsage
 
-        mat = Material(intervention_id=intervention_in_progress.id, name="Test", quantity="1")
+        mat = MaterialUsage(intervention_id=intervention_in_progress.id, designation="Test", quantity=1, unit="pièce")
         db.add(mat)
         await db.commit()
         await db.refresh(mat)

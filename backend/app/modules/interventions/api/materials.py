@@ -22,8 +22,11 @@ from app.modules.interventions.services.material import MaterialService
 router = APIRouter(prefix="/interventions", tags=["materials"])
 
 
-async def _get_intervention_or_404(db: AsyncSession, intervention_id: int) -> Intervention:
-    result = await db.execute(select(Intervention).where(Intervention.id == intervention_id))
+async def _get_intervention_or_404(db: AsyncSession, intervention_id: int, *, for_update: bool = False) -> Intervention:
+    query = select(Intervention).where(Intervention.id == intervention_id)
+    if for_update:
+        query = query.with_for_update().execution_options(populate_existing=True)
+    result = await db.execute(query)
     intervention = result.scalar_one_or_none()
     if intervention is None:
         raise HTTPException(status_code=404, detail="Intervention non trouvée")
@@ -57,7 +60,7 @@ async def create_material(
     db: AsyncSession = Depends(get_db),
 ):
     """Add a material to an intervention."""
-    intervention = await _get_intervention_or_404(db, intervention_id)
+    intervention = await _get_intervention_or_404(db, intervention_id, for_update=True)
     _check_assignation(intervention, current_user)
     service = MaterialService(db)
     return await service.create_material(intervention_id, body)
@@ -71,12 +74,12 @@ async def update_material(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update a material (name, quantity)."""
-    intervention = await _get_intervention_or_404(db, intervention_id)
+    """Update supplied material designation, quantity and unit."""
+    intervention = await _get_intervention_or_404(db, intervention_id, for_update=True)
     _check_assignation(intervention, current_user)
     service = MaterialService(db)
     return await service.update_material(
-        material_id, body.model_dump(exclude_unset=True)
+        intervention_id, material_id, body.model_dump(exclude_unset=True)
     )
 
 
@@ -88,8 +91,8 @@ async def delete_material(
     db: AsyncSession = Depends(get_db),
 ):
     """Delete a material."""
-    intervention = await _get_intervention_or_404(db, intervention_id)
+    intervention = await _get_intervention_or_404(db, intervention_id, for_update=True)
     _check_assignation(intervention, current_user)
     service = MaterialService(db)
-    await service.delete_material(material_id)
+    await service.delete_material(intervention_id, material_id)
     return Response(status_code=204)

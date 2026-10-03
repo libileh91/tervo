@@ -128,19 +128,24 @@
                 <TabPanel value="2" header="Photos">
                     <div class="photos-tab">
                         <!-- Upload buttons -->
+                        <label for="photo-usage">Usage de la photo</label>
+                        <select id="photo-usage" v-model="uploadUsage" :disabled="uploading">
+                            <option v-for="usage in photoUsages" :key="usage.value" :value="usage.value">{{ usage.label }}</option>
+                        </select>
+                        <Message v-if="photoError" severity="error">{{ photoError }}</Message>
                         <div class="upload-buttons">
                             <Button
                                 label="📷 Prendre une photo"
                                 severity="info"
                                 fluid
-                                @click="triggerUpload('avant')"
+                                @click="triggerUpload"
                                 :loading="uploading"
                             />
                             <Button
                                 label="🖼 Choisir dans la galerie"
                                 severity="info"
                                 fluid
-                                @click="triggerGalleryUpload('après')"
+                                @click="triggerGalleryUpload"
                                 :loading="uploading"
                             />
                         </div>
@@ -163,39 +168,16 @@
                         />
 
                         <!-- Avant -->
-                        <div v-if="avantPhotos.length > 0" class="photo-section">
-                            <h3 class="section-label avant">📸 Avant ({{ avantPhotos.length }})</h3>
-                            <div class="photo-grid" :class="{ 'photo-grid--many': avantPhotos.length >= 3 }">
+                        <div v-for="group in photoGroups" :key="group.value" class="photo-section">
+                            <h3 class="section-label">{{ group.label }} ({{ group.photos.length }})</h3>
+                            <div class="photo-grid" :class="{ 'photo-grid--many': group.photos.length >= 3 }">
                                 <div
-                                    v-for="photo in avantPhotos"
+                                    v-for="photo in group.photos"
                                     :key="photo.id"
                                     class="photo-card"
                                     @click="openPreview(photo.file_url)"
                                 >
-                                    <img :src="photo.thumbnail_url || photo.file_url" class="photo-thumb" />
-                                    <Button
-                                        icon="pi pi-trash"
-                                        severity="danger"
-                                        rounded
-                                        size="small"
-                                        class="delete-btn"
-                                        @click.stop="deletePhoto(photo.id)"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Après -->
-                        <div v-if="apresPhotos.length > 0" class="photo-section">
-                            <h3 class="section-label apres">✅ Après ({{ apresPhotos.length }})</h3>
-                            <div class="photo-grid" :class="{ 'photo-grid--many': apresPhotos.length >= 3 }">
-                                <div
-                                    v-for="photo in apresPhotos"
-                                    :key="photo.id"
-                                    class="photo-card"
-                                    @click="openPreview(photo.file_url)"
-                                >
-                                    <img :src="photo.thumbnail_url || photo.file_url" class="photo-thumb" />
+                                    <img :src="photo.thumbnail_url || photo.file_url" :alt="group.label" class="photo-thumb" />
                                     <Button
                                         icon="pi pi-trash"
                                         severity="danger"
@@ -230,21 +212,35 @@
                 <TabPanel value="3" header="Matériaux">
                     <div class="materials-tab">
                         <!-- Liste des matériaux existants -->
-                        <div v-for="(mat, index) in materials" :key="mat.id" class="material-row">
+                        <div v-for="mat in materials" :key="mat.id" class="material-row">
                             <InputText
-                                v-model="mat.name"
-                                placeholder="Nom du matériau"
+                                v-model="mat.designation"
+                                placeholder="Désignation"
+                                aria-label="Désignation"
+                                :maxlength="255"
+                                :disabled="mat.saving"
                                 class="mat-input"
                                 @update:model-value="markEdited(mat)"
                             />
-                            <InputText
+                            <input
                                 v-model="mat.quantity"
+                                type="number"
+                                min="0.001"
+                                max="999999999.999"
+                                step="0.001"
+                                aria-label="Quantité"
+                                :disabled="mat.saving"
                                 placeholder="Qté"
                                 class="mat-qty"
-                                @update:model-value="markEdited(mat)"
+                                @input="markEdited(mat)"
                             />
+                            <InputText v-model="mat.unit" placeholder="Unité (ex. pièce)"
+                                aria-label="Unité" :maxlength="50" :disabled="mat.saving"
+                                @update:model-value="markEdited(mat)" />
+                            <Message v-if="mat.error" severity="error">{{ mat.error }}</Message>
                             <Button
                                 v-if="mat.id < 0"
+                                :loading="mat.saving"
                                 icon="pi pi-check"
                                 severity="success"
                                 rounded
@@ -253,6 +249,7 @@
                             />
                             <Button
                                 v-else
+                                :loading="mat.saving"
                                 icon="pi pi-save"
                                 severity="info"
                                 rounded
@@ -260,6 +257,7 @@
                                 @click="updateMaterial(mat)"
                             />
                             <Button
+                                :disabled="mat.saving"
                                 icon="pi pi-trash"
                                 severity="danger"
                                 rounded
@@ -352,6 +350,8 @@ import TabView from "primevue/tabview";
 import TabPanel from "primevue/tabpanel";
 import Dialog from "primevue/dialog";
 import { useAuthStore } from "@/stores/auth";
+import { groupPhotos, photoUsages, reconcileMaterials, materialRow, validateMaterial, type MaterialRow } from "@/utils/interventionMedia";
+import type { PhotoUsage } from "@/api/client";
 import {
     api,
     interventionsApi,
@@ -379,7 +379,8 @@ const cancelLoading = ref(false);
 
 const cameraInputRef = ref<HTMLInputElement | null>(null);
 const galleryInputRef = ref<HTMLInputElement | null>(null);
-const uploadCategory = ref<string>("avant");
+const uploadUsage = ref<PhotoUsage>("BEFORE");
+const photoError = ref<string | null>(null);
 const uploading = ref(false);
 const showPreview = ref(false);
 const previewPhoto = ref<string | null>(null);
@@ -403,19 +404,9 @@ const {
     enabled: !!interventionId,
 });
 
-// ── Computed photos by category ────────────────────────
-
-const avantPhotos = computed(() => (intervention.value?.photos || []).filter((p: any) => p.category === "avant"));
-
-const apresPhotos = computed(() => (intervention.value?.photos || []).filter((p: any) => p.category === "après"));
+const photoGroups = computed(() => groupPhotos(intervention.value?.photos || []));
 
 // ── Materials state ───────────────────────────────────────
-
-interface MaterialRow {
-    id: number;
-    name: string;
-    quantity: string | null;
-}
 
 const materials = ref<MaterialRow[]>([]);
 const loadingMaterials = ref(false);
@@ -426,11 +417,7 @@ watch(
     () => intervention.value?.materials,
     (mats) => {
         if (mats) {
-            materials.value = mats.map((m: any) => ({
-                id: m.id,
-                name: m.name,
-                quantity: m.quantity,
-            }));
+            materials.value = reconcileMaterials(materials.value, mats);
         }
     },
     { immediate: true },
@@ -438,62 +425,78 @@ watch(
 
 function addRow() {
     tempIdCounter--;
-    materials.value.push({ id: tempIdCounter, name: "", quantity: null });
+    materials.value.push({ id: tempIdCounter, designation: "", quantity: 1, unit: "pièce",
+        dirty: true, saving: false, error: null });
 }
 
 function markEdited(mat: MaterialRow) {
-    // Rien de spécial — le v-model fait le binding
+    mat.dirty = true;
+    mat.error = null;
 }
 
 async function addMaterial(mat: MaterialRow) {
-    try {
-        const created = await materialsApi.add(auth.token!, interventionId, {
-            name: mat.name,
-            quantity: mat.quantity || undefined,
-        });
-        mat.id = created.id;
-        toast.add({ severity: "success", summary: "Matériau ajouté", life: 2000 });
-        queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
-    } catch (err: any) {
-        toast.add({ severity: "error", summary: "Erreur", detail: err.detail || "Erreur", life: 4000 });
-    }
+    await saveMaterial(mat);
 }
 
 async function updateMaterial(mat: MaterialRow) {
+    await saveMaterial(mat);
+}
+
+async function saveMaterial(mat: MaterialRow) {
+    if (mat.saving) return;
+    const result = validateMaterial(mat);
+    if (!result.data) {
+        mat.error = result.error;
+        return;
+    }
+    mat.saving = true;
+    mat.error = null;
     try {
-        await materialsApi.update(auth.token!, interventionId, mat.id, {
-            name: mat.name,
-            quantity: mat.quantity || undefined,
-        });
-        toast.add({ severity: "success", summary: "Matériau mis à jour", life: 2000 });
-        queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
+        const saved = mat.id < 0
+            ? await materialsApi.add(auth.token!, interventionId, result.data)
+            : await materialsApi.update(auth.token!, interventionId, mat.id, result.data);
+        Object.assign(mat, materialRow(saved), { saving: true });
+        toast.add({ severity: "success", summary: "Matériau enregistré", life: 2000 });
+        await queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
     } catch (err: any) {
+        mat.error = err.message || "Impossible d’enregistrer le matériau.";
         toast.add({ severity: "error", summary: "Erreur", detail: err.detail || "Erreur", life: 4000 });
+    } finally {
+        mat.saving = false;
     }
 }
 
 async function deleteMaterial(materialId: number) {
+    if (materialId < 0) {
+        materials.value = materials.value.filter((m) => m.id !== materialId);
+        return;
+    }
+    const row = materials.value.find((m) => m.id === materialId);
+    if (!row || row.saving) return;
+    row.saving = true;
+    row.error = null;
     try {
         await materialsApi.remove(auth.token!, interventionId, materialId);
         materials.value = materials.value.filter((m) => m.id !== materialId);
         toast.add({ severity: "success", summary: "Matériau supprimé", life: 2000 });
         queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
     } catch (err: any) {
+        row.error = err.message || "Impossible de supprimer le matériau.";
         toast.add({ severity: "error", summary: "Erreur", detail: err.detail || "Erreur", life: 4000 });
+    } finally {
+        row.saving = false;
     }
 }
 
 // ── Upload photo ───────────────────────────────────────
 
 /** Ouvre l'appareil photo natif */
-function triggerUpload(category: string) {
-    uploadCategory.value = category;
+function triggerUpload() {
     cameraInputRef.value?.click();
 }
 
 /** Ouvre la galerie */
-function triggerGalleryUpload(category: string) {
-    uploadCategory.value = category;
+function triggerGalleryUpload() {
     galleryInputRef.value?.click();
 }
 
@@ -503,11 +506,13 @@ async function onFileSelected(event: Event) {
     const file = input.files[0];
 
     uploading.value = true;
+    photoError.value = null;
     try {
-        await photosApi.upload(auth.token!, interventionId, file, uploadCategory.value);
+        await photosApi.upload(auth.token!, interventionId, file, uploadUsage.value);
         toast.add({ severity: "success", summary: "Photo ajoutée", life: 3000 });
         queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
     } catch (err: any) {
+        photoError.value = err.message || "Impossible d’ajouter la photo.";
         toast.add({
             severity: "error",
             summary: "Erreur",
@@ -523,11 +528,13 @@ async function onFileSelected(event: Event) {
 // ── Delete photo ───────────────────────────────────────
 
 async function deletePhoto(photoId: number) {
+    photoError.value = null;
     try {
         await photosApi.delete(auth.token!, interventionId, photoId);
         toast.add({ severity: "success", summary: "Photo supprimée", life: 3000 });
         queryClient.invalidateQueries({ queryKey: ["intervention", interventionId] });
     } catch (err: any) {
+        photoError.value = err.message || "Impossible de supprimer la photo.";
         toast.add({
             severity: "error",
             summary: "Erreur",

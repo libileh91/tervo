@@ -11,7 +11,7 @@ from tests.test_modular_bootstrap import BACKEND, ISOLATED_IMPORTS, _run_python
 
 
 LAYOUT = {
-    "models": ("intervention", "checklist", "checklist_item", "intervention_photo", "material", "review"),
+    "models": ("intervention", "checklist", "checklist_item", "photo", "material_usage", "review"),
     "schemas": ("intervention", "checklist", "review"),
     "repositories": ("intervention", "checklist", "photo", "material", "review"),
     "services": ("intervention", "checklist", "photo", "material", "review"),
@@ -25,8 +25,8 @@ RETIRED_MODULES = tuple(
 MODEL_NAMES = {
     "intervention": "Intervention",
     "checklist_item": "ChecklistItem",
-    "intervention_photo": "InterventionPhoto",
-    "material": "Material",
+    "photo": "Photo",
+    "material_usage": "MaterialUsage",
     "review": "Review",
 }
 
@@ -152,8 +152,8 @@ def test_interventions_identity_base_and_relations(tmp_path, order):
         assert inspect(classes["ChecklistItem"]).relationships["checklist"].mapper.class_ is InterventionChecklist
         assert inspect(intervention).relationships["checklist_items"].viewonly
         for relation, target in (
-            ("checklist_items", "ChecklistItem"), ("photos", "InterventionPhoto"),
-            ("materials", "Material"), ("review", "Review"),
+            ("checklist_items", "ChecklistItem"), ("photos", "Photo"),
+            ("materials", "MaterialUsage"), ("review", "Review"),
         ):
             assert inspect(intervention).relationships[relation].mapper.class_ is classes[target]
             if relation != "checklist_items":
@@ -208,13 +208,13 @@ def test_existing_schema_contracts():
     assert InterventionUpdate(equipment_id=None).model_dump(exclude_unset=True) == {
         "equipment_id": None,
     }
-    # Historical strings are not replaced with stricter enums or numeric quantities.
+    # Priority remains historical; material inputs now carry a numeric quantity and unit.
     assert InterventionCreate(**{**body.model_dump(), "priority": "libre"}).priority == "libre"
-    assert MaterialCreate(name="Joint", quantity="2 mètres").quantity == "2 mètres"
+    assert MaterialCreate(designation="Joint", quantity=2, unit="m").quantity == 2
     assert ChecklistItemUpdate(result="OK").comment is None
     with pytest.raises(ValidationError):
         ChecklistItemUpdate(checked=True)
-    assert PhotoRef(id=1, category="avant", file_url="/uploads/photos/a.jpg").thumbnail_url is None
+    assert PhotoRef(id=1, usage="BEFORE", file_url="/uploads/photos/a.jpg").thumbnail_url is None
     for payload in ({"rating": 0}, {"rating": 6}, {"rating": 5, "comment": "x" * 2001}):
         with pytest.raises(ValidationError):
             ReviewSubmitRequest(**payload)
@@ -249,7 +249,7 @@ async def test_photo_files_and_detail_consumer_survive_cutover(context, tmp_path
     from PIL import Image
     from starlette.datastructures import Headers, UploadFile
     from app.config import settings
-    from app.modules.interventions.models.intervention_photo import InterventionPhoto
+    from app.modules.interventions.models.photo import Photo
     from app.modules.interventions.services.photo import PhotoService
 
     monkeypatch.setattr(settings, "UPLOAD_DIR", str(tmp_path / "uploads"))
@@ -263,9 +263,10 @@ async def test_photo_files_and_detail_consumer_survive_cutover(context, tmp_path
             intervention_id,
             UploadFile(filename="terrain.jpg", file=BytesIO(original),
                        headers=Headers({"content-type": "image/jpeg"})),
-            "avant",
+            "BEFORE",
         )
-        photo = await db.get(InterventionPhoto, result["id"])
+        result = result.model_dump()
+        photo = await db.get(Photo, result["id"])
         paths = [Path(photo.file_path), Path(photo.thumbnail_path)]
         assert paths[0].read_bytes() == original
         with Image.open(paths[1]) as thumbnail:
@@ -306,7 +307,7 @@ async def test_checklist_material_completion_public_review_and_report(context):
             assert patched.json()["comment"] == "R7"
         assert (await checklist.validate_all_checked(intervention_id))["is_valid"]
         material = await MaterialService(db).create_material(
-            intervention_id, MaterialCreate(name="Joint R7", quantity="2 mètres"),
+            intervention_id, MaterialCreate(designation="Joint R7", quantity=2, unit="m"),
         )
     response = await ac.put(url + "/complete", json={"observations": "Terrain conservé"})
     assert response.status_code == 200, response.text

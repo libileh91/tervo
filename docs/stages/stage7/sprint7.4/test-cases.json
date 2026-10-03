@@ -147,6 +147,131 @@
       }
     },
     {
+      "id": "TC-INT-105-01",
+      "task": "INT-105",
+      "title": "Photos — six usages, fichiers et miniatures",
+      "type": "api",
+      "preconditions": ["Une intervention assignée", "JPEG/PNG/WebP de recette", "UPLOAD_DIR temporaire"],
+      "steps": [
+        "Uploader une image pour chacun des six usages",
+        "Lister les photos et relire le détail",
+        "Vérifier les fichiers et miniatures réels",
+        "Supprimer une photo"
+      ],
+      "expected_result": {
+        "usage": "BEFORE, AFTER, EQUIPMENT, ANOMALY, PART et OTHER persistés",
+        "contract": "Champ usage canonique, pas category legacy",
+        "thumbnail": "Image valide, miniature au maximum 300 par 300",
+        "delete": "204, ligne et fichiers de la photo cible supprimés"
+      },
+      "actual_result": {
+        "status": "passed_local",
+        "evidence": "test_all_usages_formats_detail_urls_thumbnail_and_deleted_files",
+        "observed": "Six usages, JPEG/PNG/WebP, GET/détail cohérents, miniatures réelles au maximum 300px, suppression 204 avec disparition des fichiers",
+        "browser": "Résultats navigateur suivis séparément, non déduits de ce test API"
+      }
+    },
+    {
+      "id": "TC-INT-105-02",
+      "task": "INT-105",
+      "title": "Upload invalide et nettoyage des échecs",
+      "type": "integration",
+      "preconditions": ["UPLOAD_DIR temporaire", "Une intervention assignée"],
+      "steps": [
+        "Envoyer un usage inconnu ou le champ legacy category",
+        "Envoyer un MIME refusé, un contenu image invalide et une image trop volumineuse",
+        "Injecter un échec DB après création des fichiers",
+        "Vérifier les lignes et fichiers restants"
+      ],
+      "expected_result": {
+        "invalid_usage": "422",
+        "invalid_file": "Rejet explicite, sans photo persistée",
+        "cleanup": "Aucun fichier créé par l'upload échoué ne reste sans ligne correspondante"
+      },
+      "actual_result": {
+        "status": "passed_local",
+        "observed": "Usages/alias invalides 422, MIME/contenu/taille invalides 400 ; échec commit injecté rollback sans nouvelle ligne/fichiers, fichier tiers préservé",
+        "limit": "Compensation d'échec contrôlé, pas atomicité distribuée DB/filesystem face aux crashes ou échecs de nettoyage"
+      }
+    },
+    {
+      "id": "TC-INT-105-03",
+      "task": "INT-105",
+      "title": "Matériel — quantités numériques et unités",
+      "type": "api",
+      "preconditions": ["Une intervention assignée"],
+      "steps": [
+        "Créer une consommation de câble avec quantity=0.5 et unit=m",
+        "Lister, modifier puis supprimer la consommation",
+        "Envoyer des champs inconnus, textes blancs, quantités nulles/négatives/non finies ou hors précision",
+        "Vérifier la réponse JSON et la valeur persistée"
+      ],
+      "expected_result": {
+        "create": "201, designation/quantity/unit",
+        "quantity": "Nombre JSON et valeur DB Numeric(12,3)",
+        "invalid": "422 pour contrat invalide",
+        "crud": "Routes existantes conservées ; modification et suppression persistées"
+      },
+      "actual_result": {
+        "status": "passed_local",
+        "observed": "Création/édition/liste/suppression, quantity JSON number, précision et unités persistées ; valeurs invalides 422 ; null historique conservé",
+        "openapi": "Serializer float|null déclaré et motif Decimal ancré ; réponse documentée numérique"
+      }
+    },
+    {
+      "id": "TC-INT-105-04",
+      "task": "INT-105",
+      "title": "Autorisation et rattachement au parent",
+      "type": "integration",
+      "preconditions": ["Deux techniciens et plusieurs interventions avec médias"],
+      "steps": [
+        "Modifier/supprimer un matériel ou une photo via le mauvais intervention_id",
+        "Tenter les mutations sur une intervention non assignée",
+        "Vérifier qu'aucun fichier ou enregistrement étranger n'a changé",
+        "Présenter un chemin DB hors UPLOAD_DIR lors d'une suppression de recette"
+      ],
+      "expected_result": {
+        "wrong_parent": "404 avant mutation",
+        "unassigned": "403",
+        "unsafe_path": "Suppression physique hors périmètre refusée",
+        "integrity": "Les données et fichiers étrangers sont conservés"
+      },
+      "actual_result": {
+        "status": "passed_local",
+        "observed": "Mauvais parent 404, non assigné 403, JWT absent/invalide refusé ; file_path ou thumbnail_path hors UPLOAD_DIR refusé 400 avant toute mutation",
+        "read_locking": "Quatre tests vérifient GET sans verrou et mutations avec verrou parent/refresh ORM"
+      }
+    },
+    {
+      "id": "TC-INT-105-05",
+      "task": "INT-105",
+      "title": "Migration, consommateurs et preuves historiques",
+      "type": "integration",
+      "preconditions": ["Schéma précédent jetable avec photos et matériel historiques"],
+      "steps": [
+        "Migrer les usages et quantités convertibles",
+        "Vérifier IDs, fichiers et unités historiques inconnues",
+        "Essayer une quantité ou un usage non convertible",
+        "Essayer un downgrade qui perdrait un usage V2 ou une unité",
+        "Tester le rapport, le frontend et les gardes de contrat"
+      ],
+      "expected_result": {
+        "migration": "IDs et chemins conservés, usages traduits, quantités numériques, unité historique null",
+        "preflight": "Refus avant DDL sans effacement silencieux des données ambiguës",
+        "downgrade": "Refus avant DDL des pertes de provenance V2",
+        "consumers": "Photos groupées par usage, matériel avec unité, aucun faux classement de tous les autres usages en AFTER",
+        "history": "Fixtures R0/R7/R11 immuables ; delta INT-105 contrôlé séparément"
+      },
+      "actual_result": {
+        "status": "passed_local",
+        "observed": "Préflight et downgrade conservateurs ; IDs/chemins/FK/index conservés ; unités inconnues null ; projection historique et rapport six usages/matériel numérique réussis",
+        "quantity_limit": "Conservation sémantique, pas orthographe byte-exacte des quantités historiques au downgrade",
+        "backend_suite": "539 passed, 7 skipped, 7 warnings",
+        "postgresql_suite": "200 passed, 2 warnings",
+        "frontend": "10 tests, 36 assertions, typecheck/build réussis"
+      }
+    },
+    {
       "id": "TC-INT-106-01",
       "task": "INT-106",
       "title": "Résultat ≠ statut",

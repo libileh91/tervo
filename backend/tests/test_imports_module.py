@@ -148,8 +148,8 @@ async def replay():
 
 
 async def dump_database(db):
-    """Every column, then the explicit empty-checklist INT-104 projection."""
-    from tests.contract_int104 import project_import_database
+    """Every column, then the verified INT-105 and INT-104 projections."""
+    from tests.contract_int105 import project_import_database
 
     result = {}
     for table in sorted(Base.metadata.tables.values(), key=lambda t: t.name):

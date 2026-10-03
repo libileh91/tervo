@@ -2,9 +2,11 @@
 import ast
 import base64
 from datetime import date, datetime, time
+from decimal import Decimal
 import importlib
 from importlib.util import resolve_name
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -46,12 +48,12 @@ def recipe(directory, omissions=False):
             NS(category="post_intervention", label="Essai fonctionnement", result="OK", comment="Conforme"),
             NS(category="legacy", label="Nettoyage", result=None, comment="À revoir"),
         ],
-        photos=[NS(category="avant", file_path=str(before)),
-                NS(category="apres", file_path=str(after)),
-                NS(category="avant", file_path=str(directory / "missing.jpg")),
-                NS(category="apres", file_path=None)],
-        materials=[NS(name="Joint Ø 20 & raccord", quantity="2"),
-                   NS(name="Fluide", quantity="0.5")],
+        photos=[NS(usage="BEFORE", file_path=str(before)),
+                NS(usage="AFTER", file_path=str(after)),
+                NS(usage="BEFORE", file_path=str(directory / "missing.jpg")),
+                NS(usage="AFTER", file_path=None)],
+        materials=[NS(designation="Joint Ø 20 & raccord", quantity=Decimal("2.000"), unit="pièce"),
+                   NS(designation="Fluide", quantity=Decimal("0.500"), unit="kg")],
     )
     if omissions:
         item.site = item.technician = None
@@ -93,6 +95,24 @@ def test_full_html_matches_frozen_r7_with_explicit_int104_delta(tmp_path, omissi
     ).replace(
         '<td class="check-no">X</td>', '<td class="check-no">Non réalisé</td>',
     )
+    # INT-105 changes only photo grouping markup and the material unit column.
+    # Project the frozen section explicitly; never regenerate a historical artifact.
+    expected = expected.replace(
+        '<h3 class="section-label pre">Avant</h3>',
+        '<h3 class="section-label pre" data-usage="BEFORE">Avant</h3>',
+    ).replace(
+        '<h3 class="section-label post">Apres</h3>',
+        '<h3 class="section-label post" data-usage="AFTER">Apres</h3>',
+    ).replace('alt="avant"', 'alt="BEFORE"').replace('alt="apres"', 'alt="AFTER"')
+    expected = expected.replace(
+        '<tr><th style="width:60%;">Materiau</th><th>Quantite</th></tr>',
+        '<tr><th style="width:60%;">Materiau</th><th>Quantite</th><th>Unite</th></tr>',
+    ).replace(
+        '<td>2</td>', '<td>2</td>\n    <td>pièce</td>',
+    ).replace('<td>0.5</td>', '<td>0.5</td>\n    <td>kg</td>')
+    # Replacing the two conditional groups with one loop removes one template
+    # control-line newline between them; all other static markup stays frozen.
+    expected = re.sub(r'(alt="BEFORE" />\n  \n</div>\n)\n(\n<h3)', r'\1\2', expected)
     assert actual == expected
 
 
@@ -110,6 +130,31 @@ def test_checklist_result_and_comment_are_visible_but_never_html(tmp_path):
     assert str(escape(comment)) in actual
     assert result not in actual
     assert comment not in actual
+
+
+def test_all_photo_usages_material_units_and_numeric_display(tmp_path):
+    renderer = importlib.import_module("app.modules.reports.renderer")
+    exporter = renderer.ReportExporter()
+    intervention = recipe(tmp_path)
+    usages = ("BEFORE", "AFTER", "EQUIPMENT", "ANOMALY", "PART", "OTHER")
+    intervention.photos = [NS(usage=usage, file_path=intervention.photos[0].file_path) for usage in usages]
+    intervention.materials += [
+        NS(designation="<script>material</script>", quantity=None, unit=None),
+        NS(designation="Précision", quantity=Decimal("0.001"), unit="<b>kg</b>"),
+    ]
+    with patch.object(exporter, "_html_to_pdf", side_effect=lambda html: html):
+        actual = exporter.generate_pdf(intervention)
+    assert actual.count('<div class="photos-grid">') == 6
+    for usage in usages:
+        assert actual.count(f'data-usage="{usage}"') == 1
+        assert actual.count(f'alt="{usage}"') == 1
+    assert "<td>2</td>" in actual and "<td>0.5</td>" in actual
+    assert "<td>0.001</td>" in actual and "<td>2.000</td>" not in actual
+    assert "<td>pièce</td>" in actual and "<td>kg</td>" in actual
+    assert "<td>---</td>" in actual
+    assert str(escape("<script>material</script>")) in actual
+    assert str(escape("<b>kg</b>")) in actual
+    assert "<script>material</script>" not in actual
 
 
 def run_isolated(tmp_path, source):

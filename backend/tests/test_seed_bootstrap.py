@@ -48,6 +48,10 @@ def test_real_seed_cli_twice_on_its_own_demo_only(tmp_path):
                 for table in ("user", "client", "site", "intervention")
             } == {"user": 2, "client": 8, "site": 8, "intervention": 7}
             assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+            assert connection.execute(
+                "SELECT designation,quantity,unit,position FROM material_usage ORDER BY id"
+            ).fetchall() == [("Joint d'étanchéité", 2, "pièce", 0)] * 2
+            assert connection.execute("SELECT count(*) FROM photo").fetchone()[0] == 0
             # Demo intervention creation now persists immutable V2 snapshots.
             assert connection.execute(
                 "SELECT count(*) FROM intervention_checklist"

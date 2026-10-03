@@ -90,12 +90,12 @@ class Intervention(Base):
         viewonly=True, order_by="ChecklistItem.position",
     )
     photos = relationship(
-        "InterventionPhoto",
+        "Photo",
         back_populates="intervention",
         cascade="all, delete-orphan",
     )
     materials = relationship(
-        "Material", back_populates="intervention", cascade="all, delete-orphan"
+        "MaterialUsage", back_populates="intervention", cascade="all, delete-orphan"
     )
     review = relationship(
         "Review", back_populates="intervention", uselist=False, cascade="all, delete-orphan"

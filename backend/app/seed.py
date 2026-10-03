@@ -11,6 +11,7 @@ Usage:
 
 import asyncio
 from datetime import date, datetime, time, timedelta
+from decimal import Decimal
 
 from sqlalchemy import text
 
@@ -21,6 +22,7 @@ from app.model_registry import load_models
 from app.modules.customers.models import Client, Site
 from app.modules.interventions.models.intervention import Intervention, InterventionStatus, Priority
 from app.modules.interventions.services.checklist import ChecklistService
+from app.modules.interventions.models.material_usage import MaterialUsage
 
 from app.modules.identity.models import Role, User
 
@@ -36,8 +38,8 @@ async def seed():
         print("🧹 Cleaning existing data…")
         for table in [
             "review",
-            "material",
-            "intervention_photo",
+            "material_usage",
+            "photo",
             "checklist_item",
             "intervention_checklist",
             "checklist_template",
@@ -275,6 +277,11 @@ async def seed():
         await session.flush()
         for i in interventions_data:
             await ChecklistService(session).create_snapshot(i.id)
+            if i.status == InterventionStatus.COMPLETED:
+                session.add(MaterialUsage(
+                    intervention_id=i.id, designation="Joint d'étanchéité",
+                    quantity=Decimal("2.000"), unit="pièce", position=0,
+                ))
         await session.commit()
 
         print(f"  ✅ {len(interventions_data)} interventions created")

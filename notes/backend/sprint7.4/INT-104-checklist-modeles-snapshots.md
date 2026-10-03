@@ -1,5 +1,11 @@
 # INT-104 — Modèles de checklist et snapshots historiques
 
+> Cette note décrit la livraison INT-104 et ses preuves à ce stade. Les contrats
+> photos/matériel ont ensuite évolué dans [INT-105](INT-105-photos-materiel-v2.md) :
+> `usage`, `designation`, quantité numérique et unité. Le contrat du snapshot
+> checklist présenté ici reste inchangé ; les anciennes fixtures demeurent
+> des références historiques, pas le contrat média courant.
+
 ## 1. Ce qui change, et pourquoi
 
 INT-104 distingue une **définition réutilisable** des contrôles et la **checklist

@@ -309,17 +309,19 @@ export const sitesApi = {
 
 export interface PhotoResponse {
   id: number;
-  category: string;
+  usage: PhotoUsage;
   file_url: string;
   thumbnail_url: string | null;
   taken_at: string;
 }
 
+export type PhotoUsage = "BEFORE" | "AFTER" | "EQUIPMENT" | "ANOMALY" | "PART" | "OTHER";
+
 export const photosApi = {
-  upload: (token: string, interventionId: number, file: File, category: string) => {
+  upload: (token: string, interventionId: number, file: File, usage: PhotoUsage) => {
     const fd = new FormData();
     fd.append("file", file);
-    fd.append("category", category);
+    fd.append("usage", usage);
     return api.upload<PhotoResponse>(`/interventions/${interventionId}/photos`, fd, token);
   },
   delete: (token: string, interventionId: number, photoId: number) =>
@@ -331,16 +333,23 @@ export const photosApi = {
 export interface MaterialItem {
   id: number;
   intervention_id: number;
-  name: string;
-  quantity: string | null;
+  designation: string;
+  quantity: number | null;
+  unit: string | null;
   position: number;
+}
+
+export interface MaterialInput {
+  designation: string;
+  quantity: number;
+  unit: string;
 }
 
 export const materialsApi = {
   list: (token: string, interventionId: number) => api.get<MaterialItem[]>(`/interventions/${interventionId}/materials`, token),
-  add: (token: string, interventionId: number, data: { name: string; quantity?: string }) =>
+  add: (token: string, interventionId: number, data: MaterialInput) =>
     api.post<MaterialItem>(`/interventions/${interventionId}/materials`, data, token),
-  update: (token: string, interventionId: number, materialId: number, data: { name?: string; quantity?: string }) =>
+  update: (token: string, interventionId: number, materialId: number, data: Partial<MaterialInput>) =>
     api.put<MaterialItem>(`/interventions/${interventionId}/materials/${materialId}`, data, token),
   remove: (token: string, interventionId: number, materialId: number) =>
     api.delete<void>(`/interventions/${interventionId}/materials/${materialId}`, token),

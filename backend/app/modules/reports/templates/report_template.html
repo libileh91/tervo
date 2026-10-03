@@ -102,34 +102,27 @@
 </table>
 {% endif %}
 
-{% if photos_avant or photos_apres %}
+{% if photo_groups %}
 <h2>Photos</h2>
-{% if photos_avant %}
-<h3 class="section-label pre">Avant</h3>
+{% for group in photo_groups %}
+<h3 class="section-label {{ 'pre' if group.usage == 'BEFORE' else 'post' }}" data-usage="{{ group.usage }}">{{ group.label }}</h3>
 <div class="photos-grid">
-  {% for photo in photos_avant %}
-  <img src="{{ photo }}" alt="avant" />
+  {% for photo in group.photos %}
+  <img src="{{ photo }}" alt="{{ group.usage }}" />
   {% endfor %}
 </div>
-{% endif %}
-{% if photos_apres %}
-<h3 class="section-label post">Apres</h3>
-<div class="photos-grid">
-  {% for photo in photos_apres %}
-  <img src="{{ photo }}" alt="apres" />
-  {% endfor %}
-</div>
-{% endif %}
+{% endfor %}
 {% endif %}
 
 {% if materials %}
 <h2>Materiaux utilises</h2>
 <table>
-  <tr><th style="width:60%;">Materiau</th><th>Quantite</th></tr>
+  <tr><th style="width:60%;">Materiau</th><th>Quantite</th><th>Unite</th></tr>
   {% for mat in materials %}
   <tr>
-    <td>{{ mat.name }}</td>
-    <td>{{ mat.quantity or '---' }}</td>
+    <td>{{ mat.designation }}</td>
+    <td>{{ mat.quantity }}</td>
+    <td>{{ mat.unit or '---' }}</td>
   </tr>
   {% endfor %}
 </table>

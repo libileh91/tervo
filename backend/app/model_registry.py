@@ -17,8 +17,8 @@ def load_models() -> None:
     )
     from app.modules.installations.models import Installation  # noqa: F401
     from app.modules.interventions.models.intervention import Intervention  # noqa: F401
-    from app.modules.interventions.models.intervention_photo import InterventionPhoto  # noqa: F401
-    from app.modules.interventions.models.material import Material  # noqa: F401
+    from app.modules.interventions.models.photo import Photo  # noqa: F401
+    from app.modules.interventions.models.material_usage import MaterialUsage  # noqa: F401
     from app.modules.catalog.models import Product  # noqa: F401
     from app.modules.interventions.models.review import Review  # noqa: F401
     from app.modules.sales.models import Sale, SaleLine  # noqa: F401

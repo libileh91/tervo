@@ -30,8 +30,8 @@ from app.modules.interventions.models.checklist_item import ChecklistItem
 from app.modules.interventions.models.checklist import InterventionChecklist
 from app.modules.customers.models import Client, Site
 from app.modules.interventions.models.intervention import Intervention, InterventionStatus
-from app.modules.interventions.models.intervention_photo import InterventionPhoto
-from app.modules.interventions.models.material import Material
+from app.modules.interventions.models.photo import Photo
+from app.modules.interventions.models.material_usage import MaterialUsage
 from app.modules.interventions.models.review import Review
 from app.modules.identity.models import User
 
@@ -63,8 +63,10 @@ async def _get_test_db():
 
 
 @pytest.fixture
-async def client():
+async def client(tmp_path, monkeypatch):
     """Async HTTP client with test database."""
+    from app.config import settings
+    monkeypatch.setattr(settings, "UPLOAD_DIR", str(tmp_path / "uploads"))
     await _create_tables()
     app.dependency_overrides[get_db] = _get_test_db
     transport = ASGITransport(app=app)
@@ -252,13 +254,13 @@ class TestPhotos:
         files = {"file": ("test.jpg", io.BytesIO(test_photo_bytes), "image/jpeg")}
         resp = await client.post(
             f"/api/v1/interventions/{intervention_in_progress.id}/photos",
-            data={"category": "avant"},
+            data={"usage": "BEFORE"},
             files=files,
             headers=auth_header,
         )
         assert resp.status_code == 201, resp.text
         data = resp.json()
-        assert data["category"] == "avant"
+        assert data["usage"] == "BEFORE"
         assert "file_url" in data
         assert "thumbnail_url" in data
 
@@ -268,7 +270,7 @@ class TestPhotos:
         files = {"file": ("test.gif", file_content, "image/gif")}
         resp = await client.post(
             f"/api/v1/interventions/{intervention_in_progress.id}/photos",
-            data={"category": "avant"},
+            data={"usage": "BEFORE"},
             files=files,
             headers=auth_header,
         )
@@ -279,7 +281,7 @@ class TestPhotos:
         files = {"file": ("test.jpg", io.BytesIO(test_photo_bytes), "image/jpeg")}
         resp = await client.post(
             f"/api/v1/interventions/{intervention_in_progress.id}/photos",
-            data={"category": "avant"},
+            data={"usage": "BEFORE"},
             files=files,
         )
         assert resp.status_code == 401
@@ -291,7 +293,7 @@ class TestPhotos:
         files = {"file": ("test.jpg", io.BytesIO(test_photo_bytes), "image/jpeg")}
         resp = await client.post(
             f"/api/v1/interventions/{intervention_in_progress.id}/photos",
-            data={"category": "avant"},
+            data={"usage": "BEFORE"},
             files=files,
             headers=other_auth_header,
         )
@@ -305,7 +307,7 @@ class TestPhotos:
         files = {"file": ("test.jpg", io.BytesIO(test_photo_bytes), "image/jpeg")}
         upload_resp = await client.post(
             f"/api/v1/interventions/{intervention_in_progress.id}/photos",
-            data={"category": "après"},
+            data={"usage": "AFTER"},
             files=files,
             headers=auth_header,
         )
@@ -333,7 +335,7 @@ class TestPhotos:
         files = {"file": ("test.jpg", io.BytesIO(test_photo_bytes), "image/jpeg")}
         upload_resp = await client.post(
             f"/api/v1/interventions/{intervention_in_progress.id}/photos",
-            data={"category": "après"},
+            data={"usage": "AFTER"},
             files=files,
             headers=auth_header,
         )
@@ -364,20 +366,21 @@ class TestMaterials:
         """Ajout → 201."""
         resp = await client.post(
             f"/api/v1/interventions/{intervention_in_progress.id}/materials",
-            json={"name": "Filtre HEPA", "quantity": "2"},
+            json={"designation": "Filtre HEPA", "quantity": 2, "unit": "pièce"},
             headers=auth_header,
         )
         assert resp.status_code == 201, resp.text
         data = resp.json()
-        assert data["name"] == "Filtre HEPA"
-        assert data["quantity"] == "2"
+        assert data["designation"] == "Filtre HEPA"
+        assert data["quantity"] == 2
+        assert data["unit"] == "pièce"
 
     async def test_list_materials(self, client, auth_header, intervention_in_progress):
         """Liste → 200."""
         # Add one
         await client.post(
             f"/api/v1/interventions/{intervention_in_progress.id}/materials",
-            json={"name": "Vis", "quantity": "10"},
+            json={"designation": "Vis", "quantity": 10, "unit": "pièce"},
             headers=auth_header,
         )
         resp = await client.get(
@@ -393,24 +396,25 @@ class TestMaterials:
         """Modification → 200."""
         created = await client.post(
             f"/api/v1/interventions/{intervention_in_progress.id}/materials",
-            json={"name": "Câble", "quantity": "5m"},
+            json={"designation": "Câble", "quantity": 5, "unit": "m"},
             headers=auth_header,
         )
         mat_id = created.json()["id"]
 
         resp = await client.put(
             f"/api/v1/interventions/{intervention_in_progress.id}/materials/{mat_id}",
-            json={"quantity": "10m"},
+            json={"quantity": 10},
             headers=auth_header,
         )
         assert resp.status_code == 200
-        assert resp.json()["quantity"] == "10m"
+        assert resp.json()["quantity"] == 10
+        assert resp.json()["unit"] == "m"
 
     async def test_delete_material(self, client, auth_header, intervention_in_progress):
         """Suppression → 204."""
         created = await client.post(
             f"/api/v1/interventions/{intervention_in_progress.id}/materials",
-            json={"name": "Joint", "quantity": "1"},
+            json={"designation": "Joint", "quantity": 1, "unit": "pièce"},
             headers=auth_header,
         )
         mat_id = created.json()["id"]

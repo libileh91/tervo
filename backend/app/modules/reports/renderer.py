@@ -62,20 +62,29 @@ class ReportExporter:
                 post_items.append(entry)
 
         # Embed photos as base64
-        avant_photos = []
-        apres_photos = []
+        photo_groups = [
+            {"usage": usage, "label": label, "photos": []}
+            for usage, label in (
+                ("BEFORE", "Avant"), ("AFTER", "Apres"),
+                ("EQUIPMENT", "Équipement"), ("ANOMALY", "Anomalie"),
+                ("PART", "Pièce"), ("OTHER", "Autre"),
+            )
+        ]
+        photos_by_usage = {group["usage"]: group["photos"] for group in photo_groups}
         for photo in intervention.photos or []:
             uri = self._embed_photo(photo.file_path)
             if uri:
-                if photo.category == "avant":
-                    avant_photos.append(uri)
-                else:
-                    apres_photos.append(uri)
+                photos_by_usage[photo.usage].append(uri)
 
         # Materials
         materials_list = []
         for mat in intervention.materials or []:
-            materials_list.append({"name": mat.name, "quantity": mat.quantity})
+            quantity = "---" if mat.quantity is None else format(mat.quantity, "f")
+            if "." in quantity:
+                quantity = quantity.rstrip("0").rstrip(".")
+            materials_list.append({
+                "designation": mat.designation, "quantity": quantity, "unit": mat.unit,
+            })
 
         # Status label for display
         status_labels = {
@@ -124,8 +133,7 @@ class ReportExporter:
             },
             "checklist_pre": pre_items,
             "checklist_post": post_items,
-            "photos_avant": avant_photos,
-            "photos_apres": apres_photos,
+            "photo_groups": [group for group in photo_groups if group["photos"]],
             "materials": materials_list,
             "generated_at": datetime.now().strftime("%d/%m/%Y %H:%M"),
         }

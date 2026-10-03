@@ -1,0 +1,79 @@
+{
+  "task": "INT-105",
+  "capture_phase": "before authorized task commit",
+  "base_commit": "74f05a64ab48014e21e474abaa13816446a4786d",
+  "status": "locally_verified",
+  "backend": {
+    "command": "existing primary backend venv python -m pytest <absolute tests> -q --tb=short -p no:cacheprovider",
+    "cwd_database_uploads": "scratch",
+    "passed": 539,
+    "skipped": 7,
+    "warnings": 7,
+    "seconds": 115.23,
+    "skips": "PostgreSQL checklist/media migration chains and five checklist locking cases, executed in dedicated PostgreSQL run"
+  },
+  "postgresql": {
+    "image": "local postgres:17.4 --pull never",
+    "loopback_ephemeral_port_only": true,
+    "existing_volumes_used": false,
+    "containers_stopped": true,
+    "canonical_files": [
+      "test_installations.py",
+      "test_sales.py",
+      "test_installation_migration.py",
+      "test_import_service_v2.py",
+      "test_import_api_v2.py",
+      "test_int104_checklists.py",
+      "test_checklist_migration.py",
+      "test_int105_media.py",
+      "test_media_migration.py",
+      "test_media_locking.py"
+    ],
+    "passed": 200,
+    "warnings": 2,
+    "seconds": 64.59,
+    "alembic_upgrade_downgrade_reupgrade": "passed with real env.py on disposable server",
+    "head": "h105e0010001",
+    "alembic_check": 255,
+    "metadata_delta": "only preexisting technician FK remove/add, no new INT-105 drift"
+  },
+  "frontend": {
+    "bun": "1.2.20",
+    "tests_passed": 10,
+    "assertions": 36,
+    "typecheck": 0,
+    "build": 0,
+    "vite": "6.4.3",
+    "modules": 452,
+    "dependencies_and_locks_unchanged": true
+  },
+  "review": {
+    "behavioral_blockers": 0,
+    "openapi_numeric_serializer_return_type_fixed": true,
+    "decimal_string_pattern_anchored": true,
+    "parent_scope_and_assignation_verified": true,
+    "outside_upload_paths_tests": "two API cases reject file_path and thumbnail_path, preserving row and both files",
+    "GET_readonly_locking_tests": "four cases verify read-only lookup vs mutation lock"
+  },
+  "contracts": {
+    "photo_usage": ["BEFORE", "AFTER", "EQUIPMENT", "ANOMALY", "PART", "OTHER"],
+    "materials": "designation/positive Decimal Numeric(12,3)/free unit; API JSON number",
+    "historical_nulls_preserved": true,
+    "migration_quantity_conservation": "semantic, not original byte spelling",
+    "upload_transaction_owner": "service serializes response before a single commit; repository only flush/refresh",
+    "database_filesystem_distributed_atomicity_claimed": false,
+    "R0_R7_R11_fixtures_unchanged": true
+  },
+  "followups": {
+    "TD_B004": "minimum photos at closure deferred, not enabled by INT-105",
+    "TD_B020": "extended photo metadata/audit/storage reconciliation deferred",
+    "other_todos": ["TD-B013", "TD-B016", "TD-B019", "TD-F005", "TD-F007", "TD-F008"]
+  },
+  "browser": {
+    "status": "separate scout smoke in progress; no success inferred from API tests or build"
+  },
+  "real_database_or_seed_used": false,
+  "remote_ci_success_claimed": false,
+  "deployment_performed": false,
+  "INT106_started_at_capture": false
+}

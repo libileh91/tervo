@@ -115,6 +115,12 @@ jobs:
           TERVO_CHECKLIST_MIGRATION_TEST_URL: postgresql+psycopg2://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
         run: uv run pytest tests/test_int104_checklists.py tests/test_checklist_migration.py -q
 
+      - name: PostgreSQL media usages and historical migration
+        env:
+          TERVO_MEDIA_TEST_DATABASE_URL: postgresql+asyncpg://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
+          TERVO_MEDIA_MIGRATION_TEST_URL: postgresql+psycopg2://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
+        run: uv run pytest tests/test_int105_media.py tests/test_media_migration.py -q
+
   # ── Frontend : build ────────────────────────────────────
   frontend-build:
     name: Frontend — build

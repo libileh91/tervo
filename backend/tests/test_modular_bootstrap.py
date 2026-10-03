@@ -1,4 +1,4 @@
-"""Bootstrap isolé : preuves R0 immuables et delta courant INT-104 explicite.
+"""Bootstrap isolé : preuves R0 immuables et deltas INT-104/105 explicites.
 
 Chaque scénario importe l'application dans un nouvel interpréteur, sans lifespan,
 serveur HTTP ni connexion SQL. Aucun module applicatif n'est importé à la collecte.
@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.contract_int104 import assert_metadata_contract, assert_openapi_contract
+from tests.contract_int105 import assert_metadata_contract, assert_openapi_contract
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND = REPO_ROOT / "backend"
@@ -115,7 +115,9 @@ if block_engine:
 
 historical_tables = frozenset(json.loads(metadata_baseline.read_text(encoding="utf-8")))
 assert len(historical_tables) == 17
-expected_tables = historical_tables | {"checklist_template", "intervention_checklist"}
+expected_tables = (historical_tables - {"intervention_photo", "material"}) | {
+    "checklist_template", "intervention_checklist", "photo", "material_usage"
+}
 
 
 def assert_registry(Base):
@@ -434,7 +436,7 @@ def test_domains_and_registry_import_orders_share_one_registry(tmp_path, order):
             "customers", "catalog", "sales", "equipment", "installations",
             "identity", "imports",
         )
-        terrain = ("intervention", "checklist", "checklist_item", "intervention_photo", "material", "review")
+        terrain = ("intervention", "checklist", "checklist_item", "photo", "material_usage", "review")
         if {order!r} == "registry-first":
             load_models()
         modules = [
@@ -468,7 +470,7 @@ def test_domains_and_registry_import_orders_share_one_registry(tmp_path, order):
     )
 
 
-def test_metadata_matches_r0_with_only_authorized_int104_delta(tmp_path):
+def test_metadata_matches_r0_with_only_authorized_int105_delta(tmp_path):
     actual = _run_python(
         tmp_path,
         _METADATA_SERIALIZER
@@ -478,6 +480,17 @@ from app.model_registry import load_models
 
 load_models()
 assert_registry(Base)
+assert {
+    (index.name, tuple(column.name for column in index.columns), index.unique)
+    for index in Base.metadata.tables["photo"].indexes
+} == {("ix_photo_id", ("id",), False), ("ix_photo_intervention_id", ("intervention_id",), False)}
+assert {
+    (index.name, tuple(column.name for column in index.columns), index.unique)
+    for index in Base.metadata.tables["material_usage"].indexes
+} == {
+    ("ix_material_usage_id", ("id",), False),
+    ("ix_material_usage_intervention_id", ("intervention_id",), False),
+}
 result = serialize_metadata(Base.metadata)
 """,
     )
@@ -485,7 +498,7 @@ result = serialize_metadata(Base.metadata)
     assert_metadata_contract(actual, expected)
 
 
-def test_openapi_matches_r0_with_only_authorized_int104_delta_without_startup_or_sql(tmp_path):
+def test_openapi_matches_r0_with_only_authorized_int105_delta_without_startup_or_sql(tmp_path):
     actual = _run_python(
         tmp_path,
         """

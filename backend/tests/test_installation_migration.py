@@ -12,7 +12,7 @@ from app.model_registry import load_models
 
 PREVIOUS = "d100e0010001"
 REVISION = "e103e0010001"
-HEAD = "g104e0010001"
+HEAD = "h105e0010001"
 BACKEND = Path(__file__).resolve().parents[1]
 
 
@@ -42,8 +42,26 @@ def migration(tmp_path, monkeypatch):
         previous = sa.MetaData()
         for table in Base.metadata.sorted_tables:
             if table.name not in {"installation", "sale", "sale_line",
-                                  "checklist_template", "intervention_checklist", "checklist_item"}:
+                                  "checklist_template", "intervention_checklist", "checklist_item",
+                                  "photo", "material_usage"}:
                 table.to_metadata(previous)
+        sa.Table("intervention_photo", previous,
+            sa.Column("id", sa.Integer(), primary_key=True, index=True),
+            sa.Column("intervention_id", sa.Integer(),
+                      sa.ForeignKey("intervention.id", ondelete="CASCADE"),
+                      nullable=False, index=True),
+            sa.Column("category", sa.String(20), nullable=False),
+            sa.Column("file_path", sa.String(500), nullable=False),
+            sa.Column("thumbnail_path", sa.String(500)),
+            sa.Column("taken_at", sa.DateTime(), server_default=sa.func.now(), nullable=False))
+        sa.Table("material", previous,
+            sa.Column("id", sa.Integer(), primary_key=True, index=True),
+            sa.Column("intervention_id", sa.Integer(),
+                      sa.ForeignKey("intervention.id", ondelete="CASCADE"),
+                      nullable=False, index=True),
+            sa.Column("name", sa.String(255), nullable=False),
+            sa.Column("quantity", sa.String(50)),
+            sa.Column("position", sa.Integer(), nullable=False))
         # Reconstruct the checklist that actually existed at PREVIOUS, rather
         # than leaking current tables into a stamped historical schema.
         sa.Table("checklist_item", previous,
