@@ -1,6 +1,6 @@
 # Sprint 7.5 — Showroom et remplacement
 
-> **Tervo V2** · INT-109 à INT-110 · **Statut :** À traiter
+> **Tervo V2** · INT-109 à INT-110 · **Statut :** INT-109 vérifiée localement ; INT-110 non démarrée
 > **Dépendances :** Sprint 7.1, et 7.3 pour le lien showroom → vente. Vérifier le remplacement déjà amorcé dans INT-97 avant INT-110.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.5/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -19,14 +19,39 @@ Je veux **enregistrer une visite showroom avec les produits présentés**,
 Afin de **suivre le parcours prospect → vente**.
 
 **Acceptance Criteria**
-- [ ] `ShowroomVisit` : `client_id` (nullable), `visitor_name`, `visited_at`, `salesperson_id`, `follow_up_status`, `notes`
-- [ ] `ShowroomVisitProduct` : `visit_id`, `product_id` (N↔N)
-- [ ] `follow_up_status` ∈ `TO_FOLLOW_UP / CONSIDERING / QUOTE_REQUESTED / QUOTE_SENT / SOLD / LOST / NO_FURTHER_ACTION`
-- [ ] API : `GET/POST /showroom/visits`, `POST /showroom/visits/{id}/products`
+- [x] `ShowroomVisit` : `client_id` (nullable), `visitor_name`, `visited_at`, `salesperson_id`, `follow_up_status`, `notes`
+- [x] `ShowroomVisitProduct` : `visit_id`, `product_id` (N↔N)
+- [x] `follow_up_status` ∈ `TO_FOLLOW_UP / CONSIDERING / QUOTE_REQUESTED / QUOTE_SENT / SOLD / LOST / NO_FURTHER_ACTION`
+- [x] API : `GET/POST /showroom/visits`, `POST /showroom/visits/{id}/products`
+
+**Validation locale**
+- Une recette API intégrée : prospect sans client, rattachement au client,
+  présentations dédoublonnées, statut, filtres, droits, historique après
+  désactivation du produit et suppression du client refusée.
+- 19 cas réussis sur SQLite (recette + gardes de structure + migration
+  historique), 4 gardes ciblées ventes/équipements réussies ; l'oracle
+  d'import ciblé : 1 réussi. Migration INT-109 ciblée
+  sur SQLite jetable : upgrade → downgrade vide → upgrade, CHECK SQL et refus
+  du downgrade peuplé vérifiés.
+- La recette PostgreSQL est configurée dans `ci.yml`, mais **aucune CI distante
+  INT-109 ni migration PostgreSQL INT-109 n'a été exécutée**. Pas de
+  smoke navigateur, push ou déploiement. Voir
+  [la note pédagogique](../../../../notes/backend/sprint7.5/INT-109-showroom-visites.md).
 
 **Technical Notes**
-- `client_id` nullable : prospect pas encore client (`visitor_name` requis en secours)
-- Fichiers : `app/models/showroom.py`, `app/services/showroom.py`, `app/api/v1/showroom.py`
+- Modules V2 : `app/modules/showroom/{models,schemas,repository,service,api}.py`,
+  registre ORM, routeur, migration `m109e0010001`. `client_id` nullable ;
+  `visitor_name` non blanc requis lorsqu'il est absent, au niveau API et SQL.
+- `salesperson_id` = utilisateur connecté ; attribution d'un autre ID refusée.
+  Pour l'instant `ADMIN` uniquement, car `MANAGER/COMMERCIAL` n'existent pas
+  (TD-B013). Le frontend V2 reste à cadrer (TD-F007).
+- GET détail, PATCH suivi/client/notes/date, DELETE association et liste
+  paginée/filtrée complètent les routes indispensables pour consulter et
+  corriger le suivi. La clé primaire `(visit_id, product_id)` évite les doublons.
+- `SOLD` représente le suivi déclaré, pas une vente créée automatiquement.
+  Aucun `sale_id` inféré à partir du client : plusieurs visites peuvent
+  précéder une même vente. La provenance explicite attend un arbitrage
+  métier distinct (TD-B023), sans inventer ici une cardinalité.
 
 ---
 

@@ -123,7 +123,7 @@
 | **Dépend de** | INT-96 (catalogue, sprint7.1), INT-109 (visites showroom, sprint7.5), cadrage frontend du DAT V2 |
 | **Fichiers** | `frontend/src/pages/`, `frontend/src/router/`, `docs/stages/stage7/sprint7.5/tasks.md` |
 | **Action attendue** | Vérifier l’existant et planifier les écrans V2 : catalogue, détail et édition, visites showroom, navigation, recherche/filtres et états loading/empty/error avec réessai. Adapter les cas E2E de l’ancien INT-83 au modèle V2 ; ne pas reprendre implicitement exposition physique, prix catalogue ou badges essai/vendable. |
-| **Statut** | ⏳ À cadrer avant livraison des interfaces V2 ; aucune réalisation frontend déduite de la clôture backend d’INT-96 |
+| **Statut** | ⏳ INT-109 livre les routes backend des visites, mais aucun écran showroom/catalogue n'est livré ; cadrage et feu vert frontend V2 encore requis (navigation, filtres, formulaires, états et E2E). La clôture backend INT-96/109 ne vaut pas réalisation de l'interface |
 
 ---
 

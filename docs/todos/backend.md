@@ -156,8 +156,8 @@
 | **Créé dans** | INT-96 |
 | **Dépend de** | Introduction des rôles MANAGER et COMMERCIAL prévus par la DAT |
 | **Fichiers** | `app/modules/identity/models.py` (déplacé dans INT-122), `app/modules/catalog/api.py` (déplacé dans INT-115), migrations, tests |
-| **Action attendue** | Étendre le contrôle catalogue_editor à ces rôles et tester leurs droits. Actuellement ADMIN écrit, TECHNICIAN consulte. |
-| **Statut** | ⏳ Rôles absents du modèle actuel |
+| **Action attendue** | Étendre le contrôle catalogue_editor à ces rôles et tester leurs droits. Dans INT-109, cadrer aussi leurs droits showroom et l'attribution d'un commercial actif ; actuellement ADMIN seul accède au showroom, TECHNICIAN reste exclu des visites. |
+| **Statut** | ⏳ Rôles absents du modèle actuel ; INT-109 n'introduit pas de faux rôle COMMERCIAL/MANAGER |
 
 
 ---
@@ -270,3 +270,15 @@
 | **Fichiers** | `app/modules/reports/{models,service}.py`, `deploy/`, procédure PostgreSQL INT-111 |
 | **Action attendue** | Mesurer taille cumulée des versions PDF `BYTEA`, temps de génération/lecture et volume des sauvegardes. Vérifier une restauration qui conserve PDF, empreinte et date de confirmation. Selon les mesures, décider si un stockage privé externe avec réconciliation transactionnelle est requis ; ne pas exposer les fichiers dans `/uploads`. |
 | **Statut** | ⏳ Ouvert ; les tests jetables INT-107 ne prouvent ni tenue au volume ni restauration/déploiement VPS |
+
+---
+
+## TD-B023 — Attribuer explicitement une vente à une visite showroom
+
+| Champ | Valeur |
+|---|---|
+| **Créé dans** | INT-109, sprint7.5 |
+| **Dépend de** | Arbitrage métier du lien visite → vente (cardinalité et attribution) et rôles commerciaux TD-B013 |
+| **Fichiers** | `app/modules/showroom/`, `app/modules/sales/`, migration et contrats API |
+| **Action attendue** | Définir comment enregistrer une vente provenant réellement d'une visite, sans inférer sa provenance d'un simple `client_id` ou du statut `SOLD` : un même client peut avoir plusieurs visites et plusieurs ventes. Choisir cardinalité, responsabilité de l'attribution et comportement d'un prospect non encore client avant implémentation. Ne pas inventer d'entité Quote V1. |
+| **Statut** | ⏳ Cadrage métier requis ; INT-109 conserve événements, clients, produits et suivi sans créer de lien vente non prouvé |

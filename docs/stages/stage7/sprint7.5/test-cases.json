@@ -13,14 +13,85 @@
       ],
       "steps": [
         "POST /api/v1/showroom/visits avec visitor_name (sans client_id)",
-        "Vérifier la visite"
+        "GET détail et liste filtrée ; associer deux produits puis tenter le même produit deux fois",
+        "Mettre à jour le statut de suivi sans créer de vente"
       ],
       "expected_result": {
-        "client_id_null": "true",
-        "visitor_name_conserve": "true",
-        "produits_associables": "true"
+        "client_id_null": true,
+        "visitor_name_conserve": true,
+        "produits_associables": "201 pour les deux produits, 409 pour le doublon ; historique consultable",
+        "suivi": "Statut canonique persistant, aucun Sale créé automatiquement"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed_local_sqlite",
+        "observed": "Visite prospect client_id NULL, nom conservé, deux produits présentés, doublon 409, suivi SOLD sans Sale ; recette test_showroom_api.py réussie"
+      }
+    },
+    {
+      "id": "TC-INT-109-02",
+      "task": "INT-109",
+      "title": "Client connu, historique et filtres",
+      "type": "api",
+      "preconditions": ["Un client existant, un produit actif et une visite prospect"],
+      "steps": [
+        "Créer une visite liée au client et une seconde visite prospect",
+        "Filtrer par client, commercial, date, statut et produit",
+        "Rattacher la visite prospect au client ; vérifier les deux visites historiques",
+        "Désactiver un produit présenté, relire la visite"
+      ],
+      "expected_result": {
+        "historique": "Deux événements distincts avec noms, dates, produits et statuts conservés",
+        "filtres": "Pagination et total cohérents sans doublons",
+        "produit_inactif": "Lien historique conservé ; un nouveau lien vers un produit inactif est refusé"
+      },
+      "actual_result": {
+        "status": "passed_local_sqlite",
+        "observed": "Deux visites distinctes ; filtres client/commercial/date/statut/produit et pagination cohérents ; lien au produit désactivé conservé"
+      }
+    },
+    {
+      "id": "TC-INT-109-03",
+      "task": "INT-109",
+      "title": "Validation et droits showroom",
+      "type": "api",
+      "preconditions": ["ADMIN et TECHNICIAN authentifiés ; produits et clients existants"],
+      "steps": [
+        "Tenter une création anonyme, technicien, nom blanc, client introuvable, statut invalide",
+        "Tenter un ajout produit inconnu ou inactif, deux associations identiques et une visite introuvable",
+        "PATCH avec statut invalide, ID commercial usurpé et DELETE d'un lien produit"
+      ],
+      "expected_result": {
+        "auth": "Anonyme refusé ; TECHNICIAN lecture/écriture showroom refusées 403",
+        "validation": "Nom prospect non blanc et statut parmi 7 valeurs ; référence inexistante 404 ; payload incorrect 422",
+        "duplicate": "409, un seul lien en base",
+        "writes": "Seul ADMIN actif peut écrire et ne peut attribuer la visite à un autre utilisateur"
+      },
+      "actual_result": {
+        "status": "passed_local_sqlite",
+        "observed": "Anonyme 401, TECHNICIAN 403, payloads mal formés 422, références absentes 404, produit désactivé/doublon 409, autre salesperson refusé 403"
+      }
+    },
+    {
+      "id": "TC-INT-109-04",
+      "task": "INT-109",
+      "title": "Migration et contraintes d'intégrité",
+      "type": "integration",
+      "preconditions": ["Base PostgreSQL jetable à la révision INT-108"],
+      "steps": [
+        "Upgrade INT-109, insérer et relire prospect et présentation",
+        "Vérifier FK, unicité (visit_id, product_id), contrainte de statut, refus de suppression du client lié",
+        "Sur base vide, downgrade INT-109 puis re-upgrade"
+      ],
+      "expected_result": {
+        "structure": "PK entières, client nullable, FK réelles, historique non supprimé avec le client, état contraint en DB",
+        "migration": "Upgrade et aller-retour sur tables vides réussis",
+        "downgrade_peuple": "Refus avant DDL si des visites seraient perdues"
+      },
+      "actual_result": {
+        "status": "partial_sqlite",
+        "observed": "Base SQLite jetable à la révision INT-108 stampée : upgrade/downgrade vide/re-upgrade, CHECK identité/statut, protection du downgrade peuplé ; FK et unicité testées dans la recette API",
+        "remaining": "Migration complète PostgreSQL non exécutée localement ; CI PostgreSQL configurée, non exécutée pour INT-109"
+      }
     },
     {
       "id": "TC-INT-110-01",

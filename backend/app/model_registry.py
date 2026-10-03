@@ -22,6 +22,7 @@ def load_models() -> None:
     from app.modules.catalog.models import Product  # noqa: F401
     from app.modules.interventions.models.review import Review  # noqa: F401
     from app.modules.sales.models import Sale, SaleLine  # noqa: F401
+    from app.modules.showroom.models import ShowroomVisit, ShowroomVisitProduct  # noqa: F401
 
     from app.modules.reports.models import Report, ReportVersion  # noqa: F401
     from app.modules.identity.models import User  # noqa: F401

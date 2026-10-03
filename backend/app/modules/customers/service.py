@@ -8,11 +8,13 @@ from datetime import date
 
 from fastapi import HTTPException, status
 from sqlalchemy import func, select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.interventions.models.intervention import Intervention
 from app.modules.equipment.models import Equipment
 from app.modules.installations.models import Installation
+from app.modules.showroom.models import ShowroomVisit
 from app.modules.customers.models import Client, Site
 from app.modules.customers.repository import ClientRepository, SiteRepository
 from app.modules.customers.schemas import (
@@ -103,7 +105,13 @@ class ClientService:
             raise HTTPException(409, "Ce client possède des équipements : conserver leur historique")
         if await self.repo.db.scalar(select(Installation.id).join(Site).where(Site.client_id == client_id).limit(1)):
             raise HTTPException(409, "Ce client possède des installations : conserver leur historique")
-        await self.repo.delete(client)
+        if await self.repo.db.scalar(select(ShowroomVisit.id).where(ShowroomVisit.client_id == client_id).limit(1)):
+            raise HTTPException(409, "Ce client possède des visites showroom : conserver leur historique")
+        try:
+            await self.repo.delete(client)
+        except IntegrityError as exc:
+            await self.repo.db.rollback()
+            raise HTTPException(409, "Ce client possède un historique lié : suppression refusée") from exc
 
     async def _find_or_404(self, client_id: int):
         """Find a client by ID or raise 404."""

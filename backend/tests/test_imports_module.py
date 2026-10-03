@@ -149,7 +149,7 @@ async def replay():
 
 async def dump_database(db):
     """Every column, then the verified INT-106/105/104 projections."""
-    from tests.contract_int107 import project_import_database
+    from tests.contract_int109 import project_import_database
 
     result = {}
     for table in sorted(Base.metadata.tables.values(), key=lambda t: t.name):

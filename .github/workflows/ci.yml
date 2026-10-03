@@ -132,6 +132,11 @@ jobs:
           TERVO_REPORT_TEST_DATABASE_URL: postgresql+asyncpg://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
         run: uv run pytest tests/test_report_versions_api.py -q
 
+      - name: PostgreSQL showroom prospect scenario
+        env:
+          TERVO_SHOWROOM_TEST_DATABASE_URL: postgresql+asyncpg://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
+        run: uv run pytest tests/test_showroom_api.py -q
+
   # ── Frontend : build ────────────────────────────────────
   frontend-build:
     name: Frontend — build

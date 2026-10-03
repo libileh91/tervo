@@ -16,6 +16,7 @@ from app.modules.catalog.api import router as products_router
 from app.modules.reports.api import router as reports_router
 from app.modules.interventions.api.reviews import router as reviews_router
 from app.modules.sales.api import router as sales_router
+from app.modules.showroom.api import router as showroom_router
 
 
 api_router = APIRouter()
@@ -34,3 +35,4 @@ api_router.include_router(products_router)
 api_router.include_router(equipment_router)
 api_router.include_router(installations_router)
 api_router.include_router(sales_router)
+api_router.include_router(showroom_router)

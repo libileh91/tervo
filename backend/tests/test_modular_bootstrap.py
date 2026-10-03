@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.contract_int108 import assert_metadata_contract, assert_openapi_contract
+from tests.contract_int109 import assert_metadata_contract, assert_openapi_contract
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND = REPO_ROOT / "backend"
@@ -49,6 +49,7 @@ ROUTER_REFERENCES = (
     ("app.modules.equipment.api", "router"),
     ("app.modules.installations.api", "router"),
     ("app.modules.sales.api", "router"),
+    ("app.modules.showroom.api", "router"),
 )
 
 
@@ -117,7 +118,7 @@ historical_tables = frozenset(json.loads(metadata_baseline.read_text(encoding="u
 assert len(historical_tables) == 17
 expected_tables = (historical_tables - {"intervention_photo", "material"}) | {
     "checklist_template", "intervention_checklist", "photo", "material_usage",
-    "report", "report_version",
+    "report", "report_version", "showroom_visit", "showroom_visit_product",
 }
 
 
@@ -125,10 +126,10 @@ def assert_registry(Base):
     from sqlalchemy.orm import configure_mappers
 
     assert set(Base.metadata.tables) == expected_tables
-    assert len(Base.metadata.tables) == 21
+    assert len(Base.metadata.tables) == 23
     configure_mappers()
     mappers = set(Base.registry.mappers)
-    assert len(mappers) == 21
+    assert len(mappers) == 23
     assert all(mapper.configured for mapper in mappers)
     assert {mapper.local_table.key for mapper in mappers} == expected_tables
     assert all(
@@ -435,7 +436,7 @@ def test_domains_and_registry_import_orders_share_one_registry(tmp_path, order):
 
         domains = (
             "customers", "catalog", "sales", "equipment", "installations",
-            "identity", "imports",
+            "identity", "imports", "showroom",
         )
         terrain = ("intervention", "checklist", "checklist_item", "photo", "material_usage", "review")
         if {order!r} == "registry-first":
