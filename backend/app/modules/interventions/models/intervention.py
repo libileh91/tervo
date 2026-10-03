@@ -8,6 +8,7 @@ import enum
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Column,
     Date,
     DateTime,
@@ -31,6 +32,15 @@ class InterventionStatus(str, enum.Enum):
     CANCELLED = "CANCELLED"
 
 
+class InterventionResult(str, enum.Enum):
+    RESOLVED = "RESOLVED"
+    PARTIALLY_RESOLVED = "PARTIALLY_RESOLVED"
+    UNRESOLVED = "UNRESOLVED"
+    PART_NEEDED = "PART_NEEDED"
+    QUOTE_NEEDED = "QUOTE_NEEDED"
+    RESCHEDULE = "RESCHEDULE"
+
+
 class Priority(str, enum.Enum):
     BASSE = "basse"
     NORMALE = "normale"
@@ -40,6 +50,12 @@ class Priority(str, enum.Enum):
 
 class Intervention(Base):
     __tablename__ = "intervention"
+    __table_args__ = (
+        CheckConstraint(
+            "result IN (" + ", ".join(repr(value.value) for value in InterventionResult) + ")",
+            name="ck_intervention_result",
+        ),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     site_id = Column(
@@ -70,6 +86,7 @@ class Intervention(Base):
     scheduled_end_time = Column(Time, nullable=True)
     started_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
+    result = Column(String(30), nullable=True)
     observations = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(

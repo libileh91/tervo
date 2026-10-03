@@ -36,6 +36,7 @@ def recipe(directory, omissions=False):
     item = NS(
         id=120, title="Maintenance PAC <b>R8</b> & contrôle",
         status=NS(value="COMPLETED"), scheduled_date=date(2026, 9, 28),
+        result=None,
         scheduled_start_time=time(9, 15), scheduled_end_time=time(11, 45),
         observations="Pression vérifiée & réglage effectué.\nRetour client : satisfait.",
         site=NS(name="Maison Érable", address="12 rue des Érables",
@@ -113,7 +114,44 @@ def test_full_html_matches_frozen_r7_with_explicit_int104_delta(tmp_path, omissi
     # Replacing the two conditional groups with one loop removes one template
     # control-line newline between them; all other static markup stays frozen.
     expected = re.sub(r'(alt="BEFORE" />\n  \n</div>\n)\n(\n<h3)', r'\1\2', expected)
+    # INT-106 adds exactly one issue line, without inferring historical results.
+    expected = re.sub(
+        r'(<span>Statut: [^\n]+</span>\n)',
+        r'\1      <span>Issue: Non renseigné</span>\n',
+        expected,
+    )
     assert actual == expected
+
+
+@pytest.mark.parametrize("result,label", [
+    ("RESOLVED", "Résolu"),
+    ("PARTIALLY_RESOLVED", "Partiellement résolu"),
+    ("UNRESOLVED", "Non résolu"),
+    ("PART_NEEDED", "Pièce nécessaire"),
+    ("QUOTE_NEEDED", "Devis nécessaire"),
+    ("RESCHEDULE", "À replanifier"),
+    (None, "Non renseigné"),
+])
+def test_completion_issue_is_distinct_from_status(tmp_path, result, label):
+    renderer = importlib.import_module("app.modules.reports.renderer")
+    exporter = renderer.ReportExporter()
+    intervention = recipe(tmp_path)
+    intervention.result = result
+    with patch.object(exporter, "_html_to_pdf", side_effect=lambda html: html):
+        actual = exporter.generate_pdf(intervention)
+    assert f"<span>Issue: {label}</span>" in actual
+    assert "<span>Statut: Terminée</span>" in actual
+
+
+def test_completion_issue_is_html_escaped(tmp_path):
+    renderer = importlib.import_module("app.modules.reports.renderer")
+    exporter = renderer.ReportExporter()
+    intervention = recipe(tmp_path)
+    intervention.result = "<script>issue & résultat</script>"
+    with patch.object(exporter, "_html_to_pdf", side_effect=lambda html: html):
+        actual = exporter.generate_pdf(intervention)
+    assert str(escape(intervention.result)) in actual
+    assert intervention.result not in actual
 
 
 def test_checklist_result_and_comment_are_visible_but_never_html(tmp_path):

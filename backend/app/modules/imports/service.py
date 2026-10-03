@@ -73,6 +73,13 @@ class ImportService:
             rows = (await db.execute(select(*columns).order_by(model.id))).mappings().all()
             pools[kind] = [{k:(v.isoformat() if isinstance(v,(date,datetime)) else v.value if hasattr(v,'value') else v)
                             for k,v in row.items()} for row in rows]
+            if kind == 'interventions':
+                # A nullable outcome added in INT-106 carries no information for
+                # historical unknowns. Preserve their existing approval fingerprint,
+                # but include every actual outcome so a changed result stales a plan.
+                for row in pools[kind]:
+                    if row.get('result') is None:
+                        row.pop('result', None)
         refs = {(r.source_namespace,r.entity_type,r.source_id):r.entity_id
                 for r in (await db.scalars(select(ImportReference).order_by(ImportReference.id))).all()}
         fingerprint = digest(dict(pools=pools,refs=sorted([list(key)+[value] for key,value in refs.items()])))

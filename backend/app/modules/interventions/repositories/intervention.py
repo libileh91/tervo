@@ -132,7 +132,7 @@ class InterventionRepository:
     ) -> list[dict]:
         offset = (page - 1) * page_size
         sql = text("""
-            SELECT i.id, i.title, i.status, i.completed_at, u.full_name AS technician_name
+            SELECT i.id, i.title, i.status, i.result, i.completed_at, u.full_name AS technician_name
             FROM intervention i
             LEFT JOIN "user" u ON i.technician_id = u.id
             WHERE i.site_id = :site_id
@@ -153,6 +153,7 @@ class InterventionRepository:
                 "id": row.id,
                 "title": row.title,
                 "status": row.status,
+                "result": row.result,
                 "completed_at": row.completed_at.isoformat()
                 if hasattr(row.completed_at, "isoformat")
                 else row.completed_at,

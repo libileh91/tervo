@@ -275,7 +275,7 @@ class TestInterventionsExtra:
         """Complete without adding checklist items → should succeed (no checklist = ok)."""
         resp = await client.put(
             f"/api/v1/interventions/{intervention_in_progress.id}/complete",
-            json={},
+            json={"result": "RESOLVED"},
             headers=auth_header,
         )
         # No checklist items → no validation → should succeed
@@ -285,7 +285,7 @@ class TestInterventionsExtra:
         """Complete already terminated intervention → 400."""
         resp = await client.put(
             f"/api/v1/interventions/{intervention_completed.id}/complete",
-            json={},
+            json={"result": "RESOLVED"},
             headers=auth_header,
         )
         assert resp.status_code == 400

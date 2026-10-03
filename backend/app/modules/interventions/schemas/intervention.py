@@ -9,7 +9,8 @@ from __future__ import annotations
 from datetime import date, datetime, time
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from app.modules.interventions.models.intervention import InterventionResult
 from app.modules.interventions.models.photo import PhotoUsage
 
 # ── Enums (matching the DB model) ─────────────────────────
@@ -32,7 +33,16 @@ class PriorityEnum(str):
 # ── CRUD Schemas ──────────────────────────────────────────
 
 
-class InterventionCreate(BaseModel):
+class _NoEditableResult(BaseModel):
+    @model_validator(mode="before")
+    @classmethod
+    def refuse_result(cls, data):
+        if isinstance(data, dict) and "result" in data:
+            raise ValueError("result is only writable through completion")
+        return data
+
+
+class InterventionCreate(_NoEditableResult):
     under_warranty: bool = False
     checklist_template_id: int | None = Field(None, gt=0)
     site_id: int
@@ -45,7 +55,7 @@ class InterventionCreate(BaseModel):
     scheduled_end_time: str | None = None
 
 
-class InterventionUpdate(BaseModel):
+class InterventionUpdate(_NoEditableResult):
     equipment_id: int | None = Field(None, gt=0)
     under_warranty: bool | None = None
     title: str | None = Field(None, min_length=1, max_length=255)
@@ -180,6 +190,7 @@ class InterventionResponse(BaseModel):
     title: str
     description: str | None = None
     status: str
+    result: InterventionResult | None = None
     priority: str
     under_warranty: bool = False
     scheduled_date: date
@@ -214,6 +225,7 @@ class InterventionHistoryItem(BaseModel):
     id: int
     title: str
     status: str
+    result: InterventionResult | None = None
     completed_at: datetime | None = None
     technician_name: str | None = None
 
@@ -236,6 +248,8 @@ class InterventionStartResponse(BaseModel):
 
 
 class InterventionCompleteRequest(BaseModel):
+    model_config = {"extra": "forbid"}
+    result: InterventionResult
     observations: str | None = None
 
 
@@ -247,6 +261,7 @@ class InterventionCancelResponse(BaseModel):
 class InterventionCompleteResponse(BaseModel):
     id: int
     status: str
+    result: InterventionResult
     completed_at: datetime
     duration_minutes: int
     report_url: str | None = None

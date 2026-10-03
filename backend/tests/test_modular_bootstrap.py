@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.contract_int105 import assert_metadata_contract, assert_openapi_contract
+from tests.contract_int106 import assert_metadata_contract, assert_openapi_contract
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND = REPO_ROOT / "backend"
@@ -470,7 +470,7 @@ def test_domains_and_registry_import_orders_share_one_registry(tmp_path, order):
     )
 
 
-def test_metadata_matches_r0_with_only_authorized_int105_delta(tmp_path):
+def test_metadata_matches_r0_with_only_authorized_int106_delta(tmp_path):
     actual = _run_python(
         tmp_path,
         _METADATA_SERIALIZER
@@ -480,6 +480,17 @@ from app.model_registry import load_models
 
 load_models()
 assert_registry(Base)
+assert {
+    (index.name, tuple(column.name for column in index.columns), index.unique)
+    for index in Base.metadata.tables["intervention"].indexes
+} == {
+    ("ix_intervention_" + name, (name,), False)
+    for name in (
+        "id", "site_id", "equipment_id", "technician_id",
+        "status", "priority", "scheduled_date",
+    )
+}
+assert Base.metadata.tables["intervention"].c.result.default is None
 assert {
     (index.name, tuple(column.name for column in index.columns), index.unique)
     for index in Base.metadata.tables["photo"].indexes
@@ -498,7 +509,7 @@ result = serialize_metadata(Base.metadata)
     assert_metadata_contract(actual, expected)
 
 
-def test_openapi_matches_r0_with_only_authorized_int105_delta_without_startup_or_sql(tmp_path):
+def test_openapi_matches_r0_with_only_authorized_int106_delta_without_startup_or_sql(tmp_path):
     actual = _run_python(
         tmp_path,
         """

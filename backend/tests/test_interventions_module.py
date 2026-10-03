@@ -309,7 +309,7 @@ async def test_checklist_material_completion_public_review_and_report(context):
         material = await MaterialService(db).create_material(
             intervention_id, MaterialCreate(designation="Joint R7", quantity=2, unit="m"),
         )
-    response = await ac.put(url + "/complete", json={"observations": "Terrain conservé"})
+    response = await ac.put(url + "/complete", json={"result": "RESOLVED", "observations": "Terrain conservé"})
     assert response.status_code == 200, response.text
     complete = response.json()
     assert complete["status"] == "COMPLETED"

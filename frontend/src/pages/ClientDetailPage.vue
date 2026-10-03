@@ -70,6 +70,9 @@
           <div v-for="site in sitesData.items" :key="site.id" class="site-row">
             <p class="site-name">{{ site.name }}</p>
             <p class="site-address">{{ [site.address, site.postal_code, site.city].filter(Boolean).join(", ") }}</p>
+            <Button label="Historique des interventions" text
+              @click="historySiteId = historySiteId === site.id ? null : site.id" />
+            <SiteInterventionHistory v-if="historySiteId === site.id" :siteId="site.id" />
           </div>
         </div>
 
@@ -107,6 +110,7 @@ import Message from "primevue/message";
 import Dialog from "primevue/dialog";
 import { useAuthStore } from "@/stores/auth";
 import { clientsApi, sitesApi } from "@/api/client";
+import SiteInterventionHistory from "@/components/SiteInterventionHistory.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -117,6 +121,7 @@ const queryClient = useQueryClient();
 const clientId = Number(route.params.id);
 const showDeleteDialog = ref(false);
 const deleting = ref(false);
+const historySiteId = ref<number | null>(null);
 
   // Client detail
   const {

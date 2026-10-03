@@ -319,7 +319,7 @@ class TestInterventions:
 
         resp = await client.put(
             f"/api/v1/interventions/{j.id}/complete",
-            json={"observations": "Done!"},
+            json={"result": "RESOLVED", "observations": "Done!"},
             headers=auth_header,
         )
         assert resp.status_code == 200, resp.text
@@ -345,7 +345,7 @@ class TestInterventions:
 
         resp = await client.put(
             f"/api/v1/interventions/{j.id}/complete",
-            json={},
+            json={"result": "RESOLVED"},
             headers=auth_header,
         )
         assert resp.status_code == 400

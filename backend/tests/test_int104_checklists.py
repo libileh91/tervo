@@ -401,7 +401,8 @@ async def test_item_patch_and_terminal_transition_share_intervention_lock(contex
         return await client.patch(f"{PREFIX}/checklist-items/{item_id}", json={"result": None}, headers=headers["tech"])
 
     async def change_status():
-        return await client.put(f"{PREFIX}/interventions/{intervention_id}/{transition}", json={}, headers=headers["tech"])
+        body = {"result": "RESOLVED"} if transition == "complete" else {}
+        return await client.put(f"{PREFIX}/interventions/{intervention_id}/{transition}", json=body, headers=headers["tech"])
 
     actions = {"patch": patch, "transition": change_status}
     second = "transition" if first == "patch" else "patch"

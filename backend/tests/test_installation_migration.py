@@ -12,7 +12,7 @@ from app.model_registry import load_models
 
 PREVIOUS = "d100e0010001"
 REVISION = "e103e0010001"
-HEAD = "h105e0010001"
+HEAD = "i106e0010001"
 BACKEND = Path(__file__).resolve().parents[1]
 
 
@@ -82,6 +82,12 @@ def migration(tmp_path, monkeypatch):
                     for fk in constraint.elements:
                         equipment.foreign_keys.remove(fk)
                         equipment.c.installation_id.foreign_keys.remove(fk)
+        intervention = previous.tables["intervention"]
+        for constraint in list(intervention.constraints):
+            if isinstance(constraint, sa.CheckConstraint) and constraint.name == "ck_intervention_result":
+                intervention.constraints.remove(constraint)
+        if "result" in intervention.c:
+            intervention._columns.remove(intervention.c.result)
         previous.create_all(engine)
         command.stamp(config, PREVIOUS)
     with engine.begin() as db:

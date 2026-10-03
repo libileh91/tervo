@@ -1,6 +1,6 @@
 # Sprint 7.4 — Cycle terrain
 
-> **Tervo V2** · INT-104 à INT-108 · **Statut :** INT-104 et INT-105 implémentées et vérifiées localement ; INT-106 à INT-108 à traiter
+> **Tervo V2** · INT-104 à INT-108 · **Statut :** INT-104 à INT-106 implémentées et vérifiées localement ; INT-107 et INT-108 à traiter
 > **Dépendances :** Sprint 7.1 ; réutiliser les modules terrain existants.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.4/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -123,14 +123,42 @@ Je veux **qualifier le résultat et clôturer l'intervention**,
 Afin de **distinguer « terminée » de « résolue »**.
 
 **Acceptance Criteria**
-- [ ] `result` ∈ `RESOLVED / PARTIALLY_RESOLVED / UNRESOLVED / PART_NEEDED / QUOTE_NEEDED / RESCHEDULE`
-- [ ] `complete` : résultat requis, observations optionnelles
-- [ ] `status` (avancement) ≠ `result` (issue métier) — deux champs distincts
-- [ ] Test : intervention `COMPLETED` + `result=PART_NEEDED` → en base
+- [x] `result` ∈ `RESOLVED / PARTIALLY_RESOLVED / UNRESOLVED / PART_NEEDED / QUOTE_NEEDED / RESCHEDULE`
+- [x] `complete` : résultat requis, observations optionnelles
+- [x] `status` (avancement) ≠ `result` (issue métier) — deux champs distincts
+- [x] Test : intervention `COMPLETED` + `result=PART_NEEDED` → en base
+
+**Validation locale**
+- Backend complet : 617 réussis, 9 skips PostgreSQL, 23 warnings.
+- PostgreSQL canonique : 238 réussis ; revalidation finale clôture/migration/empreinte
+  de 39 cas réussis, dont l'échec au commit et la concurrence.
+- Frontend : 14 tests (74 assertions), typecheck/build réussis.
+- Smoke réel parent : choix obligatoire, erreur injectée/réessai, PART_NEEDED,
+  historique inconnu/pagination et extraction PDF vérifiés.
+- [Note pédagogique](../../../../notes/backend/sprint7.4/INT-106-resultat-cloture.md).
+- Aucun push ni validation CI distante/déploiement déduit de ces runs.
 
 **Technical Notes**
 - Sources : `app/modules/interventions/models/intervention.py`,
   `schemas/intervention.py`, `services/intervention.py`, `api/interventions.py`.
+- Résultat global distinct du texte libre `ChecklistItem.result` ; les six valeurs
+  sont canoniques et la sélection doit être explicite, sans défaut RESOLVED.
+- `PUT /interventions/{id}/complete` exige `result` non null ; les observations
+  sont optionnelles. Absence/null conserve les observations existantes ; texte
+  fourni les remplace. Les schémas create/update ne permettent pas de fixer
+  ce résultat hors de la clôture.
+- Le résultat est exposé dans détail/liste/historique et réponse de clôture.
+  `COMPLETED + PART_NEEDED` reste une combinaison métier valide ; aucune vente,
+  devis ou intervention de suivi n'est créé automatiquement.
+- Statut, résultat, date et avis auto créé dans une transaction unique. Conserver
+  le verrou parent commun avec les PATCH checklist ; rejeter les clôtures répétées
+  sans modifier l'issue ni dupliquer l'avis.
+- Migration après `h105e0010001` : résultat nullable pour l'historique, aucun
+  résultat inféré d'un ancien statut COMPLETED. Downgrade refusé si un résultat
+  renseigné serait perdu ; base jetable uniquement pour la validation.
+- La clôture ne rend pas obligatoire une photo BEFORE/AFTER (TD-B004 différé).
+- Cas détaillés ci-dessous dans `test-cases.json` ; note à produire dans
+  `notes/backend/sprint7.4/` avec code, transactions, migration et preuves réelles.
 
 ---
 

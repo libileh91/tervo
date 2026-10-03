@@ -5,6 +5,9 @@
 > `usage`, `designation`, quantité numérique et unité. Le contrat du snapshot
 > checklist présenté ici reste inchangé ; les anciennes fixtures demeurent
 > des références historiques, pas le contrat média courant.
+> Depuis [INT-106](INT-106-resultat-cloture.md), la clôture exige également un
+> résultat **global** explicite. Les résultats libres des items ne suffisent
+> plus à déclencher seuls la clôture ; les preuves INT-104 restent historiques.
 
 ## 1. Ce qui change, et pourquoi
 

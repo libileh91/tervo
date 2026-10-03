@@ -121,6 +121,12 @@ jobs:
           TERVO_MEDIA_MIGRATION_TEST_URL: postgresql+psycopg2://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
         run: uv run pytest tests/test_int105_media.py tests/test_media_migration.py -q
 
+      - name: PostgreSQL intervention outcomes and atomic completion
+        env:
+          TERVO_RESULT_TEST_DATABASE_URL: postgresql+asyncpg://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
+          TERVO_RESULT_MIGRATION_TEST_URL: postgresql+psycopg2://tervo_ci:local-ci-only@127.0.0.1:5432/tervo_ci
+        run: uv run pytest tests/test_int106_completion.py tests/test_intervention_result_migration.py -q
+
   # ── Frontend : build ────────────────────────────────────
   frontend-build:
     name: Frontend — build

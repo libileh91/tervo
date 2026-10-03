@@ -246,3 +246,15 @@
 | **Fichiers** | `app/modules/interventions/models/photo.py`, `services/photo.py`, `app/modules/reports/`, migrations et procédures de maintenance |
 | **Action attendue** | Cadrer la persistance du nom original, MIME, taille et l'audit/contrôle des suppressions historiques. Définir une réconciliation sûre DB/filesystem : les compensations d'upload contrôlé existent, mais un crash ou une erreur filesystem après commit peut laisser un orphelin. Ne jamais supprimer arbitrairement des fichiers d'un répertoire réel pour tester ce sujet. |
 | **Statut** | ⏳ Différé ; les usages, miniatures, scopes parent et validations INT-105 ne valent ni métadonnées étendues, ni atomicité distribuée, ni maintenance automatique |
+
+---
+
+## TD-B021 — Arbitrer les issues historiques confirmées
+
+| Champ | Valeur |
+|---|---|
+| **Créé dans** | INT-106, sprint7.4 |
+| **Dépend de** | Mapping historique et arbitrages métier explicitement validés avant import réel |
+| **Fichiers** | `app/modules/imports/{planner,service}.py`, sources archivées, tests et éventuelles migrations de données |
+| **Action attendue** | Cadrer l'utilisation des issues présentes dans les archives sans inférer RESOLVED d'un statut COMPLETED ou d'une note client. Conserver provenance et décisions, tester les valeurs inconnues et l'invalidation des approbations quand un résultat réel change. |
+| **Statut** | ⏳ À cadrer ; INT-106 conserve result null dans l'historique, n'effectue aucun backfill fictif et protège les empreintes d'import |

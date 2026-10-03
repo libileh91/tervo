@@ -37,6 +37,15 @@
             <Button label="Sauvegarder" icon="pi pi-check" severity="success" fluid
                 :loading="saving" :disabled="!canEdit || !dirtyItems.size || completing" @click="handleSave" />
             <Message v-if="dirtyItems.size" severity="warn">Sauvegardez les modifications avant de terminer.</Message>
+            <section v-if="intervention?.status === 'IN_PROGRESS'">
+                <label for="completion-result">Résultat global (obligatoire)</label>
+                <Select inputId="completion-result" v-model="selectedResult" :options="interventionResultOptions"
+                    optionLabel="label" optionValue="value" placeholder="Choisir un résultat"
+                    fluid :disabled="!canEdit || completing" />
+                <label for="completion-observations">Observations globales (optionnel)</label>
+                <Textarea id="completion-observations" :model-value="observations" rows="3" fluid
+                    :disabled="!canEdit || completing" @update:model-value="updateObservations" />
+            </section>
             <Button v-if="intervention?.status === 'IN_PROGRESS'" label="Terminer l'intervention"
                 severity="danger" fluid :disabled="!canComplete" :loading="completing" @click="handleComplete" />
         </template>
@@ -54,8 +63,10 @@ import Textarea from "primevue/textarea";
 import InputText from "primevue/inputtext";
 import Skeleton from "primevue/skeleton";
 import Message from "primevue/message";
+import Select from "primevue/select";
 import { useAuthStore } from "@/stores/auth";
-import { api, checklistApi, interventionsApi, type ChecklistSnapshot } from "@/api/client";
+import { checklistApi, interventionsApi, type ChecklistSnapshot, type InterventionResult } from "@/api/client";
+import { checklistReady, completionPayload, interventionResultOptions, isInterventionResult } from "@/composables/interventionCompletion";
 import { acknowledgeSavedDraft, checkboxResult, refreshCleanDrafts, type ChecklistDraft } from "@/composables/checklistDrafts";
 
 const route = useRoute();
@@ -66,13 +77,25 @@ const queryClient = useQueryClient();
 const interventionId = Number(route.params.id);
 const saving = ref(false);
 const completing = ref(false);
+const completionSucceeded = ref(false);
 const drafts = ref<Record<number, ChecklistDraft>>({});
 const dirtyItems = ref(new Set<number>());
 const saveErrors = ref<Record<number, string>>({});
+const selectedResult = ref<InterventionResult | null>(null);
+const observations = ref("");
+const observationsEdited = ref(false);
 const { data: intervention, isLoading: interventionLoading, isError: interventionError, refetch: refetchIntervention } = useQuery({
     queryKey: ["intervention", interventionId],
     queryFn: () => interventionsApi.getById(auth.token!, interventionId),
 });
+watch(intervention, value => {
+    if (!observationsEdited.value) observations.value = value?.observations ?? "";
+}, { immediate: true });
+function updateObservations(value: string | undefined) {
+    if (!canEdit.value || completing.value) return;
+    observations.value = value ?? "";
+    observationsEdited.value = true;
+}
 const { data: snapshot, isLoading, isError, refetch } = useQuery({
     queryKey: ["checklist", interventionId],
     queryFn: () => checklistApi.getSnapshot(auth.token!, interventionId),
@@ -85,7 +108,7 @@ const canEdit = computed(() => !!auth.user && intervention.value?.technician?.id
     && ["PLANNED", "IN_PROGRESS"].includes(intervention.value?.status || ""));
 const canComplete = computed(() => canEdit.value && intervention.value?.status === "IN_PROGRESS"
     && !!snapshot.value && !isError.value && !dirtyItems.value.size && !saving.value && !completing.value
-    && items.value.every(item => item.result !== null));
+    && !interventionError.value && isInterventionResult(selectedResult.value) && checklistReady(items.value));
 const groups = computed(() => [...new Set(items.value.map(item => item.category))]
     .map(category => ({ category, items: items.value.filter(item => item.category === category) })));
 function categoryLabel(category: string) {
@@ -143,8 +166,10 @@ async function handleComplete() {
     if (!canComplete.value) return;
     completing.value = true;
     try {
-        await api.put(`/interventions/${interventionId}/complete`, { observations: null }, auth.token);
-        await Promise.all(["intervention", "interventions", "dashboard"].map(key =>
+        await interventionsApi.complete(auth.token!, interventionId,
+            completionPayload(selectedResult.value, observations.value, observationsEdited.value));
+        completionSucceeded.value = true;
+        await Promise.all(["intervention", "interventions", "dashboard", "site-interventions"].map(key =>
             queryClient.invalidateQueries({ queryKey: key === "intervention" ? [key, interventionId] : [key] })));
         completing.value = false;
         await router.push({ name: "InterventionDetail", params: { id: interventionId } });
@@ -156,7 +181,9 @@ async function handleComplete() {
 }
 onBeforeRouteLeave(() => {
     if (saving.value || completing.value) return false;
-    return !dirtyItems.value.size || window.confirm("Quitter sans sauvegarder les modifications ?");
+    if (completionSucceeded.value) return true;
+    return (!dirtyItems.value.size && !selectedResult.value && !observationsEdited.value)
+        || window.confirm("Quitter sans sauvegarder les modifications ?");
 });
 </script>
 

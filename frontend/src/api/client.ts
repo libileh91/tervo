@@ -250,6 +250,7 @@ export interface InterventionHistoryItem {
   id: number;
   title: string;
   status: string;
+  result: InterventionResult | null;
   completed_at: string | null;
   technician_name: string | null;
 }
@@ -301,6 +302,8 @@ export interface SiteListResponse {
 export const sitesApi = {
   getByClient: (token: string, clientId: number) =>
     api.get<SiteListResponse>(`/clients/${clientId}/sites`, token),
+  getInterventions: (token: string, siteId: number, page = 1) =>
+    api.get<InterventionHistoryResponse>(`/sites/${siteId}/interventions?page=${page}&page_size=20`, token),
   create: (token: string, data: { client_id: number; name: string; address: string; postal_code?: string; city?: string }) =>
     api.post<SiteListItem>("/sites", data, token),
 };
@@ -366,10 +369,29 @@ export const checklistApi = {
 
 // ── Intervention types ───────────────────────────────────────────────
 
+export type InterventionResult = "RESOLVED" | "PARTIALLY_RESOLVED" | "UNRESOLVED" | "PART_NEEDED" | "QUOTE_NEEDED" | "RESCHEDULE";
+
+export interface InterventionCompletionPayload {
+  result: InterventionResult;
+  observations?: string | null;
+}
+
+export interface InterventionCompletionResponse {
+  id: number;
+  status: string;
+  result: InterventionResult;
+  completed_at: string;
+  duration_minutes: number;
+  report_url: string | null;
+  review_share_token: string | null;
+  review_share_url: string | null;
+}
+
 export interface InterventionListItem {
   id: number;
   title: string;
   status: string;
+  result: InterventionResult | null;
   priority: string;
   scheduled_date: string;
   site: { id: number; name: string; address: string } | null;
@@ -395,6 +417,8 @@ export const interventionsApi = {
     return api.get<InterventionListResponse>(`/interventions${qs ? "?" + qs : ""}`, token);
   },
   getById: (token: string, id: number) => api.get<InterventionDetailResponse>(`/interventions/${id}`, token),
+  complete: (token: string, id: number, data: InterventionCompletionPayload) =>
+    api.put<InterventionCompletionResponse>(`/interventions/${id}/complete`, data, token),
   create: (token: string, data: Partial<InterventionCreateRequest>) => api.post<InterventionDetailResponse>("/interventions", data, token),
 };
 
@@ -438,6 +462,7 @@ export interface InterventionDetailResponse {
   title: string;
   description: string | null;
   status: string;
+  result: InterventionResult | null;
   priority: string;
   scheduled_date: string;
   scheduled_start_time: string | null;

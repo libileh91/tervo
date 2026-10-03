@@ -93,6 +93,16 @@ class ReportExporter:
             "COMPLETED": "Terminée",
             "CANCELLED": "Annulée",
         }
+        result_labels = {
+            "RESOLVED": "Résolu",
+            "PARTIALLY_RESOLVED": "Partiellement résolu",
+            "UNRESOLVED": "Non résolu",
+            "PART_NEEDED": "Pièce nécessaire",
+            "QUOTE_NEEDED": "Devis nécessaire",
+            "RESCHEDULE": "À replanifier",
+        }
+        result = intervention.result
+        result = getattr(result, "value", result)
 
         # Site + client data (the client is reachable through the site)
         site = intervention.site
@@ -104,6 +114,7 @@ class ReportExporter:
                 "id": intervention.id,
                 "title": intervention.title,
                 "status": intervention.status.value,
+                "result_label": result_labels.get(result, result) if result is not None else "Non renseigné",
                 "status_label": status_labels.get(
                     intervention.status.value, intervention.status.value
                 ),

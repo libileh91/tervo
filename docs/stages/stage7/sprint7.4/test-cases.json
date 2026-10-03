@@ -288,7 +288,123 @@
         "result_PART_NEEDED": "true",
         "deux_champs_distincts": "true"
       },
-      "actual_result": null
+      "actual_result": {"status": "passed_local", "observed": "COMPLETED + PART_NEEDED persisté, API/détail/historique/rapport concordants", "browser": "PUT 200 et relecture DB réels"}
+    },
+    {
+      "id": "TC-INT-106-02",
+      "task": "INT-106",
+      "title": "Clôture — contrat explicite et six issues",
+      "type": "api",
+      "preconditions": ["Intervention IN_PROGRESS assignée, checklist réalisée"],
+      "steps": [
+        "Clôturer avec chaque valeur du résultat global",
+        "Envoyer un résultat absent, null, inconnu, blanc ou un champ supplémentaire",
+        "Essayer de fixer result par create/update normal",
+        "Relire détail, liste et historique"
+      ],
+      "expected_result": {
+        "valid": "200 et result exact, statut COMPLETED distinct",
+        "invalid": "422",
+        "bypass": "422 sans mutation du résultat",
+        "read": "Issue exposée dans les réponses, sans confondre le texte libre d'un item checklist"
+      },
+      "actual_result": {"status": "passed_local", "observed": "Six issues acceptées ; absence/null/valeur inconnue/champs supplémentaires et bypass CRUD refusés 422 ; résultat lu dans détail/liste/historique"}
+    },
+    {
+      "id": "TC-INT-106-03",
+      "task": "INT-106",
+      "title": "Préconditions, observations et limites de clôture",
+      "type": "integration",
+      "preconditions": ["Plusieurs statuts et techniciens", "Observations préexistantes"],
+      "steps": [
+        "Clôturer sans assignation ou au mauvais statut",
+        "Clôturer avec un item checklist sans résultat",
+        "Omettre les observations, envoyer null, puis un texte dans trois recettes",
+        "Clôturer une checklist vide historique ou sans photos"
+      ],
+      "expected_result": {
+        "permissions": "403",
+        "status_or_pending_checklist": "400 sans résultat/date/avis persisté",
+        "observations": "Omission/null conserve, texte remplace",
+        "photos": "Aucune règle minimale BEFORE/AFTER ajoutée implicitement",
+        "empty_checklist": "Ne bloque pas la clôture si les autres conditions sont respectées"
+      },
+      "actual_result": {"status": "passed_local", "observed": "403/400 sans mutation ; observations omission/null conservées, chaîne vide appliquée ; checklist vide et absence photos n'ajoutent pas de blocage"}
+    },
+    {
+      "id": "TC-INT-106-04",
+      "task": "INT-106",
+      "title": "Transaction — rollback de clôture et avis",
+      "type": "integration",
+      "preconditions": ["Intervention IN_PROGRESS assignée et contrôles réalisés"],
+      "steps": [
+        "Injecter une erreur après le flush de l'avis",
+        "Injecter une erreur au commit",
+        "Relire intervention et avis depuis une nouvelle session"
+      ],
+      "expected_result": {
+        "rollback": "Statut, résultat, observations et date initiaux conservés ; aucun avis partiellement créé",
+        "success": "Une seule transaction de clôture pour intervention et avis"
+      },
+      "actual_result": {"status": "passed_local", "observed": "Échecs injectés après flush Review, à validation de réponse et au commit : état original conservé, aucun avis partiel", "postgresql": "Test commit inclus dans la revalidation finale de 39 cas"}
+    },
+    {
+      "id": "TC-INT-106-05",
+      "task": "INT-106",
+      "title": "Répétition et concurrence PostgreSQL",
+      "type": "integration",
+      "preconditions": ["PostgreSQL jetable", "Intervention clôturable"],
+      "steps": [
+        "Répéter la clôture avec une autre issue",
+        "Lancer deux clôtures concurrentes sur la même intervention",
+        "Rejouer les quatre ordres PATCH item/clôture ou annulation d'INT-104"
+      ],
+      "expected_result": {
+        "repeat": "400, première issue/date/observations conservées",
+        "concurrent": "Un succès et un refus, un seul avis",
+        "item_race": "Verrou partagé préservé, aucun résultat d'item effacé après clôture"
+      },
+      "actual_result": {"status": "passed_postgresql", "observed": "Deux clôtures : 200/400, première issue conservée et un avis ; quatre ordres PATCH/transitions INT-104 rejoués avec résultat requis"}
+    },
+    {
+      "id": "TC-INT-106-06",
+      "task": "INT-106",
+      "title": "Migration et résultats historiques inconnus",
+      "type": "integration",
+      "preconditions": ["Schéma précédent avec statuts, dates et avis historiques"],
+      "steps": [
+        "Migrer au nouveau schéma",
+        "Vérifier qu'aucune issue n'est inventée",
+        "Tester contraintes de valeurs et downgrade",
+        "Rejouer l'oracle d'import avec projection du seul résultat null"
+      ],
+      "expected_result": {
+        "history": "Anciennes interventions, même COMPLETED, conservent result=null et autres données identiques",
+        "constraint": "Valeur inconnue refusée",
+        "downgrade": "Round trip sans résultats renseignés ; refus avant DDL si perte d'issue",
+        "oracle": "Fixtures/SHA immuables ; résultat non null interdit dans la projection historique"
+      },
+      "actual_result": {"status": "passed_local", "observed": "Historique result null sans défaut ni inférence, contraintes et downgrade conservateur, chaîne PostgreSQL réelle réussie", "fingerprint": "NULL compatible avec ancien hash, résultat réel invalide l'approbation en 409, retour NULL restaure ancien hash", "oracle": "Replay exact et SHA historiques préservés"}
+    },
+    {
+      "id": "TC-INT-106-07",
+      "task": "INT-106",
+      "title": "Frontend et rapport — issue séparée du statut",
+      "type": "integration",
+      "preconditions": ["Frontend adapté", "Intervention clôturable et historique inconnu"],
+      "steps": [
+        "Vérifier qu'aucun résultat global n'est choisi par défaut",
+        "Choisir PART_NEEDED et saisir les observations",
+        "Clôturer et relire le détail/rapport",
+        "Afficher une intervention historique COMPLETED avec result null"
+      ],
+      "expected_result": {
+        "selection": "Clôture empêchée sans choix explicite ou avec saisies checklist non sauvegardées",
+        "outcome": "COMPLETED et Pièce nécessaire distincts",
+        "history": "Inconnu/non renseigné, jamais converti visuellement en Résolu",
+        "no_side_effect": "Aucun devis ni nouvelle planification automatique"
+      },
+      "actual_result": {"status": "passed_real_browser_and_tests", "observed": "Choix global obligatoire même checklist complète ; erreur 500 injectée conserve choix/observations ; retry 200, COMPLETED/PART_NEEDED distincts ; historique inconnu et page 2 vérifiés", "PDF": "200, %PDF-, 15907 octets, pdftotext confirme Pièce nécessaire", "frontend": "14 tests / 74 assertions, typecheck/build réussis"}
     },
     {
       "id": "TC-INT-107-01",

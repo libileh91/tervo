@@ -5,7 +5,7 @@ Business logic for intervention CRUD and specialized queries.
 """
 
 import uuid
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -236,43 +236,45 @@ class InterventionService:
 
         # 4. Photos validation (skip — Phase 2)
 
-        # 5. Mettre à jour
-        if body.observations is not None:
-            intervention.observations = body.observations
-        intervention.status = InterventionStatus.COMPLETED
-        intervention.completed_at = datetime.utcnow()
-        await self.repo.db.commit()
-        await self.repo.db.refresh(intervention)
-
-        # 6. Créer automatiquement le Review avec share_token
-        review_repo = ReviewRepository(self.repo.db)
-        share_token = uuid.uuid4().hex
-        expires_at = intervention.completed_at + timedelta(days=30)
-        await review_repo.create(
-            {
-                "intervention_id": intervention.id,
-                "rating": 5,  # valeur par défaut, sera écrasée par le client
-                "share_token": share_token,
-                "share_token_expires_at": expires_at.replace(tzinfo=None),
-            }
-        )
-
-        duration = 0
-        if intervention.started_at and intervention.completed_at:
-            duration = int(
-                (intervention.completed_at - intervention.started_at).total_seconds()
-                // 60
+        # Outcome and share token are one transaction. Historical outcomes are
+        # never inferred from COMPLETED; only this explicit request writes them.
+        try:
+            if body.observations is not None:
+                intervention.observations = body.observations
+            intervention.status = InterventionStatus.COMPLETED
+            intervention.result = body.result.value
+            intervention.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            share_token = uuid.uuid4().hex
+            await ReviewRepository(self.db).create(
+                {
+                    "intervention_id": intervention.id,
+                    "rating": 5,  # valeur par défaut, sera écrasée par le client
+                    "share_token": share_token,
+                    "share_token_expires_at": intervention.completed_at + timedelta(days=30),
+                },
+                commit=False,
             )
-
-        return InterventionCompleteResponse(
-            id=intervention.id,
-            status=intervention.status.value,
-            completed_at=intervention.completed_at,
-            duration_minutes=duration,
-            report_url=f"/api/v1/interventions/{intervention.id}/report/download",
-            review_share_token=share_token,
-            review_share_url=f"/review/{share_token}",
-        )
+            duration = 0
+            if intervention.started_at:
+                duration = int(
+                    (intervention.completed_at - intervention.started_at).total_seconds() // 60
+                )
+            # Response validation must also succeed before the commit.
+            response = InterventionCompleteResponse(
+                id=intervention.id,
+                status=intervention.status.value,
+                result=intervention.result,
+                completed_at=intervention.completed_at,
+                duration_minutes=duration,
+                report_url=f"/api/v1/interventions/{intervention.id}/report/download",
+                review_share_token=share_token,
+                review_share_url=f"/review/{share_token}",
+            )
+            await self.db.commit()
+            return response
+        except Exception:
+            await self.db.rollback()
+            raise
 
     # ── Site interventions history (from INT-06) ──────────
 

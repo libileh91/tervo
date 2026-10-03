@@ -29,10 +29,13 @@ class ReviewRepository:
         )
         return result.scalar_one_or_none()
 
-    async def create(self, data: dict) -> Review:
+    async def create(self, data: dict, *, commit: bool = True) -> Review:
         review = Review(**data)
         self.db.add(review)
-        await self.db.commit()
+        if commit:
+            await self.db.commit()
+        else:
+            await self.db.flush()
         await self.db.refresh(review)
         return review
 

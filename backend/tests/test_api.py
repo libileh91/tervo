@@ -596,7 +596,7 @@ class TestIntegration:
         """Compléter un intervention crée un Review avec share_token."""
         resp = await client.put(
             f"/api/v1/interventions/{intervention_in_progress.id}/complete",
-            json={"observations": "Test"},
+            json={"result": "RESOLVED", "observations": "Test"},
             headers=auth_header,
         )
         assert resp.status_code == 200, resp.text
@@ -620,7 +620,7 @@ class TestIntegration:
         """Intervention planifié → 400."""
         resp = await client.put(
             f"/api/v1/interventions/{intervention_planned.id}/complete",
-            json={},
+            json={"result": "RESOLVED"},
             headers=auth_header,
         )
         assert resp.status_code == 400
@@ -631,7 +631,7 @@ class TestIntegration:
         """Mauvais technicien → 403."""
         resp = await client.put(
             f"/api/v1/interventions/{intervention_in_progress.id}/complete",
-            json={},
+            json={"result": "RESOLVED"},
             headers=other_auth_header,
         )
         assert resp.status_code == 403

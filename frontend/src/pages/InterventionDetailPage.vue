@@ -22,6 +22,7 @@
                     <h1>{{ intervention.title }}</h1>
                     <div class="header-chips">
                         <Chip :label="statusLabel(intervention.status)" :severity="statusSeverity(intervention.status)" size="small" />
+                        <Chip :label="`Résultat : ${interventionResultLabel(intervention.result)}`" size="small" />
                         <Chip
                             :label="priorityLabel(intervention.priority)"
                             :severity="prioritySeverity(intervention.priority)"
@@ -350,6 +351,7 @@ import TabView from "primevue/tabview";
 import TabPanel from "primevue/tabpanel";
 import Dialog from "primevue/dialog";
 import { useAuthStore } from "@/stores/auth";
+import { interventionResultLabel } from "@/composables/interventionCompletion";
 import { groupPhotos, photoUsages, reconcileMaterials, materialRow, validateMaterial, type MaterialRow } from "@/utils/interventionMedia";
 import type { PhotoUsage } from "@/api/client";
 import {

@@ -280,7 +280,7 @@ class TestChecklistAPI:
         # All items are unchecked by default
         resp = await client.put(
             f"/api/v1/interventions/{intervention_with_checklist.id}/complete",
-            json={},
+            json={"result": "RESOLVED"},
             headers=auth_header,
         )
         assert resp.status_code == 400
