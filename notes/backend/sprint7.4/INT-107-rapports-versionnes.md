@@ -322,4 +322,16 @@ Limites assumées :
   car les octets de la version sont stockés séparément.
 - TD-B004 (photos obligatoires), TD-B013 (rôles), TD-B016 (import représentatif),
   TD-B019 (seed sur base existante) et TD-B021 (issues historiques) restent ouverts.
-  INT-108 n'est pas commencée.
+  INT-108 a depuis été livré : voir [la note d'avis client](INT-108-avis-client.md).
+
+### Rectification de non-régression après le push du sprint 7.4
+
+La suite distante initiale du sprint a révélé que la recette transverse
+`test_checklist_material_completion_public_review_and_report` supposait encore
+que `GET /report/download` générait le document. Depuis INT-107, ce GET est
+strictement une lecture : il répond 404 en l'absence de version.
+La recette génère désormais explicitement la version avec
+`POST /interventions/{id}/reports` (201) **avant** le téléchargement PDF
+authentifié ; la partie avis continue sans JWT après le PDF. Le test ciblé
+a été réexécuté localement avec succès. Cette correction n'ajoute aucun
+générateur implicite au GET et ne change pas l'archive en base.

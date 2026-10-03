@@ -320,6 +320,9 @@ async def test_checklist_material_completion_public_review_and_report(context):
     assert all(item["result"] == "OK" and item["comment"] == "R7"
                for item in detail["checklist_items"])
     assert detail["materials"] == [material.model_dump()]
+    # INT-107 archives a report only after an explicit authenticated generation.
+    generated = await ac.post(url + "/reports")
+    assert generated.status_code == 201, generated.text
     response = await ac.get(complete["report_url"])
     assert response.status_code == 200, response.text
     assert response.headers["content-type"] == "application/pdf"
