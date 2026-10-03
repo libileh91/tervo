@@ -179,3 +179,18 @@ TD-B021 (issues historiques), TD-B022 (volumétrie PDF), TD-F007
 débloqués par l'avis client ; ils restent ouverts selon leurs dépendances.
 L'avis client est optionnel pour l'intervention et ne constitue ni un
 résultat de clôture ni une transmission de rapport.
+
+### Rectification des gardes de non-régression après le push
+
+La première CI distante de `5a781f8` a signalé un ancien `HEAD` fixé à
+INT-107 et deux projections R0 incomplètes. Le module `contract_int108.py`
+vérifie maintenant **exactement** le nouvel endpoint public et le nouveau
+schéma OpenAPI, ainsi que la nullabilité et le CHECK de `Review`, avant de
+reprojeter les métadonnées et routes dans les gardes INT-107 → R0.
+Les preuves originales R0–R11 ne sont pas modifiées. Le test de migration
+historique reconstruit l'ancien `review.rating NOT NULL` avant de rejouer la
+chaîne ; son `HEAD` attendu est la révision INT-108. Ces trois gardes et le
+scénario transverse rapport/avis corrigé ont été ciblés localement :
+**4 réussis, 2 warnings**. La première CI n'a pas exécuté ses étapes
+PostgreSQL après l'échec de la suite globale : elles restent à vérifier
+sur le nouveau run distant, sans les déclarer déjà réussies.

@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.contract_int107 import assert_metadata_contract, assert_openapi_contract
+from tests.contract_int108 import assert_metadata_contract, assert_openapi_contract
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND = REPO_ROOT / "backend"

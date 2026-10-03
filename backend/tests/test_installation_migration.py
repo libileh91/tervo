@@ -12,7 +12,7 @@ from app.model_registry import load_models
 
 PREVIOUS = "d100e0010001"
 REVISION = "e103e0010001"
-HEAD = "j107e0010001"
+HEAD = "k108e0010001"
 BACKEND = Path(__file__).resolve().parents[1]
 
 
@@ -88,6 +88,11 @@ def migration(tmp_path, monkeypatch):
                 intervention.constraints.remove(constraint)
         if "result" in intervention.c:
             intervention._columns.remove(intervention.c.result)
+        review = previous.tables["review"]
+        review.c.rating.nullable = False
+        for constraint in list(review.constraints):
+            if isinstance(constraint, sa.CheckConstraint) and constraint.name == "ck_review_submission_rating":
+                review.constraints.remove(constraint)
         previous.create_all(engine)
         command.stamp(config, PREVIOUS)
     with engine.begin() as db:
