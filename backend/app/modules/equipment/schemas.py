@@ -1,6 +1,6 @@
 """Equipment API contracts; replacement creates a distinct physical instance."""
 from datetime import date, datetime
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from app.modules.equipment.models import EquipmentStatus
 
 
@@ -30,7 +30,28 @@ class EquipmentReplace(BaseModel):
     new_product_id: int | None = Field(None, gt=0)
     installation_date: date | None = None
     serial_number: str | None = Field(None, max_length=255)
+    commissioned_at: date | None = None
+    warranty_start: date | None = None
+    warranty_end: date | None = None
     notes: str | None = None
+
+    @field_validator("serial_number")
+    @classmethod
+    def clean_serial_number(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        if not value:
+            raise ValueError("Le numéro de série ne doit pas être blanc")
+        return value
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        if self.warranty_start and self.warranty_end and self.warranty_end < self.warranty_start:
+            raise ValueError("La fin de garantie doit suivre son début")
+        if self.installation_date and self.commissioned_at and self.commissioned_at < self.installation_date:
+            raise ValueError("La mise en service ne peut précéder la pose")
+        return self
 
 
 class EquipmentResponse(BaseModel):

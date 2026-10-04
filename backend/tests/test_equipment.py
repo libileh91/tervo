@@ -1,4 +1,7 @@
-"""INT-94–97: physical chain, catalogue reuse and replacement history."""
+"""INT-94–97/110: physical chain, catalogue reuse and replacement history."""
+from datetime import date, datetime
+from hashlib import sha256
+
 import httpx
 import pytest
 from sqlalchemy import event, select
@@ -12,6 +15,9 @@ from app.modules.identity.models import Role, User
 from app.modules.catalog.models import Product
 from app.modules.equipment.models import Equipment
 from app.modules.interventions.models.intervention import Intervention
+from app.modules.interventions.models.photo import Photo
+from app.modules.installations.models import Installation, InstallationStatus
+from app.modules.reports.models import Report, ReportVersion
 
 
 @pytest.fixture
@@ -110,3 +116,87 @@ async def test_invalid_replacement_is_atomic(context):
     assert (await ac.delete(f'/api/v1/equipment/{old["id"]}')).status_code == 405
     del app.dependency_overrides[get_current_user]
     assert (await ac.get('/api/v1/equipment')).status_code in (401,403)
+
+
+async def test_int110_replacement_keeps_installation_intervention_photo_and_pdf(context):
+    """One real API recipe over historical links; no PDF rerender and no migration."""
+    ac, sessions, (_, site, _, product) = context
+    pdf = b"%PDF-1.4\n% historical report\n"
+    async with sessions() as db:
+        installation = Installation(
+            site_id=site, status=InstallationStatus.COMPLETED,
+            installation_date=date(2020, 6, 1),
+        )
+        db.add(installation)
+        await db.flush()
+        old = Equipment(
+            site_id=site, product_id=product, installation_id=installation.id,
+            serial_number="OLD-100", installed_at=date(2020, 6, 1),
+            warranty_start=date(2020, 6, 1), warranty_end=date(2025, 6, 1),
+        )
+        db.add(old)
+        await db.flush()
+        intervention = Intervention(
+            site_id=site, equipment_id=old.id, title="Réparation ancienne",
+            scheduled_date=date(2026, 9, 20), status="COMPLETED", result="PART_NEEDED",
+        )
+        db.add(intervention)
+        await db.flush()
+        photo = Photo(intervention_id=intervention.id, usage="BEFORE", file_path="/archive/old.jpg")
+        report = Report(intervention_id=intervention.id)
+        db.add_all([photo, report])
+        await db.flush()
+        db.add(ReportVersion(
+            report_id=report.id, version=1, pdf=pdf, sha256=sha256(pdf).hexdigest(),
+            size=len(pdf), generated_at=datetime(2026, 9, 20),
+        ))
+        await db.commit()
+        old_id, intervention_id, installation_id = old.id, intervention.id, installation.id
+        photo_id, report_id = photo.id, report.id
+
+    url = f"/api/v1/equipment/{old_id}/replace"
+    for payload, expected in (
+        ({"serial_number": "  "}, 422),
+        ({"serial_number": "old-100"}, 409),
+        ({"warranty_start": "2031-01-01", "warranty_end": "2030-01-01"}, 422),
+        ({"installation_date": "2026-10-15", "commissioned_at": "2026-10-14"}, 422),
+        ({"new_product_id": 999999}, 404),
+    ):
+        response = await ac.post(url, json=payload)
+        assert response.status_code == expected, response.text
+    assert (await ac.get(f"/api/v1/equipment/{old_id}")).json()["lifecycle_status"] == "ACTIVE"
+    assert (await ac.get("/api/v1/equipment", params={"site_id": site})).json()["total"] == 1
+
+    response = await ac.post(url, json={
+        "new_product_id": product, "serial_number": " NEW-200 ",
+        "installation_date": "2026-10-15", "commissioned_at": "2026-10-16",
+        "warranty_start": "2026-10-15", "warranty_end": "2030-10-15",
+    })
+    assert response.status_code == 201, response.text
+    new = response.json()
+    assert new["id"] != old_id and new["site_id"] == site
+    assert new["serial_number"] == "NEW-200" and new["installed_at"] == "2026-10-15"
+    assert new["commissioned_at"] == "2026-10-16"
+    assert new["warranty_start"] == "2026-10-15" and new["warranty_end"] == "2030-10-15"
+    assert new["installation_id"] is None and new["lifecycle_status"] == "ACTIVE"
+    assert (await ac.post(url, json={})).status_code == 409
+
+    previous = (await ac.get(f"/api/v1/equipment/{old_id}")).json()
+    assert previous["replaced_by_id"] == new["id"] and previous["lifecycle_status"] == "REPLACED"
+    assert previous["serial_number"] == "OLD-100"
+    assert previous["warranty_end"] == "2025-06-01"
+    assert previous["installation_id"] == installation_id
+    detail = await ac.get(f"/api/v1/interventions/{intervention_id}")
+    assert detail.status_code == 200, detail.text
+    assert detail.json()["equipment_id"] == old_id
+    assert [p["id"] for p in detail.json()["photos"]] == [photo_id]
+    assert detail.json()["photos"][0]["file_url"].endswith("/old.jpg")
+    assert (await ac.get(f"/api/v1/reports/{report_id}/versions/1")).content == pdf
+    async with sessions() as db:
+        assert (await db.get(Equipment, old_id)).installation_id == installation_id
+        assert (await db.get(Equipment, new["id"])).installation_id is None
+        historical_photo = await db.get(Photo, photo_id)
+        assert historical_photo.intervention_id == intervention_id
+        assert historical_photo.file_path == "/archive/old.jpg"
+        assert (await db.get(Report, report_id)).intervention_id == intervention_id
+        assert len(list(await db.scalars(select(Equipment)))) == 2

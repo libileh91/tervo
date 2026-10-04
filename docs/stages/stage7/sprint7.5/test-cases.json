@@ -102,15 +102,63 @@
         "Un équipement avec interventions"
       ],
       "steps": [
-        "POST /api/v1/equipment/{id}/replace (nouveau serial_number)",
-        "Vérifier l'ancien et le nouveau"
+        "Créer un ancien équipement lié à son installation et à une intervention avec photo et version PDF",
+        "POST /api/v1/equipment/{id}/replace avec nouveau serial_number, installation_date et warranty_start/end",
+        "Relire ancien, nouveau, intervention, photo et version PDF"
       ],
       "expected_result": {
-        "ancien_status_REPLACED": "true",
+        "ancien_status_REPLACED": true,
         "ancien_replaced_by_id": "nouveau.id",
-        "historique_ancien_conserve": "true"
+        "historique_ancien_conserve": "Intervention, photo, rapport et installation restent liés à l'ancien",
+        "nouveau": "Site conservé, nouveau numéro, installed_at et garantie renseignés ; nouvelle installation non inventée",
+        "transaction": "Création du nouveau et passage de l'ancien à REPLACED atomiques"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed_local_sqlite",
+        "observed": "POST 201, ancien REPLACED → nouveau ACTIVE ; ancien installation/intervention/photo inchangés et octets PDF versionné relus ; nouveau numéro, pose, mise en service et garantie présents, installation_id NULL"
+      }
+    },
+    {
+      "id": "TC-INT-110-02",
+      "task": "INT-110",
+      "title": "Remplacement — validations et historique incomplet",
+      "type": "api",
+      "preconditions": ["Un ancien équipement actif ou hors service, un produit existant, un équipement retiré"],
+      "steps": [
+        "Envoyer une garantie inversée, un produit inconnu, un numéro de série blanc et une date incohérente",
+        "Remplacer un appareil hors service avec des champs historiques inconnus",
+        "Rejouer le remplacement, puis tenter de remplacer un équipement RETIRED"
+      ],
+      "expected_result": {
+        "validation": "422 pour dates/numéro invalides, 404 pour produit inconnu, aucune mutation",
+        "historique": "Les champs anciens inconnus restent facultatifs, aucun produit ni installation inventé",
+        "statuts": "Un seul successeur ; second remplacement et équipement retiré refusés 409"
+      },
+      "actual_result": {
+        "status": "passed_local_sqlite",
+        "observed": "Dates invalides et série blanche 422, série identique/rejeu 409, produit inconnu 404 sans successeur ; INT-97 accepte toujours les champs inconnus pour un équipement hors service et rejette RETIRED"
+      }
+    },
+    {
+      "id": "TC-INT-110-03",
+      "task": "INT-110",
+      "title": "Concurrence et rollback du remplacement",
+      "type": "integration",
+      "preconditions": ["Base jetable, remplacement existant INT-97"],
+      "steps": [
+        "Forcer un échec entre INSERT successeur et UPDATE conditionnel parent",
+        "Vérifier qu'aucun successeur orphelin ni ancien REPLACED n'est persisté",
+        "Vérifier que la course entre deux remplacements n'enregistre qu'un successeur"
+      ],
+      "expected_result": {
+        "atomicite": "ROLLBACK de la nouvelle instance et de la transition ancienne",
+        "concurrence": "Un seul succès, seconde tentative 409 ; pas de nouvelle migration destructive"
+      },
+      "actual_result": {
+        "status": "partial_regression",
+        "observed": "Les 3 injections de panne préexistantes au flush, execute et commit passent ; l'UPDATE conditionnel INT-97 et le rejeu 409 restent inchangés, aucune migration ajoutée",
+        "remaining": "Course simultanée réelle à deux connexions non exécutée pour INT-110"
+      }
     }
   ]
 }

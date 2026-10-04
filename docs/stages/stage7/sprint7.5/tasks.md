@@ -1,6 +1,6 @@
 # Sprint 7.5 — Showroom et remplacement
 
-> **Tervo V2** · INT-109 à INT-110 · **Statut :** INT-109 vérifiée localement ; INT-110 non démarrée
+> **Tervo V2** · INT-109 à INT-110 · **Statut :** INT-109 et INT-110 vérifiées localement ; CI du sprint et déploiement non effectués
 > **Dépendances :** Sprint 7.1, et 7.3 pour le lien showroom → vente. Vérifier le remplacement déjà amorcé dans INT-97 avant INT-110.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.5/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -63,14 +63,35 @@ Je veux **remplacer un équipement défaillant**,
 Afin de **conserver l'historique de l'ancien et ouvrir un nouveau cycle**.
 
 **Acceptance Criteria**
-- [ ] `POST /equipment/{id}/replace` : ancien → `REPLACED` + `replaced_by_id` → nouveau
-- [ ] Nouvel équipement : nouveau `serial_number`, `installed_at`, `warranty_*`
-- [ ] L'ancien conserve ses interventions, rapports, photos
-- [ ] Test : remplacer → ancien pointe vers nouveau, historique intact
+- [x] `POST /equipment/{id}/replace` : ancien → `REPLACED` + `replaced_by_id` → nouveau
+- [x] Nouvel équipement : nouveau `serial_number`, `installed_at`, `warranty_*`
+- [x] L'ancien conserve ses interventions, rapports, photos
+- [x] Test : remplacer → ancien pointe vers nouveau, historique intact
+
+**Validation locale**
+- Une recette API directe sur SQLite : ancien lié à installation, intervention,
+  photo et PDF versionné ; nouvel appareil avec numéro distinct, pose,
+  mise en service et garantie ; données historiques inchangées. Refus de
+  date inversée, série blanche/identique, produit inconnu et rejeu.
+- Scénarios existants INT-97 / lien installation, rollback contrôlé et garde
+  OpenAPI ciblés : 10 réussis, un warning passlib. Les champs historiques
+  inconnus restent acceptés ; aucune migration Alembic n'est nécessaire.
+- Aucune course concurrente réelle ni migration PostgreSQL exécutée pour
+  INT-110 ; la CI INT-109/110 n'a pas été déclenchée. Aucun push, smoke navigateur
+  ou déploiement. [Note pédagogique](../../../../notes/backend/sprint7.5/INT-110-remplacement-equipement.md).
 
 **Technical Notes**
-- Transaction métier (état ancien + création nouveau atomiques)
-- Fichiers : `app/services/equipment.py`, `app/api/v1/equipment.py`
+- INT-97 avait déjà livré `POST /api/v1/equipment/{id}/replace`, la self-FK
+  et la transaction création → mise à jour conditionnelle → commit. INT-110
+  étend uniquement `EquipmentReplace` / `EquipmentService` pour la mise en
+  service et la garantie et vérifie les liens historiques réels.
+- Le contrat historique `installation_date` est conservé et alimente
+  `Equipment.installed_at` ; `commissioned_at` et `warranty_start/end`
+  optionnels sont renseignés sur **le successeur seulement**. Identité
+  physique distincte quand deux numéros de série sont connus ; aucun
+  nouveau produit, installation ou historique client n'est déduit de l'ancien.
+- Sources V2 : `app/modules/equipment/{schemas,service,repository,models,api}.py`,
+  intervention/photo/rapport et contrats API. Pas de nouvel ORM, FK ou DDL.
 
 ---
 

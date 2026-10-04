@@ -44,9 +44,14 @@ class EquipmentService:
             EquipmentStatus.ACTIVE, EquipmentStatus.OUT_OF_SERVICE
         ):
             raise HTTPException(409, "Cet équipement ne peut plus être remplacé")
+        if (body.serial_number and old.serial_number
+                and body.serial_number.casefold() == old.serial_number.strip().casefold()):
+            raise HTTPException(409, "Le nouvel équipement doit avoir un numéro de série distinct")
         await self.check_product(body.new_product_id)
         new = await self.repo.replace(old, dict(product_id=body.new_product_id,
-            installed_at=body.installation_date, serial_number=body.serial_number, notes=body.notes))
+            installed_at=body.installation_date, commissioned_at=body.commissioned_at,
+            serial_number=body.serial_number, warranty_start=body.warranty_start,
+            warranty_end=body.warranty_end, notes=body.notes))
         if new is None:
             raise HTTPException(409, "Équipement déjà remplacé")
         return new

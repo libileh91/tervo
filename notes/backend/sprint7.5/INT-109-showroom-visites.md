@@ -218,5 +218,5 @@ PostgreSQL locale, de CI distante ni de déploiement revendiqués.
 - **TD-B023** : relation précise d'une visite à la vente effective ; éviter
   d'utiliser `client_id` ou `SOLD` comme preuve unique d'origine commerciale.
 - Les autres todos (import volumétrique, sécurité du seed, stockage photo
-  et PDF) ne sont pas débloqués par INT-109. INT-110 (remplacement)
-  n'est pas entamée sans feu vert distinct.
+  et PDF) ne sont pas débloqués par INT-109. Depuis sa rédaction, INT-110
+  a reçu son feu vert : voir [la note remplacement](INT-110-remplacement-equipement.md).
