@@ -88,9 +88,9 @@
         "downgrade_peuple": "Refus avant DDL si des visites seraient perdues"
       },
       "actual_result": {
-        "status": "partial_sqlite",
-        "observed": "Base SQLite jetable à la révision INT-108 stampée : upgrade/downgrade vide/re-upgrade, CHECK identité/statut, protection du downgrade peuplé ; FK et unicité testées dans la recette API",
-        "remaining": "Migration complète PostgreSQL non exécutée localement ; CI PostgreSQL configurée, non exécutée pour INT-109"
+        "status": "partial_sqlite_and_postgresql_ci",
+        "observed": "SQLite jetable : upgrade/downgrade vide/re-upgrade, CHECK identité/statut et downgrade peuplé refusé. CI #37186606561 : aller-retour Alembic PostgreSQL sur tables vides et recette API showroom sur schéma PostgreSQL isolé réussis",
+        "remaining": "Refus du downgrade peuplé testé sur SQLite uniquement ; aucune base persistante ni charge représentative validée"
       }
     },
     {

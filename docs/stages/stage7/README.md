@@ -11,7 +11,7 @@ La référence métier et technique reste le [DAT unique](../../DAT/new/00-somma
 | [7.3](sprint7.3/tasks.md) | Chaîne commerciale | INT-102 à INT-103 | Implémentés ; non-régression SQLite/PostgreSQL vérifiée |
 | [Chantier technique — refactor monolithe modulaire](refactor-monolithe-modulaire/README.md) | Transverse, avant 7.4 ; hors sprints fonctionnels | INT-113 à INT-123 (R1 à R11) | Terminé et poussé sur main (`adc5954`), CI verte ; TD-B018 traité au démarrage d'INT-104 |
 | [7.4](sprint7.4/tasks.md) | Cycle terrain | INT-104 à INT-108 | Terminé ; `main` poussé, CI verte (`6206c6f`), déploiement sauté |
-| [7.5](sprint7.5/tasks.md) | Showroom et remplacement | INT-109 à INT-110 | INT-109/110 vérifiées localement ; CI non exécutée pour ce sprint |
+| [7.5](sprint7.5/tasks.md) | Showroom et remplacement | INT-109 à INT-110 | Implémentées ; code poussé (`624424b`), [CI verte](https://github.com/libileh91/tervo/actions/runs/37186606561), déploiement sauté |
 | [7.6](sprint7.6/tasks.md) | Déploiement VPS et documentation entretien | INT-111 à INT-112 | À traiter |
 
 Chaque dossier contient son `tasks.md` et son `test-cases.json`. Les notes suivent les mêmes noms de sprint dans `notes/backend/`, dont [sprint7.4](../../../notes/backend/sprint7.4/) pour INT-104.

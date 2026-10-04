@@ -220,3 +220,15 @@ PostgreSQL locale, de CI distante ni de déploiement revendiqués.
 - Les autres todos (import volumétrique, sécurité du seed, stockage photo
   et PDF) ne sont pas débloqués par INT-109. Depuis sa rédaction, INT-110
   a reçu son feu vert : voir [la note remplacement](INT-110-remplacement-equipement.md).
+
+### Validation distante après le push du sprint
+
+Les résultats locaux ci-dessus restent ceux constatés **avant** le push.
+Le code INT-109/110 a ensuite été poussé jusqu'à `624424b` sur `main`.
+Le [run CI/CD #37186606561](https://github.com/libileh91/tervo/actions/runs/37186606561)
+a réussi : suite backend, migrations PostgreSQL `head → -1 → head`
+sur base vide, recette showroom exécutée sur schéma PostgreSQL isolé,
+et job frontend (tests, typecheck, build). Le déploiement VPS a été
+**sauté**. Cela valide l'aller-retour PostgreSQL vide et la recette
+sur son schéma jetable, mais pas le downgrade d'une visite **peuplée**
+sur PostgreSQL, ni un écran showroom ou une charge représentative.

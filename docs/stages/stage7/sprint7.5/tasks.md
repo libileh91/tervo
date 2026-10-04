@@ -1,6 +1,6 @@
 # Sprint 7.5 — Showroom et remplacement
 
-> **Tervo V2** · INT-109 à INT-110 · **Statut :** INT-109 et INT-110 vérifiées localement ; CI du sprint et déploiement non effectués
+> **Tervo V2** · INT-109 à INT-110 · **Statut :** INT-109 et INT-110 implémentées ; CI verte sur `624424b`, déploiement sauté
 > **Dépendances :** Sprint 7.1, et 7.3 pour le lien showroom → vente. Vérifier le remplacement déjà amorcé dans INT-97 avant INT-110.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.5/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -33,9 +33,11 @@ Afin de **suivre le parcours prospect → vente**.
   d'import ciblé : 1 réussi. Migration INT-109 ciblée
   sur SQLite jetable : upgrade → downgrade vide → upgrade, CHECK SQL et refus
   du downgrade peuplé vérifiés.
-- La recette PostgreSQL est configurée dans `ci.yml`, mais **aucune CI distante
-  INT-109 ni migration PostgreSQL INT-109 n'a été exécutée**. Pas de
-  smoke navigateur, push ou déploiement. Voir
+- Après le push du code `624424b`, le [run CI/CD #37186606561](https://github.com/libileh91/tervo/actions/runs/37186606561)
+  est vert : suite backend, aller-retour Alembic PostgreSQL sur tables vides
+  et recette showroom sur schéma PostgreSQL isolé. Le downgrade d'une visite
+  peuplée n'a été vérifié que sur SQLite. Frontend CI vert (tests, typecheck,
+  build) ; aucun smoke navigateur ni déploiement. Voir
   [la note pédagogique](../../../../notes/backend/sprint7.5/INT-109-showroom-visites.md).
 
 **Technical Notes**
@@ -76,9 +78,12 @@ Afin de **conserver l'historique de l'ancien et ouvrir un nouveau cycle**.
 - Scénarios existants INT-97 / lien installation, rollback contrôlé et garde
   OpenAPI ciblés : 10 réussis, un warning passlib. Les champs historiques
   inconnus restent acceptés ; aucune migration Alembic n'est nécessaire.
-- Aucune course concurrente réelle ni migration PostgreSQL exécutée pour
-  INT-110 ; la CI INT-109/110 n'a pas été déclenchée. Aucun push, smoke navigateur
-  ou déploiement. [Note pédagogique](../../../../notes/backend/sprint7.5/INT-110-remplacement-equipement.md).
+- La [CI du commit `624424b`](https://github.com/libileh91/tervo/actions/runs/37186606561)
+  est verte (backend et frontend). INT-110 n'ajoute pas de migration :
+  l'aller-retour PostgreSQL du sprint valide le `head` INT-109 sur base vide.
+  Une course simultanée réelle INT-110 et un smoke navigateur restent
+  non exécutés ; le déploiement VPS a été sauté.
+  [Note pédagogique](../../../../notes/backend/sprint7.5/INT-110-remplacement-equipement.md).
 
 **Technical Notes**
 - INT-97 avait déjà livré `POST /api/v1/equipment/{id}/replace`, la self-FK

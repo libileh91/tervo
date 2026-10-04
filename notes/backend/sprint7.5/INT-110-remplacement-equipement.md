@@ -211,3 +211,15 @@ checklist) ne sont pas débloqués par les trois nouvelles dates
 de remplacement. Aucune base locale persistante ni déploiement
 n'a été modifié pour les valider. Le sprint
 7.6 (VPS / documentation entretien) attend un feu vert distinct.
+
+### Validation distante après le push du sprint
+
+La section 6 décrit l'état **au moment de la livraison locale**. Le
+code INT-109/110 a ensuite été poussé sur `main` (`624424b`) et le
+[run CI/CD #37186606561](https://github.com/libileh91/tervo/actions/runs/37186606561)
+a réussi : suite backend, migrations PostgreSQL sur tables vides,
+recette showroom PostgreSQL et job frontend (tests, typecheck, build).
+`Deploy — VPS` a été sauté. Il n'y a toujours **pas** de migration
+INT-110 spécifique, de smoke navigateur ni de preuve d'une course
+simultanée de deux remplacements sur PostgreSQL ; le cas
+`TC-INT-110-03` demeure partiel.
