@@ -65,7 +65,18 @@
         "strategie_reseau": "Mode réel observé, dépendances réseau nécessaires explicites et recréables, aucune IP de conteneur codée en dur",
         "droits_docker": "Mode d'administration documenté sans imposer le groupe docker au compte humain ; privilèges root-equivalent explicités"
       },
-      "actual_result": null,
+      "actual_result": {
+        "status": "partial_loopback_and_agent_verified_remotely",
+        "observed": "Échec initial d'isolation : 0.0.0.0:7410 et HTTP 200 extérieur, ALLOW 7410/tcp et 443/udp ajoutés par l'agent. Arrêt/désactivation et DENY UFW effectués. Reprise : Connection refused via tunnel expliqué par core/agent inactifs et absence d'écoute. Core seul démarré après contrôle UFW/dépendances ; core actif, agent inactif, DENY IPv4/IPv6 inchangés. Écoute ultérieure 0.0.0.0:7410 et connexion au panneau par tunnel confirmées par l'utilisateur. Exception firewall approuvée avec bind loopback obligatoire",
+        "recovery_observed": "502 identifié sur POST /api/v2/settings/search : connexion refusée au socket agent. Bind 127.0.0.1 appliqué par l'utilisateur. Après accès SSH rétabli, Delta confirme core/agent active et disabled, 127.0.0.1:7410 uniquement, socket agent LISTEN, HTTP local 200 et tentative TCP publique IPv4 sans connexion (timeout 5s). sudo non interactif indisponible ; aucune modification distante ni requête avec cookie partagé effectuée",
+        "user_confirmation": "Informations VPS affichées et absence de 502 confirmées dans le navigateur. Sortie UFW actif : DENY 7410/TCP IPv4/IPv6 conservés, seuls ALLOW 22/80/443 TCP visibles, aucun ALLOW automatique 7410/TCP ou 443/UDP à ce contrôle",
+        "restart_observed": "Utilisateur : restart core/agent réussi, ss immédiatement vide puis lecture ultérieure core/agent active et 127.0.0.1:7410 uniquement (PID core 12322), règles UFW inchangées. Delta : nouvelle tentative TCP publique IPv4 après restart en timeout 5s, aucune connexion établie",
+        "boot_activation_observed": "Utilisateur : systemctl enable core/agent crée les deux liens multi-user.target.wants ; is-enabled renvoie enabled pour chaque unité. Aucun reboot effectué",
+        "openresty_preflight_observed": "Utilisateur : docker ps -a et ss sur TCP 80/443 ne renvoient que les en-têtes ; aucun conteneur actif/arrêté ni écoute TCP 80/443 constaté dans cet inventaire. OpenResty pas encore installé",
+        "openresty_install_observed": "Journal utilisateur : init/pull/start réussis pour OpenResty. Conteneur 1Panel-openresty-wTu3, image 1panel/openresty:1.31.1.1-2-4-noble, Up et écoutes 80/443 IPv4/IPv6. Delta : GET HTTP public 200 et tentative TCP publique 7410 en timeout 5s après installation. Ni mode host ni HTTPS valide déduits de ces seuls résultats",
+        "remaining": "Mode réseau OpenResty effectif, nginx -t, bind/règles après installation et recette upstream/rechargement sur cible jetable ; version CLI 1Panel, confirmation parcours navigateur après restart, persistance après reboot réel et contrôle après mise à jour. Pas de nouveau test IPv6 externe ni reboot",
+        "evidence": "notes/backend/deploy/vps/03-preparation-1panel-prive.md"
+      },
       "legacy_id": "TC-INT-86-01"
     },
     {

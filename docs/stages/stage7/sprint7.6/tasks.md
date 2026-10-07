@@ -1,6 +1,6 @@
 # Sprint 7.6 — Déploiement VPS et documentation entretien
 
-> **Tervo V2** · INT-111/112 + INT-124 à INT-130 · **Statut :** socle système/SSH validé ; INT-124 planifiée, autres tâches non démarrées
+> **Tervo V2** · INT-111/112 + INT-124 à INT-130 · **Statut :** socle système/SSH validé ; administration 1Panel privée et OpenResty installé, recette proxy INT-124 en attente ; autres tâches non démarrées
 > **Dépendances :** Valider le périmètre livré et ses tests avant déploiement ; documenter explicitement le backlog restant.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.6/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -96,19 +96,19 @@ Je veux **installer le panneau et son proxy sans exposer l'administration**,
 Afin de **gérer le VPS sans créer une seconde stack Tervo**.
 
 **Acceptance Criteria**
-- [ ] Archive v2.3.2 amd64 et SHA-256 vérifiés localement ; installateur lu, patch supprimant son appel d'ouverture automatique du port testé sans fuzz et avec contrôle d'unique changement
-- [ ] Inventaire VPS actualisé, absence de données/installation 1Panel préexistantes vérifiée ; paquet exact préparé et hash revérifié sur le VPS
+- [x] Archive v2.3.2 amd64 et SHA-256 vérifiés localement ; installateur lu, patch supprimant son appel d'ouverture automatique du port testé sans fuzz et avec contrôle d'unique changement
+- [x] Inventaire VPS actualisé, absence de données/installation 1Panel préexistantes vérifiée ; paquet exact préparé et hash revérifié sur le VPS
 - [ ] Installation contrôlée, versions/chemins/services core-agent documentés ; Docker/Compose et daemon.json existants conservés, aucune licence Pro activée
-- [ ] Administration 7410 privée en fonctionnement : bind loopback, tunnel avec clé choisie, bind local explicite et `ExitOnForwardFailure`, refus TCP public IPv4 ; aucune écoute administrative IPv6 ni IPv6 publique constatée dans l'inventaire ; bind et UFW conservés après restart core/agent
+- [x] Administration 7410 privée en fonctionnement : bind loopback, tunnel avec clé choisie, bind local explicite et `ExitOnForwardFailure`, refus TCP public IPv4 ; aucune écoute administrative IPv6 ni IPv6 publique constatée dans l'inventaire ; bind et UFW conservés après restart core/agent
 - [ ] Persistance après reboot réel et contrôle après mise à jour ; règles automatiques éventuelles inventoriées selon l'exception approuvée, refus extérieur IPv4/IPv6 si présente et accès navigateur recontrôlés
-- [ ] OpenResty 1.31.1.1-2-4-noble installé : conteneur actif, écoutes 80/443 IPv4/IPv6 et HTTP public 200
+- [x] OpenResty 1.31.1.1-2-4-noble installé : conteneur actif, écoutes 80/443 IPv4/IPv6 et HTTP public 200
 - [ ] Mode OpenResty host/bridge observé, configuration valide, dépendances réseau nécessaires recréables et résolution/rechargement validés sur cible jetable sans IP statique de conteneur
 - [ ] Changements du panneau journalisés, retour arrière et note de livraison documentés ; critères/cas mis à jour
 
 **Technical Notes**
 - Dépend du socle système déjà validé, **pas de la clôture d'INT-111**.
-- Fichiers envisagés : `deploy/patches/1panel-v2.3.2-private-admin.patch`,
-  `notes/backend/deploy/vps/03-preparation-1panel-prive.md` (à produire).
+- Sources : `deploy/patches/1panel-v2.3.2-private-admin.patch`,
+  [note 03](../../../../notes/backend/deploy/vps/03-preparation-1panel-prive.md).
   Préparation locale ne signifie pas installation ou bind validé.
 - Host : upstreams loopback du VPS. Bridge : noms sur réseau partagé et
   résolution/rechargement après recréation ; réseau externe seulement si utile.
@@ -116,6 +116,31 @@ Afin de **gérer le VPS sans créer une seconde stack Tervo**.
   services Tervo d'INT-125 ni les domaines/HTTPS publics d'INT-111.
 - Aucun PostgreSQL, runtime Python/Node ou Compose Tervo créé dans 1Panel.
 - Cas TC-INT-111-02 : ID historique conservé, propriétaire INT-124.
+- Incident après installation : HTTP 200 extérieur sur 7410, ALLOW
+  7410/tcp et 443/udp ajoutés par la synchronisation `FirewallPortWhiteList`
+  de l'agent, malgré le patch du shell. Panneau arrêté et refus extérieur
+  confirmé, services désactivés et règles nettoyées avec DENY 7410.
+  Exception firewall approuvée avec bind loopback obligatoire.
+- Reprise contrôlée : login par tunnel puis 502 sur l'API agent arrêté.
+  Bind privé appliqué par l'utilisateur ; core/agent désormais actifs et
+  disabled au boot, écoute 127.0.0.1:7410 et socket agent LISTEN contrôlés
+  par Delta, HTTP local 200 et tentative TCP publique IPv4 en timeout.
+  Utilisateur : informations VPS affichées sans 502, DENY UFW conservés,
+  seuls ALLOW 22/80/443 TCP visibles. Après restart des deux unités,
+  lectures utilisateur : core/agent active, bind loopback maintenu et
+  UFW inchangé ; nouveau test public IPv4 Delta en timeout.
+  Activation au boot effectuée par l'utilisateur : liens créés et
+  `enabled` pour les deux unités. Persistance après reboot réel, contrôle
+  après upgrade et recette proxy OpenResty restent à valider ; aucun cookie partagé
+  réutilisé pour ces contrôles.
+- Inventaire préalable OpenResty fourni par l'utilisateur : aucun conteneur
+  actif/arrêté dans le daemon Docker interrogé, aucune écoute TCP 80/443.
+  Formulaire/version et mode réseau effectif à vérifier avant configuration.
+- Installation OpenResty confirmée par journal et sorties utilisateur :
+  `1Panel-openresty-wTu3`, image `1panel/openresty:1.31.1.1-2-4-noble`,
+  Up et écoutes 80/443 IPv4/IPv6. Delta : HTTP public 200, TCP public
+  7410 toujours inaccessible. Mode effectif, test de configuration,
+  sécurité relue et recette proxy sur cible jetable restent à valider.
 
 ---
 

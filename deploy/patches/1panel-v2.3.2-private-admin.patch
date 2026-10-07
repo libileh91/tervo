@@ -1,0 +1,11 @@
+--- install.sh
++++ install.sh
+@@ -1286,7 +1286,7 @@
+     Set_Dir
+     Install_Docker
+     Set_Port
+-    Set_Firewall
++    # Tervo manages UFW separately: do not open the administration port.
+     Set_Entrance
+     Set_Username
+     Set_Password

@@ -12,8 +12,9 @@ Le bilan de livraison du sprint restera dans `notes/backend/sprint7.6/`.
 |---|---|---|
 | [01 — Inventaire et accès SSH](01-inventaire-et-acces-ssh.md) | Choix du VPS, inventaire Debian, compte `tervo`, clés, `sudo`, durcissement SSH et correction client/serveur | Accès SSH confirmé ; sécurité système poursuivie dans la note 02 |
 | [02 — Préparation de la sécurité système](02-preparation-securite-systeme.md) | PATH administrateur, Docker, APT, reboot et outils de sécurité | UFW actif, jail SSH chargée, noyau Security actif ; mises à jour quotidiennes configurées et dry-run vérifié |
+| [03 — Préparer 1Panel privé](03-preparation-1panel-prive.md) | Préparation, incidents firewall/502, reprise privée et installation OpenResty | Bind loopback maintenu après restart, services enabled ; OpenResty installé, mode réel et recette proxy en attente |
 
-Depuis le découpage du chantier, la future note 03 accompagnera **INT-124**.
+Depuis le découpage du chantier, la note 03 accompagne **INT-124**.
 Les notes 01/02 conservent les preuves système acquises dans INT-111.
 Les autres lots (stack, bootstrap, DB, backup, release, CI/CD) ont chacun
 leur tâche INT-125 à INT-130 ; une préparation n'en valide pas la livraison.
@@ -27,9 +28,9 @@ leur tâche INT-125 à INT-130 ; une préparation n'en valide pas la livraison.
 | Refus des connexions sans clé | Confirmé |
 | Configuration du client SSH | Corrigée et validée |
 | Pare-feu, fail2ban et mises à jour automatiques | UFW actif, jail SSH chargée ; noyau Security actif, contrôles APT restaurés ; automatisation configurée et dry-run validé, pare-feu fournisseur inconnu |
-| Docker et Compose | Versions et service actif confirmés ; aucun conteneur observé avant installation du panneau |
-| 1Panel | À préparer et installer dans INT-124 |
-| OpenResty et HTTPS | Proxy à installer dans INT-124 ; HTTPS public à valider dans INT-111 |
+| Docker et Compose | Versions et service actif confirmés ; conteneur OpenResty actif, mode réseau encore à inspecter |
+| 1Panel | Bind 127.0.0.1:7410, tunnel sans 502 confirmé, isolation conservée après restart ; core/agent enabled, aucun reboot après cette activation |
+| OpenResty et HTTPS | OpenResty installé, 80/443 en écoute et HTTP public 200 ; mode réel/configuration/recette upstream en attente, aucun certificat Tervo validé |
 | Déploiement Tervo, secrets et données | Pas encore réalisé sur ce VPS |
 | Sauvegarde/restauration et automatisation du déploiement | À préparer et valider |
 

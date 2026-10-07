@@ -18,7 +18,7 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 | **DNS**            | Cloudflare (`tervoapp.com`)            | Enregistrements A                   |
 | **Ports services** | Historiquement `0.0.0.0`               | **`127.0.0.1`** (Stage 6.1)         |
 | **PostgreSQL**     | Conteneur partagé préexistant          | Embarqué dans le compose            |
-| **Statut**         | ✅ opérationnel                        | ⏳ Socle système sécurisé ; panneau/proxy et application non déployés |
+| **Statut**         | ✅ opérationnel                        | ⏳ Socle sécurisé, 1Panel privé et OpenResty installé ; recette proxy en attente, application non déployée |
 
 > **Pourquoi deux cibles ?** Le mini-s1 a servi à valider l'application et la chaîne de déploiement sans exposer la machine. Le VPS est la cible professionnelle (Sprint 7.6 (INT-111)).
 
@@ -114,18 +114,19 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 | ------------------ | ---------------------------------------------------------------------------------- |
 | `paperless-ngx.md` | GED documentaire (OCR des archives) — installation Docker Classic, intégration API |
 
-### 4.6 Réalisation guidée du VPS (INT-111, en cours)
+### 4.6 Réalisation guidée du VPS (INT-111/124, en cours)
 
 | Note | Contenu |
 |---|---|
 | [Parcours VPS](vps/README.md) | Point d'entrée et avancement réel des étapes, distinct des procédures historiques |
 | [01 — Inventaire et accès SSH](vps/01-inventaire-et-acces-ssh.md) | Choix Hostkey/Debian, ressources observées, clés et compte `tervo`, `sudo`, durcissement SSH, erreur client/serveur et vérifications confirmées |
 | [02 — Sécurité système](vps/02-preparation-securite-systeme.md) | UFW/fail2ban, mises à jour Security, redémarrages et contrôles observés |
+| [03 — 1Panel privé et OpenResty](vps/03-preparation-1panel-prive.md) | Incident d'exposition, tunnel SSH, 502 agent, bind privé, restart et installation du proxy ; limites de validation |
 
 Ces notes enregistrent les commandes et résultats rapportés pendant la
 réalisation ; chaque étape précise ce qui est vérifié ou encore en attente.
-Le socle système est contrôlé ; le panneau, le proxy, HTTPS Tervo et
-le déploiement applicatif restent à préparer et valider.
+Le socle système et l'accès privé au panneau sont contrôlés, mais la recette
+proxy, HTTPS Tervo et le déploiement applicatif ne sont pas validés.
 Le bilan du sprint sera rédigé séparément dans `notes/backend/sprint7.6/`.
 
 ---

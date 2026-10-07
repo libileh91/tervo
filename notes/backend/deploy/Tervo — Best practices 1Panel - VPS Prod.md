@@ -11,7 +11,8 @@
 
 Ce document fixe la doctrine cible, pas un bilan de déploiement réussi.
 Les réalisations, écarts et contrôles effectivement observés sont tracés
-dans [le parcours VPS](vps/README.md).
+dans [le parcours VPS](vps/README.md). L'exception firewall d'INT-124
+ci-dessous ne permet jamais de publier l'administration.
 
 ---
 
@@ -94,7 +95,7 @@ La suppression ou la panne de l'interface 1Panel ne doit donc jamais rendre impo
 | DNS public | fournisseur DNS | aucun |
 | Backups planifiés | scripts Tervo + scheduler 1Panel | **scheduler** |
 | Monitoring système | Debian + 1Panel | dashboard |
-| Firewall | Debian / UFW | ne pas dupliquer la configuration |
+| Firewall | Debian / UFW | synchronisation automatique limitée à l'exception INT-124 documentée en section 7 |
 | Fail2ban | Debian | ne pas installer une seconde instance |
 | SSH | Debian | aucun |
 | Updates Debian Security | Debian | aucun |
@@ -106,7 +107,7 @@ Ne jamais administrer le même composant depuis deux endroits sans nécessité.
 Exemples :
 
 ```text
-UFW        → Debian
+UFW        → Debian, avec exception de synchronisation 1Panel contrôlée
 Fail2ban   → Debian
 Docker     → Docker CLI / Compose
 Tervo      → Git + Compose
@@ -216,6 +217,14 @@ Déjà réalisé :
 
 Utiliser l'installateur officiel 1Panel correspondant à la version stable retenue.
 
+Ne pas lancer un installateur stock puis supposer que refermer le port
+après coup suffit : INT-124 a constaté une exposition publique et une
+synchronisation firewall supplémentaire par l'agent. La procédure de
+[préparation/reprise privée](vps/03-preparation-1panel-prive.md) distingue
+le patch shell historique du confinement réel. Préparer la protection
+avant démarrage, appliquer le bind officiel loopback, puis vérifier
+écoute, règles et refus extérieur avant activation au boot.
+
 Avant installation :
 
 ```bash
@@ -289,29 +298,52 @@ Depuis le poste administrateur :
 
 ```bash
 ssh -N \
-  -L 7410:127.0.0.1:7410 \
+  -o IdentitiesOnly=yes \
+  -o ExitOnForwardFailure=yes \
+  -o ServerAliveInterval=30 \
+  -i "$HOME/.ssh/tervo_ed25519" \
+  -L 127.0.0.1:17410:127.0.0.1:7410 \
   tervo@<VPS>
 ```
 
 Puis :
 
 ```text
-http://127.0.0.1:7410
+http://127.0.0.1:17410/<entree-privee>
 ```
+
+17410 appartient au poste administrateur ; 7410 reste le port du VPS.
+Cela évite un conflit avec un panneau local. `ssh -N` reste silencieux
+et ne démarre aucun service distant. Ne jamais partager les cookies,
+la passphrase ou l'entrée privée lors d'un diagnostic.
 
 ## Défense en profondeur
 
-Préférer, lorsque la version de 1Panel le permet :
+Le bind privé est obligatoire dans la stratégie approuvée pour INT-124 :
 
 ```text
 1Panel → bind 127.0.0.1:7410
 ```
 
-et conserver malgré tout :
+L'état UFW contrôlé après reprise et restart conserve :
 
 ```text
-UFW → aucun ALLOW 7410
+UFW → DENY 7410/TCP IPv4 et IPv6, aucun ALLOW 7410 visible
 ```
+
+**Exception approuvée :** cette version de l'agent 1Panel peut synchroniser
+des règles firewall au démarrage. Le patch de l'installateur shell ne
+désactive pas ce mécanisme. Ne pas promettre « 1Panel ne touche jamais
+UFW » ; inventorier les règles réellement créées et conserver le bind
+loopback, puis tester l'accès extérieur après restart et mise à jour.
+Une règle ALLOW n'expose pas à elle seule une écoute loopback, mais un
+retour à `0.0.0.0`/`[::]` pourrait rendre le panneau accessible.
+L'éventuelle règle 443/UDP doit être évaluée séparément ; elle n'est pas
+déclarée nécessaire à Tervo. Un filtre fournisseur indépendant apporterait
+une protection supplémentaire s'il est disponible.
+
+Incident, correction et limites :
+[réalisation INT-124](vps/03-preparation-1panel-prive.md#9-décision-approuvée-mise-en-œuvre-encore-partielle).
 
 ## Preuves obligatoires
 
