@@ -1,6 +1,6 @@
 # Sprint 7.6 — Déploiement VPS et documentation entretien
 
-> **Tervo V2** · INT-111/112 + INT-124 à INT-130 · **Statut :** socle système/SSH validé ; administration 1Panel privée et OpenResty installé, recette proxy INT-124 en attente ; autres tâches non démarrées
+> **Tervo V2** · INT-111/112 + INT-124 à INT-130 · **Statut :** socle système/SSH validé ; INT-124 terminée, prochaine tâche INT-125 après feu vert ; autres tâches non démarrées
 > **Dépendances :** Valider le périmètre livré et ses tests avant déploiement ; documenter explicitement le backlog restant.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.6/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -98,18 +98,22 @@ Afin de **gérer le VPS sans créer une seconde stack Tervo**.
 **Acceptance Criteria**
 - [x] Archive v2.3.2 amd64 et SHA-256 vérifiés localement ; installateur lu, patch supprimant son appel d'ouverture automatique du port testé sans fuzz et avec contrôle d'unique changement
 - [x] Inventaire VPS actualisé, absence de données/installation 1Panel préexistantes vérifiée ; paquet exact préparé et hash revérifié sur le VPS
-- [ ] Installation contrôlée, versions/chemins/services core-agent documentés ; Docker/Compose et daemon.json existants conservés, aucune licence Pro activée
+- [x] Installation contrôlée, versions/chemins/services core-agent documentés ; Docker/Compose et daemon.json existants conservés, aucune activation de licence Pro réalisée dans le parcours
 - [x] Administration 7410 privée en fonctionnement : bind loopback, tunnel avec clé choisie, bind local explicite et `ExitOnForwardFailure`, refus TCP public IPv4 ; aucune écoute administrative IPv6 ni IPv6 publique constatée dans l'inventaire ; bind et UFW conservés après restart core/agent
-- [ ] Persistance après reboot réel et contrôle après mise à jour ; règles automatiques éventuelles inventoriées selon l'exception approuvée, refus extérieur IPv4/IPv6 si présente et accès navigateur recontrôlés
+- [x] Retour automatique après reboot réel : SSH/Docker/UFW/core-agent actifs, OpenResty Up, bind privé et UFW conservés, aucune écoute 18080 ; HTTP public 200 et accès TCP public 7410 refusé
+- [x] Accès navigateur privé après reboot confirmé ; procédure de contrôle après chaque mise à jour documentée (bind, règles automatiques selon exception approuvée, refus extérieur IPv4/IPv6 si présente et tunnel), sans prétendre à une mise à jour non exécutée
 - [x] OpenResty 1.31.1.1-2-4-noble installé : conteneur actif, écoutes 80/443 IPv4/IPv6 et HTTP public 200
-- [ ] Mode OpenResty host/bridge observé, configuration valide, dépendances réseau nécessaires recréables et résolution/rechargement validés sur cible jetable sans IP statique de conteneur
-- [ ] Changements du panneau journalisés, retour arrière et note de livraison documentés ; critères/cas mis à jour
+- [x] Mode OpenResty observé : host, restart always, nginx -t réussi ; upstreams loopback du VPS, aucun bridge externe nécessaire au routage
+- [x] Routage et rechargement validés sur cible jetable sans IP statique de conteneur : marqueur renvoyé via OpenResty après reload et depuis l'extérieur ; test de résolution Docker après recréation non applicable au mode host observé
+- [x] Changements du panneau journalisés, confinement/retour arrière et note de livraison documentés ; critères/cas mis à jour, restauration complète distincte non déclarée testée
 
 **Technical Notes**
 - Dépend du socle système déjà validé, **pas de la clôture d'INT-111**.
 - Sources : `deploy/patches/1panel-v2.3.2-private-admin.patch`,
   [note 03](../../../../notes/backend/deploy/vps/03-preparation-1panel-prive.md).
-  Préparation locale ne signifie pas installation ou bind validé.
+  [Note de livraison](../../../../notes/backend/sprint7.6/INT-124-1panel-openresty-prives.md).
+  L'archive/patch seul ne garantit pas le bind ; les critères cochés
+  reposent sur les contrôles effectivement reçus.
 - Host : upstreams loopback du VPS. Bridge : noms sur réseau partagé et
   résolution/rechargement après recréation ; réseau externe seulement si utile.
 - La recette du proxy utilise une cible jetable : elle n'attend pas les
@@ -130,17 +134,33 @@ Afin de **gérer le VPS sans créer une seconde stack Tervo**.
   lectures utilisateur : core/agent active, bind loopback maintenu et
   UFW inchangé ; nouveau test public IPv4 Delta en timeout.
   Activation au boot effectuée par l'utilisateur : liens créés et
-  `enabled` pour les deux unités. Persistance après reboot réel, contrôle
-  après upgrade et recette proxy OpenResty restent à valider ; aucun cookie partagé
-  réutilisé pour ces contrôles.
+  `enabled` pour les deux unités. La suite ci-dessous valide reboot et
+  recette proxy ; aucune mise à jour 1Panel ni réutilisation de cookie
+  partagé n'a été effectuée.
 - Inventaire préalable OpenResty fourni par l'utilisateur : aucun conteneur
   actif/arrêté dans le daemon Docker interrogé, aucune écoute TCP 80/443.
-  Formulaire/version et mode réseau effectif à vérifier avant configuration.
+  Version puis mode effectif confirmés dans la suite de la recette.
 - Installation OpenResty confirmée par journal et sorties utilisateur :
   `1Panel-openresty-wTu3`, image `1panel/openresty:1.31.1.1-2-4-noble`,
   Up et écoutes 80/443 IPv4/IPv6. Delta : HTTP public 200, TCP public
-  7410 toujours inaccessible. Mode effectif, test de configuration,
-  sécurité relue et recette proxy sur cible jetable restent à valider.
+  7410 toujours inaccessible. Utilisateur : NetworkMode=host, restart
+  always et nginx -t réussi ; bind 7410 loopback et UFW inchangés après
+  installation. Recette jetable : GET direct 18080 et GET via proxy après
+  nginx -t/reload renvoient le marqueur ; Delta confirme HTTP public 200
+  avec corps exact et Host de test. Nettoyage confirmé ci-dessous.
+- Contrôle final utilisateur : CLI 1Panel v2.3.2 stable et nginx -t réussi ;
+  cible Python PID 13535 arrêtée avec fuser, aucune écoute 18080 ensuite.
+  Suppression du site de test confirmée par l'utilisateur.
+- Post-reboot : uptime-s 2026-10-07 21:16:41, cinq services active,
+  OpenResty Up, bind 7410 privé, absence 18080 et UFW inchangé.
+  Delta : HTTP public 200 sans marqueur temporaire, TCP public 7410
+  et 18080 inaccessibles. Utilisateur : panneau accessible après relance
+  du tunnel, informations VPS affichées sans 502.
+- Clôture sur le périmètre runtime vérifié. Le canal stable ne prouve pas
+  une licence ; aucune activation Pro dans le parcours, pas d'audit privé
+  exhaustif. IPv6 publique absente de l'inventaire initial, pas de nouveau
+  test extérieur IPv6 ; contrôles obligatoires si une adresse est ajoutée.
+  Backup/restore complet, upgrade, HTTPS et stack Tervo restent distincts.
 
 ---
 

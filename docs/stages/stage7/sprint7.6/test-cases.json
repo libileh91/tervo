@@ -52,11 +52,11 @@
       "steps": [
         "Inspecter version/installateur 1Panel ; vérifier que Docker existant et UFW ne sont pas réinstallés/réouverts implicitement",
         "Appliquer le bind administratif 127.0.0.1 avec IPv6 désactivé pour le panneau ; inventorier les règles automatiques selon l'exception approuvée",
-        "Après reprise contrôlée de l'agent et redémarrage, recontrôler écoute/règles ; répéter les contrôles après mise à jour",
+        "Après reprise contrôlée de l'agent et reboot, recontrôler écoute/règles ; documenter les recontrôles obligatoires après toute mise à jour réelle",
         "Depuis l'extérieur : tenter le port 7410 sur IPv4 et IPv6 si présente → doit échouer",
         "Depuis le poste local : ssh -N -o ExitOnForwardFailure=yes -o IdentitiesOnly=yes -i ~/.ssh/tervo_ed25519 -L 127.0.0.1:17410:127.0.0.1:7410 tervo@<IP_VPS>",
         "Accéder au panneau via 127.0.0.1:17410, protocole et entrée privée réellement configurés, sans publier les identifiants",
-        "Observer NetworkMode OpenResty ; sur cible jetable, valider l'upstream host/bridge et sa résolution après recréation sans attendre les services Tervo"
+        "Observer NetworkMode OpenResty ; sur cible jetable, valider routage/rechargement sans attendre Tervo ; uniquement en mode bridge, vérifier aussi la résolution Docker après recréation"
       ],
       "expected_result": {
         "bind_administration": "127.0.0.1:7410 uniquement, sans 0.0.0.0 ni [::] ; règles automatiques inventoriées, aucune exposition administrative admise",
@@ -66,15 +66,24 @@
         "droits_docker": "Mode d'administration documenté sans imposer le groupe docker au compte humain ; privilèges root-equivalent explicités"
       },
       "actual_result": {
-        "status": "partial_loopback_and_agent_verified_remotely",
+        "status": "passed_current_installation",
         "observed": "Échec initial d'isolation : 0.0.0.0:7410 et HTTP 200 extérieur, ALLOW 7410/tcp et 443/udp ajoutés par l'agent. Arrêt/désactivation et DENY UFW effectués. Reprise : Connection refused via tunnel expliqué par core/agent inactifs et absence d'écoute. Core seul démarré après contrôle UFW/dépendances ; core actif, agent inactif, DENY IPv4/IPv6 inchangés. Écoute ultérieure 0.0.0.0:7410 et connexion au panneau par tunnel confirmées par l'utilisateur. Exception firewall approuvée avec bind loopback obligatoire",
         "recovery_observed": "502 identifié sur POST /api/v2/settings/search : connexion refusée au socket agent. Bind 127.0.0.1 appliqué par l'utilisateur. Après accès SSH rétabli, Delta confirme core/agent active et disabled, 127.0.0.1:7410 uniquement, socket agent LISTEN, HTTP local 200 et tentative TCP publique IPv4 sans connexion (timeout 5s). sudo non interactif indisponible ; aucune modification distante ni requête avec cookie partagé effectuée",
         "user_confirmation": "Informations VPS affichées et absence de 502 confirmées dans le navigateur. Sortie UFW actif : DENY 7410/TCP IPv4/IPv6 conservés, seuls ALLOW 22/80/443 TCP visibles, aucun ALLOW automatique 7410/TCP ou 443/UDP à ce contrôle",
         "restart_observed": "Utilisateur : restart core/agent réussi, ss immédiatement vide puis lecture ultérieure core/agent active et 127.0.0.1:7410 uniquement (PID core 12322), règles UFW inchangées. Delta : nouvelle tentative TCP publique IPv4 après restart en timeout 5s, aucune connexion établie",
-        "boot_activation_observed": "Utilisateur : systemctl enable core/agent crée les deux liens multi-user.target.wants ; is-enabled renvoie enabled pour chaque unité. Aucun reboot effectué",
-        "openresty_preflight_observed": "Utilisateur : docker ps -a et ss sur TCP 80/443 ne renvoient que les en-têtes ; aucun conteneur actif/arrêté ni écoute TCP 80/443 constaté dans cet inventaire. OpenResty pas encore installé",
+        "boot_activation_observed": "Utilisateur : systemctl enable core/agent crée les deux liens multi-user.target.wants ; is-enabled renvoie enabled pour chaque unité. Aucun reboot effectué à ce stade ; retour après reboot contrôlé ultérieurement",
+        "openresty_preflight_observed": "Utilisateur : docker ps -a et ss sur TCP 80/443 ne renvoient que les en-têtes ; aucun conteneur actif/arrêté ni écoute TCP 80/443 constaté dans cet inventaire préalable. OpenResty pas encore installé à ce stade",
         "openresty_install_observed": "Journal utilisateur : init/pull/start réussis pour OpenResty. Conteneur 1Panel-openresty-wTu3, image 1panel/openresty:1.31.1.1-2-4-noble, Up et écoutes 80/443 IPv4/IPv6. Delta : GET HTTP public 200 et tentative TCP publique 7410 en timeout 5s après installation. Ni mode host ni HTTPS valide déduits de ces seuls résultats",
-        "remaining": "Mode réseau OpenResty effectif, nginx -t, bind/règles après installation et recette upstream/rechargement sur cible jetable ; version CLI 1Panel, confirmation parcours navigateur après restart, persistance après reboot réel et contrôle après mise à jour. Pas de nouveau test IPv6 externe ni reboot",
+        "openresty_validation_observed": "Utilisateur : docker inspect confirme NetworkMode=host Restart=always ; nginx -t réussit. Administration uniquement sur 127.0.0.1:7410 et UFW actif inchangé (DENY 7410 IPv4/IPv6, seuls ALLOW 22/80/443 TCP). Routage prévu vers loopback VPS sans bridge externe ni IP statique",
+        "proxy_validation_observed": "Utilisateur : reverse proxy de test créé ; GET direct 127.0.0.1:18080 renvoie TERVO_PROXY_CHECK_OK. nginx -t réussi, reload signale signal process started, GET via OpenResty avec Host tervo-proxy-check.invalid renvoie le même marqueur après reload. Delta : GET public IPv4 port 80 avec ce Host, HTTP 200 et corps exactement TERVO_PROXY_CHECK_OK suivi d'un saut de ligne. GET local via proxy avant reload non fourni séparément",
+        "cleanup_check_observed": "Premier contrôle utilisateur : nginx -t réussi, CLI 1Panel v2.3.2 mode stable ; ss montre encore python3 PID 13535 en écoute sur 127.0.0.1:18080. À ce stade, cible temporaire non arrêtée et suppression du site non confirmée explicitement",
+        "target_cleanup_observed": "Contrôle suivant utilisateur : fuser -k 18080/tcp cible le PID 13535 ; ss sur 18080 ne contient ensuite que l'en-tête. Cible temporaire arrêtée ; suppression du site confirmée dans le message suivant",
+        "site_cleanup_confirmed": "Utilisateur : site de test déjà supprimé. Coupures SSH signalées, cause exacte non déterminée ; survie du processus constatée avant arrêt explicite. Keepalives client proposés, sans modification de configuration SSH ni effet vérifié",
+        "post_reboot_observed": "Utilisateur : uptime -s 2026-10-07 21:16:41, SSH/Docker/UFW/core/agent active, OpenResty Up 4 minutes, écoutes 80/443 IPv4/IPv6 et 127.0.0.1:7410 uniquement, aucune écoute 18080, UFW inchangé. Delta : HTTP public 200 sans marqueur temporaire avec Host de test, TCP public 7410 et 18080 en timeout 5s. Sortie pré-reboot non fournie, pas de comparaison de dates inventée",
+        "post_reboot_browser_confirmed": "Utilisateur : oui à la confirmation du panneau accessible via tunnel relancé, informations VPS affichées sans 502 après reboot",
+        "maintenance_documented": "Note de livraison avec contrôles post-restart/upgrade et confinement/retour arrière ; pas de mise à jour artificielle ni restauration complète prétendue. Aucun todo explicite dépendant d'INT-124 débloqué",
+        "limits": "Aucune mise à jour 1Panel ni restauration complète exécutée ; contrôles à répéter après une mise à jour réelle. IPv6 publique absente de l'inventaire initial, pas de nouveau test extérieur IPv6. Résolution Docker après recréation non applicable au mode host. Pas de certificat HTTPS, DB, application Tervo ou CI/CD validés",
+        "delivery_note": "notes/backend/sprint7.6/INT-124-1panel-openresty-prives.md",
         "evidence": "notes/backend/deploy/vps/03-preparation-1panel-prive.md"
       },
       "legacy_id": "TC-INT-86-01"

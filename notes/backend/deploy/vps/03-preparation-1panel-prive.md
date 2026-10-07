@@ -10,12 +10,16 @@
 > DENY UFW conservés, aucun nouvel ALLOW 7410/443 UDP dans la sortie fournie.
 > Bind privé maintenu après restart des deux services ; les deux unités
 > sont désormais enabled au boot, confirmé par la sortie utilisateur.
-> Aucun reboot réel ni contrôle après mise à jour effectué à ce stade.
-> OpenResty installé et HTTP public 200 ; mode réel et recette proxy
-> sur cible jetable encore à contrôler.
+> Retour automatique et isolation contrôlés après reboot VPS ; panneau
+> navigateur confirmé sans 502, aucune mise à jour 1Panel testée.
+> OpenResty installé, mode host/always et nginx -t confirmés ; HTTP public
+> 200, bind administratif et UFW relus après installation. Routage vers
+> cible jetable validé après reload et depuis l'extérieur ; site supprimé
+> selon confirmation utilisateur, cible arrêtée. INT-124 terminée :
+> [note de livraison et maintenance](../../sprint7.6/INT-124-1panel-openresty-prives.md).
 > Suite de [la préparation système](02-preparation-securite-systeme.md).
 
-> [!WARNING] Isolation finale non validée
+> [!WARNING] Patch insuffisant à lui seul
 > Le patch de l'installateur ne désactive pas la synchronisation firewall
 > des binaires 1Panel. Le bloc d'installation ci-dessous est une trace
 > historique, **pas une procédure validée à rejouer** sans corriger ce point.
@@ -353,12 +357,11 @@ publique**. Chaque règle réellement recréée devra être inventoriée ; le ca
 La reprise de l'agent n'a été proposée qu'après contrôle du bind privé ;
 les observations après reprise figurent en section 11.
 
-**Non validés :** version CLI, persistance après reboot réel,
-contrôle après mise à jour, mode réel/recette de routage OpenResty et
-déploiement Tervo.
-INT-124 reste ouverte : préparation, accès privé en fonctionnement et
-installation du proxy sont cochés, pas la recette de routage ni la
-persistance après reboot/mise à jour.
+**Limites de clôture :** aucune mise à jour 1Panel ni restauration complète
+exécutée, pas de déploiement Tervo. INT-124 est terminée pour l'installation
+et le runtime contrôlés ; la procédure de maintenance impose les mêmes
+contrôles après une mise à jour réelle. Le retour après reboot et le
+navigateur sont confirmés en section 16.
 
 ## 10. Incident d'accès SSH : tunnel ouvert, panneau arrêté
 
@@ -611,11 +614,175 @@ ou d'une validation du fuseau horaire par Delta.
 
 L'écoute publique 80/443 est attendue pour le proxy. Elle ne doit pas
 être confondue avec celle de l'administration 7410, qui doit rester
-loopback. La colonne Docker PORTS vide est compatible avec le mode host,
-mais `docker inspect` reste nécessaire pour le confirmer.
+loopback. La colonne Docker PORTS vide était compatible avec le mode host ;
+le contrôle utilisateur ultérieur l'a confirmé :
 
-**Pas encore validés :** configuration `nginx -t`, mode réseau réel,
-règles UFW et bind 7410 relus après installation, routage/rechargement
-sur cible jetable, résolution après recréation si bridge. HTTP 200 sur
-la racine du proxy ne signifie ni déploiement Tervo ni certificat HTTPS
-valide ; aucun site Tervo ou certificat n'est déclaré livré.
+```text
+NetworkMode=host Restart=always
+nginx: the configuration file /usr/local/openresty/nginx/conf/nginx.conf syntax is ok
+nginx: configuration file /usr/local/openresty/nginx/conf/nginx.conf test is successful
+```
+
+Les lectures fournies dans le même bloc confirment l'administration
+uniquement sur `127.0.0.1:7410` et UFW inchangé : DENY 7410/TCP IPv4/IPv6,
+seuls ALLOW 22/80/443 TCP visibles. Le proxy partage donc le réseau du
+VPS et pourra joindre les upstreams loopback. Aucun bridge externe ni
+IP statique de conteneur n'est requis pour ce routage ; le Compose
+Tervo sera adapté dans INT-125, sans le modifier à cette étape.
+
+Le routage/rechargement sur cible jetable est validé en section 14.
+La recette de résolution Docker après recréation prévue pour un proxy
+bridge n'est pas applicable au mode host observé. HTTP 200 sur la racine
+du proxy ne signifie ni déploiement Tervo ni certificat HTTPS valide ;
+aucun site Tervo ou certificat n'est déclaré livré.
+
+## 14. Recette upstream loopback et rechargement OpenResty
+
+### Cible et site temporaires
+
+La cible proposée est un serveur Python en premier plan, lié uniquement
+à `127.0.0.1:18080`. Son handler renvoie le marqueur fixe
+`TERVO_PROXY_CHECK_OK`, pas un répertoire du VPS :
+
+```python
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        body = b"TERVO_PROXY_CHECK_OK\n"
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+```
+
+La commande proposée démarre `HTTPServer(("127.0.0.1", 18080), Handler)`
+avec `serve_forever()`, sans écriture de fichier ni règle UFW supplémentaire.
+L'utilisateur a confirmé la création du reverse proxy de test ; le host
+utilisé par les requêtes est `tervo-proxy-check.invalid`, cible HTTP
+`127.0.0.1:18080`. `.invalid` ne nécessite aucun DNS public : le test
+envoie explicitement l'en-tête Host pour choisir le virtual host OpenResty.
+Aucun certificat ni domaine Tervo n'est nécessaire à cette recette.
+
+### Commandes et résultats effectivement reçus
+
+L'utilisateur a transmis le GET direct :
+
+```bash
+curl --max-time 5 -fsS http://127.0.0.1:18080/
+```
+
+Puis le contrôle de configuration, le rechargement et le GET via proxy :
+
+```bash
+sudo docker exec 1Panel-openresty-wTu3 \
+  /usr/local/openresty/nginx/sbin/nginx -t &&
+sudo docker exec 1Panel-openresty-wTu3 \
+  /usr/local/openresty/nginx/sbin/nginx -s reload &&
+curl --max-time 5 -fsS \
+  -H 'Host: tervo-proxy-check.invalid' \
+  http://127.0.0.1/
+```
+
+| Scénario | Preuve observée |
+|---|---|
+| GET direct vers la cible loopback | `TERVO_PROXY_CHECK_OK` dans la sortie utilisateur |
+| `nginx -t` avant reload | Syntaxe et test de configuration réussis |
+| `nginx -s reload` | `signal process started`, puis chaîne de commandes poursuivie |
+| GET local via OpenResty après reload | `TERVO_PROXY_CHECK_OK` dans la sortie utilisateur |
+| GET public IPv4 vers port 80 avec le même Host, effectué par Delta | HTTP 200 et corps exactement `TERVO_PROXY_CHECK_OK\n` |
+
+Le GET local via proxy proposé avant reload n'a pas été fourni séparément ;
+il n'est pas déclaré exécuté. Le test extérieur a comparé le corps au
+marqueur attendu, au lieu de conclure sur un simple 200 de la page par défaut.
+Ces résultats valident le chemin réel OpenResty → upstream loopback après
+rechargement. Ils ne valident ni readiness DB ni déploiement/HTTPS Tervo.
+
+### Nettoyage et limites
+
+Le nettoyage proposé était de supprimer uniquement le site de test via
+1Panel, puis d'arrêter le serveur en premier plan avec `Ctrl+C` et de
+vérifier l'absence d'écoute 18080 et la validité de la configuration.
+
+Le premier contrôle de nettoyage confirme `nginx -t` réussi et
+`1pctl version` : **v2.3.2, mode stable**, mais montrait encore `python3`,
+PID 13535, sur `127.0.0.1:18080`.
+L'utilisateur a ensuite exécuté `sudo fuser -k 18080/tcp`, qui a ciblé
+ce PID ; la lecture suivante `sudo ss -lntp 'sport = :18080'` ne contient
+que l'en-tête. La cible temporaire est donc arrêtée. Cette commande est
+une trace du nettoyage effectué, pas une recommandation de tuer un port
+sans identifier son propriétaire.
+L'utilisateur a ensuite confirmé que le site avait déjà été supprimé.
+Le nettoyage de la recette est donc confirmé : site supprimé selon
+l'utilisateur, aucune écoute 18080 dans la sortie fournie.
+La persistance après reboot réel et le contrôle après mise à jour restent
+distincts de ces lectures.
+
+## 15. Coupures SSH et durée de vie des processus
+
+L'utilisateur a signalé des déconnexions SSH et la survie du processus
+Python. Le résultat `ss` avait confirmé cette survie, mais ne permet pas
+de déterminer la cause exacte ni de conclure que le script avait été
+explicitement lancé en arrière-plan. Selon le shell, les signaux et le
+mode de lancement, un processus peut survivre à la perte du terminal.
+Une fermeture SSH n'est donc pas une procédure de nettoyage.
+
+Commande proposée pour les sessions interactives, sur le poste local :
+
+```bash
+ssh -o IdentitiesOnly=yes \
+  -o ServerAliveInterval=30 \
+  -o ServerAliveCountMax=3 \
+  -i "$HOME/.ssh/tervo_ed25519" \
+  tervo@151.241.228.152
+```
+
+Les keepalives peuvent éviter une coupure liée à une connexion inactive
+et détecter une liaison devenue muette. Ils ne garantissent ni connexion
+permanente ni reconnexion automatique en cas de veille, panne réseau ou
+reboot VPS. Leur utilisation et leur effet ne sont pas déclarés vérifiés.
+Le tunnel du panneau doit être relancé s'il est coupé.
+
+Pour un test long nécessitant de retrouver le terminal, `tmux` serait
+une solution si disponible ; il n'est pas installé par cette note.
+Les services core/agent gérés par systemd et OpenResty avec restart always
+ne dépendent pas de la session SSH. Les futures applications Tervo seront
+également gérées par les services de la stack, pas par un script interactif.
+
+## 16. Contrôles après reboot réel du VPS
+
+Après feu vert utilisateur pour le reboot, les lectures transmises
+confirment :
+
+| Lecture utilisateur | Résultat |
+|---|---|
+| `uptime -s` | `2026-10-07 21:16:41`, heure telle qu'affichée par le VPS |
+| `systemctl is-active ssh docker ufw 1panel-core 1panel-agent` | Cinq résultats `active`, dans cet ordre |
+| `docker ps -a` | Même conteneur/image OpenResty, `Up 4 minutes` |
+| `ss` sur 80/443/7410/18080 | OpenResty 80/443 IPv4/IPv6, core uniquement 127.0.0.1:7410, aucune écoute 18080 |
+| `ufw status numbered` | Actif, DENY 7410/TCP IPv4/IPv6, seuls ALLOW 22/80/443 TCP visibles |
+
+La sortie pré-reboot demandée n'a pas été fournie : aucune comparaison
+de deux dates `uptime -s` n'est prétendue. Les lectures post-reboot et
+l'état des services/ports sont les preuves conservées.
+
+Delta a ensuite effectué depuis l'extérieur :
+
+| Test IPv4 public | Résultat |
+|---|---|
+| GET port 80 avec Host `tervo-proxy-check.invalid` | HTTP 200, marqueur temporaire absent |
+| Connexion TCP 7410 | Timeout 5 secondes, aucune connexion établie |
+| Connexion TCP 18080 | Timeout 5 secondes, aucune connexion établie |
+
+Le retour automatique du proxy et des services, le bind privé et les
+règles attendues sont donc constatés après reboot. Le test HTTP ne
+valide pas un certificat TLS ni un service Tervo. L'utilisateur a ensuite
+confirmé le panneau dans le navigateur après relance du tunnel,
+informations VPS affichées sans 502.
+Les contrôles après mise à jour resteront obligatoires lors d'une mise
+à jour réelle ; aucune mise à jour 1Panel n'est exécutée pour fabriquer
+une validation.
+
+La [note de livraison INT-124](../../sprint7.6/INT-124-1panel-openresty-prives.md)
+explique les invariants, les commandes, les résultats, la maintenance
+et le confinement/retour arrière sans reproduire ce journal chronologique.
+La tâche suivante INT-125 attend un feu vert distinct.
