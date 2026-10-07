@@ -114,11 +114,11 @@
 | Champ         | Valeur                                                          |
 | ------------- | --------------------------------------------------------------- |
 | **Créé dans** | INT-67 (Sprint 6.1 — consolidation du compose)                  |
-| **Dépend de** | Sprint 7.6 (INT-111, déploiement VPS)                            |
+| **Dépend de** | Sprint 7.6 : INT-127 (cible/décision), INT-128 (backup/restore), INT-111 (application réelle du plan) |
 | **Fichiers**  | `deploy/docker-compose.yml`, `deploy/postgres.docker-compose.yml` |
-| **Action**    | Le compose principal embarque désormais son propre service `postgres` (conteneur `tervo-postgres-1`, volume `postgres_data`). L'ancien conteneur partagé `postgres` (compose `postgres.docker-compose.yml`) contient les données actuelles (`tervo_db`). |
-|               | **Décider** : (a) migrer les données de `postgres` vers `tervo-postgres-1`, ou (b) conserver le PG partagé et retirer le service embarqué. |
-|               | Migration si option (a) :                                          |
+| **Action**    | Inventorier la source réelle mini-s1 ou confirmer le démarrage vide ; préparer une seule DB Compose sur le VPS. L'ancien PG partagé documenté ne prouve pas quelles données doivent être transférées aujourd'hui. |
+|               | **Décider** la reprise en INT-127, vérifier backup/restore en INT-128, appliquer le choix en INT-111. Ne présumer ni conteneur, rôle, volume physique ni version. |
+|               | Exemples historiques mini-s1 uniquement, à ne pas exécuter sans inventaire et procédure adaptée : |
 |               | `docker exec postgres pg_dump -U lob tervo_db \| gzip > tervo_db.sql.gz` |
 |               | `gunzip -c tervo_db.sql.gz \| docker exec -i tervo-postgres-1 psql -U lob -d tervo_db` |
 | **Statut**    | ⏳ À traiter dans INT-111 (Sprint 7.6)                            |
@@ -230,7 +230,7 @@
 | Champ | Valeur |
 |---|---|
 | **Créé dans** | INT-122 / R10, vérification réelle du bootstrap démo |
-| **Dépend de** | Cadrage technique autorisé avant usage sur un environnement avec données ; à prendre en compte dans INT-111 |
+| **Dépend de** | INT-126 (bootstrap production sûr), INT-111 (usage réel) ; aucun seed sur base persistante sans cadrage dédié |
 | **Fichiers** | `app/seed.py`, procédures de déploiement, futurs tests de protection si autorisés |
 | **Action attendue** | Séparer/cadrer l'usage démo de la migration/production, définir la protection contre un seed destructif accidentel et documenter les préconditions. Le script actuel effectue des DELETE et ne nettoie pas toute la chaîne V2 ; la répétition testée sur sa propre SQLite démo ne garantit pas la sûreté sur une base peuplée. Ne pas modifier ou vider une base existante pour valider ce todo. |
 | **Statut** | ⏳ À cadrer avant tout usage du seed avec des données existantes ; aucun changement de CLI/comportement dans R10 |
@@ -266,7 +266,7 @@
 | Champ | Valeur |
 |---|---|
 | **Créé dans** | INT-107, sprint7.4 |
-| **Dépend de** | Volumétrie documentaire représentative et procédure de sauvegarde/restauration PostgreSQL d'INT-111 |
+| **Dépend de** | Volumétrie représentative, INT-128 (backup/restore BYTEA), INT-111 (déploiement réel) |
 | **Fichiers** | `app/modules/reports/{models,service}.py`, `deploy/`, procédure PostgreSQL INT-111 |
 | **Action attendue** | Mesurer taille cumulée des versions PDF `BYTEA`, temps de génération/lecture et volume des sauvegardes. Vérifier une restauration qui conserve PDF, empreinte et date de confirmation. Selon les mesures, décider si un stockage privé externe avec réconciliation transactionnelle est requis ; ne pas exposer les fichiers dans `/uploads`. |
 | **Statut** | ⏳ Ouvert ; les tests jetables INT-107 ne prouvent ni tenue au volume ni restauration/déploiement VPS |

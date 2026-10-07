@@ -13,10 +13,11 @@
         "Clé SSH configurée"
       ],
       "steps": [
-        "ssh user@vps (avec clé) → doit fonctionner",
-        "ssh user@vps -o PreferredAuthentications=password → doit échouer",
-        "ssh root@vps → doit échouer",
-        "sudo ufw status"
+        "Depuis le poste local : nouvelle connexion avec ControlPath=none, clé choisie et PreferredAuthentications=publickey",
+        "Depuis le poste local : ssh -o ControlPath=none -o PubkeyAuthentication=no user@vps → doit échouer sans demander le mot de passe du serveur",
+        "Vérifier les règles effectives root puis tenter une connexion root directe dans une fenêtre contrôlée",
+        "sudo ufw status verbose, statut de la jail sshd et reconnexion après activation UFW avec secours annulé",
+        "Vérifier le dépôt Debian Security, les paramètres APT effectifs et le dry-run des mises à jour automatiques"
       ],
       "expected_result": {
         "acces_par_cle": "ok",
@@ -28,57 +29,72 @@
           80,
           443
         ],
-        "fail2ban_actif": "true"
+        "fail2ban_actif": "true",
+        "updates_security": "Configuration quotidienne Security-only et dry-run réussi, reboot/nettoyage automatiques désactivés ; future exécution réelle à surveiller"
       },
-      "actual_result": null,
+      "actual_result": {
+        "status": "partial_verified_vps",
+        "evidence": "notes/backend/deploy/vps/01-inventaire-et-acces-ssh.md ; 02-preparation-securite-systeme.md",
+        "observed": "Connexion neuve tervo par clé et sudo confirmés, tentative sans clé refusée ; root interdit dans la configuration chargée. UFW actif 22/80/443 IPv4/IPv6, jail sshd chargée, secours annulé avant exécution. Noyau Security actif, configuration APT quotidienne et dry-run code 0 relus",
+        "remaining": "Empreinte serveur indépendante non documentée ; tentative root négative non retranscrite ; pare-feu fournisseur non inventorié et future exécution automatique réelle non observée"
+      },
       "legacy_id": "TC-INT-85-01"
     },
     {
       "id": "TC-INT-111-02",
-      "task": "INT-111",
+      "task": "INT-124",
+      "origin_task": "INT-111",
       "title": "1Panel - non exposé publiquement",
       "type": "security",
       "preconditions": [
         "1Panel installé"
       ],
       "steps": [
-        "Depuis l'extérieur : curl http://<IP_VPS>:7410 → doit échouer",
-        "ssh -L 7410:localhost:7410 user@vps",
-        "curl http://localhost:7410 → doit répondre"
+        "Inspecter version/installateur 1Panel ; vérifier que Docker existant et UFW ne sont pas réinstallés/réouverts implicitement",
+        "Appliquer le bind administratif 127.0.0.1 avec IPv6 désactivé pour le panneau ; inventorier les règles automatiques selon l'exception approuvée",
+        "Après reprise contrôlée de l'agent et redémarrage, recontrôler écoute/règles ; répéter les contrôles après mise à jour",
+        "Depuis l'extérieur : tenter le port 7410 sur IPv4 et IPv6 si présente → doit échouer",
+        "Depuis le poste local : ssh -N -o ExitOnForwardFailure=yes -o IdentitiesOnly=yes -i ~/.ssh/tervo_ed25519 -L 127.0.0.1:17410:127.0.0.1:7410 tervo@<IP_VPS>",
+        "Accéder au panneau via 127.0.0.1:17410, protocole et entrée privée réellement configurés, sans publier les identifiants",
+        "Observer NetworkMode OpenResty ; sur cible jetable, valider l'upstream host/bridge et sa résolution après recréation sans attendre les services Tervo"
       ],
       "expected_result": {
+        "bind_administration": "127.0.0.1:7410 uniquement, sans 0.0.0.0 ni [::] ; règles automatiques inventoriées, aucune exposition administrative admise",
         "port_7410_externe": "refusé",
         "port_7410_tunnel_ssh": "accessible",
-        "reseau_1panel_network": "créé",
-        "docker_accessible_sans_sudo": "true"
+        "strategie_reseau": "Mode réel observé, dépendances réseau nécessaires explicites et recréables, aucune IP de conteneur codée en dur",
+        "droits_docker": "Mode d'administration documenté sans imposer le groupe docker au compte humain ; privilèges root-equivalent explicités"
       },
       "actual_result": null,
       "legacy_id": "TC-INT-86-01"
     },
     {
       "id": "TC-INT-111-03",
-      "task": "INT-111",
+      "task": "INT-125",
+      "origin_task": "INT-111",
       "title": "Compose prod - services healthy, PG non exposé",
       "type": "integration",
       "preconditions": [
-        "docker compose up -d"
+        "Stack déployée après migrations contrôlées, avec chemin .env/Compose explicite",
+        "Stack jetable séparée pour tester l'indisponibilité DB"
       ],
       "steps": [
-        "docker compose ps",
-        "docker compose port postgres 5432 → doit être vide",
-        "Observe les binds : docker compose ps --format json"
+        "Inspecter les services via le fichier Compose de production et attendre leur santé",
+        "Vérifier l'absence de port PostgreSQL publié et les binds loopback frontend/backend",
+        "GET sur l'endpoint readiness documenté : vérification DB réelle, pas seulement OpenAPI",
+        "Dans la stack jetable uniquement : rendre la DB indisponible, vérifier readiness en échec puis rétablissement",
+        "Identifier les noms réels des volumes via Compose et vérifier leur persistance"
       ],
       "expected_result": {
-        "backend_bind": "127.0.0.1:8000",
-        "frontend_bind": "127.0.0.1:3000",
+        "backend_bind": "127.0.0.1 sur BACKEND_PORT configuré (8000 par défaut)",
+        "frontend_bind": "127.0.0.1 sur FRONTEND_PORT configuré (3000 par défaut)",
         "postgres_port_publie": "aucun",
         "postgres_status": "healthy",
         "backend_status": "healthy",
+        "frontend_status": "healthy",
         "backend_demarre_apres_pg": "true",
-        "volumes_crees": [
-          "postgres_data",
-          "uploads_data"
-        ]
+        "readiness_db": "Succès avec DB disponible, échec explicite sinon",
+        "volumes_persistants": "DB et uploads sur volumes réellement identifiés, pas de nom physique supposé depuis la seule clé YAML"
       },
       "actual_result": null,
       "legacy_id": "TC-INT-87-01"
@@ -93,9 +109,10 @@
         "Sites 1Panel créés"
       ],
       "steps": [
-        "curl -I https://tervo.<domaine>",
-        "curl -I https://api.tervo.<domaine>/docs",
-        "Vérifier le certificat : openssl s_client"
+        "curl -fsS -o /dev/null -w '%{http_code}\\n' https://<domaine_frontend>/ → GET 200",
+        "GET HTTPS sur l'endpoint API readiness documenté → 200 ; ne pas supposer HEAD /docs ou racine API valides",
+        "Vérifier chaîne, hostname et validité du certificat, sans -k",
+        "Vérifier la redirection HTTP → HTTPS et la configuration/recette du renouvellement"
       ],
       "expected_result": {
         "frontend_https_200": "true",
@@ -115,19 +132,23 @@
       "preconditions": [
         "Services déployés",
         "Migrations appliquées",
+        "Premier administrateur créé par bootstrap ponctuel sécurisé sans seed ni endpoint d'inscription publique ajouté",
         "Compte de validation et données de test autorisées disponibles ; aucun compte de démonstration par défaut en production"
       ],
       "steps": [
-        "curl https://tervo.<domaine> → frontend",
-        "POST https://api.tervo.<domaine>/api/v1/auth/login (compte de validation, identifiants de production dédiés)",
+        "GET https://<domaine_frontend>/ → frontend",
+        "POST https://<domaine_api>/api/v1/auth/login (compte de validation, sans afficher le mot de passe ni le token dans les notes/logs)",
         "GET /api/v1/dashboard/summary avec le token",
-        "POST une photo sur une intervention"
+        "Depuis le navigateur sur le domaine réellement retenu : login, dashboard, upload et récupération photo",
+        "Vérifier les appels API relatifs/cross-origin et la politique CORS choisie"
       ],
       "expected_result": {
         "frontend_200": "true",
         "login_200_token_recu": "true",
         "dashboard_200": "true",
         "upload_photo_201": "true",
+        "photo_recuperee": "true",
+        "origines": "Domaines/client/proxy cohérents ; aucun hostname historique forcé ou wildcard CORS de production",
         "donnees_validation_disponibles": "true"
       },
       "actual_result": null,
@@ -135,25 +156,32 @@
     },
     {
       "id": "TC-INT-111-06",
-      "task": "INT-111",
+      "task": "INT-130",
+      "origin_task": "INT-111",
       "title": "CI/CD - déploiement automatique",
       "type": "e2e",
       "preconditions": [
         "Secrets GitHub configurés",
-        "Workflow en place",
+        "Workflow corrigé et recette manuelle réussie",
+        "Identité CI dédiée, permissions et empreinte SSH validées ; ancienne image conservée",
         "Déploiement autorisé et DEPLOY_ENABLED activé pour cette validation"
       ],
       "steps": [
         "Pousser un commit sur main",
         "Observer GitHub Actions",
-        "Vérifier le redéploiement sur le VPS"
+        "Vérifier l'ordre build/version → sauvegarde/maintenance si nécessaire → migration → démarrage/attente → smoke",
+        "Vérifier le SHA et les images réellement déployés, sans prune des images de secours",
+        "Vérifier l'échec du pipeline si migration/readiness/smoke échoue dans un environnement isolé"
       ],
       "expected_result": {
         "tests_executes_ci": "true",
-        "build_unique": "true",
+        "build_images_production": "Chaque image construite une fois sur le VPS par version ; aucune seconde construction d'image jetée en CI",
+        "build_vue_ci": "Vérification autorisée, distincte du build des images de production",
         "ssh_deploiement": "réussi",
         "app_mise_a_jour": "true",
-        "zero_double_build": "true"
+        "ordre": "Nouveau backend exposé après migration compatible et attente de disponibilité",
+        "pipeline_fail_closed": "Pas de conclusion verte sur migration/readiness/smoke en échec ; ancien artefact conservé",
+        "secrets_logs": "Aucun secret interpolé affiché ; validation Compose --quiet"
       },
       "actual_result": null,
       "legacy_id": "TC-INT-89-02"
@@ -167,18 +195,143 @@
         "Déploiement terminé"
       ],
       "steps": [
-        "Relire notes/backend/deploy/vps-deploy.md",
-        "Vérifier que chaque commande est copiable"
+        "Relire notes/backend/deploy/vps/README.md et les notes de réalisation indexées",
+        "Vérifier que chaque commande précise poste local/VPS, privilèges, fichiers réels et point d'arrêt",
+        "Vérifier le journal des changements 1Panel, les scripts versionnés et le bilan sprint7.6"
       ],
       "expected_result": {
         "prerequis_listes": "true",
         "commandes_copiables": "true",
         "erreurs_rencontrees_documentees": "true",
         "schema_final_present": "true",
+        "cible_vs_preuve": "Cible, configuration, commandes effectuées et résultats réellement observés distingués",
         "diff_tunnel_vs_letsencrypt": "true"
       },
       "actual_result": null,
       "legacy_id": "TC-INT-90-01"
+    },
+    {
+      "id": "TC-INT-111-08",
+      "task": "INT-125",
+      "origin_task": "INT-111",
+      "title": "Checkout neuf - build et configuration fail-fast",
+      "type": "integration",
+      "preconditions": [
+        "Checkout neuf sans frontend/dist, scripts de production adaptés",
+        "Environnement jetable et secrets de test fictifs, aucune donnée de production"
+      ],
+      "steps": [
+        "Construire les images sur la cible VPS depuis le checkout neuf, sans artefact dist manuel",
+        "Omettre chaque secret critique : validation Compose --quiet doit échouer avant tout démarrage",
+        "Fournir la configuration de test complète par chemin .env explicite : validation silencieuse réussie",
+        "Vérifier la construction/échappement du DSN PostgreSQL pour l'alphabet de secrets autorisé",
+        "Identifier les images par SHA et vérifier la rotation des logs configurée"
+      ],
+      "expected_result": {
+        "build": "Frontend construit par Dockerfile multi-stage, backend et frontend utilisables depuis un clone neuf",
+        "fail_fast": "Secret absent refusé explicitement, pas de fallback de développement",
+        "confidentialite": "Aucune valeur de secret dans le rendu/log de validation",
+        "dsn": "Connexion possible sans erreur de parsing pour les secrets acceptés",
+        "versions_logs": "SHA traçable, ancienne image conservée et limites de logs explicites"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-111-09",
+      "task": "INT-128",
+      "origin_task": "INT-111",
+      "title": "Sauvegarde et restauration isolée - DB, photo et PDF",
+      "type": "integration",
+      "preconditions": [
+        "Scripts de sauvegarde/restauration versionnés et destination externe explicitement autorisée",
+        "Jeu de données autorisé avec photo, version PDF BYTEA et relations métier",
+        "Stack de restauration isolée, jamais de restore destructif sur la base réelle"
+      ],
+      "steps": [
+        "Inventorier la source réelle de données et les volumes effectifs, sans supposer conteneur/rôle de l'ancien mini-s1",
+        "Créer un dump PostgreSQL et une archive uploads cohérents, avec fenêtre de maintenance si nécessaire",
+        "Vérifier fichiers temporaires puis publication atomique, checksums, chiffrement, copie externe et rétention",
+        "Restaurer dans la stack isolée, appliquer la procédure de reconstruction et vérifier les relations, photo et octets/empreinte PDF",
+        "Vérifier le mécanisme de récupération des secrets et de la configuration proxy sans les publier"
+      ],
+      "expected_result": {
+        "backup": "Archives complètes, cohérentes et vérifiables, pas de fichier incomplet annoncé comme backup réussi",
+        "offsite": "Copie chiffrée hors VPS avec rétention et accès documentés",
+        "restore": "Relations métier conservées ; photo accessible et PDF archivé byte-identique avec SHA-256 valide",
+        "scope": "Base originale et volumes de production inchangés par le test de restauration",
+        "todos": "Preuves restore enregistrées pour TD-B010/TD-B022 ; TD-B010 clôturé en INT-111 après application réelle de la décision"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-111-10",
+      "task": "INT-129",
+      "origin_task": "INT-111",
+      "title": "Échec de déploiement et rollback applicatif contrôlé",
+      "type": "integration",
+      "preconditions": [
+        "Commande de release versionnée, stack jetable, image précédente identifiée et conservée",
+        "Stratégie de compatibilité schéma et arrêt/maintenance documentée"
+      ],
+      "steps": [
+        "Simuler un échec de migration/readiness/smoke dans la stack jetable",
+        "Vérifier retour d'échec de la commande et conservation de l'ancienne image, sans prune immédiat",
+        "Tester retour à l'image précédente si compatible avec le schéma, en gardant un état Git/déploiement explicite",
+        "Vérifier qu'un schéma incompatible bloque le rollback automatique et impose une procédure contrôlée",
+        "Vérifier qu'aucun downgrade, restore, down -v ou nettoyage de volumes n'est déclenché implicitement"
+      ],
+      "expected_result": {
+        "failure": "Échec propagé ; un conteneur Up ne suffit pas à une conclusion verte",
+        "artefact": "Ancienne image exacte disponible, SHA/identité enregistrés ; pas de rebuild présumé identique",
+        "rollback": "Version de secours fonctionnelle si schéma compatible, sans HEAD détaché laissé sur le VPS",
+        "donnees": "Aucune opération destructive implicite ; récupération DB distincte, explicitement autorisée et testée en isolation"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-126-01",
+      "task": "INT-126",
+      "title": "Bootstrap admin - création, rejeu et conflits",
+      "type": "integration",
+      "preconditions": [
+        "DB jetable migrée, CLI de bootstrap disponible, secrets fictifs"
+      ],
+      "steps": [
+        "Créer le premier administrateur par CLI avec secret saisi privément, puis vérifier login",
+        "Rejouer sans changer silencieusement mot de passe/rôle d'un compte existant",
+        "Tenter données invalides et conflit ; vérifier rollback et absence de DELETE métier",
+        "Contrôler sorties et historique : aucun secret, aucun appel du seed et aucune inscription publique ajoutée"
+      ],
+      "expected_result": {
+        "creation": "Compte valide avec mot de passe haché, login réussi",
+        "rejeu": "Pas de doublon, reset ni changement de rôle implicite",
+        "erreurs": "Conflits/validations explicites, aucun état partiel",
+        "confidentialite": "Secret absent des arguments/logs partagés ; données existantes conservées"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-127-01",
+      "task": "INT-127",
+      "title": "DB cible - isolation et décision de reprise",
+      "type": "integration",
+      "preconditions": [
+        "Configuration INT-125 disponible, choix des données source à confirmer"
+      ],
+      "steps": [
+        "Inventorier DB/version/schema/volumes réellement présents ou constater explicitement l'absence de données",
+        "Enregistrer le choix utilisateur : transfert source inventoriée ou démarrage vide",
+        "Préparer PostgreSQL Compose, vérifier healthcheck, absence de port et rôles SQL réels",
+        "Tester la reconstruction en isolation sans réinitialiser un volume existant ni exécuter le transfert réel",
+        "Documenter les prérequis backup/restore INT-128 et application du plan INT-111"
+      ],
+      "expected_result": {
+        "cible": "Une instance Tervo, stockage persistant et rôles/permissions connus, aucun port publié",
+        "decision": "Source/version/provenance explicites, aucune donnée présumée",
+        "safety": "Aucun volume existant vidé, aucun compte postgres/lob supposé depuis un ancien exemple",
+        "dependencies": "Pas de transfert ni clôture TD-B010 avant backup/restore et mise en service réelle"
+      },
+      "actual_result": null
     },
     {
       "id": "TC-INT-112-01",

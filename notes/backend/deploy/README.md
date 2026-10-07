@@ -1,7 +1,7 @@
 # Déploiement Tervo — Index & Vue d'ensemble
 
 > **Objet :** point d'entrée de toute la documentation de déploiement. Chaque note détaillée est référencée ici.
-> **Dernière mise à jour :** 20/09/2026
+> **Dernière mise à jour :** parcours VPS INT-111/124 actualisé ; les procédures historiques restent datées dans leurs notes
 
 ---
 
@@ -11,14 +11,14 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 
 |                    | **mini-s1** (dev / démo)               | **VPS** (production)                |
 | ------------------ | -------------------------------------- | ----------------------------------- |
-| **Serveur**        | Machine locale, `192.168.10.192`       | Hetzner CX22 (ou équivalent)        |
+| **Serveur**        | Machine locale, `192.168.10.192`       | Hostkey `vm.mini`, Debian 13 (inventaire reçu) |
 | **IP**             | Privée, derrière un routeur            | Publique fixe                       |
 | **Exposition**     | Cloudflare Tunnel (connexion sortante) | Reverse proxy 1Panel (ports 80/443) |
 | **SSL**            | Cloudflare Edge (automatique)          | Let's Encrypt (1Panel)              |
 | **DNS**            | Cloudflare (`tervoapp.com`)            | Enregistrements A                   |
 | **Ports services** | Historiquement `0.0.0.0`               | **`127.0.0.1`** (Stage 6.1)         |
 | **PostgreSQL**     | Conteneur partagé préexistant          | Embarqué dans le compose            |
-| **Statut**         | ✅ opérationnel                        | ⏳ Sprint 7.6 (INT-111)                        |
+| **Statut**         | ✅ opérationnel                        | ⏳ Socle système sécurisé ; panneau/proxy et application non déployés |
 
 > **Pourquoi deux cibles ?** Le mini-s1 a servi à valider l'application et la chaîne de déploiement sans exposer la machine. Le VPS est la cible professionnelle (Sprint 7.6 (INT-111)).
 
@@ -36,7 +36,7 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 | 17/08/2026     | —       | Incident **502** : OpenResty ne résout plus le nom du conteneur                              |
 | **17/09/2026** | **6.1** | **Corrections d'architecture** : ports `127.0.0.1`, healthchecks, firewall, CI/CD            |
 | 20/09/2026     | 6.1     | CI GitHub Actions verte (26s) + fix `UPLOAD_DIR` révélé par la CI                            |
-| ⏳             | 6.4     | **Déploiement VPS** (provisioning, DNS, Let's Encrypt, CI/CD)                                |
+| 05/10/2026     | 7.6 / INT-111 | VPS Hostkey Debian 13 : inventaire et accès SSH non-root par clé confirmés ; pare-feu et déploiement encore à réaliser |
 
 ---
 
@@ -113,6 +113,20 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 | Fichier            | Contenu                                                                            |
 | ------------------ | ---------------------------------------------------------------------------------- |
 | `paperless-ngx.md` | GED documentaire (OCR des archives) — installation Docker Classic, intégration API |
+
+### 4.6 Réalisation guidée du VPS (INT-111, en cours)
+
+| Note | Contenu |
+|---|---|
+| [Parcours VPS](vps/README.md) | Point d'entrée et avancement réel des étapes, distinct des procédures historiques |
+| [01 — Inventaire et accès SSH](vps/01-inventaire-et-acces-ssh.md) | Choix Hostkey/Debian, ressources observées, clés et compte `tervo`, `sudo`, durcissement SSH, erreur client/serveur et vérifications confirmées |
+| [02 — Sécurité système](vps/02-preparation-securite-systeme.md) | UFW/fail2ban, mises à jour Security, redémarrages et contrôles observés |
+
+Ces notes enregistrent les commandes et résultats rapportés pendant la
+réalisation ; chaque étape précise ce qui est vérifié ou encore en attente.
+Le socle système est contrôlé ; le panneau, le proxy, HTTPS Tervo et
+le déploiement applicatif restent à préparer et valider.
+Le bilan du sprint sera rédigé séparément dans `notes/backend/sprint7.6/`.
 
 ---
 
