@@ -14,6 +14,7 @@ Le bilan de livraison du sprint restera dans `notes/backend/sprint7.6/`.
 | [02 — Préparation de la sécurité système](02-preparation-securite-systeme.md) | PATH administrateur, Docker, APT, reboot et outils de sécurité | UFW actif, jail SSH chargée, noyau Security actif ; mises à jour quotidiennes configurées et dry-run vérifié |
 | [03 — Préparer 1Panel privé](03-preparation-1panel-prive.md) | Préparation, incidents firewall/502, reprise privée et installation OpenResty | INT-124 terminée : runtime, routage, nettoyage, reboot et navigateur validés |
 | [Livraison INT-124](../../sprint7.6/INT-124-1panel-openresty-prives.md) | Explications techniques, preuves, maintenance et confinement/retour arrière | Livrée ; aucune mise à jour ou restauration complète prétendue |
+| [Livraison INT-125](../../sprint7.6/INT-125-stack-reproductible.md) | Packaging, environnement et readiness DB, recette Docker locale | Validée localement ; aucun changement de stack sur le VPS |
 
 Depuis le découpage du chantier, la note 03 accompagne **INT-124**.
 Les notes 01/02 conservent les preuves système acquises dans INT-111.
@@ -32,6 +33,7 @@ leur tâche INT-125 à INT-130 ; une préparation n'en valide pas la livraison.
 | Docker et Compose | Versions et service actif confirmés ; conteneur OpenResty actif en mode host avec restart always |
 | 1Panel | Bind 127.0.0.1:7410 et UFW conservés après reboot, services actifs ; panneau navigateur confirmé sans 502 via tunnel relancé |
 | OpenResty et HTTPS | OpenResty host, nginx -t/reload et upstream loopback validés localement et sur IPv4 publique ; recette nettoyée, aucun certificat Tervo validé |
+| Images/configuration Tervo | INT-125 validée sur export Git et stack Docker jetable locale ; ne vaut pas artefacts construits sur le VPS |
 | Déploiement Tervo, secrets et données | Pas encore réalisé sur ce VPS |
 | Sauvegarde/restauration et automatisation du déploiement | À préparer et valider |
 

@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.core.database import engine
+from app.core.health import router as health_router
 from app.model_registry import load_models
 
 
@@ -32,8 +33,8 @@ app = FastAPI(
 # ── CORS ──────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # À restreindre en production
-    allow_credentials=True,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=False,  # JWT is sent explicitly in Authorization, not cookies.
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -44,6 +45,7 @@ load_models()
 from app.router import api_router
 
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+app.include_router(health_router)
 
 # ── Static files (uploaded photos) ────────────────────────
 # Le dossier est gitignoré : il est donc absent d'un checkout neuf (CI,

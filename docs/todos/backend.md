@@ -86,12 +86,10 @@
 | Champ         | Valeur                                                          |
 | ------------- | --------------------------------------------------------------- |
 | **Créé dans** | INT-50 (Sprint 3.1)                                             |
-| **Dépend de** | Container PostgreSQL running sur le serveur (`postgres:17.4`)    |
-| **Fichiers**  | — (commande Docker exec)                                         |
-| **Action**    | Exécuter sur le serveur :                                        |
-|               | `docker exec -it postgres psql -U postgres -c "CREATE DATABASE tervo_db;"` |
-|               | `docker exec -it postgres psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE tervo_db TO lob;"` |
-| **Statut**    | ⏳ À faire dans INT-DPL                                          |
+| **Dépend de** | INT-125 (configuration), INT-127 (cible/décision SQL) |
+| **Fichiers**  | `deploy/docker-compose.yml`, `deploy/.env.example`, procédure INT-127 |
+| **Action**    | Préparer la DB cible avec les noms/rôles réellement choisis. INT-125 ne crée que des DB de recette jetables ; ne pas supposer le rôle `postgres`/`lob` ou un conteneur issu du mini-s1. Les anciennes commandes CREATE/GRANT sont des exemples historiques, pas une procédure VPS autorisée. |
+| **Statut**    | ⏳ Ouvert, reprise INT-127 ; aucune DB réelle créée par INT-125 |
 
 ---
 
@@ -100,12 +98,10 @@
 | Champ         | Valeur                                                          |
 | ------------- | --------------------------------------------------------------- |
 | **Créé dans** | INT-50 (Sprint 3.1)                                             |
-| **Dépend de** | TD-B008                                                         |
-| **Fichiers**  | — (commande Docker exec)                                         |
-| **Action**    | Vérifier que `lob` a les droits sur `tervo_db` :                  |
-|               | `docker exec -it postgres psql -U postgres -c "\l"`             |
-|               | `docker exec -it postgres psql -U lob -d tervo_db -c "\dt"`      |
-| **Statut**    | ⏳ À faire dans INT-DPL (après TD-B008)                          |
+| **Dépend de** | TD-B008, INT-127 ; constat enrichi dans INT-125 |
+| **Fichiers**  | `deploy/docker-compose.yml`, `backend/app/config.py`, procédure SQL INT-127 |
+| **Action**    | Cadrer les rôles bootstrap/migration/application et tester leurs privilèges avant release réelle. `POSTGRES_USER` de l'image officielle crée un superuser ; le rôle partagé de la recette INT-125 ne prouve pas un moindre privilège. Vérifier le rôle courant et les accès réels, sans présumer `lob`/`postgres`, ni modifier une DB existante pour rendre la recette verte. |
+| **Statut**    | ⏳ Ouvert, dépendance INT-127 non débloquée ; ne pas clôturer sur la seule santé de la stack |
 
 ---
 

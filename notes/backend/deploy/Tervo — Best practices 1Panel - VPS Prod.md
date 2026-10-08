@@ -14,6 +14,14 @@ Les réalisations, écarts et contrôles effectivement observés sont tracés
 dans [le parcours VPS](vps/README.md). L'exception firewall d'INT-124
 ci-dessous ne permet jamais de publier l'administration.
 
+Depuis [INT-125](../sprint7.6/INT-125-stack-reproductible.md), la stack
+est construisible et validée localement : modèle `deploy/.env.example`,
+fichier privé explicite, SHA source distinct du tag, readiness DB
+`/health/ready` et mode host sans bridge externe 1Panel.
+Le job deploy historique est retiré ; la CI ne déploie rien, même si une
+variable DEPLOY_ENABLED existe. Les étapes de release de ce guide restent
+des contrats INT-129/130, pas une procédure actuellement exécutable.
+
 ---
 
 ## 1. Décision d'architecture
@@ -397,7 +405,7 @@ compose 1Panel différent
 cd /opt/tervo
 
 docker compose \
-  --env-file /opt/tervo/.env \
+  --env-file /opt/tervo/deploy/.env \
   -f deploy/docker-compose.yml \
   config --quiet
 ```
@@ -559,7 +567,7 @@ docker network inspect 1panel-network
 
 Le réseau doit alors exister et sa création doit être documentée.
 En mode host avec upstreams loopback, ne pas créer ni imposer ce bridge
-par habitude ; INT-125 adaptera le Compose à la stratégie validée en INT-124.
+par habitude ; INT-125 a retiré cette dépendance dans la stack de production.
 
 Ne jamais supprimer :
 
@@ -757,10 +765,10 @@ depends_on:
     condition: service_healthy
 ```
 
-Le healthcheck backend cible prévu dans INT-125 doit vérifier la connexion
-à PostgreSQL. Un HTTP 200 sur `/openapi.json` ne prouve que le serveur HTTP,
-pas la disponibilité de la DB. Le healthcheck actuel ne doit donc pas
-être considéré comme une preuve suffisante de readiness métier.
+Le healthcheck backend livré dans INT-125 appelle `/health/ready` et
+vérifie PostgreSQL par SELECT 1. Un HTTP 200 sur `/openapi.json` ne prouve
+que le serveur HTTP, pas la disponibilité de la DB. La readiness livrée
+ne remplace pas la validation du schéma ni les scénarios métier.
 `depends_on` ne vérifie la santé qu'au démarrage ; il ne garantit pas
 que la DB reste disponible ensuite.
 
@@ -1383,8 +1391,9 @@ docker compose \
 
 # 30. Smoke tests internes
 
-Après INT-125, définir `TERVO_API_READINESS_URL` avec l'URL locale du
-contrat livré (incluant un accès DB réel), puis depuis le VPS :
+Après déploiement réel, définir `TERVO_API_READINESS_URL` avec
+`http://127.0.0.1:8000/health/ready` (port adapté si configuré), puis
+depuis le VPS ; aucun test Tervo VPS n'est déclaré exécuté ici :
 
 ```bash
 : "${TERVO_API_READINESS_URL:?Définir la readiness DB livrée dans INT-125}"

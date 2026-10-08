@@ -1,109 +1,99 @@
-# Tervo — Docker Compose (stack complète).
-#
-# Services : PostgreSQL + backend (FastAPI) + frontend (Nginx static).
-# Le reverse proxy est géré par 1Panel — pas de Traefik.
-#
-# Sécurité réseau :
-#   - backend et frontend écoutent sur 127.0.0.1 (loopback) uniquement
-#   - PostgreSQL ne publie aucun port
-#   - tout le trafic public passe par le reverse proxy 1Panel en HTTPS
-#
-#   Internet → 1Panel OpenResty (80/443) → 127.0.0.1:PORT → service
-#
-# Démarrage :
-#   docker compose -f deploy/docker-compose.yml up -d
-#   docker compose -f deploy/docker-compose.yml down
-
+# Tervo — production stack, OpenResty host mode (INT-124).
+# Always use: docker compose --env-file deploy/.env -f deploy/docker-compose.yml ...
+# Validate with config --quiet; do not print resolved secrets.
+# Migration/bootstrap/release are separate operations (INT-126 to INT-130).
 name: tervo
 
+x-logging: &bounded-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
-  # ── PostgreSQL ───────────────────────────────────────
   postgres:
-    image: postgres:17.4
+    image: postgres:17.7@sha256:2006493727bd5277eece187319af1ef82b4cf82cf4fc1ed00da0775b646ac2a4
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${TERVO_DB_NAME:-tervo_db}
-      POSTGRES_USER: ${TERVO_DB_USER:-lob}
-      POSTGRES_PASSWORD: ${TERVO_DB_PASSWORD:-password}
+      POSTGRES_DB: ${TERVO_DB_NAME:?Set TERVO_DB_NAME in the explicit env file}
+      # Todo later TD-B009 / INT-127: this initial role is a superuser.
+      # Separate migration/application privileges before the real release.
+      POSTGRES_USER: ${TERVO_DB_USER:?Set TERVO_DB_USER in the explicit env file}
+      POSTGRES_PASSWORD: ${TERVO_DB_PASSWORD:?Set TERVO_DB_PASSWORD in the explicit env file}
       PGDATA: /var/lib/postgresql/data/pgdata
-    # Aucun port publié : PostgreSQL n'est joignable que dans le réseau Docker.
-    # Accès admin ponctuel : docker exec -it tervo-postgres-1 psql -U lob -d tervo_db
     volumes:
       - postgres_data:/var/lib/postgresql/data/pgdata
     networks:
-      - tervo_network
-    # pg_isready : retourne 0 seulement si PostgreSQL accepte les connexions.
+      - database
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${TERVO_DB_USER:-lob} -d ${TERVO_DB_NAME:-tervo_db}",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    logging: *bounded-logging
 
-  # ── Backend API ──────────────────────────────────────
   backend:
+    image: tervo-backend:${TERVO_IMAGE_TAG:?Set TERVO_IMAGE_TAG to the source revision}
     build:
       context: ../backend
       dockerfile: Dockerfile
+      args:
+        VCS_REF: ${TERVO_VCS_REF:?Set TERVO_VCS_REF to the full source SHA}
+    restart: unless-stopped
     ports:
-      # 127.0.0.1 = accessible uniquement depuis l'hôte (pas depuis Internet)
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    environment:
+      APP_ENV: production
+      TERVO_DB_HOST: postgres
+      TERVO_DB_PORT: "5432"
+      TERVO_DB_NAME: ${TERVO_DB_NAME:?Set TERVO_DB_NAME}
+      TERVO_DB_USER: ${TERVO_DB_USER:?Set TERVO_DB_USER}
+      TERVO_DB_PASSWORD: ${TERVO_DB_PASSWORD:?Set TERVO_DB_PASSWORD}
+      SECRET_KEY: ${SECRET_KEY:?Set a strong SECRET_KEY}
+      CORS_ORIGINS: '["${FRONTEND_ORIGIN:?Set the HTTPS frontend origin}"]'
+      UPLOAD_DIR: /app/uploads
+      UPLOAD_URL: /uploads
     volumes:
       - uploads_data:/app/uploads
-    environment:
-      - DATABASE_URL=postgresql://${TERVO_DB_USER:-lob}:${TERVO_DB_PASSWORD:-password}@postgres:5432/${TERVO_DB_NAME:-tervo_db}
-      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
-      - APP_NAME=Tervo
-      - API_V1_PREFIX=/api/v1
-      - UPLOAD_DIR=/app/uploads
     networks:
-      - tervo_network
-      - 1panel-network # pour que le reverse proxy 1Panel joigne le backend
-    # depends_on + condition : le backend ne démarre qu'une fois PostgreSQL
-    # réellement prêt (et non simplement "démarré").
+      - database
     depends_on:
       postgres:
         condition: service_healthy
     healthcheck:
       test:
-        [
-          "CMD",
-          "python",
-          "-c",
-          "import urllib.request; urllib.request.urlopen('http://localhost:8000/openapi.json')",
-        ]
-      interval: 30s
-      timeout: 10s
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"
+      interval: 10s
+      timeout: 5s
       retries: 3
       start_period: 15s
-    restart: unless-stopped
+    logging: *bounded-logging
 
-  # ── Frontend static ──────────────────────────────────
   frontend:
+    image: tervo-frontend:${TERVO_IMAGE_TAG:?Set TERVO_IMAGE_TAG to the source revision}
     build:
       context: ../frontend
       dockerfile: Dockerfile
-    ports:
-      # 127.0.0.1 = accessible uniquement depuis l'hôte (pas depuis Internet)
-      - "127.0.0.1:${FRONTEND_PORT:-3000}:80"
-    networks:
-      - tervo_network
-      - 1panel-network # pour que le reverse proxy 1Panel joigne le frontend
-    depends_on:
-      - backend
+      args:
+        VCS_REF: ${TERVO_VCS_REF:?Set TERVO_VCS_REF to the full source SHA}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:?Set the HTTPS API base URL}
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - frontend
+    logging: *bounded-logging
 
 volumes:
   postgres_data:
   uploads_data:
 
 networks:
-  tervo_network:
+  database:
     driver: bridge
-  1panel-network:
-    external: true
-    name: 1panel-network
+  frontend:
+    driver: bridge

@@ -18,7 +18,7 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 | **DNS**            | Cloudflare (`tervoapp.com`)            | Enregistrements A                   |
 | **Ports services** | Historiquement `0.0.0.0`               | **`127.0.0.1`** (Stage 6.1)         |
 | **PostgreSQL**     | Conteneur partagé préexistant          | Embarqué dans le compose            |
-| **Statut**         | ✅ opérationnel                        | ⏳ Socle sécurisé et INT-124 terminée (panneau privé/proxy/reboot) ; application non déployée |
+| **Statut**         | ✅ opérationnel                        | ⏳ INT-124 runtime VPS validé, INT-125 packaging/stack validés localement ; application non déployée |
 
 > **Pourquoi deux cibles ?** Le mini-s1 a servi à valider l'application et la chaîne de déploiement sans exposer la machine. Le VPS est la cible professionnelle (Sprint 7.6 (INT-111)).
 
@@ -123,6 +123,7 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 | [02 — Sécurité système](vps/02-preparation-securite-systeme.md) | UFW/fail2ban, mises à jour Security, redémarrages et contrôles observés |
 | [03 — 1Panel privé et OpenResty](vps/03-preparation-1panel-prive.md) | Incident d'exposition, tunnel SSH, 502 agent, bind privé, restart et installation du proxy ; limites de validation |
 | [Livraison INT-124](../sprint7.6/INT-124-1panel-openresty-prives.md) | Note pédagogique, preuves de clôture, maintenance et confinement/retour arrière |
+| [Livraison INT-125](../sprint7.6/INT-125-stack-reproductible.md) | Images/configuration/readiness, recette Docker locale jetable et limites de déploiement |
 
 Ces notes enregistrent les commandes et résultats rapportés pendant la
 réalisation ; chaque étape précise ce qui est vérifié ou encore en attente.

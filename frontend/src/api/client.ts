@@ -4,9 +4,7 @@
  * Axios-free HTTP client using fetch with JWT token injection.
  */
 
-const API_BASE = window.location.hostname === "tervoapp.com"
-  ? "https://api.tervoapp.com/api/v1"
-  : "/api/v1";
+import { API_BASE } from "./config";
 
 interface ApiError {
   status: number;
@@ -121,6 +119,25 @@ export const authApi = {
   refresh: (refreshToken: string) => api.post<TokenResponse>("/auth/refresh", { refresh_token: refreshToken }),
 
   me: (token: string) => api.get<UserResponse>("/auth/me", token),
+};
+
+export interface PublicReviewResponse {
+  intervention: { title: string; completed_at: string };
+  technician: { full_name: string | null };
+  already_reviewed: boolean;
+}
+
+export interface ReviewSubmission {
+  share_token: string;
+  rating: number;
+  comment: string | null;
+  reviewer_name: string | null;
+}
+
+// Public routes intentionally do not receive a JWT.
+export const reviewsApi = {
+  get: (token: string) => api.get<PublicReviewResponse>(`/review/${encodeURIComponent(token)}`),
+  submit: (body: ReviewSubmission) => api.post<unknown>("/reviews", body),
 };
 
 // ── Dashboard types ────────────────────────────────────────

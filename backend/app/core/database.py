@@ -7,17 +7,14 @@ Uses aiosqlite for dev (SQLite async), PostgreSQL + asyncpg for prod.
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import settings
+from app.core.database_urls import database_url
 
 
 def _get_async_database_url() -> str:
-    """Convert sync DATABASE_URL to async by injecting the async driver."""
-    if settings.DATABASE_URL.startswith("sqlite"):
-        return settings.DATABASE_URL.replace("sqlite://", "sqlite+aiosqlite://", 1)
-    if settings.DATABASE_URL.startswith("postgresql"):
-        return settings.DATABASE_URL.replace(
-            "postgresql://", "postgresql+asyncpg://", 1
-        )
-    return settings.DATABASE_URL
+    """Retain the historical string interface with structurally selected drivers."""
+    return database_url(settings.DATABASE_URL, asynchronous=True).render_as_string(
+        hide_password=False
+    )
 
 
 engine = create_async_engine(_get_async_database_url(), echo=False)

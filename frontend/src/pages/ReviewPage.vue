@@ -89,6 +89,7 @@ import Button from "primevue/button";
 import InputText from "primevue/inputtext";
 import Rating from "primevue/rating";
 import Textarea from "primevue/textarea";
+import { reviewsApi, type PublicReviewResponse } from "@/api/client";
 
 // ── Route ──────────────────────────────────────────────
 
@@ -99,11 +100,7 @@ const token = route.params.token as string;
 
 const isLoading = ref(true);
 const isError = ref(false);
-const reviewData = ref<{
-    intervention: { title: string; completed_at: string };
-    technician: { full_name: string | null };
-    already_reviewed: boolean;
-} | null>(null);
+const reviewData = ref<PublicReviewResponse | null>(null);
 
 const rating = ref<number>(0);
 const comment = ref("");
@@ -116,9 +113,7 @@ async function loadReviewData() {
     isLoading.value = true;
     isError.value = false;
     try {
-        const res = await fetch(`/api/v1/review/${token}`);
-        if (!res.ok) throw new Error("Not found");
-        reviewData.value = await res.json();
+        reviewData.value = await reviewsApi.get(token);
     } catch {
         isError.value = true;
     } finally {
@@ -135,28 +130,19 @@ async function handleSubmit() {
 
     submitting.value = true;
     try {
-        const res = await fetch("/api/v1/reviews", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                share_token: token,
-                rating: rating.value,
-                comment: comment.value || null,
-                reviewer_name: reviewerName.value || null,
-            }),
+        await reviewsApi.submit({
+            share_token: token,
+            rating: rating.value,
+            comment: comment.value || null,
+            reviewer_name: reviewerName.value || null,
         });
-
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.detail || "Erreur");
-        }
 
         // Marquer comme soumis
         if (reviewData.value) {
             reviewData.value.already_reviewed = true;
         }
     } catch (err: any) {
-        alert(err.message || "Impossible d'envoyer votre avis");
+        alert(err.detail || err.message || "Impossible d'envoyer votre avis");
     } finally {
         submitting.value = false;
     }

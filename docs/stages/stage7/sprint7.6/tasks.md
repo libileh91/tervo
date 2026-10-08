@@ -1,6 +1,6 @@
 # Sprint 7.6 — Déploiement VPS et documentation entretien
 
-> **Tervo V2** · INT-111/112 + INT-124 à INT-130 · **Statut :** socle système/SSH validé ; INT-124 terminée, prochaine tâche INT-125 après feu vert ; autres tâches non démarrées
+> **Tervo V2** · INT-111/112 + INT-124 à INT-130 · **Statut :** INT-124/125 terminées, stack validée localement en isolation ; prochaine INT-126 après feu vert, application non déployée sur VPS
 > **Dépendances :** Valider le périmètre livré et ses tests avant déploiement ; documenter explicitement le backlog restant.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.6/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -172,21 +172,41 @@ Je veux **construire et configurer les services depuis un checkout neuf**,
 Afin de **déployer un artefact traçable sans secrets ni fichiers manuels cachés**.
 
 **Acceptance Criteria**
-- [ ] Dockerfiles construisibles depuis un checkout neuf, frontend multi-stage sans `dist/` manuel ; versions/digests utiles fixés et images identifiables par SHA
-- [ ] Secrets critiques obligatoires, `.env` explicite et modèle sans vraie valeur, permissions et parsing/échappement du DSN vérifiés ; validation Compose `--quiet`
-- [ ] Binds applicatifs loopback, PG non publié, réseaux selon INT-124, volumes persistants et versions d'image explicites
-- [ ] Healthcheck PostgreSQL, readiness backend vérifiant la DB et santé frontend ; panne DB testée en isolation
-- [ ] Domaines/transport API choisis, client configurable sans hostname historique, appels API/uploads cohérents et CORS limité aux origines nécessaires
-- [ ] Rotation des logs bornée, seuils disque/RAM et nettoyage documentés ; pas de suppression automatique des volumes/réseaux nécessaires
-- [ ] Scénarios checkout neuf/configuration/disponibilité et note de livraison validés
+- [x] Dockerfiles construisibles depuis un export Git propre, frontend multi-stage sans `dist/` manuel ; versions/digests utiles fixés et images identifiables par SHA
+- [x] Secrets critiques obligatoires, `.env` explicite et modèle sans vraie valeur, permissions et parsing/échappement du DSN vérifiés ; validation Compose `--quiet` refusant les variables ambiantes
+- [x] Binds applicatifs loopback, PG non publié, réseaux selon INT-124, volumes persistants et versions d'image explicites
+- [x] Healthcheck PostgreSQL, readiness backend vérifiant la DB et santé frontend ; panne DB testée en isolation avec 503/unhealthy puis reprise 200/healthy
+- [x] Domaines/transport API choisis, client configurable sans hostname historique, appels API/avis publics/uploads cohérents et CORS limité aux origines nécessaires
+- [x] Rotation des logs bornée, seuils disque/RAM et nettoyage documentés ; pas de suppression automatique des volumes/réseaux nécessaires hors ressources de recette UUID
+- [x] Scénarios source propre/configuration/disponibilité et note de livraison validés localement ; ne vaut pas build/release sur le VPS
 
 **Technical Notes**
 - Dépend d'INT-124 pour le réseau. Sources : Dockerfiles, Compose,
   configuration/main backend et client frontend.
 - Une construction par image/version sur VPS ; compilation Vue CI distincte.
-  OpenAPI seul ne remplace pas la readiness DB.
+  OpenAPI seul ne remplace pas la readiness DB ; le job de déploiement
+  historique a été retiré dans INT-125, il ne doit pas être réactivé tel quel.
 - Ne pas partager de rendu complet Compose/inspect avec les environnements.
 - Cas TC-INT-111-03/08 : propriétaires INT-125, IDs conservés.
+- Domaines confirmés : frontend `https://tervoapp.com`, API
+  `https://api.tervoapp.com/api/v1` ; pas de bascule DNS dans cette tâche.
+- Compose sans réseau externe 1Panel : OpenResty host rejoint 127.0.0.1,
+  frontend sur bridge séparé, backend/PG sur réseau database.
+- Production : DB components/URL exclusifs, URL.create puis drivers
+  asyncpg/psycopg2 communs ; Alembic reçoit un URL sans ConfigParser%.
+  `/health/ready` SELECT 1 borné, 200/503 statiques, hors OpenAPI.
+- Validation : 27 tests backend ciblés, 20 frontend, typecheck/build ;
+  export Git sans dist/deps/DB, build Docker et PG17.7 jetable, migrations
+  jusqu'à m109, panne/reprise réelle, uploads persistants après recreate,
+  CORS et santé frontend (index absent503 puis200), PDF en mémoire,
+  env pollué/secret manquant/mode644 refusés, labels par voie Compose.
+- Ancien job deploy retiré mécaniquement, pas simplement commenté.
+  CI frontend Bun1.2.20/URL fictive ; aucun run distant revendiqué.
+- TD-B008/009 restent ouverts pour DB/rôles réels en INT-127 ; POSTGRES_USER
+  initialise un superuser, aucun moindre privilège prétendu ici.
+  Aucune vraie DB, bootstrap admin, sauvegarde, release ou VPS modifié.
+- [Note pédagogique](../../../../notes/backend/sprint7.6/INT-125-stack-reproductible.md)
+  et helper `deploy/check-stack.py --revision <objet Git explicite>`.
 
 ---
 

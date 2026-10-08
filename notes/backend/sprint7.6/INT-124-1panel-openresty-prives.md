@@ -206,9 +206,11 @@ alors un réseau partagé et des noms Docker, avec contrôle après recréation.
 Cette variante n'est pas le mode retenu ni une recette déclarée exécutée.
 Ne pas coder une IP de conteneur ni ajouter `1panel-network` par habitude.
 
-INT-125 devra adapter la stack applicative au mode **host observé** :
-frontend/backend accessibles via des publications loopback, PostgreSQL
-non publié. Nous n'avons pas modifié le Compose Tervo dans INT-124.
+L'adaptation au mode **host observé** est désormais livrée dans
+[INT-125](INT-125-stack-reproductible.md) : frontend/backend publiés sur
+loopback, PostgreSQL non publié et pas de bridge 1Panel requis.
+Elle est validée localement, pas déployée sur le VPS. Le Compose n'avait
+pas été modifié dans INT-124.
 
 ## 7. Recette utile : comparer un contenu, pas seulement un HTTP 200
 
@@ -372,8 +374,9 @@ Les todos ont été relus : aucun todo explicite dépendant d'INT-124 n'est
 débloqué à exécuter. TD-B010 et TD-B022 restent liés aux tâches DB/backup
 et au déploiement réel ; ils ne sont pas clôturés par un proxy fonctionnel.
 
-**Prochaine tâche : INT-125**, après feu vert distinct, pour une stack
-de production reproductible et cohérente avec le mode host observé.
+**Reprise actualisée après INT-125 :** packaging, configuration et
+disponibilité sont validés sur une stack locale jetable ; voir sa note.
+La prochaine tâche INT-126 attend un feu vert distinct.
 INT-126 à INT-130 et la mise en service INT-111 restent non livrés.
 Ne pas activer `DEPLOY_ENABLED`, créer la DB, lancer un seed ou publier
 les domaines applicatifs en prétendant prolonger simplement INT-124.

@@ -1,4 +1,4 @@
-# Tervo — Intégration et déploiement continus
+# Tervo — Intégration continue ; déploiement différé à INT-129/130
 #
 # Principe : UN SEUL BUILD.
 #   - GitHub Actions : vérifie (tests backend + build frontend)
@@ -11,10 +11,9 @@
 # Évolution possible (non implémentée) :
 #   CI → build → push GHCR → VPS → docker compose pull → up -d
 #
-# ⚠️ Le déploiement est désactivé par défaut.
-#   Il s'active en définissant la variable de dépôt DEPLOY_ENABLED = 'true'
-#   (Settings → Secrets and variables → Actions → Variables).
-#   À activer quand le VPS est provisionné et les secrets en place.
+# Aucun job de déploiement avant INT-129/130. Le script historique (up avant
+# migration, env implicite, prune) est retiré, pas seulement commenté.
+# INT-130 réintroduira le job après la release sûre et recette INT-111.
 #
 # Optimisations (20/09/2026) :
 #   1. paths-ignore  — un changement purement documentaire (docs/, notes/,
@@ -29,7 +28,7 @@
 #    ici (push direct sur main), mais c'est à garder en tête si on ajoute des
 #    règles de protection plus tard.
 
-name: CI/CD
+name: CI
 
 on:
   push:
@@ -150,6 +149,8 @@ jobs:
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.2.20"
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -161,31 +162,8 @@ jobs:
         run: bun run typecheck
 
       - name: Build
+        # Compilation de vérification uniquement : aucune image/artifact publié.
+        # Le build de production reçoit l'URL réelle via deploy/.env.
+        env:
+          VITE_API_BASE_URL: https://api.example.invalid/api/v1
         run: bun run build
-
-  # ── Déploiement ─────────────────────────────────────────
-  # Uniquement sur un push vers main, si les vérifications ont réussi
-  # ET si le déploiement a été explicitement activé (variable de dépôt).
-  deploy:
-    name: Deploy — VPS
-    needs: [backend-tests, frontend-build]
-    if: >
-      github.ref == 'refs/heads/main' &&
-      github.event_name == 'push' &&
-      vars.DEPLOY_ENABLED == 'true'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            set -e
-            cd /opt/tervo
-            git pull --ff-only
-            docker compose -f deploy/docker-compose.yml up -d --build
-            docker exec tervo-backend-1 alembic upgrade head
-            docker image prune -f

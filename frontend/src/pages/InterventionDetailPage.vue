@@ -178,7 +178,7 @@
                                     class="photo-card"
                                     @click="openPreview(photo.file_url)"
                                 >
-                                    <img :src="photo.thumbnail_url || photo.file_url" :alt="group.label" class="photo-thumb" />
+                                    <img :src="publicPhotoUrl(photo.thumbnail_url || photo.file_url)" :alt="group.label" class="photo-thumb" />
                                     <Button
                                         icon="pi pi-trash"
                                         severity="danger"
@@ -355,6 +355,7 @@
 </template>
 
 <script setup lang="ts">
+import { publicPhotoUrl } from "@/api/config";
 import { computed, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useQuery, useQueryClient } from "@tanstack/vue-query";
@@ -406,7 +407,7 @@ const showPreview = ref(false);
 const previewPhoto = ref<string | null>(null);
 
 function openPreview(fileUrl: string) {
-    previewPhoto.value = fileUrl;
+    previewPhoto.value = publicPhotoUrl(fileUrl);
     showPreview.value = true;
 }
 

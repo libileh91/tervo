@@ -116,7 +116,13 @@
         "readiness_db": "Succès avec DB disponible, échec explicite sinon",
         "volumes_persistants": "DB et uploads sur volumes réellement identifiés, pas de nom physique supposé depuis la seule clé YAML"
       },
-      "actual_result": null,
+      "actual_result": {
+        "status": "passed_local_isolated",
+        "observed": "Helper Docker local, projet tervo-int125-ca6b380115e7 : trois services healthy, PG sans port, backend/frontend loopback, réseaux sans externe. GET /health/ready DB réel200 ; arrêt PG ->503 statique et Dockerbackendunhealthy ; reprise ->200healthy. Migrations PG17.7 neuves jusqu'à m109 et canary uploads conservé après recreate backend. Santé frontend503 si index absent, retour200 après restauration ; CORS origine autorisée uniquement",
+        "evidence": "notes/backend/sprint7.6/INT-125-stack-reproductible.md",
+        "command": "python3 deploy/check-stack.py --revision 3600abe840c04c99a95a3776819cb42dc840b633",
+        "limits": "Validation locale Linux/Docker sur projet et volumes jetables supprimés ; aucune DB existante, seed, admin, VPS, DNS, TLS ou release validé"
+      },
       "legacy_id": "TC-INT-87-01"
     },
     {
@@ -241,9 +247,10 @@
         "Environnement jetable et secrets de test fictifs, aucune donnée de production"
       ],
       "steps": [
-        "Construire les images sur la cible VPS depuis le checkout neuf, sans artefact dist manuel",
+        "Construire les images depuis un export Git explicite propre sans dist manuel, en recette locale isolée ; construction de release VPS différée à INT-129/111",
         "Omettre chaque secret critique : validation Compose --quiet doit échouer avant tout démarrage",
         "Fournir la configuration de test complète par chemin .env explicite : validation silencieuse réussie",
+        "Refuser variables ambiantes, fichier mode644 et SHA source vide/invalide ; ne pas confondre tag image et SHA source",
         "Vérifier la construction/échappement du DSN PostgreSQL pour l'alphabet de secrets autorisé",
         "Identifier les images par SHA et vérifier la rotation des logs configurée"
       ],
@@ -252,9 +259,15 @@
         "fail_fast": "Secret absent refusé explicitement, pas de fallback de développement",
         "confidentialite": "Aucune valeur de secret dans le rendu/log de validation",
         "dsn": "Connexion possible sans erreur de parsing pour les secrets acceptés",
-        "versions_logs": "SHA traçable, ancienne image conservée et limites de logs explicites"
+        "versions_logs": "SHA source complet par voie Compose et tag distinct, limites de logs explicites ; pas de prune global, conservation des artefacts de release relevant d'INT-129"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed_local_isolated",
+        "observed": "Export de l'arbre Git3600abe840c04c99a95a3776819cb42dc840b633 sans dist/node_modules/SQLite, build deuximages multi-stage réussi et labels OCI identiques à l'objet exporté par variablesCompose normales. Secrets fictifs600, variables ambiantes/secrets ou VCS manquants et mode644 refusés ; motdepasse réservé exactement retrouvé en runtime et migrations/connectivité réussies. Logs json-file10m×3 pour trois services, PDF natif en mémoire réussi",
+        "tests": "27 backend ciblés, 20 frontend dont avis publics cross-origin, typecheck et build configuré réussis",
+        "evidence": "notes/backend/sprint7.6/INT-125-stack-reproductible.md",
+        "limits": "Aucune image publiée, aucun build/release VPS ou runCI distant ; source d'essai = arbreindex Git et pas commit HEAD prétendu. APT mutable, pas de garantie bit-identique ; rôles SQL/privilèges réels en INT-127"
+      }
     },
     {
       "id": "TC-INT-111-09",

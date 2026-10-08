@@ -1,6 +1,6 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 
 from alembic import context
 
@@ -16,13 +16,15 @@ if config.config_file_name is not None:
 # ── Tervo: load all models before exposing metadata ────────
 from app.config import settings
 from app.core.base import Base
+from app.core.database_urls import database_url
 from app.model_registry import load_models
 
 load_models()
 target_metadata = Base.metadata
 
-# Override database URL from application settings
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+# Pass a URL object directly: ConfigParser interpolation must not consume
+# percent-encoded credentials. Alembic always uses the synchronous driver.
+migration_url = database_url(settings.DATABASE_URL, asynchronous=False)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -42,9 +44,8 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url,
+        url=migration_url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -61,11 +62,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_engine(migration_url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
