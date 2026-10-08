@@ -9,6 +9,10 @@ une DB neuve, CORS, uploads persistants et identité des images.
 administrateur, certificat, DNS ou release automatisée n'est livré ici.
 Les tests physiques utilisent un projet Docker UUID et des secrets fictifs.
 
+Pour les explications de fond (CORS/5173, tag/SHA/digest, validation
+d'environnement, drivers DB, readiness, dev/prod et dist), voir
+[la note complémentaire](INT-125-comprendre-les-choix-techniques.md).
+
 Références : [tâche](../../../docs/stages/stage7/sprint7.6/tasks.md),
 [cas JSON](../../../docs/stages/stage7/sprint7.6/test-cases.json),
 [Compose](../../../deploy/docker-compose.yml),
