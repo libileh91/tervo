@@ -25,8 +25,8 @@ Tu bosses en mode **feu-vert** : je valide chaque étape avant que tu passes à 
 
 - **Nom du projet : Tervo** — nom conservé, pas de rebranding (ni « MB Chauffage », ni « ShowRoom »)
 - **DAT unique** : `docs/DAT/new/` (refonte en cours — voir structure ci-dessous)
-- **Prochain sprint à démarrer** : `docs/stages/stage7/sprint7.3/` (Tervo v2 : chaîne commerciale ; prochaine tâche INT-102)
-- **Planning V2** : `docs/stages/stage7/README.md` — sprints `sprint7.1` à `sprint7.6` ; 7.1 et 7.2 terminés
+- **Sprint actif** : `docs/stages/stage7/sprint7.6/` ; INT-124/125 validées, cible Caddy natif/Dockge privé approuvée, prochaine implémentation INT-131 après feu vert
+- **Planning V2** : `docs/stages/stage7/README.md` — sprints `sprint7.1` à `sprint7.6` ; relire les statuts actuels, ne pas déduire une livraison du cadrage
 - **Branche de travail DAT** : `chore/rewrite-dat`
 
 ### Organisation du Stage 7 (réorganisation du 26 septembre 2026)
@@ -56,22 +56,26 @@ reprise : relire les critères et les todos avant de commencer une tâche.
   (7.5). Le modèle exposition physique, les badges essai/vendable, les prix
   catalogue et la suppression en cascade ne sont pas transposés au modèle V2.
 - Anciens 6.4/6.5 : critères utiles repris dans INT-111/112 (7.6), avec dix cas
-  de test adaptés ; `legacy_id` conserve leur provenance. Ils restent à exécuter.
+  de test adaptés ; `legacy_id` conserve leur provenance. Leur état actuel
+  est dans test-cases.json : socle partiel, preuves INT-124/125 acquises,
+  autres scénarios non exécutés.
 
 **Dépendances et points de reprise :**
 - 7.1 fournit le socle à 7.2, 7.3 et 7.4. L’import 7.2 ne dépend pas de 7.3 :
   `installation_id` reste nullable pour les équipements historiques.
-- 7.5 dépend du socle et de 7.3 pour le lien showroom → vente. Avant INT-110,
-  vérifier le remplacement déjà amorcé dans INT-97 pour éviter de le réimplémenter.
-- `docs/todos/backend.md` : TD-B014 attend INT-103 (Equipment → Installation) ;
+- 7.5 dépend du socle et de 7.3 ; INT-109/110 sont livrées. L'ancien rappel
+  « avant INT-110, vérifier INT-97 » reste une règle de rétrospective,
+  pas une tâche actuellement à redémarrer.
+- `docs/todos/backend.md` : TD-B014/TD-B017 sont réalisés (Installation/vente) ;
   TD-B016 exige une mesure sur volume représentatif avant import réel ; TD-B010
   est rattaché à INT-111 (cible PostgreSQL et migration des données existantes).
   TD-B013 reste ouvert pour les rôles MANAGER/COMMERCIAL.
 - `docs/todos/frontend.md` : TD-F007 suit les besoins catalogue/showroom V2
   (navigation, filtres, formulaires, états loading/empty/error et tests E2E).
   La clôture backend d’INT-96 ne signifie pas que ces interfaces sont livrées.
-- Les cas de test détaillés d’INT-105 et INT-108 restent à compléter avant leur
-  implémentation dans 7.4. Les cas INT-111/112 sont désormais présents dans 7.6.
+- INT-104 à INT-108 sont livrées ; ne pas reprendre l'ancien cadrage des
+  cas INT-105/108 comme un travail non implémenté. Les cas actuels de 7.6
+  comprennent INT-131/132, tous non exécutés au cadrage.
 - 7.6 déploie le périmètre effectivement validé, documente le backlog et reprend
   les critères détaillés des anciens sprints ; réévaluer ses estimations au démarrage.
 
@@ -284,39 +288,46 @@ notes/
 > - **Local / mini-s1** (192.168.10.192) — dev et démo, via 1Panel + Cloudflare Tunnel
 > - **VPS** (Sprint 7.6 — INT-111) — production publique : IP fixe, DNS, Let's Encrypt, `127.0.0.1`
 
-### 3.1 Fin de chaque sprint (local)
+### 3.1 Validation locale et limites des anciennes recettes
 
-```bash
-# 1. Build frontend
-cd frontend && npm install && npm run build && cd ..
+Le mini-s1 reste un environnement historique distinct, via 1Panel/Cloudflare.
+Ne pas y exécuter une recette VPS ou un seed par défaut.
+Le Compose INT-125 exige fichier privé explicite, secrets et SHA source ;
+frontend construit dans l'image avec URL API publique explicite.
 
-# 2. Build images Docker
-docker build -t tervo-backend:latest -f backend/Dockerfile backend/
-docker build -t tervo-frontend:latest -f frontend/Dockerfile frontend/
-
-# 3. Déployer
-docker compose -f deploy/docker-compose.yml up -d
-
-# 4. Migrations + seed
-docker exec tervo-backend-1 alembic upgrade head
-docker exec tervo-backend-1 python -m app.seed
-
-# 5. Vérifier
-curl http://localhost:3000/       # → 200
-curl http://localhost:8000/docs   # → 200
-```
+La validation isolée utilise `deploy/check-stack.py --revision <objet Git explicite>`
+sur Docker local, données fictives et projet UUID. La procédure de release
+réelle INT-129 reste à livrer ; aucune commande up puis seed n'est une
+procédure de production autorisée. `app.seed` peut supprimer des données.
 
 ### 3.2 Déploiement VPS (Sprint 7.6 — INT-111)
 
 ```
-Internet → 1Panel OpenResty (80/443) → 127.0.0.1:PORT → service
+Internet → Caddy natif (80/443 TCP) → 127.0.0.1:PORT → service
+Poste admin → tunnel SSH → Dockge 127.0.0.1:5001 → console Compose
 ```
 
-- Ports publics : **22, 80, 443** uniquement
-- 1Panel (7410) : accès **via tunnel SSH** uniquement
+- Ports publics : **22, 80, 443 TCP** uniquement ; HTTP/3 désactivé sans exception UDP validée
+- Dockge (5001) : **loopback + tunnel SSH + login**, jamais route publique Caddy
+- Admin Caddy : API locale/socket, pas de port 2019 public
 - PostgreSQL : **aucun port publié**
 - SSL : Let's Encrypt (plus de Cloudflare Tunnel sur le VPS)
-- CI/CD : GitHub Actions → tests → SSH → `git pull` → `docker compose up -d` (**un seul build**)
+- Cible approuvée, pas installée : INT-131 effectue la bascule réversible
+  depuis 1Panel/OpenResty ; INT-132 prouve l'adoption Dockge sans dérive.
+- INT-131 utilise un bootstrap HTTP sans vrais hostnames et automatic
+  HTTPS désactivé ; profil production gardé inactif jusqu'à INT-111,
+  absence de tentative ACME/état de certificat à vérifier.
+- CI vérifie, build production VPS conservé ; GHCR hors périmètre.
+  INT-129 livrera la release (migration avant exposition, artefact de secours),
+  INT-130 l'automatisation après recette INT-111. Ancien job deploy retiré.
+- Dockge possède des droits Docker root-equivalent. `docker.sock:ro`
+  n'est pas un contrôle API read-only ; convention de consultation ≠ RBAC.
+  Console principale désactivée par défaut dans la version étudiée :
+  activation explicite seulement après sécurisation. SSH reste nécessaire.
+- Gate préalable : layout Dockge/paths/env/projet/volumes identiques au
+  chemin Git/CLI d'INT-125 ; aucune copie/symlink non éprouvé ne vaut adoption.
+- INT-132 établit la gouvernance, pas une preuve de verrou/release futurs :
+  interaction réelle et gel de l'administration à tester en INT-129/111.
 
 ### 3.3 Documenter le déploiement
 
@@ -324,7 +335,8 @@ Dans `notes/backend/<nom-du-sprint>/` pour le compte rendu du sprint, et dans
 `notes/backend/deploy/` pour les procédures transversales :
 - Procédure complète
 - Erreurs rencontrées et corrections
-- Ports, IPs, configuration 1Panel
+- Ports, IPs, configuration Caddy/Dockge et limites vérifiées ; préserver
+  les notes historiques 1Panel, ne pas les réattribuer aux nouveaux services
 - Fichiers de référence : `cloudflare-tunnel-deploy.md` (mini-s1), `vps-deploy.md` (VPS)
 
 ---
@@ -349,19 +361,18 @@ Dans `notes/backend/<nom-du-sprint>/` pour le compte rendu du sprint, et dans
 
 | Élément | Valeur |
 |---------|--------|
-| Container manager | 1Panel (OpenResty reverse proxy + SSL) |
-| Base de données | PostgreSQL 17.4 |
+| Proxy VPS cible | Caddy natif sous systemd (INT-131 non implémentée) |
+| Console Compose cible | Dockge privé (INT-132 non implémentée) |
+| Base de données | PostgreSQL 17.7 épinglé dans Compose INT-125 ; données/roles réels INT-127 |
 | Réseau Docker (mini-s1) | `postgres_postgres_network`, `1panel-network` |
-| Build backend | `docker build -t tervo-backend:latest -f backend/Dockerfile backend/` |
-| Build frontend | `docker build -t tervo-frontend:latest -f frontend/Dockerfile frontend/` |
-| Orchestration | `docker compose -f deploy/docker-compose.yml up -d` |
-| PostgreSQL (compose) | `docker compose -f deploy/postgres.docker-compose.yml up -d` |
-| Migrations | `docker exec tervo-backend-1 alembic upgrade head` |
-| Seed | `docker exec tervo-backend-1 python -m app.seed` |
+| Build / orchestration | Compose et `.env` explicites ; validation `sh deploy/validate-env.sh <fichier privé>` avant toute opération |
+| PostgreSQL | Service du Compose Tervo, sans port publié ; pas de seconde stack PG |
+| Migrations | Commande de release INT-129 à livrer, une fois avant exposition |
+| Seed | Aucun seed production ; bootstrap sûr INT-126 à livrer |
 | Accès local API | `http://192.168.10.192:8000` |
 | Accès local frontend | `http://192.168.10.192:3000` |
 | Reverse proxy (mini-s1) | 1Panel → IPs statiques (OpenResty mode host) |
-| Reverse proxy (VPS) | 1Panel → `127.0.0.1:PORT` (mode bridge) |
+| Reverse proxy (VPS) | Caddy hôte → `127.0.0.1:3000` / `127.0.0.1:8000` ; OpenResty host historique encore actif tant qu'INT-131 non exécutée |
 
 > ⚠️ **Cible Stage 6.1+** : les services doivent binder sur `127.0.0.1:PORT` (pas `0.0.0.0`), et PostgreSQL ne doit **pas** publier de port sur l'hôte.
 
