@@ -343,6 +343,15 @@ Mais un label n'est **pas une signature**. La recette compare donc la valeur dé
 
 ## 5.3 Pourquoi un tree Git alors que le code n'était pas encore committé ?
 
+> **L'objectif : tester la stack dans un environnement propre à partir
+> d'un snapshot Git (`git write-tree`), pour vérifier qu'elle ne dépend
+> pas des fichiers ou artefacts locaux du poste.**
+
+Dans la recette INT-125 exécutée, `TERVO_VCS_REF` était le SHA du **tree**,
+pas celui d'un commit. Pour la release de production prévue, la règle
+retenue est le SHA du **commit réellement construit**. Aucun des deux
+n'est le digest Docker.
+
 Modèle mental :
 
 ```text
