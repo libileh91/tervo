@@ -5,6 +5,11 @@
 > **Sprints Tervo V2 :** [Stage 7 — découpage et avancement](../../stages/stage7/README.md)
 > **Branche de travail :** `chore/rewrite-dat`
 
+> **Cible VPS approuvée :** Caddy natif pour le trafic public, Dockge privé
+> pour la console Compose, Git/Compose et build VPS conservés.
+> **Cadrage seulement :** INT-131/132 restent à implémenter ; les preuves
+> historiques 1Panel/OpenResty d'INT-124 ne sont pas effacées.
+
 ## 1. Rôle du DAT
 
 Ce document décrit les décisions structurantes de Tervo : son fonctionnement métier, son modèle de domaine, ses workflows, puis leur traduction technique.
@@ -14,7 +19,7 @@ Le DAT sert de référence pour concevoir et faire évoluer le produit. Il ne re
 ## 2. Organisation
 
 ```text
-docs/DAT/
+docs/DAT/new/
 ├── 00-sommaire.md
 ├── 00-revue/
 │   ├── 00-vue-ensemble.md

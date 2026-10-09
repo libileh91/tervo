@@ -1,7 +1,7 @@
 {
   "$schema": "Stage 7 - Sprint 7.6 Test Cases",
   "sprint": "7.6",
-  "description": "Tervo V2 — Déploiement VPS et documentation entretien",
+  "description": "Tervo V2 — Déploiement VPS et entretien ; cible Caddy natif/Dockge privé approuvée, nouveaux cas non exécutés, preuves 1Panel historiques conservées",
   "test_cases": [
     {
       "id": "TC-INT-111-01",
@@ -45,6 +45,7 @@
       "task": "INT-124",
       "origin_task": "INT-111",
       "title": "1Panel - non exposé publiquement",
+      "historical_scope": "Preuve INT-124 conservée ; ne valide pas Caddy/Dockge ni leur bascule INT-131/132",
       "type": "security",
       "preconditions": [
         "1Panel installé"
@@ -132,7 +133,7 @@
       "type": "e2e",
       "preconditions": [
         "DNS propagé",
-        "Sites 1Panel créés"
+        "Caddy INT-131 livré et configuration des domaines réels autorisée en INT-111"
       ],
       "steps": [
         "curl -fsS -o /dev/null -w '%{http_code}\\n' https://<domaine_frontend>/ → GET 200",
@@ -223,7 +224,7 @@
       "steps": [
         "Relire notes/backend/deploy/vps/README.md et les notes de réalisation indexées",
         "Vérifier que chaque commande précise poste local/VPS, privilèges, fichiers réels et point d'arrêt",
-        "Vérifier le journal des changements 1Panel, les scripts versionnés et le bilan sprint7.6"
+        "Vérifier la décision Caddy/Dockge, le journal de bascule, les paramètres privés et scripts versionnés ; conserver les preuves historiques 1Panel sans les attribuer à la nouvelle cible"
       ],
       "expected_result": {
         "prerequis_listes": "true",
@@ -311,7 +312,8 @@
         "Vérifier retour d'échec de la commande et conservation de l'ancienne image, sans prune immédiat",
         "Tester retour à l'image précédente si compatible avec le schéma, en gardant un état Git/déploiement explicite",
         "Vérifier qu'un schéma incompatible bloque le rollback automatique et impose une procédure contrôlée",
-        "Vérifier qu'aucun downgrade, restore, down -v ou nettoyage de volumes n'est déclenché implicitement"
+        "Vérifier qu'aucun downgrade, restore, down -v ou nettoyage de volumes n'est déclenché implicitement",
+        "Tester le verrou réel et la fenêtre d'administration Dockge gelée : aucune action en cours/concurrente ni seconde orchestration pendant release ; ne pas traiter une convention comme un RBAC"
       ],
       "expected_result": {
         "failure": "Échec propagé ; un conteneur Up ne suffit pas à une conclusion verte",
@@ -382,7 +384,9 @@
         "duree_presentation": "<= 3 minutes",
         "schema_lisible": "true (1 page)",
         "decisions_justifiees": [
-          "1Panel",
+          "Caddy natif",
+          "Dockge privé et privilèges",
+          "évaluation historique 1Panel",
           "Compose",
           "PostgreSQL",
           "127.0.0.1"
@@ -449,6 +453,105 @@
       },
       "actual_result": null,
       "legacy_id": "TC-INT-93-01"
+    },
+    {
+      "id": "TC-INT-131-01",
+      "task": "INT-131",
+      "title": "Caddy - bascule déclarative et rollback de l'ancien proxy",
+      "type": "integration",
+      "preconditions": [
+        "Feu vert INT-131 ; inventaire live et paramètres anciens sauvegardés en privé",
+        "Cible jetable sans DB/app Tervo ; aucun DNS ou certificat réel activé prématurément"
+      ],
+      "steps": [
+        "Relever services/sockets/restart policies ; préparer Caddy officiel vérifié sans démarrage surprise sur 80/443",
+        "Valider profil bootstrap HTTP sans vrais hostnames et automatic HTTPS désactivé, profil production inactif ; prouver absence de tentative ACME/état de certificat Tervo et aucun changement DNS",
+        "Valider refus d'une config invalide avant reload ; tester upstream loopback et GET/reload sur cible jetable",
+        "Faire autoriser bascule ; neutraliser ancien proxy au boot, restart always Docker inclus, et core/agent sans couper SSH/Docker/UFW",
+        "Vérifier Caddy seul proxy selon profil actif (:80 bootstrap, 80/443 après autorisation production), puis rollback contrôlé et routage ancien sans suppression de données",
+        "Revenir à la cible autorisée et nettoyer la recette ; consigner identité/config/state à sauvegarder"
+      ],
+      "expected_result": {
+        "config": "Code versionné, validation avant reload, mauvais fichier ne remplace pas la configuration active",
+        "route": "Marqueur exact sur upstream loopback après reload ; pas de bridge app ajouté ni port exposé",
+        "bascule": "Un seul proxy sur 80/443 ; anciens services sans autorun concurrent",
+        "rollback": "État ancien retrouvable, politiques restaurées, données/SSH/Docker/UFW conservés",
+        "limits": "Aucune tentative ACME/certificat Tervo pendant bootstrap, profil réel inactif ; certificats publics et release restent INT-111"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-131-02",
+      "task": "INT-131",
+      "title": "Caddy - surface privée et persistance après reboot",
+      "type": "security",
+      "preconditions": [
+        "Bascule INT-131 contrôlée et Caddy configuré ; feu vert avant reboot"
+      ],
+      "steps": [
+        "Vérifier SSH/Docker/UFW, Caddy systemd et sockets avant/après reboot",
+        "Tester TCP80 bootstrap, absence d'ancien listener443 avant profil production autorisé, puis refus public admin2019/ancien panneau7410",
+        "Vérifier API admin locale ou socket privé, app ports loopback, PG non publié et ancien proxy sans reprise concurrente",
+        "Contrôler profil h1/h2 sans ajout implicite UDP443 ; avant/après reboot, prouver absence de tentative ACME et d'état de certificat Tervo, état bootstrap persistant et paramètres privés identifiés",
+        "Consigner lectures externes, limites IPv6 si absente et parcours de secours"
+      ],
+      "expected_result": {
+        "surface": "22/80 TCP en bootstrap sans ACME ; 443 seulement avec profil production autorisé, aucune API admin publique ni double proxy au reboot",
+        "persistence": "Retour du proxy/bootstrap après reboot, données d'état conservées et aucun état de certificat Tervo avant/après reboot",
+        "udp": "HTTP/3 désactivé tant qu'exception UDP non approuvée",
+        "honesty": "Aucun certificat réel ou renouvellement déclaré validé sur une simple écoute"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-132-01",
+      "task": "INT-132",
+      "title": "Dockge - console privée, authentification et pouvoir Docker",
+      "type": "security",
+      "preconditions": [
+        "Feu vert INT-132 ; image/version officielle exacte et chemins persistants préparés",
+        "Dockge seulement 127.0.0.1:5001, aucune route/domaine public Caddy"
+      ],
+      "steps": [
+        "Vérifier publication effective et refus TCP depuis extérieur",
+        "Configurer login privé, tester refus sans auth et succès via tunnel choisi",
+        "Activer explicitement console principale seulement si nécessaire après sécurisation ; tester sorties d'une commande sans secret",
+        "Recontrôler service/login/port après reboot et restauration de paramètres en isolation",
+        "Documenter docker.sock root-equivalent, absence de garantie read-only/RBAC, limites SSH/systemd/journald et procédure de retrait"
+      ],
+      "expected_result": {
+        "private": "Accès tunnel + login, pas de port ni reverse proxy public",
+        "auth": "disableAuth interdit, données d'auth privées persistantes",
+        "privileges": "Mount :ro ne filtre pas l'API ; console traitée comme administration, pas observation non privilégiée",
+        "ops": "Sorties consultables sans secrets, aucun volume Tervo supprimé par retrait/restauration"
+      },
+      "actual_result": null
+    },
+    {
+      "id": "TC-INT-132-02",
+      "task": "INT-132",
+      "title": "Dockge - gate d'adoption de la source Git/Compose",
+      "type": "integration",
+      "preconditions": [
+        "Stack jetable, env fictif privé, aucun volume ni secret de production",
+        "Layout officiel et chemins host/container à confronter au dépôt actuel"
+      ],
+      "steps": [
+        "Tester layout /opt/stacks/<nom>/compose.yaml et paths identiques sans présumer qu'un déplacement/symlink fonctionne",
+        "Comparer configurations effectives Git/CLI/Dockge en mémoire : contexts build, env explicite, absence d'exports ambiants, projet, ports, réseaux et volumes",
+        "Démontrer consultation de logs et commandes utiles, sans créer un fichier Compose autonome ou une modification UI cachée",
+        "Prouver absence d'opération parallèle pendant le gate et documenter contrat de gouvernance de la future release ; pas de test INT-129 inexistant ni de RBAC prétendu",
+        "Si incompatibilité, bloquer adoption Tervo et demander arbitrage ; ne pas conclure sur une démo étrangère",
+        "Nettoyer uniquement ressources UUID et enregistrer méthode reproducible validée ou limite"
+      ],
+      "expected_result": {
+        "source": "Git reste autoritaire ; adaptations nécessaires sont versionnées et retestées",
+        "env_paths": "Même configuration réelle que le chemin explicite d'INT-125, aucun .env découvert implicitement",
+        "release": "Aucune opération parallèle dans le gate, pas de rebuild/downgrade/prune caché ; interaction verrou/release réelle à tester en INT-129",
+        "gate": "Adoption Tervo seulement après preuve et autorisation ; périmètre réduit soumis au développeur",
+        "safety": "Pas de secrets affichés ni de données réelles modifiées"
+      },
+      "actual_result": null
     }
   ]
 }

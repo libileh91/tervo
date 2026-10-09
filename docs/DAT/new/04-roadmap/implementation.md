@@ -1366,9 +1366,12 @@ Storage monitoring
 Endpoints :
 
 ```http
-GET /health
 GET /health/ready
 ```
+
+Le backend livré en INT-125 a cette readiness DB (200/503) ; le `/health`
+du frontend est distinct. Aucun endpoint liveness backend séparé n'est
+prétendu implémenté.
 
 Les logs doivent permettre d'identifier :
 
@@ -1379,6 +1382,15 @@ où
 ```
 
 sans exposer de données sensibles.
+
+Le cadrage VPS approuvé ajoute INT-131 (Caddy natif, bascule réversible)
+et INT-132 (Dockge privé, gate d'adoption Git/Compose). Le planning actif
+reste [sprint7.6](../../../stages/stage7/sprint7.6/tasks.md).
+Dockge consulte des sorties et peut piloter Compose : il ne remplace
+ni les backups testés, ni les alertes externes, ni SSH. Aucun de ces
+deux nouveaux lots n'est déclaré exécuté par cette roadmap.
+La CI reste vérification seule avant INT-130, le build production sur
+VPS est conservé et aucun registre n'est ajouté.
 
 ---
 

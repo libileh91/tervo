@@ -474,7 +474,7 @@ SMTP_PASSWORD=...
 
 # 12. PostgreSQL et infrastructure
 
-Le conteneur PostgreSQL ne doit pas être exposé publiquement lorsque cela n'est pas nécessaire.
+Le conteneur PostgreSQL ne publie aucun port hôte dans la cible Tervo.
 
 Architecture cible :
 
@@ -482,7 +482,7 @@ Architecture cible :
 Internet
    │
    ▼
-Reverse Proxy
+Caddy natif 80/443
    │
    ├── Frontend
    │
@@ -496,6 +496,27 @@ Reverse Proxy
 PostgreSQL doit être accessible uniquement par les services qui en ont besoin.
 
 Même principe pour le stockage interne.
+
+### Plan d'administration privé
+
+Dockge est publié uniquement sur 127.0.0.1:5001, accessible par tunnel
+SSH et authentification propre. Aucune route publique Caddy vers Dockge
+et aucun ALLOW public 5001 ne sont nécessaires.
+L'API admin Caddy est locale (2019 par défaut ou socket Unix contrôlé),
+jamais un endpoint d'administration public.
+
+Le socket Docker donne à Dockge une capacité root-equivalent. Un montage
+`docker.sock:ro` ne filtre pas les opérations de l'API et ne prouve pas
+un accès lecture seule. Aucun RBAC observateur n'est garanti ici.
+La console principale Dockge, désactivée par défaut dans la version
+documentaire étudiée, exige une activation explicite après protection
+et tests ; `disableAuth` est interdit.
+
+Les commandes hôte restent via SSH ; une console dans le conteneur ne
+remplace ni journald ni systemd. Les modifications UI et les sorties
+de commandes peuvent exposer des secrets : ne pas afficher de config
+résolue ou d'inspect complet, ne pas exporter l'env de production dans
+une console partagée, journaliser les actions sans leur contenu sensible.
 
 ---
 
@@ -516,6 +537,13 @@ Le reverse proxy est responsable de la terminaison TLS.
 Les cookies ou tokens sensibles ne doivent jamais transiter sur une connexion HTTP non sécurisée.
 
 Les certificats doivent être renouvelés automatiquement lorsque l'infrastructure le permet.
+
+La cible Caddy gère ACME/renouvellement sous réserve DNS, accès réseau
+et persistance de son état privé. L'écoute sur 443 ne suffit pas à
+valider un certificat ni son renouvellement.
+La surface retenue reste 22/80/443 TCP. HTTP/3 et 443/UDP ne sont pas
+ouverts implicitement ; désactiver h3 dans le profil initial ou faire
+valider explicitement une exception et la tester.
 
 ---
 
@@ -683,7 +711,9 @@ PostgreSQL
 Stockage fichiers
 ```
 
-Sauvegarder uniquement PostgreSQL ne suffit pas puisque les photos et rapports sont stockés séparément.
+Sauvegarder uniquement PostgreSQL ne suffit pas : les photos/uploads
+sont dans un volume séparé. Les versions PDF BYTEA sont couvertes par
+la sauvegarde DB ; la cohérence DB/fichiers reste à vérifier.
 
 Objectif :
 
@@ -703,6 +733,10 @@ Les sauvegardes doivent être :
 * séparées du stockage primaire lorsque possible.
 
 Une sauvegarde qui n'a jamais été restaurée n'est pas considérée comme suffisamment validée.
+Inclure les paramètres nécessaires à reconstruire Caddy/Dockge, l'état
+de certificats et l'authentification de la console, ainsi qu'un moyen
+de récupérer les secrets sans les committer. Scheduler système unique,
+pas de sauvegarde présumée grâce à la présence d'une UI.
 
 ---
 

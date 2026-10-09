@@ -1,6 +1,6 @@
 # Sprint 7.6 — Déploiement VPS et documentation entretien
 
-> **Tervo V2** · INT-111/112 + INT-124 à INT-130 · **Statut :** INT-124/125 terminées, stack validée localement en isolation ; prochaine INT-126 après feu vert, application non déployée sur VPS
+> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125 historiquement validées ; Caddy natif + Dockge privé approuvés, INT-131/132 à implémenter ; prochaine INT-131 après feu vert, application non déployée
 > **Dépendances :** Valider le périmètre livré et ses tests avant déploiement ; documenter explicitement le backlog restant.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.6/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -11,30 +11,34 @@
 
 INT-111 conserve la mise en service publique et ses preuves système
 acquises ; INT-112 reste la documentation entretien. Les prérequis
-techniques sont transférés aux nouveaux identifiants INT-124 à INT-130,
-vérifiés libres. Aucun transfert de critères ou de tests ne vaut livraison.
+techniques sont transférés aux identifiants INT-124 à INT-130.
+La décision Caddy/Dockge ajoute INT-131/132, vérifiés libres, sans effacer
+les preuves précédentes. Aucun cadrage ou transfert de test ne vaut livraison.
 
 | Ordre | Tâche | Livrable | Dépendances |
 |---|---|---|---|
-| 1 | INT-124 (3 pts) | 1Panel/OpenResty et administration privée | Socle système validé, pas clôture d'INT-111 |
-| 2 | INT-125 (5 pts) | Images/configuration de production reproductibles | INT-124 pour la stratégie réseau |
+| Historique | INT-124 (3 pts) | 1Panel/OpenResty privé, preuves conservées | Livrée, cible remplacée par décision ; bascule non effectuée |
+| Historique | INT-125 (5 pts) | Images/configuration reproductibles, publications loopback | Livrée localement ; contrat réutilisé par Caddy |
+| 1 | INT-131 (3 pts) | Caddy natif et retrait réversible de l'ancien proxy | Socle VPS + INT-124/125, pas publication Tervo |
+| 2 | INT-132 (3 pts) | Dockge privé et gate Git/Compose/env | INT-125/131 ; adoption Tervo à démontrer |
 | 3 | INT-126 (2 pts) | Bootstrap sécurisé du premier administrateur | Modèle identité existant |
 | 4 | INT-127 (3 pts) | PostgreSQL cible et décision de reprise | INT-125 |
-| 5 | INT-128 (5 pts) | Backup/restore vérifié en isolation | INT-125, INT-127 |
-| 6 | INT-129 (5 pts) | Commande de release et rollback contrôlé | INT-125, INT-127, INT-128 |
-| 7 | INT-111 (5 pts) | Mise en service manuelle, DNS/HTTPS et recette | INT-124 à INT-129 |
+| 5 | INT-128 (5 pts) | Backup/restore vérifié en isolation | INT-125/127, inventaire Caddy/Dockge INT-131/132 |
+| 6 | INT-129 (5 pts) | Commande de release et rollback contrôlé | INT-125/127/128 ; pas d'autorité Dockge concurrente |
+| 7 | INT-111 (5 pts) | Mise en service manuelle, DNS/HTTPS et recette | INT-125 à INT-129 + INT-131/132 |
 | 8 | INT-130 (3 pts) | CI/CD réutilisant la commande de release | INT-111 manuelle validée, INT-129 |
 | 9 | INT-112 (3 pts) | Entretien fondé sur les preuves finales | INT-111 et INT-130 pour le bilan final |
 
-Estimations indicatives à réévaluer par tâche : 34 points au total,
+Estimations indicatives à réévaluer par tâche : 40 points au total,
 contre les 8 points historiques trop larges. Ce n'est pas une mesure du
 travail déjà consommé. Le dossier reste `sprint7.6`, sans nouveau sprint.
 
 **Règles communes**
-- Feu vert distinct par tâche ; la reprise autorisée après découpage
-  concerne **INT-124 uniquement**. Aucune tâche future n'est démarrée.
-- Git/Compose définissent Tervo ; 1Panel administre proxy/certificats/
-  opérations, pas une seconde stack PostgreSQL/applicative.
+- Feu vert distinct par tâche. Cette mise à jour valide le cadrage
+  Caddy/Dockge, pas leur installation ni une bascule du VPS.
+- Git/Compose définissent Tervo ; Caddy natif possède le trafic public,
+  Dockge fournit une console Compose privée avec privilèges élevés,
+  sans duplication de fichiers ni release concurrente. SSH reste le secours.
 - CI vérifie, VPS construit les images de production ; GHCR reste hors
   périmètre. Ne pas confondre compilation Vue de vérification et image
   de production, ni rebuild ancien et artefact exact de secours.
@@ -57,11 +61,11 @@ Afin de **disposer d'une instance publique avec HTTPS**.
 **Acceptance Criteria**
 - [x] VPS : Debian 13 (choix utilisateur, remplace Ubuntu 24.04 prévu), SSH clé, ufw (22/80/443), fail2ban
 - [x] SSH par clé uniquement, connexion root directe désactivée, utilisateur non-root et mises à jour de sécurité automatiques
-- [ ] Prérequis INT-124 à INT-129 livrés et vérifiés ; périmètre réellement disponible et backlog explicités avant publication
+- [ ] Prérequis actifs INT-125 à INT-129 et INT-131/132 livrés/vérifiés ; les preuves historiques INT-124 restent conservées, périmètre et backlog explicités avant publication
 - [ ] Choix de reprise INT-127 appliqué après backup/restore INT-128 : transfert réel si nécessaire, aucune source présumée ; TD-B010 clôturé sur preuves
 - [ ] Release manuelle via INT-129 : SHA/images identifiés, migrations avant exposition et disponibilité effective des services
-- [ ] PostgreSQL non publié, services applicatifs loopback et administration 7410 privée ; surface publique 22/80/443 vérifiée
-- [ ] DNS frontend/API, reverse proxy vers les services locaux, certificats Let's Encrypt valides, renouvellement automatique et redirection HTTP vers HTTPS vérifiés
+- [ ] PostgreSQL non publié, services applicatifs loopback, Dockge 5001 privé et API admin Caddy locale ; ancien panneau/proxy neutralisés après INT-131, surface publique 22/80/443 TCP vérifiée
+- [ ] DNS frontend/API, Caddy vers les services locaux, certificats Let's Encrypt valides, renouvellement automatique et redirection HTTP vers HTTPS vérifiés ; état TLS persistant sauvegardable
 - [ ] GET réels frontend/API et recette navigateur : admin via INT-126, connexion, dashboard, upload/récupération photo sans compte démo
 - [ ] Backups planifiés et récupération INT-128 vérifiés sur le déploiement réel, y compris secrets/proxy ; seuils disque/RAM suivis
 - [ ] Procédure rejouable dans `notes/backend/deploy/vps/` (dossier demandé par l'utilisateur) : prérequis, commandes, erreurs/corrections, schéma et différences mini-s1/VPS ; bilan du sprint dans `notes/backend/sprint7.6/`
@@ -89,6 +93,11 @@ Afin de **disposer d'une instance publique avec HTTPS**.
 ---
 
 ## INT-124 — 1Panel et OpenResty à administration privée (3 pts)
+
+**Statut :** livraison historique validée. La nouvelle cible est Caddy/Dockge ;
+INT-131 doit effectuer la transition. Aucun arrêt ou remplacement n'est
+déduit de cette décision documentaire, et les critères cochés restent
+les preuves de l'installation précédente.
 
 **User Story**
 En tant qu'**exploitant**,
@@ -210,6 +219,72 @@ Afin de **déployer un artefact traçable sans secrets ni fichiers manuels cach�
 
 ---
 
+## INT-131 — Caddy natif et bascule du proxy réversible (3 pts)
+
+**User Story**
+En tant qu'**exploitant**,
+Je veux **remplacer 1Panel/OpenResty par un proxy natif déclaratif**,
+Afin de **réduire les responsabilités implicites sans perdre les protections validées**.
+
+**Acceptance Criteria**
+- [ ] Inventaire live actualisé et sauvegarde privée des paramètres nécessaires de l'ancien panneau/proxy ; versions, restart policies, sockets et propriétaires de 80/443 relevés sans secrets
+- [ ] Installation Caddy depuis source officielle vérifiée, version/service/utilisateur et état persistant documentés ; aucun démarrage automatique surprise sur les ports déjà occupés
+- [ ] Deux profils versionnés : bootstrap actif HTTP seulement avec automatic HTTPS désactivé et sans vrais hostnames ; profil production des domaines choisis conservé inactif jusqu'à INT-111 ; validation avant reload et preuve d'absence de tentative ACME/état de certificat réel
+- [ ] Bascule explicitement autorisée, ancien proxy et core/agent neutralisés au boot (restart policy Docker incluse), Caddy seul proxy public selon profil actif (:80 bootstrap, 80/443 production) ; SSH/Docker/UFW et données inchangés
+- [ ] API admin locale/socket, aucun accès public 2019 ni administration 7410 ; profil initial TCP seulement, HTTP/3 désactivé sans exception UDP validée
+- [ ] Routage/reload sur cible jetable, contrôle extérieur et retour après reboot ; rollback vers état ancien testé sans réinstallation/effacement, toutes ressources de recette nettoyées
+- [ ] Note de livraison et inventaire des paramètres/état TLS à sauvegarder ; émission/renouvellement publics réellement testés seulement en INT-111
+
+**Technical Notes**
+- Réutilise INT-125 sans changer ses ports/réseaux ni les apps. Pas de
+  build en CI/registre ajouté et pas de migrations métier.
+- Sources envisagées : `deploy/caddy/`, guide de transition
+  `notes/backend/deploy/vps/`, note `notes/backend/sprint7.6/`.
+- Le bootstrap ne charge pas les hostnames Tervo et désactive explicitement
+  automatic HTTPS : ne pas laisser Caddy tenter ACME parce qu'un profil
+  production a été chargé avant l'autorisation DNS/TLS INT-111.
+  Le profil production inactif conserve les upstreams 127.0.0.1:3000
+  et 127.0.0.1:8000 et les domaines déjà choisis.
+- 1Panel installé reste l'état de référence tant que la bascule n'a pas
+  été exécutée. Son exception firewall historique n'est pas reconduite
+  comme règle cible Caddy. Ne pas faire tourner deux proxies sur 80/443.
+- Cas TC-INT-131-01/02, tous non exécutés au cadrage.
+
+---
+
+## INT-132 — Dockge privé et console Compose sans dérive (3 pts)
+
+**User Story**
+En tant qu'**exploitant**,
+Je veux **consulter logs et sorties Compose dans une console privée**,
+Afin de **diagnostiquer Tervo sans créer une seconde source de configuration**.
+
+**Acceptance Criteria**
+- [ ] Version/image officielle exacte et digest relevés, publication 127.0.0.1:5001, données d'auth persistantes identifiées ; aucun domaine/route Caddy ni port public pour la console
+- [ ] Login administrateur privé sans disableAuth, accès par tunnel ; console principale activée explicitement si nécessaire après sécurisation (désactivée par défaut dans la version étudiée), aucune sortie sensible partagée
+- [ ] Accès docker.sock root-equivalent documenté ; ni mount :ro ni convention de lecture présentés comme RBAC read-only, SSH/systemd/journald non remplacés
+- [ ] Gate sur stack jetable : layout/chemins identiques hôte-conteneur, contexte build, fichier env explicite, absence d'exports ambiants et identité projet/volumes démontrés ; configuration effective identique au chemin Git/CLI
+- [ ] Logs/commandes utiles réellement accessibles, aucune copie de Compose devenue autonome ni édition/rebuild/delete caché ; Git reste autoritaire, aucun opérateur concurrent pendant le gate et contrat de future release documenté, sans prétendre tester INT-129 avant livraison
+- [ ] Retour après reboot, refus extérieur 5001, restore isolé des paramètres console et retrait Dockge documentés sans toucher aux volumes Tervo ; pas d'auto-prune
+- [ ] Adoption Tervo seulement après gate réussi et autorisation ; échec ou périmètre réduit soumis au développeur, pas clôturé comme besoin satisfait ; note de livraison et cas renseignés
+
+**Technical Notes**
+- Layout officiel étudié : `/opt/stacks/<nom>/compose.yaml`,
+  `DOCKGE_STACKS_DIR` absolu et identique côté hôte/conteneur.
+  Ce n'est pas une preuve d'adoption du fichier actuel
+  `deploy/docker-compose.yml` (contexts `../backend`, `../frontend`).
+- Aucune copie/symlink fragile, découverte implicite du .env ou réécriture
+  des paths n'est retenue sans expérimentation. Une adaptation source
+  versionnée peut être nécessaire, à cadrer avant modification d'INT-125.
+- Dockge est un manager Compose avec pouvoir d'action, pas un outil
+  général de lecture des commandes hôte. La gouvernance des boutons
+  start/update/edit ne constitue pas un contrôle de permission technique.
+- Le test réel d'interaction avec verrou/release appartient à INT-129,
+  puis à la recette INT-111 ; INT-132 ne peut pas le valider par avance.
+- Cas TC-INT-132-01/02, non exécutés. Pas de rôle métier ni feature UI Tervo.
+
+---
+
 ## INT-126 — Bootstrap sûr du premier administrateur (2 pts)
 
 **User Story**
@@ -267,9 +342,9 @@ Afin de **prouver la récupération sans détruire la source**.
 **Acceptance Criteria**
 - [ ] Scripts versionnés dump PG/archive uploads, volumes découverts et cohérence DB/fichiers garantie par une fenêtre contrôlée si nécessaire
 - [ ] Archives atomiques, checksum, chiffrement, destination hors VPS explicitement autorisée et rétention ; aucun secret committé
-- [ ] Un seul scheduler, procédure manuelle possible sans UI 1Panel
+- [ ] Un seul scheduler système (timers/scripts), procédure manuelle possible sans UI ; Dockge ne remplace pas un plan de backup
 - [ ] Restore isolé vérifiant relations, photo et octets/empreinte PDF BYTEA, source et volumes réels inchangés
-- [ ] Récupération sécurisée `.env` et reconstruction/export du proxy documentés sans secrets
+- [ ] Récupération sécurisée `.env`, configuration/état TLS Caddy et données d'auth Dockge ; reconstruction/restore privés documentés sans secrets
 - [ ] Preuves enregistrées pour TD-B010/TD-B022 ; limites volume et stockage photo TD-B020 explicites
 
 **Technical Notes**
@@ -291,7 +366,7 @@ Je veux **une commande de release commune au manuel et à la CI**,
 Afin de **maîtriser artefacts, migrations, disponibilité et retour arrière**.
 
 **Acceptance Criteria**
-- [ ] Commande versionnée avec Compose/.env explicites, services Compose, verrou de déploiement et SHA enregistré
+- [ ] Commande versionnée avec Compose/.env explicites, services Compose, verrou de déploiement et SHA enregistré ; interaction réelle avec Dockge testée (fenêtre d'administration gelée/absence d'action en cours), pas de seconde orchestration ni simple promesse de RBAC
 - [ ] Build/version des images une fois, backup/maintenance avant migration si nécessaire, migration avant exposition, démarrage/attente puis GET readiness/smoke
 - [ ] Échec propagé pour build/migration/readiness/smoke ; conteneur Up ou OpenAPI seul ne rend pas la release verte
 - [ ] Images précédentes conservées sans prune immédiat, rollback vers artefact exact testé sans HEAD détaché laissé sur VPS
@@ -341,9 +416,9 @@ Afin de **présenter le projet avec crédibilité (profil backend Java/Go)**.
 **Acceptance Criteria**
 - [ ] Fiche archi : chaîne Client→Site→Equipment→Intervention + migration
 - [ ] Q/R : pourquoi la migration est transverse, pourquoi 3 zones, pourquoi transactions par batch
-- [ ] Périmètre crédibilité : ne pas survendre Vue/TS, GH Actions, VPS, 1Panel
+- [ ] Périmètre crédibilité : ne pas survendre Vue/TS, GH Actions, VPS, Caddy/Dockge ; 1Panel présenté comme évaluation historique
 - [ ] Fichiers : `notes/interview/`
-- [ ] Fiche d’une page présentable en 2–3 minutes : flux réseau, couches Router → Service → Repository, modèle V2, pipeline d’import et déploiement ; choix 1Panel, Compose et PostgreSQL justifiés
+- [ ] Fiche d’une page présentable en 2–3 minutes : flux réseau, couches Router → Service → Repository, modèle V2, pipeline d’import et déploiement ; choix Caddy natif, console Dockge privée, Compose et PostgreSQL justifiés sans annoncer des tests non exécutés
 - [ ] Q/R couvrant healthchecks, idempotence, fuzzy matching, deux passes, transactions, interventions orphelines, CI/CD, ports, versions, modélisation V2 et sécurité VPS ; réponses de 3–5 phrases maximum
 - [ ] Seuils 95/80 présentés comme paramètres à calibrer ; réalisations distinguées du backlog et compétences présentées sans survente
 - [ ] Formulation adaptée pour chaque limite de compétence et pitch de 5–6 phrases ; livrables `architecture-presentation.md`, `questions-reponses.md`, `perimetre-credibilite.md`
@@ -357,11 +432,13 @@ Afin de **présenter le projet avec crédibilité (profil backend Java/Go)**.
 
 Voir [test-cases.json](test-cases.json).
 
-Quinze scénarios : dix hérités (avec `legacy_id` conservés), trois issus
-de la revue production et deux pour le bootstrap admin/la décision DB.
+Dix-neuf scénarios : dix hérités (avec `legacy_id` conservés), trois issus
+de la revue production, deux pour le bootstrap admin/la décision DB,
+quatre nouveaux pour Caddy/Dockge (INT-131/132).
 Le propriétaire `task` est aligné sur le découpage ; les IDs historiques
 ne sont pas renommés et `origin_task` trace les transferts.
 TC-INT-111-01 conserve les observations partielles du socle VPS,
-TC-INT-111-02 la préparation locale 1Panel ; aucune installation ni
-recette future n'est déclarée réussie. Les autres cas restent à exécuter.
+TC-INT-111-02 les validations historiques 1Panel/OpenResty,
+TC-INT-111-03/08 la recette locale INT-125. Leurs résultats ne sont pas
+réattribués à Caddy/Dockge ; tous les cas INT-131/132 restent non exécutés.
 Le planning ne vaut pas implémentation ou validation de déploiement.

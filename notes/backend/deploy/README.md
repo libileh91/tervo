@@ -13,12 +13,12 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 | ------------------ | -------------------------------------- | ----------------------------------- |
 | **Serveur**        | Machine locale, `192.168.10.192`       | Hostkey `vm.mini`, Debian 13 (inventaire reçu) |
 | **IP**             | Privée, derrière un routeur            | Publique fixe                       |
-| **Exposition**     | Cloudflare Tunnel (connexion sortante) | Reverse proxy 1Panel (ports 80/443) |
-| **SSL**            | Cloudflare Edge (automatique)          | Let's Encrypt (1Panel)              |
+| **Exposition**     | Cloudflare Tunnel (connexion sortante) | Caddy natif cible 80/443 ; dernier proxy vérifié OpenResty host |
+| **SSL**            | Cloudflare Edge (automatique)          | Let's Encrypt via Caddy prévu, non validé |
 | **DNS**            | Cloudflare (`tervoapp.com`)            | Enregistrements A                   |
 | **Ports services** | Historiquement `0.0.0.0`               | **`127.0.0.1`** (Stage 6.1)         |
 | **PostgreSQL**     | Conteneur partagé préexistant          | Embarqué dans le compose            |
-| **Statut**         | ✅ opérationnel                        | ⏳ INT-124 runtime VPS validé, INT-125 packaging/stack validés localement ; application non déployée |
+| **Statut**         | ✅ opérationnel                        | ⏳ Caddy/Dockge approuvés en INT-131/132, bascule non faite ; preuves INT-124/125 conservées, app non déployée |
 
 > **Pourquoi deux cibles ?** Le mini-s1 a servi à valider l'application et la chaîne de déploiement sans exposer la machine. Le VPS est la cible professionnelle (Sprint 7.6 (INT-111)).
 
@@ -42,33 +42,21 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 
 ## 3. Architecture cible
 
-```
-                        INTERNET
-                           │
-                     HTTPS 80/443
-                           │
-                   ┌───────▼────────┐
-                   │     1Panel     │
-                   │   OpenResty    │
-                   │  SSL / Routing │
-                   └───────┬────────┘
-                           │ 127.0.0.1 (aucun service applicatif exposé)
-          ┌────────────────┼────────────────┐
-          ▼                ▼                ▼
-    Frontend (Vue.js)  Backend (FastAPI)  [services annexes]
-    127.0.0.1:3000     127.0.0.1:8000
-          │                │
-          │         Router → Service → Repository
-          │                │
-          │           PostgreSQL
-          │          (aucun port publié)
-          │
-          └────────── API REST
+```text
+Internet ── 80/443 TCP ── Caddy natif
+                           ├── 127.0.0.1:3000 ── frontend
+                           └── 127.0.0.1:8000 ── FastAPI
+                                                  ├── PostgreSQL non publié
+                                                  └── uploads persistants
 
-  1Panel (7410) : écoute en loopback → accès par tunnel SSH uniquement
+Poste admin ── tunnel SSH ── 127.0.0.1:5001 ── Dockge + login
+Pas de route Caddy publique vers Dockge ; API admin Caddy locale/socket.
 ```
 
-**Ports publics : 22, 80, 443.** Tout le reste est interne.
+**Cible, pas état déjà exécuté :** INT-131 commence avec un profil HTTP
+sans ACME ni vrais domaines actifs ; HTTPS public sera validé en INT-111.
+Le dernier état vérifié reste 1Panel privé/OpenResty host, à basculer.
+**Ports publics retenus : 22/80/443 TCP.** Aucun ajout implicite UDP443.
 
 ---
 
@@ -124,6 +112,7 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 | [03 — 1Panel privé et OpenResty](vps/03-preparation-1panel-prive.md) | Incident d'exposition, tunnel SSH, 502 agent, bind privé, restart et installation du proxy ; limites de validation |
 | [Livraison INT-124](../sprint7.6/INT-124-1panel-openresty-prives.md) | Note pédagogique, preuves de clôture, maintenance et confinement/retour arrière |
 | [Livraison INT-125](../sprint7.6/INT-125-stack-reproductible.md) | Images/configuration/readiness, recette Docker locale jetable et limites de déploiement |
+| [Cadrage INT-131/132](../sprint7.6/INT-131-132-cadrage-caddy-dockge.md) | Nouvelle cible Caddy natif/Dockge privé, bascule réversible et gate d'adoption |
 
 Ces notes enregistrent les commandes et résultats rapportés pendant la
 réalisation ; chaque étape précise ce qui est vérifié ou encore en attente.

@@ -228,7 +228,7 @@
 | **Créé dans** | INT-122 / R10, vérification réelle du bootstrap démo |
 | **Dépend de** | INT-126 (bootstrap production sûr), INT-111 (usage réel) ; aucun seed sur base persistante sans cadrage dédié |
 | **Fichiers** | `app/seed.py`, procédures de déploiement, futurs tests de protection si autorisés |
-| **Action attendue** | Séparer/cadrer l'usage démo de la migration/production, définir la protection contre un seed destructif accidentel et documenter les préconditions. Le script actuel effectue des DELETE et ne nettoie pas toute la chaîne V2 ; la répétition testée sur sa propre SQLite démo ne garantit pas la sûreté sur une base peuplée. Ne pas modifier ou vider une base existante pour valider ce todo. |
+| **Action attendue** | Séparer/cadrer l'usage démo de la migration/production, définir la protection contre un seed destructif accidentel et documenter les préconditions. Le script actuel effectue des DELETE et ne nettoie pas toute la chaîne V2 ; la répétition testée sur sa propre SQLite démo ne garantit pas la sûreté sur une base peuplée. Ne pas modifier ou vider une base existante pour valider ce todo, ni lancer ce seed depuis une console Dockge comme raccourci de bootstrap. |
 | **Statut** | ⏳ À cadrer avant tout usage du seed avec des données existantes ; aucun changement de CLI/comportement dans R10 |
 
 ---

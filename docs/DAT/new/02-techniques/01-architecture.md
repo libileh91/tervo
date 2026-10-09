@@ -671,29 +671,30 @@ Exemple :
 
 # 18. Architecture de déploiement
 
-L'architecture cible reste volontairement simple :
+La cible VPS approuvée après INT-125 reste volontairement simple :
+Caddy natif sous systemd, application sous Docker Compose et Dockge
+strictement privé pour les opérations Compose.
 
 ```text
-                    Internet
-                       │
-                     HTTPS
-                       │
-                       ▼
-                Reverse Proxy
-                       │
-          ┌────────────┴────────────┐
-          │                         │
-          ▼                         ▼
-      Frontend                    API
-          │                         │
-          │                         ├──── PostgreSQL
-          │                         │
-          │                         └──── Storage
-          │
-          └──────── navigateur
+Internet ── HTTPS ── Caddy natif :80/:443
+                       ├── 127.0.0.1:3000 ── frontend Nginx :3000
+                       └── 127.0.0.1:8000 ── FastAPI :8000
+                                              ├── PostgreSQL (non publié)
+                                              └── volume uploads
+
+Poste administrateur ── tunnel SSH ── 127.0.0.1:5001 ── Dockge
 ```
 
-Les différents composants sont déployés sur une infrastructure Docker.
+* Caddy est le seul proxy public après bascule : HTTP :80 pour le
+  bootstrap sans ACME, puis 80/443 pour le profil production autorisé.
+* Frontend/API restent publiés uniquement sur le loopback ; PostgreSQL
+  ne publie aucun port. Les réseaux séparés d'INT-125 restent conservés.
+* Les domaines retenus sont `tervoapp.com` et `api.tervoapp.com`, avec
+  une base API `/api/v1` et CORS limité à l'origine frontend.
+* Dockge n'a ni domaine public ni route dans Caddy ; sa publication
+  127.0.0.1:5001 est accessible par tunnel et login administrateur.
+* SSH reste nécessaire pour l'hôte ; Dockge ne remplace pas systemd,
+  journald, le contrôle UFW ou la console fournisseur de secours.
 
 Le déploiement doit privilégier :
 
@@ -706,17 +707,65 @@ Le déploiement doit privilégier :
 
 L'orchestration complexe n'est pas nécessaire pour le périmètre initial.
 
+### Responsabilités et source de vérité
+
+| Élément | Responsable |
+|---|---|
+| HTTPS et routage public | Caddy, configuration versionnée |
+| Services/réseaux/volumes applicatifs | Compose suivi dans Git |
+| Secrets | Fichier privé explicitement fourni, jamais Git ni logs |
+| Release et rollback | Commande INT-129, puis CI INT-130 réutilisant cette commande |
+| Console Compose privée | Dockge, sans seconde définition autonome de Tervo |
+| Backups et alertes | Scripts versionnés et scheduler système explicite, INT-128/111 |
+
+La CI vérifie ; les images de production restent construites sur le VPS.
+GHCR et la construction/promotion d'images en CI ne sont pas introduits
+par ce changement de proxy.
+
+Dockge dispose de capacités de modification et d'un accès Docker
+root-equivalent, pas d'un rôle lecture seule démontré. La convention
+« consulter les logs sans éditer Tervo » ne constitue pas un RBAC technique.
+Le déploiement doit avoir une seule autorité : pas de release concurrente,
+d'édition cachée du Compose ou de rebuild depuis une source différente.
+
+### Gate d'intégration Dockge
+
+Le layout officiel `/opt/stacks/<nom>/compose.yaml` et les chemins
+identiques côté hôte/conteneur doivent être confrontés au dépôt réel :
+`deploy/docker-compose.yml`, contextes relatifs et `.env` explicite.
+Une copie ou un symlink n'est pas une adoption validée.
+
+INT-132 doit prouver une stratégie reproductible, la même configuration
+effective, le même projet/volumes et l'absence de secrets dans les sorties.
+Tant que ce gate ne passe pas, Dockge ne pilote pas la stack Tervo.
+Une portée réduite à une stack de démonstration ne vaut pas validation
+du besoin de console Tervo et doit être acceptée explicitement.
+
+### État réel et cible
+
+La décision est approuvée, pas exécutée. Les preuves INT-124 concernent
+1Panel/OpenResty privé avec OpenResty déjà en mode host ; INT-125 est une
+recette locale réussie. INT-131/132 préparent la bascule réversible et
+la console privée, sans rouvrir automatiquement leurs critères historiques.
+Les certificats publics et la publication Tervo restent dans INT-111.
+INT-131 ne charge aucun vrai hostname : profil bootstrap HTTP avec
+automatic HTTPS désactivé, profil production conservé inactif. La recette
+vérifie absence de tentative ACME et d'état de certificat Tervo, pas
+simplement absence de revendication de succès.
+
+INT-132 valide le gate et la gouvernance sans prétendre tester une
+release encore inexistante. La preuve avec commande/verrou réels et
+fenêtre d'administration gelée appartient à INT-129, puis INT-111.
+
 ---
 
 # 19. Environnement de développement
 
-Le développement local doit permettre de lancer rapidement les dépendances principales.
-
-Exemple :
-
-```text
-docker compose up -d
-```
+Le développement local doit permettre de lancer rapidement les dépendances
+principales. Le Compose livré en INT-125 est une configuration production
+avec secrets explicites, pas une configuration hot reload de dev.
+Un Compose dev dédié est une option non livrée ; ne pas réutiliser
+une ancienne configuration avec secrets de secours comme modèle VPS.
 
 Services principaux :
 
@@ -771,19 +820,18 @@ Minimum :
 * état de la base de données ;
 * surveillance de l'espace disque pour les fichiers.
 
-Exemple :
+Contrat backend livré en INT-125 :
 
 ```text
-GET /health
+GET /health/ready
+200 {"status":"ready"} ou 503 {"status":"not_ready"}
 ```
 
-Réponse conceptuelle :
-
-```json
-{
-  "status": "ok"
-}
-```
+Le probe exécute SELECT 1 avec délai borné ; il ne prouve pas que le
+schéma est migré ni que tous les parcours métier fonctionnent.
+Le frontend a son propre `/health` qui vérifie la présence d'index.html.
+Dockge facilite la consultation, mais ne fournit pas à lui seul
+une alerte extérieure ni une preuve de disponibilité publique HTTPS.
 
 Des mécanismes plus avancés de métriques et de tracing pourront être ajoutés si l'utilisation de Tervo le justifie.
 
@@ -809,7 +857,12 @@ Données métier
 Fichiers
 ```
 
-La stratégie opérationnelle détaillée pourra être documentée séparément si nécessaire.
+La stratégie opérationnelle doit également couvrir la configuration
+et l'état Caddy (dont certificats), les données d'authentification Dockge
+et la récupération privée des secrets. Les PDF BYTEA sont couverts par
+la DB ; les uploads restent un volume séparé.
+Le détail et les tests de restauration appartiennent à INT-128/111 ;
+la présence d'une console Dockge ne vaut pas sauvegarde.
 
 ---
 

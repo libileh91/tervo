@@ -1,15 +1,21 @@
 # Tervo — Best practices 1Panel & VPS production
 
+> **Guide historique 1Panel.** La cible approuvée est désormais Caddy natif
+> et Dockge privé ; voir [le cadrage INT-131/132](../sprint7.6/INT-131-132-cadrage-caddy-dockge.md).
+> L'état ancien reste celui des preuves INT-124 tant que la bascule n'est
+> pas réalisée. Ne pas appliquer ce guide comme doctrine de la nouvelle cible.
+
 > **Contexte :** INT-111 — Déploiement VPS
 > **Cible :** Hostkey `vm.mini` — 4 vCore / 6 GB RAM / 120 GB SSD
 > **OS :** Debian 13
 > **Orchestration :** Docker Compose
-> **Administration serveur :** 1Panel
-> **Reverse proxy :** OpenResty / 1Panel
-> **CI/CD :** GitHub Actions → SSH → VPS
-> **Statut :** référence opérationnelle à partir d’INT-111
+> **Administration évaluée en INT-124 :** 1Panel
+> **Proxy évalué en INT-124 :** OpenResty / 1Panel
+> **CI/CD envisagée historiquement :** GitHub Actions → SSH → VPS
+> **Statut :** snapshot de doctrine antérieure, remplacée par le cadrage Caddy/Dockge
 
-Ce document fixe la doctrine cible, pas un bilan de déploiement réussi.
+Ce document conserve la doctrine 1Panel évaluée, pas la cible actuelle
+ni un bilan de mise en service publique réussi.
 Les réalisations, écarts et contrôles effectivement observés sont tracés
 dans [le parcours VPS](vps/README.md). L'exception firewall d'INT-124
 ci-dessous ne permet jamais de publier l'administration.
@@ -26,9 +32,11 @@ des contrats INT-129/130, pas une procédure actuellement exécutable.
 
 ## 1. Décision d'architecture
 
-Pour Tervo, **1Panel est conservé**, mais avec une responsabilité volontairement limitée.
+**Décision historique avant INT-131/132 :** 1Panel était conservé avec
+une responsabilité volontairement limitée. La cible approuvée est
+désormais Caddy natif/Dockge privé, pas encore installée.
 
-La règle centrale est :
+La règle centrale de ce snapshot était :
 
 > **Git + `deploy/docker-compose.yml` définissent Tervo.
 > 1Panel administre le VPS autour de Tervo.**

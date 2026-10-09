@@ -12,7 +12,7 @@ La référence métier et technique reste le [DAT unique](../../DAT/new/00-somma
 | [Chantier technique — refactor monolithe modulaire](refactor-monolithe-modulaire/README.md) | Transverse, avant 7.4 ; hors sprints fonctionnels | INT-113 à INT-123 (R1 à R11) | Terminé et poussé sur main (`adc5954`), CI verte ; TD-B018 traité au démarrage d'INT-104 |
 | [7.4](sprint7.4/tasks.md) | Cycle terrain | INT-104 à INT-108 | Terminé ; `main` poussé, CI verte (`6206c6f`), déploiement sauté |
 | [7.5](sprint7.5/tasks.md) | Showroom et remplacement | INT-109 à INT-110 | Implémentées ; code poussé (`624424b`), [CI verte](https://github.com/libileh91/tervo/actions/runs/37186606561), déploiement sauté |
-| [7.6](sprint7.6/tasks.md) | Déploiement VPS et documentation entretien | INT-111/112 + INT-124 à INT-130 | INT-124/125 terminées, stack validée localement en isolation ; prochaine INT-126 après feu vert, application non déployée |
+| [7.6](sprint7.6/tasks.md) | Déploiement VPS et documentation entretien | INT-111/112 + INT-124 à INT-132 | INT-124/125 validées, Caddy natif/Dockge privé approuvés ; INT-131/132 planifiées, aucune bascule ou app déployée |
 
 Chaque dossier contient son `tasks.md` et son `test-cases.json`. Les notes suivent les mêmes noms de sprint dans `notes/backend/`, dont [sprint7.4](../../../notes/backend/sprint7.4/) pour INT-104.
 
@@ -22,10 +22,13 @@ Chaque dossier contient son `tasks.md` et son `test-cases.json`. Les notes suive
 - 7.2 ne dépend pas de 7.3 : les équipements historiques ont `installation_id` nullable.
 - 7.5 utilise le socle 7.1 et la chaîne commerciale 7.3 pour relier showroom et vente.
 - 7.6 déploie le périmètre effectivement validé et documente les fonctionnalités encore en backlog.
-- 7.6 : ordre technique INT-124 → 125 → 126 → 127 → 128 → 129, puis
+- 7.6 : preuves INT-124/125 conservées ; nouveau cadrage INT-131 (Caddy)
+  → INT-132 (Dockge privé/gate), puis INT-126 → 127 → 128 → 129, puis
   INT-111 (mise en service manuelle), INT-130 (CI/CD) et INT-112.
   La recette manuelle ne dépend pas de sa propre automatisation ; aucun
   nouveau sprint ni sujet métier n'est créé par ce découpage.
+  La cible reste build VPS sans GHCR, application loopback et PG non publié.
+  Un changement de cible n'est pas une validation des nouvelles installations.
 
 La mesure de l’import sur un volume représentatif reste ouverte dans [TD-B016](../../todos/backend.md#td-b016--mesurer-limport-sur-un-volume-représentatif). Les liens Equipment → Installation (TD-B014) et Installation → SaleLine (TD-B017) sont réalisés. Avant INT-110, vérifier le remplacement déjà amorcé dans INT-97.
 
