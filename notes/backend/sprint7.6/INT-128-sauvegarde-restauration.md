@@ -39,6 +39,13 @@ définitions de fonctions, `set -e`, `umask` et `trap` n'affichent normalement
 rien. Une affectation avec `$(commande)` capture sa sortie dans la variable,
 elle ne l'affiche pas. Ne jamais imprimer les secrets pour « vérifier ».
 
+Les blocs **« retour terminal »** complètent les tableaux. Un bloc marqué
+**attendu** est une illustration, pas une capture VPS ; les mots
+`ID_DEPOT`, `ID_SNAPSHOT`, `CHEMIN_DEPOT` sont des placeholders. Les commandes
+complètes restent dans les blocs `bash`. `echo "$?"` rend visible le code de
+la commande immédiatement précédente ; sous `set -e`, une erreur peut quitter
+la session avant cet affichage.
+
 ## 2. Choisir explicitement le projet — sur le VPS
 
 Après déploiement validé, dans un terminal d'administration :
@@ -72,6 +79,17 @@ Si le fichier choisi est `deploy/.env`, à côté du Compose, l'affectation
 peut être `ENV_FILE="$(dirname "$COMPOSE_FILE")/.env"`. Elle reste silencieuse
 et donne un chemin absolu si `COMPOSE_FILE` est absolu ; elle ne prouve pas
 que le fichier existe ou est valide.
+
+**Retour terminal attendu** (le message du validateur a été observé localement,
+mais ce n'est pas une capture de commandes exécutées sur le VPS) :
+
+```text
+Environment permissions and Compose configuration valid.
+
+# dc config --quiet
+# echo "$?"
+0
+```
 
 ```bash
 BACKEND_ID=$(dc ps -a -q backend)
@@ -140,6 +158,14 @@ les services. Ne jamais annoncer une récupération automatique universelle.
 testés. Les contrôles systemd/Dockge sont simulés ; ce tableau n'est pas une
 preuve que les services du VPS ont été arrêtés.
 
+**Retour terminal attendu** pour une commande d'arrêt silencieuse :
+
+```text
+# systemctl stop caddy.service
+# echo "$?"
+0
+```
+
 ## 4. Dump, uploads et paramètres — toujours sur le VPS
 
 ```bash
@@ -192,6 +218,27 @@ curl --fail --show-error --silent --noproxy "*" \
 **Observé en recette locale :** dump/restauration et archives réussis ;
 le contrôle HTTP a donné 200 avec la DB disponible et 503 pendant sa panne.
 Le curl manuel de reprise sur le VPS n'a pas été exécuté.
+
+**Retours terminal attendus** pour un dump redirigé et un contrôle HTTP réussi :
+
+```text
+# dc exec -T postgres sh -c 'exec pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom --no-owner --no-acl' > "$SNAPSHOT_DIR/database.dump"
+# echo "$?"
+0
+# test -s "$SNAPSHOT_DIR/database.dump"
+# echo "$?"
+0
+```
+
+Le premier code se lit immédiatement après le `pg_dump` du bloc précédent ;
+le second contrôle que son fichier n'est pas vide. Il n'existe pas de ligne
+`dump OK` produite automatiquement par cette commande.
+
+```text
+{"status":"ready"}
+```
+
+Cette dernière ligne est la forme du corps HTTP attendu, pas une capture VPS.
 
 ```bash
 (
@@ -275,6 +322,24 @@ uniquement aux emplacements créés pour cette capture.
 | `restic check --read-data` | Code 0 après vérification du dépôt et lecture des packs ; des erreurs d'intégrité interdisent de compter le backup comme exploitable. Réussi en recette locale. |
 | `restic snapshots …` | Liste des snapshots correspondant à `tervo-vps`/`tervo`, avec IDs et dates ; ne prouve pas à elle seule qu'un restore fonctionne. |
 
+**Retour terminal observé sur le poste de recette** pour `restic version` :
+
+```text
+restic 0.19.1 compiled with go1.26.4 on linux/amd64
+```
+
+**Forme attendue des lignes utiles** de `restic init`, `backup` et `check`
+(extraits illustratifs, pas des IDs ni une capture du dépôt mini-s1) :
+
+```text
+created restic repository ID_DEPOT at CHEMIN_DEPOT
+snapshot ID_SNAPSHOT saved
+no errors were found
+```
+
+Les commandes peuvent aussi afficher statistiques et progression ; les
+tableaux ci-dessus restent les contrôles de réussite, pas seulement ces lignes.
+
 Rétention proposée, à approuver avant suppression :
 
 ```bash
@@ -340,6 +405,21 @@ de recette. Le remplacement local demandé reste une opération finale distincte
 nouveau PostgreSQL healthy, restore/grants et uploads réussis. La source de
 recette n'a pas été remplacée.
 
+**Retour terminal attendu**, exemple de forme des messages psql des grants :
+
+```text
+BEGIN
+GRANT
+GRANT
+...
+REVOKE
+COMMIT
+```
+
+Le `...` remplace les autres lignes `GRANT` ; ce n'est pas une ligne émise
+par psql. `pg_restore` sans `--verbose` est normalement silencieux : son code
+0 puis les contrôles SQL/bytes sont nécessaires, pas un message inventé.
+
 Contrôler les relations, chemins photo et métadonnées PDF sous cette cible :
 
 ```bash
@@ -381,6 +461,12 @@ sha256sum "$RESTORE_DIR/report.pdf"
 | `psql … > pdf.base64` | Code 0, une version identifiée exportée vers le fichier ; aucun PDF/base64 affiché. Un ID absent peut donner un fichier vide : contrôler la ligne SQL avant l'export. |
 | `base64 --decode … > report.pdf` | Code 0, fichier PDF reconstitué ; contenu base64 invalide = échec. |
 | `sha256sum …/report.pdf` | Une ligne `HASH  CHEMIN`, le hash devant égaler le `sha256` enregistré. Cette commande ne compare pas automatiquement les deux valeurs. |
+
+**Retour terminal attendu**, avec valeurs volontairement non renseignées :
+
+```text
+SHA256_STOCKE_DANS_REPORT_VERSION  CHEMIN_PRIVE/report.pdf
+```
 
 Attendre le hash stocké pour cette version et les mêmes octets qu'avant backup.
 Ne pas afficher le PDF/base64 dans le terminal partagé. Pour une photo choisie,
