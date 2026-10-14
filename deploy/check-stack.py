@@ -5,13 +5,17 @@ Never points at an existing DB, performs a production release or prunes Docker.
 """
 
 import argparse
+import base64
 import contextlib
+import hashlib
 import http.client
+import importlib.util
 import io
 import json
 import os
 from pathlib import Path
 import socket
+import sqlite3
 import subprocess
 import tarfile
 import tempfile
@@ -58,10 +62,165 @@ def wait_for(check, description, seconds=90):
     raise RuntimeError(f"Timeout: {description}")
 
 
+def check_backup(root, compose, env_file, child_env, project, restic):
+    """INT-128: real PG/restic restore, offline configuration fixtures, no real SSH."""
+    from types import SimpleNamespace
+    spec = importlib.util.spec_from_file_location("snapshot", root / "deploy/scripts/snapshot.py")
+    snapshot = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(snapshot)
+    photo = (root / "backend/tests/test_photo.jpg").read_bytes()
+    compose("exec", "-T", "backend", "python", "-c", """
+import asyncio,base64,hashlib,sys
+from datetime import date,datetime
+from pathlib import Path
+from weasyprint import HTML
+from app.model_registry import load_models
+from app.core.database import async_session
+from app.modules.customers.models import Client,Site
+from app.modules.interventions.models.intervention import Intervention
+from app.modules.interventions.models.photo import Photo
+from app.modules.reports.models import Report,ReportVersion
+load_models()
+photo=base64.b64decode(sys.stdin.read())
+pdf=HTML(string='<p>INT128 restore fixture</p>').write_pdf()
+async def create():
+    async with async_session() as db, db.begin():
+        client=Client(full_name='INT128_CLIENT',phone='fictitious',address='fictitious')
+        db.add(client); await db.flush()
+        site=Site(client_id=client.id,name='INT128_SITE',address='fictitious')
+        db.add(site); await db.flush()
+        intervention=Intervention(site_id=site.id,title='INT128',scheduled_date=date.today())
+        db.add(intervention); await db.flush()
+        db.add(Photo(intervention_id=intervention.id,usage='BEFORE',file_path='photos/int128.jpg'))
+        report=Report(intervention_id=intervention.id)
+        db.add(report); await db.flush()
+        db.add(ReportVersion(report_id=report.id,version=1,pdf=pdf,
+            sha256=hashlib.sha256(pdf).hexdigest(),size=len(pdf),
+            generated_at=datetime(2026,1,1,12),transmitted_at=datetime(2026,1,2,12)))
+        Path('/app/uploads/photos/int128.jpg').write_bytes(photo)
+asyncio.run(create())
+""", input_data=base64.b64encode(photo).decode())
+    sql = """SELECT c.id,s.id,i.id,p.id,r.id,v.id,encode(v.pdf,'hex'),v.sha256,v.size,
+v.generated_at,v.transmitted_at
+FROM client c JOIN site s ON s.client_id=c.id JOIN intervention i ON i.site_id=s.id
+JOIN photo p ON p.intervention_id=i.id JOIN report r ON r.intervention_id=i.id
+JOIN report_version v ON v.report_id=r.id WHERE c.full_name='INT128_CLIENT';"""
+
+    def query(command):
+        return run(command + ["exec", "-T", "postgres", "sh", "-c",
+            'exec psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -qAt'],
+            env=child_env, input_data=sql, capture=True).strip()
+
+    source_command = ["docker", "compose", "-p", project, "--env-file", str(env_file),
+                      "-f", str(root / "deploy/docker-compose.yml")]
+    expected = query(source_command)
+    fields = expected.split("|")
+    assert hashlib.sha256(bytes.fromhex(fields[6])).hexdigest() == fields[7]
+    assert len(bytes.fromhex(fields[6])) == int(fields[8])
+    config_dirs = [root / name for name in ("caddy-config", "caddy-state", "dockge-data")]
+    for directory in config_dirs:
+        directory.mkdir()
+    (config_dirs[0] / "Caddyfile").write_text("fixture HTTP only")
+    (config_dirs[1] / "state").write_bytes(b"fictitious-private-state")
+    with sqlite3.connect(config_dirs[2] / "dockge.db") as db:
+        db.execute("CREATE TABLE fixture (value TEXT)")
+        db.execute("INSERT INTO fixture VALUES ('fictitious-auth-state')")
+    private_sources = {path: snapshot.sha256(path) for directory in config_dirs for path in directory.iterdir()}
+    unit = root / "caddy.service"
+    unit.write_text("fictitious unit")
+    dockge_compose = root / "dockge-fixture.yaml"
+    dockge_compose.write_text("fictitious compose")
+    bundle = root / "bundle.tar"
+    with bundle.open("wb") as output:
+        snapshot.capture(SimpleNamespace(
+            env_file=env_file, compose=root / "deploy/docker-compose.yml", project=project,
+            caddy_config=config_dirs[0], caddy_state=config_dirs[1], dockge_data=config_dirs[2],
+            caddy_unit_file=unit, dockge_compose=dockge_compose,
+            lock_file=root / "backup.lock", output=output), contextlib.nullcontext())
+    assert query(source_command) == expected
+    assert all(snapshot.sha256(path) == digest for path, digest in private_sources.items())
+
+    password_file = root / "restic-password"
+    password_file.write_text(uuid.uuid4().hex)
+    password_file.chmod(0o600)
+    restic_env = {**child_env, "RESTIC_REPOSITORY": str(root / "restic-repo"),
+                  "RESTIC_PASSWORD_FILE": str(password_file)}
+    restic_env.pop("RESTIC_PASSWORD", None)
+    restic_env.pop("RESTIC_PASSWORD_COMMAND", None)
+    run([restic, "init"], env=restic_env, capture=True)
+    tools = root / "test-tools"
+    tools.mkdir()
+    (tools / "restic").symlink_to(restic)
+    (tools / "ssh").write_text('#!/bin/sh\nexec cat "$FAKE_BUNDLE"\n')
+    (tools / "ssh").chmod(0o700)
+    config = root / "mini-fixture.conf"
+    config.write_text(
+        f"RESTIC_REPOSITORY='{restic_env['RESTIC_REPOSITORY']}'\n"
+        f"RESTIC_PASSWORD_FILE='{password_file}'\nSSH_TARGET=fictitious\n"
+        "SSH_CONFIG=/fictitious\nREMOTE_COMMAND=fictitious\nAPPLY_RETENTION=1\n")
+    config.chmod(0o600)
+    run(["sh", str(root / "deploy/scripts/pull-backup.sh"), str(config)],
+        env={**child_env, "PATH": str(tools) + ":" + child_env["PATH"], "FAKE_BUNDLE": str(bundle)},
+        capture=True)
+    run([restic, "check", "--read-data"], env=restic_env, capture=True)
+    decrypted = root / "decrypted.tar"
+    with decrypted.open("wb") as output:
+        subprocess.run([restic, "dump", "latest", "/tervo.tar"], env=restic_env,
+                       stdout=output, stderr=subprocess.PIPE, check=True)
+    assert snapshot.sha256(decrypted) == snapshot.sha256(bundle)
+    wrong_password = root / "wrong-password"
+    wrong_password.write_text("wrong-fictitious-password")
+    denied = subprocess.run([restic, "snapshots"],
+        env={**restic_env, "RESTIC_PASSWORD_FILE": str(wrong_password)}, capture_output=True)
+    assert denied.returncode != 0
+    unpacked = root / "unpacked"
+    snapshot.unpack(decrypted, unpacked)
+    assert (unpacked / "private.env").read_bytes() == env_file.read_bytes()
+    for archive_name, original in zip(
+            ("caddy-config.tar", "caddy-state.tar", "dockge-data.tar"), config_dirs):
+        restored = root / (archive_name + "-restore")
+        restored.mkdir()
+        with tarfile.open(unpacked / archive_name) as archive:
+            archive.extractall(restored, filter="data")
+        for path in original.iterdir():
+            assert (restored / original.name / path.name).read_bytes() == path.read_bytes()
+
+    restore_project = "tervo-int128-restore-" + uuid.uuid4().hex[:12]
+    restore_command = ["docker", "compose", "-p", restore_project,
+                       "--env-file", str(env_file), "-f", str(root / "deploy/docker-compose.yml")]
+    try:
+        run(restore_command + ["up", "-d", "--wait", "--wait-timeout", "120", "postgres"], env=child_env)
+        with (unpacked / "database.dump").open("rb") as source:
+            subprocess.run(restore_command + ["exec", "-T", "postgres", "sh", "-c",
+                'exec pg_restore --exit-on-error --no-owner --no-acl -U "$POSTGRES_USER" -d "$POSTGRES_DB"'],
+                stdin=source, env=child_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        run(restore_command + ["exec", "-T", "postgres", "sh", "-c",
+            'exec psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /opt/tervo/app-grants.sql'],
+            env=child_env, capture=True)
+        assert query(restore_command) == expected
+        with (unpacked / "uploads.tar").open("rb") as source:
+            subprocess.run(restore_command + ["run", "--rm", "-T", "--no-deps", "backend", "python", "-c",
+                "import sys,tarfile; tarfile.open(fileobj=sys.stdin.buffer,mode='r|').extractall('/app',filter='data')"],
+                stdin=source, env=child_env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        restored_photo = run(restore_command + ["run", "--rm", "-T", "--no-deps", "backend", "python", "-c",
+            "import base64; from pathlib import Path; "
+            "print(base64.b64encode(Path('/app/uploads/photos/int128.jpg').read_bytes()).decode())"],
+            env=child_env, capture=True).strip()
+        assert base64.b64decode(restored_photo) == photo
+        assert query(source_command) == expected
+        print("PASS: encrypted restic bundle, wrong-key refusal, relationships/photo/PDF BYTEA and private config restore; source unchanged", flush=True)
+    finally:
+        run(restore_command + ["down", "--volumes", "--remove-orphans"], env=child_env)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--revision", required=True, help="Explicit Git commit/tree to export")
+    parser.add_argument("--backup", action="store_true", help="Also run isolated INT-128 restore checks")
+    parser.add_argument("--restic", help="Verified local restic executable for --backup")
     args = parser.parse_args()
+    if args.backup and (not args.restic or not Path(args.restic).is_file()):
+        parser.error("--backup requires --restic /absolute/path/to/restic")
     repo = Path(__file__).resolve().parent.parent
     endpoint = os.environ.get("DOCKER_HOST") or run(
         ["docker", "context", "inspect", "--format", "{{.Endpoints.docker.Host}}"],
@@ -267,6 +426,8 @@ def main():
             wait_for(lambda: healthy("backend"), "backend healthy after recreation")
             assert get(backend_port, "/uploads/photos/int125-check.txt")[1] == b"INT125_UPLOAD_CHECK"
             print("PASS: uploads persisted after backend recreation; migrations and outage/recovery", flush=True)
+            if args.backup:
+                check_backup(root, compose, env_file, child_env, project, str(Path(args.restic).resolve()))
             for service in ("backend", "frontend"):
                 label = run(["docker", "image", "inspect", config["services"][service]["image"],
                              "--format", '{{index .Config.Labels "org.opencontainers.image.revision"}}'],

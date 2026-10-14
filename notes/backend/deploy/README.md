@@ -11,6 +11,7 @@ Entrée unique : [état du VPS et références](vps/README.md).
 | Stack reproductible, Compose/env explicites | [INT-125](../sprint7.6/INT-125-stack-reproductible.md) |
 | Premier admin sans seed destructif, tests locaux SQLite | [INT-126](../sprint7.6/INT-126-bootstrap-admin.md) |
 | DB vide, séparation admin/API et droits testés localement | [INT-127](../sprint7.6/INT-127-postgresql-cible.md) |
+| Sauvegarde/restauration : commandes expliquées, preuve locale, mini-s1 à préparer | [INT-128](../sprint7.6/INT-128-sauvegarde-restauration.md) |
 | Ordre DB → backups → release → publication | [Planning 7.6](../../../docs/stages/stage7/sprint7.6/tasks.md) |
 
 **L'application, PostgreSQL Tervo et HTTPS ne sont pas encore déployés sur

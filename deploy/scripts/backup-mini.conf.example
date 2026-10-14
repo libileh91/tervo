@@ -1,0 +1,11 @@
+# Private file on mini-s1, operator-owned and mode 600, never committed with secrets.
+# Initialize the encrypted restic repository explicitly before enabling the timer.
+RESTIC_REPOSITORY=/srv/backups/tervo
+RESTIC_PASSWORD_FILE=/etc/tervo/restic-password
+SSH_CONFIG=/etc/tervo/backup-ssh.conf
+SSH_TARGET=tervo-vps-backup
+# Set only after the release path and privileged fixed command are approved.
+# The server helper and its config must be root-owned, never user-writable.
+REMOTE_COMMAND=
+# Opt in only after approving pruning: 7 daily, 4 weekly, 6 monthly snapshots.
+APPLY_RETENTION=0

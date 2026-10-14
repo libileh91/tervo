@@ -1,8 +1,8 @@
 #!/bin/sh
 # Validate private file permissions and Compose interpolation without logging values.
 set -eu
-if [ "$#" -ne 1 ]; then
-    echo "Usage: sh deploy/validate-env.sh /absolute/path/to/private.env" >&2
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+    echo "Usage: sh deploy/validate-env.sh /absolute/path/to/private.env [compose-file]" >&2
     exit 2
 fi
 env_file=$1
@@ -26,8 +26,9 @@ for name in TERVO_IMAGE_TAG TERVO_VCS_REF TERVO_DB_NAME TERVO_DB_USER \
     fi
 done
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-docker compose --env-file "$env_file" -f "$script_dir/docker-compose.yml" config --quiet
-python3 - "$env_file" "$script_dir/docker-compose.yml" <<'PY'
+compose_file=${2:-"$script_dir/docker-compose.yml"}
+docker compose --env-file "$env_file" -f "$compose_file" config --quiet
+python3 - "$env_file" "$compose_file" <<'PY'
 import json
 import re
 import subprocess

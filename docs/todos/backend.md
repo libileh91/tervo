@@ -114,7 +114,7 @@
 | **Fichiers**  | `deploy/docker-compose.yml`, `deploy/postgres.docker-compose.yml` |
 | **Action**    | Décision INT-127 : aucune reprise depuis les données locales obsolètes, démarrage VPS vide. Après validation du VPS, remplacer la base locale par sa copie ; identifier la cible exacte et sauvegarder son ancien état avant remplacement. |
 |               | Backup/restore vérifié en INT-128, application réelle en INT-111 ; ne pas présumer conteneur, rôle ou volume, ni effacer une base pour tester. |
-| **Statut**    | ⏳ Choix enregistré et cible testée localement en INT-127 ; DB VPS, sauvegarde/restauration et remplacement local restent non exécutés. |
+| **Statut**    | 🟡 INT-127 : choix enregistré/cible locale ; INT-128 : restore PostgreSQL isolé validé. DB VPS, vraie copie sur mini-s1 et remplacement local final restent à exécuter en INT-111. |
 
 ---
 
@@ -238,7 +238,7 @@
 | **Dépend de** | Cadrage dédié des métadonnées/audits prévus au DAT ; INT-107 pour les règles après transmission d'un rapport |
 | **Fichiers** | `app/modules/interventions/models/photo.py`, `services/photo.py`, `app/modules/reports/`, migrations et procédures de maintenance |
 | **Action attendue** | Cadrer la persistance du nom original, MIME, taille et l'audit/contrôle des suppressions historiques. Définir une réconciliation sûre DB/filesystem : les compensations d'upload contrôlé existent, mais un crash ou une erreur filesystem après commit peut laisser un orphelin. Ne jamais supprimer arbitrairement des fichiers d'un répertoire réel pour tester ce sujet. |
-| **Statut** | ⏳ Différé ; INT-107 archive les octets PDF séparément des photos et garde ses versions stables, mais ne livre ni audit/suppression contrôlée des originaux photo, ni réconciliation du filesystem. Politique métier restante à cadrer. |
+| **Statut** | ⏳ Différé ; INT-128 restaure une photo fictive byte-identique en isolation, mais ne répare pas les orphelins ni ne livre audit/suppression contrôlée/réconciliation du filesystem. Politique métier et volume représentatif restent à cadrer. |
 
 ---
 
@@ -262,7 +262,7 @@
 | **Dépend de** | Volumétrie représentative, INT-128 (backup/restore BYTEA), INT-111 (déploiement réel) |
 | **Fichiers** | `app/modules/reports/{models,service}.py`, `deploy/`, procédure PostgreSQL INT-111 |
 | **Action attendue** | Mesurer taille cumulée des versions PDF `BYTEA`, temps de génération/lecture et volume des sauvegardes. Vérifier une restauration qui conserve PDF, empreinte et date de confirmation. Selon les mesures, décider si un stockage privé externe avec réconciliation transactionnelle est requis ; ne pas exposer les fichiers dans `/uploads`. |
-| **Statut** | ⏳ Ouvert ; les tests jetables INT-107 ne prouvent ni tenue au volume ni restauration/déploiement VPS |
+| **Statut** | 🟡 INT-128 : PDF BYTEA, taille/hash/dates préservés par restore PostgreSQL isolé ; pas de mesure représentative, backup/déploiement réel ou récupération VPS validés. |
 
 ---
 

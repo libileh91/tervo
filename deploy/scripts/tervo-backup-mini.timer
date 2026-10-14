@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily Tervo backup on mini-s1
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=5m
+# No catch-up maintenance during working hours if mini-s1 was offline.
+Persistent=false
+Unit=tervo-backup-mini.service
+
+[Install]
+WantedBy=timers.target

@@ -1,6 +1,6 @@
 # Sprint 7.6 — Déploiement VPS et documentation entretien
 
-> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131, INT-132 (console privée), INT-126 (SQLite local) et INT-127 (PostgreSQL local jetable) validées ; application non encore déployée
+> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131, INT-132 (console privée), INT-126/127/128 (recettes locales) validées ; application et sauvegarde réelle non encore déployées
 > **Dépendances :** Valider le périmètre livré et ses tests avant déploiement ; documenter explicitement le backlog restant.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.6/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -351,21 +351,26 @@ Je veux **sauvegarder et restaurer DB, uploads et paramètres nécessaires**,
 Afin de **prouver la récupération sans détruire la source**.
 
 **Acceptance Criteria**
-- [ ] Scripts versionnés dump PG/archive uploads, volumes découverts et cohérence DB/fichiers garantie par une fenêtre contrôlée si nécessaire
-- [ ] Archives atomiques, checksum, chiffrement, destination hors VPS explicitement autorisée et rétention ; aucun secret committé
-- [ ] Un seul scheduler système (timers/scripts), procédure manuelle possible sans UI ; Dockge ne remplace pas un plan de backup
-- [ ] Restore isolé vérifiant relations, photo et octets/empreinte PDF BYTEA, source et volumes réels inchangés
-- [ ] Récupération sécurisée `.env`, configuration/état TLS Caddy et données d'auth Dockge ; reconstruction/restore privés documentés sans secrets
-- [ ] Preuves enregistrées pour TD-B010/TD-B022 ; limites volume et stockage photo TD-B020 explicites
+- [x] Dump PG/archive uploads versionnés et expliqués par commandes ; volume uploads découvert, pause des écritures et verrou coopératif documentés/testés localement
+- [x] Bundle standard tar/SHA256SUMS, snapshot restic chiffré et rétention opt-in testés localement ; destination mini-s1 autorisée, aucune copie réelle ni secret committé
+- [x] Un timer Tervo versionné pour mini-s1, non installé/activé ; recette manuelle sans UI ; validation des jobs réels avant activation en INT-111
+- [x] Restore PostgreSQL sur un second projet UUID : relations, photo, octets/empreinte/dates PDF BYTEA conservés, source de recette inchangée
+- [x] `.env` et fixtures privées Caddy/Dockge restitués byte-identiques ; reconstruction expliquée. Login/TLS/services et transfert SSH réels restent à tester en INT-111
+- [x] Preuves locales TD-B010/TD-B022 renseignées ; volume représentatif et réconciliation photo TD-B020 restent ouverts
 
 **Technical Notes**
 - Dépend d'INT-125/127. Fixtures autorisées/jetables, jamais seed sur base réelle.
   Dump et archive pris à des instants différents ne sont pas présumés cohérents.
-- Scripts futurs dans `deploy/scripts/`, pas considérés déjà livrés.
+- Note principale : [commandes et usage INT-128](../../../../notes/backend/sprint7.6/INT-128-sauvegarde-restauration.md).
+  `deploy/scripts/` est le support facultatif ; restic, pg_dump, tar et pg_restore
+  sont expliqués sans exiger la lecture du Python.
 - La preuve complète de restore utilise un jeu isolé avant INT-111 ;
   la planification/récupération du déploiement réel sera recontrôlée en INT-111.
 - Cas TC-INT-111-09, propriétaire INT-128 ; clôture TD-B010 en INT-111
   après application réelle de la décision de reprise.
+- Mini-s1 validé comme destination. Pause Caddy/Dockge/API, accès SSH/sudo,
+  conservation de clé et installation/activation du timer à approuver/tester
+  avant usage réel. Aucune sauvegarde VPS ou copie sur mini-s1 effectuée ici.
 
 ---
 

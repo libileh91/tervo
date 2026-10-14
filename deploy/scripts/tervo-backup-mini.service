@@ -1,0 +1,9 @@
+[Unit]
+Description=Pull encrypted Tervo backup onto mini-s1
+RequiresMountsFor=/srv/backups/tervo
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/bin/sh /usr/local/lib/tervo/scripts/pull-backup.sh /etc/tervo/backup-mini.conf

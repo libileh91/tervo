@@ -33,7 +33,7 @@ une validation ou en masquant une limite.
 
 - **Nom du projet : Tervo** — nom conservé, pas de rebranding (ni « MB Chauffage », ni « ShowRoom »)
 - **DAT unique** : `docs/DAT/new/` (refonte en cours — voir structure ci-dessous)
-- **Sprint actif** : `docs/stages/stage7/sprint7.6/` ; INT-131 livrée, INT-132 limitée à la console privée, INT-126 SQLite et INT-127 PostgreSQL testées localement ; prochaine INT-128 après feu vert. Relire `tasks.md` pour l'état courant.
+- **Sprint actif** : `docs/stages/stage7/sprint7.6/` ; INT-131 livrée, INT-132 limitée à la console privée, INT-126/127/128 testées localement ; prochaine INT-129 après feu vert. INT-128 cible mini-s1, mais aucune sauvegarde réelle ni timer activé. Relire `tasks.md` pour l'état courant.
 - **Planning V2** : `docs/stages/stage7/README.md` — sprints `sprint7.1` à `sprint7.6` ; relire les statuts actuels, ne pas déduire une livraison du cadrage
 - **Branche de travail DAT** : `chore/rewrite-dat`
 

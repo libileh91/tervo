@@ -295,7 +295,17 @@
         "scope": "Base originale et volumes de production inchangés par le test de restauration",
         "todos": "Preuves restore enregistrées pour TD-B010/TD-B022 ; TD-B010 clôturé en INT-111 après application réelle de la décision"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed_local_docker_restic",
+        "snapshot": "6fd18829bd6edc6240d15891396e7fce8c279261",
+        "destination": "Mini-s1 explicitement autorisé par l'utilisateur ; dépôt de test local temporaire seulement, aucun transfert réel.",
+        "backup": "pg_dump custom, archive uploads read-only et bundle tar/SHA256SUMS ; reprise backend avant publication. Restic 0.19.1 réel : sauvegarde, check --read-data, restitution et rétention sur dépôt fictif réussis ; mauvaise clé refusée.",
+        "restore": "Second PostgreSQL UUID : relations, photo, PDF BYTEA/hash/taille/dates identiques ; source de recette préservée et ressources UUID nettoyées.",
+        "config": "Env privé et fixtures offline Caddy/Dockge restitués byte-identiques. Le login d'un Dockge restauré et des certificats réels ne sont pas validés.",
+        "tests": "14 tests snapshot/production_config réussis ; SSH et contrôle des services hôte simulés. Pas de suite backend complète revendiquée.",
+        "remaining": "INT-111 : accès/clé SSH et privilèges fixes, coupure approuvée, installation/timer, vraie copie hors VPS et restauration des paramètres réels. INT-129 : intégration du verrou partagé. TD-B010/022 restent ouverts pour opérations/mesures réelles.",
+        "evidence": "notes/backend/sprint7.6/INT-128-sauvegarde-restauration.md"
+      }
     },
     {
       "id": "TC-INT-111-10",
