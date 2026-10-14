@@ -1,6 +1,6 @@
 # Sprint 7.6 — Déploiement VPS et documentation entretien
 
-> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131, INT-132 (console privée seule) et INT-126 (tests locaux SQLite) validées ; application non encore déployée
+> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131, INT-132 (console privée), INT-126 (SQLite local) et INT-127 (PostgreSQL local jetable) validées ; application non encore déployée
 > **Dépendances :** Valider le périmètre livré et ses tests avant déploiement ; documenter explicitement le backlog restant.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.6/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -314,11 +314,11 @@ Je veux **préparer une DB dédiée et inventorier les données source**,
 Afin de **choisir une reprise sans présumer un ancien conteneur ou rôle**.
 
 **Acceptance Criteria**
-- [ ] Patch PostgreSQL supporté retenu, une instance Compose Tervo, healthcheck/volume réels identifiés et aucun port publié
-- [ ] Base/rôles/privilèges cadrés et état SQL contrôlé sans supposer `postgres`/`lob` ; rôle applicatif distinct du compte Linux
-- [ ] Source réelle (mini-s1 ou aucune donnée) inventoriée : version/schema/volumes/provenance et décision utilisateur enregistrés
-- [ ] Plan de reprise ou démarrage vide, préflight et retour arrière établis ; aucun volume existant réinitialisé par facilité
-- [ ] Cible/reconstruction testée en isolation, commandes adaptées ; TD-B008/B009/B010 annotés selon la décision
+- [x] PostgreSQL 17.11 supporté et digest épinglé ; une instance Compose, healthcheck/volume vérifiés en Docker local jetable, aucun port publié
+- [x] `tervo_admin` réservé à l'administration/migrations, `tervo_app` sans superuser/DDL ; état SQL et droits réels testés en isolation, rôle API distinct du compte Linux cible `lb11`
+- [x] Décision utilisateur enregistrée : données locales obsolètes, aucune source à importer ; départ VPS vide, pas d'absence physique de données locales prétendue
+- [x] Plan de démarrage vide et préflight documentés ; volume existant à examiner, jamais réinitialisé ; en cas d'échec préserver les données et ne pas exposer l'API
+- [x] Initialisation, migrations, CRUD/refus et recréation avec volume persistant testés en isolation ; TD-B008/B009/B010 annotés sans clôture VPS
 
 **Technical Notes**
 - Dépend d'INT-125. Distinguer les privilèges d'initialisation/migration et
@@ -326,7 +326,20 @@ Afin de **choisir une reprise sans présumer un ancien conteneur ou rôle**.
 - Prépare la DB et la décision, **pas le transfert réel** : backup/restore
   en INT-128, application du plan en INT-111 ; pas de dépendance circulaire.
   Cette tâche ne clôture pas seule TD-B010.
-- Sources : Compose PostgreSQL et procédures SQL/reprise. Cas TC-INT-127-01.
+- Décision utilisateur : données locales déclarées obsolètes, démarrage du VPS
+  avec une base vide ; aucune reprise depuis le mini-s1. Après validation du VPS,
+  remplacer la base locale par une copie de celle du VPS. Cette opération reste
+  différée : identifier la cible locale exacte, sauvegarder son état et vérifier
+  la restauration en isolation avant remplacement ; ne rien supprimer maintenant.
+- Nomenclature validée : base `tervo_db`, rôle administration/migrations
+  `tervo_admin`, rôle API `tervo_app`. Compte Linux cible demandé : `lb11` ;
+  sa création ou la transition depuis l'accès SSH `tervo` n'est pas effectuée
+  dans INT-127 et ne vaut pas une preuve d'accès sous ce nouveau compte.
+- Sources : Compose, `deploy/postgres/init-app.sql`, `app-grants.sql` et recette
+  `deploy/check-stack.py` adaptée. Note : [INT-127](../../../../notes/backend/sprint7.6/INT-127-postgresql-cible.md).
+- Aucun PostgreSQL Tervo créé sur le VPS. `migrate` (profil `tools`) puis grants
+  seront intégrés à INT-129 avant exposition ; ce n'est pas une release réelle.
+  Cas TC-INT-127-01, preuves locales uniquement.
 
 ---
 

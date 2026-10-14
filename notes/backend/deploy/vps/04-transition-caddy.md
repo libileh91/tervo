@@ -80,7 +80,7 @@ certificat. Caddy crée aussi des métadonnées de nettoyage en HTTP seul.
 ## 5. La suite, dans l'ordre
 
 1. INT-126 testée localement : bootstrap admin sans seed ; pas d'admin VPS créé.
-2. INT-127 puis INT-128 : décision DB et sauvegarde/restauration.
+2. INT-127 validée localement : DB vide et rôles admin/API ; INT-128 à réaliser.
 3. INT-129 : release et gate d'adoption Tervo dans Dockge avant tout usage.
 
 Le déploiement de Tervo et le HTTPS des vrais domaines restent en INT-111.

@@ -33,7 +33,7 @@ une validation ou en masquant une limite.
 
 - **Nom du projet : Tervo** — nom conservé, pas de rebranding (ni « MB Chauffage », ni « ShowRoom »)
 - **DAT unique** : `docs/DAT/new/` (refonte en cours — voir structure ci-dessous)
-- **Sprint actif** : `docs/stages/stage7/sprint7.6/` ; INT-131 livrée, INT-132 limitée à la console privée, INT-126 testée localement sur SQLite ; prochaine INT-127 après feu vert. Relire `tasks.md` pour l'état courant.
+- **Sprint actif** : `docs/stages/stage7/sprint7.6/` ; INT-131 livrée, INT-132 limitée à la console privée, INT-126 SQLite et INT-127 PostgreSQL testées localement ; prochaine INT-128 après feu vert. Relire `tasks.md` pour l'état courant.
 - **Planning V2** : `docs/stages/stage7/README.md` — sprints `sprint7.1` à `sprint7.6` ; relire les statuts actuels, ne pas déduire une livraison du cadrage
 - **Branche de travail DAT** : `chore/rewrite-dat`
 
@@ -380,7 +380,7 @@ Dans `notes/backend/<nom-du-sprint>/` pour le compte rendu du sprint, et dans
 |---------|--------|
 | Proxy VPS cible | Caddy natif sous systemd, HTTP seul (INT-131 livrée) |
 | Console Compose cible | Dockge privé installé ; adoption Tervo non validée (gate INT-129) |
-| Base de données | PostgreSQL 17.7 épinglé dans Compose INT-125 ; données/roles réels INT-127 |
+| Base de données | Patch 17 épinglé dans Compose ; INT-127 : départ VPS vide, `tervo_admin` distinct de `tervo_app`, validés seulement sur Docker local |
 | Réseau Docker (mini-s1) | `postgres_postgres_network`, `1panel-network` |
 | Build / orchestration | Compose et `.env` explicites ; validation `sh deploy/validate-env.sh <fichier privé>` avant toute opération |
 | PostgreSQL | Service du Compose Tervo, sans port publié ; pas de seconde stack PG |

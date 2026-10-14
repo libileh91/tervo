@@ -23,6 +23,7 @@ def run(args, *, capture=False, env=None, input_data=None):
     return subprocess.run(
         args, check=True, text=True, env=env, input=input_data,
         stdout=subprocess.PIPE if capture else None,
+        stderr=subprocess.PIPE if capture else None,
     ).stdout
 
 
@@ -77,8 +78,10 @@ def main():
     values = {
         "TERVO_IMAGE_TAG": image_tag,
         "TERVO_VCS_REF": revision,
-        "TERVO_DB_NAME": "test_db",
-        "TERVO_DB_USER": "test_user",
+        "TERVO_DB_NAME": "tervo_db",
+        "TERVO_DB_ADMIN_USER": "tervo_admin",
+        "TERVO_DB_ADMIN_PASSWORD": "test-only-admin-" + "x" * 32,
+        "TERVO_DB_USER": "tervo_app",
         "TERVO_DB_PASSWORD": password,
         "SECRET_KEY": "test-only-key-" + "x" * 64,
         "FRONTEND_ORIGIN": "https://tervoapp.com",
@@ -131,8 +134,21 @@ def main():
             )
             assert rejected.returncode != 0
             valid_env = env_file.read_text()
-            for key in ("SECRET_KEY", "TERVO_DB_PASSWORD", "TERVO_VCS_REF"):
+            for key in ("SECRET_KEY", "TERVO_DB_PASSWORD", "TERVO_DB_ADMIN_PASSWORD", "TERVO_VCS_REF"):
                 env_file.write_text(valid_env.replace(f"{key}='{values[key]}'", f"{key}=''"))
+                rejected = subprocess.run(
+                    ["sh", str(root / "deploy/validate-env.sh"), str(env_file)],
+                    env=child_env, capture_output=True,
+                )
+                assert rejected.returncode != 0
+            for key, invalid in (
+                ("TERVO_DB_USER", values["TERVO_DB_ADMIN_USER"]),
+                ("TERVO_DB_USER", "Invalid Role"),
+                ("TERVO_DB_USER", "pg_reserved"),
+                ("TERVO_DB_PASSWORD", "short"),
+                ("TERVO_DB_ADMIN_PASSWORD", password),
+            ):
+                env_file.write_text(valid_env.replace(f"{key}='{values[key]}'", f"{key}='{invalid}'"))
                 rejected = subprocess.run(
                     ["sh", str(root / "deploy/validate-env.sh"), str(env_file)],
                     env=child_env, capture_output=True,
@@ -151,6 +167,8 @@ def main():
             # Exact runtime values are checked separately inside the container.
             assert config["services"]["backend"]["environment"]["TERVO_DB_PASSWORD"].replace("$$", "$") == password
             assert not config["services"]["postgres"].get("ports")
+            assert config["services"]["postgres"]["environment"]["POSTGRES_USER"] == values["TERVO_DB_ADMIN_USER"]
+            assert "TERVO_DB_ADMIN_PASSWORD" not in config["services"]["backend"]["environment"]
             assert not any(v.get("external") for v in config["networks"].values())
             for service in ("backend", "frontend"):
                 assert all(port["host_ip"] == "127.0.0.1" for port in config["services"][service]["ports"])
@@ -185,7 +203,50 @@ def main():
                     "assert HTML(string='<p>INT125</p>').write_pdf().startswith(b'%PDF'); "
                     "print('PASS: native PDF dependencies render an in-memory document')")
             # Full migrations only on this newly created, privately named DB.
-            compose("exec", "-T", "backend", "alembic", "upgrade", "head")
+            version_and_role = compose("exec", "-T", "postgres", "sh", "-c",
+                    'exec psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -qAt',
+                    input_data="SHOW server_version; SELECT current_user, rolsuper FROM pg_roles WHERE rolname=current_user;",
+                    capture=True).splitlines()
+            assert version_and_role[0].startswith("17.11")
+            assert version_and_role[1] == values["TERVO_DB_ADMIN_USER"] + "|t"
+            compose("run", "--rm", "-T", "--no-deps", "migrate")
+            compose("exec", "-T", "postgres", "sh", "-c",
+                    'exec psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" '
+                    '-f /opt/tervo/app-grants.sql')
+
+            def app_sql(sql):
+                return compose("exec", "-T", "postgres", "sh", "-c",
+                    'export PGPASSWORD="$TERVO_DB_PASSWORD"; '
+                    'exec psql -h 127.0.0.1 -U "$TERVO_DB_USER" -d "$POSTGRES_DB" '
+                    '-v ON_ERROR_STOP=1 -qAt', input_data=sql, capture=True).strip()
+
+            assert app_sql(
+                "SELECT current_user, rolsuper, rolcreatedb, rolcreaterole, "
+                "rolreplication, rolbypassrls FROM pg_roles WHERE rolname=current_user;"
+            ) == values["TERVO_DB_USER"] + "|f|f|f|f|f"
+            app_sql(
+                'INSERT INTO public."user" (username,email,hashed_password,role,is_active) '
+                "VALUES ('int127_check','int127@example.test','fictitious-not-a-login','TECHNICIAN',true);"
+                'UPDATE public."user" SET full_name=\'INT127 persistence\' WHERE username=\'int127_check\';'
+                'INSERT INTO public."user" (username,email,hashed_password,role,is_active) '
+                "VALUES ('int127_delete','delete@example.test','fictitious-not-a-login','TECHNICIAN',true);"
+                'DELETE FROM public."user" WHERE username=\'int127_delete\';'
+            )
+            assert app_sql('SELECT full_name FROM public."user" WHERE username=\'int127_check\';') == "INT127 persistence"
+            for sql in (
+                "CREATE TABLE public.int127_forbidden (id integer);",
+                'TRUNCATE TABLE public."user";',
+                "CREATE ROLE int127_forbidden;",
+                "SET ROLE " + values["TERVO_DB_ADMIN_USER"] + ";",
+                "UPDATE public.alembic_version SET version_num='forbidden';",
+            ):
+                try:
+                    app_sql(sql)
+                except subprocess.CalledProcessError as error:
+                    assert "permission denied" in error.stderr.lower()
+                else:
+                    raise AssertionError("Application role unexpectedly allowed a privileged command.")
+            print("PASS: admin migrations, application CRUD/sequences, forbidden DDL/roles/TRUNCATE/version edits", flush=True)
             compose("exec", "-T", "backend", "python", "-c",
                     "from pathlib import Path; Path('/app/uploads/photos').mkdir(exist_ok=True); "
                     "Path('/app/uploads/photos/int125-check.txt').write_text('INT125_UPLOAD_CHECK')")
@@ -198,6 +259,10 @@ def main():
             compose("up", "-d", "--no-build", "--wait", "--wait-timeout", "120", "postgres")
             wait_for(lambda: get(backend_port, "/health/ready")[0] == 200 and healthy("backend"),
                      "DB recovery restores readiness")
+            compose("up", "-d", "--no-build", "--no-deps", "--force-recreate",
+                    "--wait", "--wait-timeout", "120", "postgres")
+            assert app_sql('SELECT full_name FROM public."user" WHERE username=\'int127_check\';') == "INT127 persistence"
+            print("PASS: application role and data preserved on existing-volume PostgreSQL recreation", flush=True)
             compose("up", "-d", "--no-build", "--no-deps", "--force-recreate", "backend")
             wait_for(lambda: healthy("backend"), "backend healthy after recreation")
             assert get(backend_port, "/uploads/photos/int125-check.txt")[1] == b"INT125_UPLOAD_CHECK"

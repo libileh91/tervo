@@ -360,12 +360,14 @@
       "title": "DB cible - isolation et décision de reprise",
       "type": "integration",
       "preconditions": [
-        "Configuration INT-125 disponible, choix des données source à confirmer"
+        "Configuration INT-125 disponible ; utilisateur : données locales obsolètes, départ VPS vide",
+        "Docker local jetable, secrets fictifs privés, aucun accès à une base existante"
       ],
       "steps": [
-        "Inventorier DB/version/schema/volumes réellement présents ou constater explicitement l'absence de données",
-        "Enregistrer le choix utilisateur : transfert source inventoriée ou démarrage vide",
+        "Enregistrer le choix utilisateur et la provenance : aucune reprise des données locales déclarées obsolètes",
+        "Documenter le remplacement local futur par la base VPS après validation et sauvegarde",
         "Préparer PostgreSQL Compose, vérifier healthcheck, absence de port et rôles SQL réels",
+        "Appliquer Alembic via migrate, puis grants ; vérifier CRUD et refus DDL/TRUNCATE/CREATE ROLE/SET ROLE admin/modification alembic_version sous API",
         "Tester la reconstruction en isolation sans réinitialiser un volume existant ni exécuter le transfert réel",
         "Documenter les prérequis backup/restore INT-128 et application du plan INT-111"
       ],
@@ -375,7 +377,16 @@
         "safety": "Aucun volume existant vidé, aucun compte postgres/lob supposé depuis un ancien exemple",
         "dependencies": "Pas de transfert ni clôture TD-B010 avant backup/restore et mise en service réelle"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed_local_docker",
+        "decision": "Utilisateur : départ VPS vide ; données locales obsolètes non reprises. Copie VPS vers base locale à la fin, cible exacte et sauvegarde à contrôler avant exécution.",
+        "target": "PostgreSQL 17.11 officiel épinglé ; une instance, volume nommé du projet UUID, aucun port publié.",
+        "roles": "Deux rôles : tervo_admin administratif superuser, tervo_app login non privilégié. Migrations séparées, grants métier hors alembic_version ; CRUD/séquences autorisés, opérations privilégiées refusées.",
+        "final_snapshot": "a7228a1ff2ce8e14e621cab102d7ea4a8bc45542 : recette Docker complète réussie avec tervo_db/tervo_admin/tervo_app et secrets fictifs ; version SQL 17.11, rôles et privilèges contrôlés, ressources UUID nettoyées.",
+        "unit_tests": "9 tests production_config/bootstrap_admin réussis ; pas de suite backend complète revendiquée.",
+        "limits": "Recette locale seulement. Aucun PostgreSQL Tervo, transfert, remplacement local ni compte Linux lb11 créé sur le VPS ; recette réelle INT-111 après backup/restore INT-128.",
+        "evidence": "notes/backend/sprint7.6/INT-127-postgresql-cible.md"
+      }
     },
     {
       "id": "TC-INT-112-01",

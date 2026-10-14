@@ -17,7 +17,8 @@ esac
 # Shell exports override --env-file in Compose. Refuse ambiguity rather than
 # silently validate a different source; Docker client settings remain intact.
 for name in TERVO_IMAGE_TAG TERVO_VCS_REF TERVO_DB_NAME TERVO_DB_USER \
-    TERVO_DB_PASSWORD SECRET_KEY FRONTEND_ORIGIN VITE_API_BASE_URL \
+    TERVO_DB_PASSWORD TERVO_DB_ADMIN_USER TERVO_DB_ADMIN_PASSWORD \
+    SECRET_KEY FRONTEND_ORIGIN VITE_API_BASE_URL \
     BACKEND_PORT FRONTEND_PORT; do
     if printenv "$name" >/dev/null 2>&1; then
         echo "Unset exported $name before using the explicit environment file." >&2
@@ -41,5 +42,17 @@ config = json.loads(raw)
 revision = config["services"]["backend"]["build"]["args"]["VCS_REF"]
 if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", revision):
     raise SystemExit("TERVO_VCS_REF must be a full hexadecimal source SHA.")
+postgres = config["services"]["postgres"]["environment"]
+for key in ("POSTGRES_DB", "POSTGRES_USER", "TERVO_DB_USER"):
+    if not re.fullmatch(r"[a-z][a-z0-9_]{0,62}", postgres[key]):
+        raise SystemExit("DB and role names must be lowercase SQL identifiers (max 63 characters).")
+if postgres["POSTGRES_USER"] == postgres["TERVO_DB_USER"]:
+    raise SystemExit("Administrative and application roles must be distinct.")
+if any(postgres[key].startswith("pg_") for key in ("POSTGRES_USER", "TERVO_DB_USER")):
+    raise SystemExit("Role names starting with pg_ are reserved by PostgreSQL.")
+admin_secret = postgres["POSTGRES_PASSWORD"].replace("$$", "$")
+app_secret = postgres["TERVO_DB_PASSWORD"].replace("$$", "$")
+if min(len(admin_secret), len(app_secret)) < 16 or admin_secret == app_secret:
+    raise SystemExit("Use distinct DB passwords of at least 16 characters.")
 PY
 echo "Environment permissions and Compose configuration valid."

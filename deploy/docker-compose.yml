@@ -12,17 +12,30 @@ x-logging: &bounded-logging
 
 services:
   postgres:
-    image: postgres:17.7@sha256:2006493727bd5277eece187319af1ef82b4cf82cf4fc1ed00da0775b646ac2a4
+    image: postgres:17.11@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${TERVO_DB_NAME:?Set TERVO_DB_NAME in the explicit env file}
-      # Todo later TD-B009 / INT-127: this initial role is a superuser.
-      # Separate migration/application privileges before the real release.
-      POSTGRES_USER: ${TERVO_DB_USER:?Set TERVO_DB_USER in the explicit env file}
-      POSTGRES_PASSWORD: ${TERVO_DB_PASSWORD:?Set TERVO_DB_PASSWORD in the explicit env file}
+      # Administrative superuser, never used by the running API.
+      POSTGRES_USER: ${TERVO_DB_ADMIN_USER:?Set TERVO_DB_ADMIN_USER}
+      POSTGRES_PASSWORD: ${TERVO_DB_ADMIN_PASSWORD:?Set TERVO_DB_ADMIN_PASSWORD}
+      TERVO_DB_USER: ${TERVO_DB_USER:?Set TERVO_DB_USER}
+      TERVO_DB_PASSWORD: ${TERVO_DB_PASSWORD:?Set TERVO_DB_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data/pgdata
+      - type: bind
+        source: ./postgres/init-app.sql
+        target: /docker-entrypoint-initdb.d/10-app.sql
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./postgres/app-grants.sql
+        target: /opt/tervo/app-grants.sql
+        read_only: true
+        bind:
+          create_host_path: false
     networks:
       - database
     healthcheck:
@@ -43,7 +56,7 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
-    environment:
+    environment: &backend-environment
       APP_ENV: production
       TERVO_DB_HOST: postgres
       TERVO_DB_PORT: "5432"
@@ -71,6 +84,21 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    logging: *bounded-logging
+
+  migrate:
+    # Explicit one-shot command, not part of a normal `up`.
+    profiles: ["tools"]
+    image: tervo-backend:${TERVO_IMAGE_TAG:?Set TERVO_IMAGE_TAG}
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      <<: *backend-environment
+      TERVO_DB_USER: ${TERVO_DB_ADMIN_USER:?Set TERVO_DB_ADMIN_USER}
+      TERVO_DB_PASSWORD: ${TERVO_DB_ADMIN_PASSWORD:?Set TERVO_DB_ADMIN_PASSWORD}
+    networks:
+      - database
+    healthcheck:
+      disable: true
     logging: *bounded-logging
 
   frontend:

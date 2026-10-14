@@ -89,7 +89,7 @@
 | **Dépend de** | INT-125 (configuration), INT-127 (cible/décision SQL) |
 | **Fichiers**  | `deploy/docker-compose.yml`, `deploy/.env.example`, procédure INT-127 |
 | **Action**    | Préparer la DB cible avec les noms/rôles réellement choisis. INT-125 ne crée que des DB de recette jetables ; ne pas supposer le rôle `postgres`/`lob` ou un conteneur issu du mini-s1. Les anciennes commandes CREATE/GRANT sont des exemples historiques, pas une procédure VPS autorisée. |
-| **Statut**    | ⏳ Ouvert, reprise INT-127 ; aucune DB réelle créée par INT-125 |
+| **Statut**    | 🟡 INT-127 : cible vide et rôles préparés/testés sur PostgreSQL 17.11 jetable. Création réelle et inventaire du volume VPS encore à vérifier en INT-111. |
 
 ---
 
@@ -101,7 +101,7 @@
 | **Dépend de** | TD-B008, INT-127 ; constat enrichi dans INT-125 |
 | **Fichiers**  | `deploy/docker-compose.yml`, `backend/app/config.py`, procédure SQL INT-127 |
 | **Action**    | Cadrer les rôles bootstrap/migration/application et tester leurs privilèges avant release réelle. `POSTGRES_USER` de l'image officielle crée un superuser ; le rôle partagé de la recette INT-125 ne prouve pas un moindre privilège. Vérifier le rôle courant et les accès réels, sans présumer `lob`/`postgres`, ni modifier une DB existante pour rendre la recette verte. |
-| **Statut**    | ⏳ Ouvert, dépendance INT-127 non débloquée ; ne pas clôturer sur la seule santé de la stack |
+| **Statut**    | 🟡 INT-127 : admin séparé de l'API, CRUD/séquences et refus des opérations privilégiées vérifiés localement ; recontrôle SQL sur la DB réelle en INT-111 avant clôture. |
 
 ---
 
@@ -112,12 +112,9 @@
 | **Créé dans** | INT-67 (Sprint 6.1 — consolidation du compose)                  |
 | **Dépend de** | Sprint 7.6 : INT-127 (cible/décision), INT-128 (backup/restore), INT-111 (application réelle du plan) |
 | **Fichiers**  | `deploy/docker-compose.yml`, `deploy/postgres.docker-compose.yml` |
-| **Action**    | Inventorier la source réelle mini-s1 ou confirmer le démarrage vide ; préparer une seule DB Compose sur le VPS. L'ancien PG partagé documenté ne prouve pas quelles données doivent être transférées aujourd'hui. |
-|               | **Décider** la reprise en INT-127, vérifier backup/restore en INT-128, appliquer le choix en INT-111. Ne présumer ni conteneur, rôle, volume physique ni version. |
-|               | Exemples historiques mini-s1 uniquement, à ne pas exécuter sans inventaire et procédure adaptée : |
-|               | `docker exec postgres pg_dump -U lob tervo_db \| gzip > tervo_db.sql.gz` |
-|               | `gunzip -c tervo_db.sql.gz \| docker exec -i tervo-postgres-1 psql -U lob -d tervo_db` |
-| **Statut**    | ⏳ À traiter dans INT-111 (Sprint 7.6)                            |
+| **Action**    | Décision INT-127 : aucune reprise depuis les données locales obsolètes, démarrage VPS vide. Après validation du VPS, remplacer la base locale par sa copie ; identifier la cible exacte et sauvegarder son ancien état avant remplacement. |
+|               | Backup/restore vérifié en INT-128, application réelle en INT-111 ; ne pas présumer conteneur, rôle ou volume, ni effacer une base pour tester. |
+| **Statut**    | ⏳ Choix enregistré et cible testée localement en INT-127 ; DB VPS, sauvegarde/restauration et remplacement local restent non exécutés. |
 
 ---
 

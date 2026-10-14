@@ -9,6 +9,12 @@ une DB neuve, CORS, uploads persistants et identité des images.
 administrateur, certificat, DNS ou release automatisée n'est livré ici.
 Les tests physiques utilisent un projet Docker UUID et des secrets fictifs.
 
+**Contrat SQL actualisé par [INT-127](INT-127-postgresql-cible.md) :**
+PostgreSQL 17.11, secrets admin/API distincts et service ponctuel `migrate`,
+puis grants métier. Les exemples et preuves INT-125 ci-dessous décrivent leur
+snapshot historique ; ne plus migrer avec le rôle de l'API ni copier son ancien
+env sans `TERVO_DB_ADMIN_USER/PASSWORD`.
+
 Pour les explications de fond (CORS/5173, tag/SHA/digest, validation
 d'environnement, drivers DB, readiness, dev/prod et dist), voir
 [la note complémentaire](INT-125-comprendre-les-choix-techniques.md).
