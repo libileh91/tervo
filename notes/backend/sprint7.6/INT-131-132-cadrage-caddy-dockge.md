@@ -17,11 +17,13 @@ Le différenciateur de Tervo reste la migration Excel.
 
 - **INT-131 terminée :** Caddy actif, reload et reboot vérifiés ; ancien
   panneau/proxy retiré après test du retour arrière.
-- **INT-132 à démarrer :** Dockge privé à installer ; aucune adoption Tervo.
+- **INT-132 terminée sur un périmètre réduit :** console Dockge privée installée,
+  accès authentifié par tunnel et logs de démo vérifiés. Aucune adoption Tervo.
 - Pas encore de déploiement applicatif, PostgreSQL Tervo ou HTTPS public sur le VPS.
 - Les preuves historiques 1Panel/OpenResty restent distinctes de celles de Caddy.
 
-Pour l'état du proxy, lire [le guide Caddy](../deploy/vps/04-transition-caddy.md).
+Pour l'état du proxy, lire [le guide Caddy](../deploy/vps/04-transition-caddy.md) ;
+pour la console, lire [le guide Dockge](../../../deploy/dockge/README.md).
 
 ## Règles à conserver
 
@@ -43,10 +45,35 @@ Pour l'état du proxy, lire [le guide Caddy](../deploy/vps/04-transition-caddy.m
 - Avant adoption de Tervo, vérifier sur une stack jetable les chemins,
   l'environnement, le nom du projet et les volumes.
 
-Une tâche à la fois : INT-131 terminée, INT-132 à démarrer.
+Une tâche à la fois : INT-131 terminée, INT-132 livrée pour la console seule.
 Les critères détaillés restent dans
 [le planning](../../../docs/stages/stage7/sprint7.6/tasks.md),
 pas dans une seconde procédure.
+
+## Livraison INT-132 — ce qui est réellement vérifié
+
+Le Compose épingle l'image officielle Dockge 1.5.0 et publie seulement
+`127.0.0.1:5001:5001`. `/opt/dockge/data` conserve l'authentification ;
+`/opt/stacks` est monté au même chemin hôte/conteneur. `DOCKGE_ENABLE_CONSOLE`
+reste `false` : les logs Docker d'une stack sont consultables sans activer
+une console de commandes hôte. Le socket Docker donne néanmoins à Dockge des
+droits équivalents à root ; son montage `:ro` ne serait pas un RBAC.
+
+Sur le VPS : conteneur `healthy` et écoute loopback confirmés ; accès direct
+au port 5001 injoignable depuis le poste client testé (timeout 3 s).
+Le tunnel SSH ouvre le tableau de bord après login ; en fenêtre privée,
+il présente le formulaire de
+connexion. Les logs fictifs `Dockge demo OK` ont été vus, puis le conteneur
+arrêté avec code 0. Le contrôle `sudo docker ps -a` filtré par projet était
+vide et le dossier `/opt/stacks/dockge-demo` absent. Ces contrôles ont été
+rapportés par l'opérateur ; pas de secret ni de donnée Tervo utilisés.
+
+La démo ne teste pas le `deploy/docker-compose.yml` de Tervo, dont les builds
+dépendent de `../backend` et `../frontend` et d'un `.env` explicite. **Avant
+toute adoption dans Dockge**, INT-129 devra comparer configuration effective
+Git/CLI/Dockge et tester son interaction avec la release. La restauration
+isolée de l'auth relève d'INT-128 et le recontrôle après reboot d'INT-111.
+Ne pas annoncer ces vérifications comme réalisées.
 
 ## Livraison INT-131 — l'essentiel à comprendre
 

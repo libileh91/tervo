@@ -1,6 +1,6 @@
 # Sprint 7.6 — Déploiement VPS et documentation entretien
 
-> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131 validées ; INT-132 à démarrer ; application non encore déployée
+> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131 et INT-132 (console privée seule) validées ; application non encore déployée
 > **Dépendances :** Valider le périmètre livré et ses tests avant déploiement ; documenter explicitement le backlog restant.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.6/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -20,7 +20,7 @@ les preuves précédentes. Aucun cadrage ou transfert de test ne vaut livraison.
 | Historique | INT-124 (3 pts) | 1Panel/OpenResty privé, preuves conservées | Livrée, cible remplacée par décision ; bascule non effectuée |
 | Historique | INT-125 (5 pts) | Images/configuration reproductibles, publications loopback | Livrée localement ; contrat réutilisé par Caddy |
 | 1 | INT-131 (3 pts) | Caddy natif et retrait réversible de l'ancien proxy | Socle VPS + INT-124/125, pas publication Tervo |
-| 2 | INT-132 (3 pts) | Dockge privé et gate Git/Compose/env | INT-125/131 ; adoption Tervo à démontrer |
+| 2 | INT-132 (3 pts) | Dockge privé, login et logs ; pas d'adoption Tervo | INT-125/131 ; gate transféré à INT-129 |
 | 3 | INT-126 (2 pts) | Bootstrap sécurisé du premier administrateur | Modèle identité existant |
 | 4 | INT-127 (3 pts) | PostgreSQL cible et décision de reprise | INT-125 |
 | 5 | INT-128 (5 pts) | Backup/restore vérifié en isolation | INT-125/127, inventaire Caddy/Dockge INT-131/132 |
@@ -64,7 +64,7 @@ Afin de **disposer d'une instance publique avec HTTPS**.
 - [ ] Prérequis actifs INT-125 à INT-129 et INT-131/132 livrés/vérifiés ; les preuves historiques INT-124 restent conservées, périmètre et backlog explicités avant publication
 - [ ] Choix de reprise INT-127 appliqué après backup/restore INT-128 : transfert réel si nécessaire, aucune source présumée ; TD-B010 clôturé sur preuves
 - [ ] Release manuelle via INT-129 : SHA/images identifiés, migrations avant exposition et disponibilité effective des services
-- [ ] PostgreSQL non publié, services applicatifs loopback, Dockge 5001 privé et API admin Caddy locale ; ancien panneau/proxy neutralisés après INT-131, surface publique 22/80/443 TCP vérifiée
+- [ ] PostgreSQL non publié, services applicatifs loopback, Dockge 5001 privé recontrôlé après reboot et API admin Caddy locale ; ancien panneau/proxy neutralisés après INT-131, surface publique 22/80/443 TCP vérifiée
 - [ ] DNS frontend/API, Caddy vers les services locaux, certificats Let's Encrypt valides, renouvellement automatique et redirection HTTP vers HTTPS vérifiés ; état TLS persistant sauvegardable
 - [ ] GET réels frontend/API et recette navigateur : admin via INT-126, connexion, dashboard, upload/récupération photo sans compte démo
 - [ ] Backups planifiés et récupération INT-128 vérifiés sur le déploiement réel, y compris secrets/proxy ; seuils disque/RAM suivis
@@ -255,34 +255,27 @@ Afin de **réduire les responsabilités implicites sans perdre les protections v
 
 ## INT-132 — Dockge privé et console Compose sans dérive (3 pts)
 
+**Statut :** livré pour la console privée uniquement ; la stack Tervo n'est pas adoptée.
+
 **User Story**
 En tant qu'**exploitant**,
-Je veux **consulter logs et sorties Compose dans une console privée**,
-Afin de **diagnostiquer Tervo sans créer une seconde source de configuration**.
+Je veux **accéder à une console Compose privée et à ses logs**,
+Afin de **préparer le diagnostic sans exposer Docker sur Internet**.
 
 **Acceptance Criteria**
-- [ ] Version/image officielle exacte et digest relevés, publication 127.0.0.1:5001, données d'auth persistantes identifiées ; aucun domaine/route Caddy ni port public pour la console
-- [ ] Login administrateur privé sans disableAuth, accès par tunnel ; console principale activée explicitement si nécessaire après sécurisation (désactivée par défaut dans la version étudiée), aucune sortie sensible partagée
-- [ ] Accès docker.sock root-equivalent documenté ; ni mount :ro ni convention de lecture présentés comme RBAC read-only, SSH/systemd/journald non remplacés
-- [ ] Gate sur stack jetable : layout/chemins identiques hôte-conteneur, contexte build, fichier env explicite, absence d'exports ambiants et identité projet/volumes démontrés ; configuration effective identique au chemin Git/CLI
-- [ ] Logs/commandes utiles réellement accessibles, aucune copie de Compose devenue autonome ni édition/rebuild/delete caché ; Git reste autoritaire, aucun opérateur concurrent pendant le gate et contrat de future release documenté, sans prétendre tester INT-129 avant livraison
-- [ ] Retour après reboot, refus extérieur 5001, restore isolé des paramètres console et retrait Dockge documentés sans toucher aux volumes Tervo ; pas d'auto-prune
-- [ ] Adoption Tervo seulement après gate réussi et autorisation ; échec ou périmètre réduit soumis au développeur, pas clôturé comme besoin satisfait ; note de livraison et cas renseignés
+- [x] Dockge 1.5.0 épinglé installé, healthy et publié sur `127.0.0.1:5001` uniquement ; pas de route Caddy, port 5001 injoignable depuis le poste client testé
+- [x] Login par tunnel SSH confirmé ; fenêtre privée non authentifiée sur la page de connexion, console générale désactivée
+- [x] Logs de la démo lus dans Dockge ; arrêt propre et suppression de ses conteneurs et de son dossier confirmés sur le VPS
+- [x] Privilèges Docker root-equivalent documentés ; Git reste la source Tervo, aucune adoption ni release Tervo revendiquée
 
 **Technical Notes**
-- Layout officiel étudié : `/opt/stacks/<nom>/compose.yaml`,
-  `DOCKGE_STACKS_DIR` absolu et identique côté hôte/conteneur.
-  Ce n'est pas une preuve d'adoption du fichier actuel
-  `deploy/docker-compose.yml` (contexts `../backend`, `../frontend`).
-- Aucune copie/symlink fragile, découverte implicite du .env ou réécriture
-  des paths n'est retenue sans expérimentation. Une adaptation source
-  versionnée peut être nécessaire, à cadrer avant modification d'INT-125.
-- Dockge est un manager Compose avec pouvoir d'action, pas un outil
-  général de lecture des commandes hôte. La gouvernance des boutons
-  start/update/edit ne constitue pas un contrôle de permission technique.
-- Le test réel d'interaction avec verrou/release appartient à INT-129,
-  puis à la recette INT-111 ; INT-132 ne peut pas le valider par avance.
-- Cas TC-INT-132-01/02, non exécutés. Pas de rôle métier ni feature UI Tervo.
+- Preuves dans [le guide Dockge](../../../../deploy/dockge/README.md)
+  et la [note de sprint](../../../../notes/backend/sprint7.6/INT-131-132-cadrage-caddy-dockge.md).
+- Gate Git/Compose/env/chemins/volumes et interaction avec la release :
+  INT-129, **avant toute adoption Tervo dans Dockge** (TC-INT-132-02
+  transféré). Pas de copie du Compose ni de modification UI par anticipation.
+- Restore isolé des données d'auth Dockge : INT-128 ; recontrôle après reboot :
+  INT-111. Aucune de ces preuves n'est attribuée à INT-132.
 
 ---
 
@@ -368,6 +361,7 @@ Afin de **maîtriser artefacts, migrations, disponibilité et retour arrière**.
 
 **Acceptance Criteria**
 - [ ] Commande versionnée avec Compose/.env explicites, services Compose, verrou de déploiement et SHA enregistré ; interaction réelle avec Dockge testée (fenêtre d'administration gelée/absence d'action en cours), pas de seconde orchestration ni simple promesse de RBAC
+- [ ] Avant toute adoption Tervo dans Dockge, comparer source Git/CLI et configuration effective Dockge (chemins build, env explicite, projet, volumes) sur stack jetable ; bloquer si incompatibles
 - [ ] Build/version des images une fois, backup/maintenance avant migration si nécessaire, migration avant exposition, démarrage/attente puis GET readiness/smoke
 - [ ] Échec propagé pour build/migration/readiness/smoke ; conteneur Up ou OpenAPI seul ne rend pas la release verte
 - [ ] Images précédentes conservées sans prune immédiat, rollback vers artefact exact testé sans HEAD détaché laissé sur VPS
@@ -379,7 +373,8 @@ Afin de **maîtriser artefacts, migrations, disponibilité et retour arrière**.
   exécution réelle en INT-111 ; pas besoin de pipeline GitHub pour le clore.
 - Sources : `deploy/scripts/`, versions locales, migrations et rollback.
   Rebuild ancien n'est pas ancien artefact.
-- Cas TC-INT-111-10, propriétaire INT-129. La CI INT-130 appellera ce script.
+- Cas TC-INT-111-10 et TC-INT-132-02 (transféré), propriétaires INT-129.
+  La CI INT-130 appellera ce script.
 
 ---
 
@@ -443,5 +438,6 @@ TC-INT-111-02 les validations historiques 1Panel/OpenResty,
 TC-INT-111-03/08 la recette locale INT-125. Leurs résultats ne sont pas
 réattribués à Caddy/Dockge. TC-INT-131-01/02 sont validés avec leurs limites :
 routage jetable local, bootstrap/public IPv4/reload/reboot sur VPS, pas de TLS réel.
-INT-132 reste non exécutée.
+INT-132 vérifie la console privée et la démo nettoyée, pas l'adoption Tervo ;
+le gate TC-INT-132-02 est transféré à INT-129.
 Le planning ne vaut pas implémentation ou validation de déploiement.

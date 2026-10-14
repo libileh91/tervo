@@ -536,21 +536,31 @@
       "steps": [
         "Vérifier publication effective et refus TCP depuis extérieur",
         "Configurer login privé, tester refus sans auth et succès via tunnel choisi",
-        "Activer explicitement console principale seulement si nécessaire après sécurisation ; tester sorties d'une commande sans secret",
-        "Recontrôler service/login/port après reboot et restauration de paramètres en isolation",
-        "Documenter docker.sock root-equivalent, absence de garantie read-only/RBAC, limites SSH/systemd/journald et procédure de retrait"
+        "Lire les logs d'une démo jetable, arrêter et supprimer seulement cette démo",
+        "Documenter docker.sock root-equivalent et l'absence d'adoption Tervo"
       ],
       "expected_result": {
         "private": "Accès tunnel + login, pas de port ni reverse proxy public",
         "auth": "disableAuth interdit, données d'auth privées persistantes",
         "privileges": "Mount :ro ne filtre pas l'API ; console traitée comme administration, pas observation non privilégiée",
-        "ops": "Sorties consultables sans secrets, aucun volume Tervo supprimé par retrait/restauration"
+        "ops": "Logs fictifs consultables ; démo supprimée sans volume ni déploiement Tervo"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed_limited_to_private_console",
+        "observed": "Release officielle1.5.0 confirmée ; index OCI sha256:335c6368b880ecc203236ed89e6e5232e0d6578e8ef5920e4a502390451502bf relevé. Compose local valide : 127.0.0.1:5001, console générale désactivée, mounts explicites sans autocreation, auth par défaut conservée.",
+        "installed": "Opérateur : Compose installé /opt/dockge/compose.yaml, image épinglée téléchargée, dockge-dockge-1 démarré et127.0.0.1:5001 confirmé par Docker etss. Premier état healthstarting, pas preuve login ouhealthy.",
+        "health_and_network": "Opérateur : conteneur healthy, 127.0.0.1:5001 conservé ; Caddy/Docker actifs. Poste client : TCP5001 public sans connexion dans 3s. Login confirmé ensuite ; adoption Tervo non validée.",
+        "login": "Utilisateur : connexion par tunnel et accès au tableau de bord confirmés. Aucun identifiant stocké dans la documentation.",
+        "unauthenticated": "Utilisateur : fenêtre privée sur le tunnel affiche la page de connexion, pas le tableau de bord.",
+        "demo": "Utilisateur : logs Dockge demo OK visibles, puis journal-1 exited with code 0. Sur le VPS, sudo docker ps -a filtré sur com.docker.compose.project=dockge-demo ne renvoie aucun conteneur ; sudo ls -ld /opt/stacks/dockge-demo confirme l'absence du dossier. Contrôles exécutés par l'utilisateur.",
+        "remaining": "INT-129 : gate d'adoption Tervo et interaction release/Dockge. INT-128 : restauration isolée des paramètres. INT-111 : recontrôle après reboot et recette réelle. Aucune commande console hôte activée ni testée.",
+        "evidence": "deploy/dockge/README.md"
+      }
     },
     {
       "id": "TC-INT-132-02",
-      "task": "INT-132",
+      "task": "INT-129",
+      "origin_task": "INT-132",
       "title": "Dockge - gate d'adoption de la source Git/Compose",
       "type": "integration",
       "preconditions": [

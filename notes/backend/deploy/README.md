@@ -18,7 +18,7 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 | **DNS**            | Cloudflare (`tervoapp.com`)            | Enregistrements A                   |
 | **Ports services** | Historiquement `0.0.0.0`               | **`127.0.0.1`** (Stage 6.1)         |
 | **PostgreSQL**     | Conteneur partagé préexistant          | Embarqué dans le compose            |
-| **Statut**         | ✅ opérationnel                        | Caddy actif, INT-131 terminée ; Dockge à installer, app et HTTPS non livrés |
+| **Statut**         | ✅ opérationnel                        | Caddy actif, Dockge privé installé ; app et HTTPS non livrés |
 
 > **Pourquoi deux cibles ?** Le mini-s1 a servi à valider l'application et la chaîne de déploiement sans exposer la machine. Le VPS est la cible professionnelle (Sprint 7.6 (INT-111)).
 
@@ -119,7 +119,8 @@ Les notes 01 à 03 ci-dessous sont historiques, pas une nouvelle recette à suiv
 
 Le socle système et les tests historiques 1Panel/OpenResty sont conservés.
 Caddy est maintenant le proxy actif, reload et reboot vérifiés ;
-1Panel/OpenResty retirés et INT-131 clôturée. Dockge reste à installer.
+1Panel/OpenResty retirés et INT-131 clôturée. Dockge privé est installé ;
+login et logs fictifs validés, pas d'adoption Tervo.
 HTTPS Tervo et le déploiement applicatif ne sont pas livrés.
 Le bilan du sprint sera rédigé séparément dans `notes/backend/sprint7.6/`.
 

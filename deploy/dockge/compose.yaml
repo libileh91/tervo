@@ -1,0 +1,33 @@
+# Dockge private console (INT-132). No Tervo application deployment here.
+name: dockge
+
+services:
+  dockge:
+    image: louislam/dockge:1.5.0@sha256:335c6368b880ecc203236ed89e6e5232e0d6578e8ef5920e4a502390451502bf
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5001:5001"
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /opt/dockge/data
+        target: /app/data
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /opt/stacks
+        target: /opt/stacks
+        bind:
+          create_host_path: false
+    environment:
+      DOCKGE_STACKS_DIR: /opt/stacks
+      DOCKGE_ENABLE_CONSOLE: "false"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

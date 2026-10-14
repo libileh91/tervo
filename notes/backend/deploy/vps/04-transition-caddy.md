@@ -13,7 +13,7 @@ Ce guide remplace le journal détaillé de préparation et de bascule.
 | 1Panel | Désinstallé : dossiers, anciennes unités et binaires absents |
 | OpenResty | Conteneur et image supprimés |
 | SSH / Docker / UFW | Actifs ; règles du pare-feu inchangées |
-| Dockge | À installer en INT-132, accès privé prévu sur 127.0.0.1:5001 |
+| Dockge | Privé sur 127.0.0.1:5001 ; login par tunnel et logs de démo confirmés, pas d'adoption Tervo |
 | Application / PostgreSQL / HTTPS Tervo | Pas encore déployés sur le VPS |
 
 Le serveur affiche une **page de contrôle**, pas l'application Tervo.
@@ -79,8 +79,9 @@ certificat. Caddy crée aussi des métadonnées de nettoyage en HTTP seul.
 
 ## 5. La suite, dans l'ordre
 
-1. Installer Dockge privé et vérifier son accès par tunnel (INT-132).
-2. Préparer bootstrap, DB, backups et release avant INT-111.
+1. INT-126 à réaliser : bootstrap admin sans seed.
+2. INT-127 puis INT-128 : décision DB et sauvegarde/restauration.
+3. INT-129 : release et gate d'adoption Tervo dans Dockge avant tout usage.
 
 Le déploiement de Tervo et le HTTPS des vrais domaines restent en INT-111.
 Le warning de journal tronqué reste à diagnostiquer séparément : ne pas
