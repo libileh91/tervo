@@ -329,7 +329,8 @@
       "title": "Bootstrap admin - création, rejeu et conflits",
       "type": "integration",
       "preconditions": [
-        "DB jetable migrée, CLI de bootstrap disponible, secrets fictifs"
+        "SQLite jetable au schéma User courant pour le test local ; PostgreSQL migré à vérifier avant usage réel",
+        "CLI de bootstrap disponible, secrets fictifs"
       ],
       "steps": [
         "Créer le premier administrateur par CLI avec secret saisi privément, puis vérifier login",
@@ -343,7 +344,15 @@
         "erreurs": "Conflits/validations explicites, aucun état partiel",
         "confidentialite": "Secret absent des arguments/logs partagés ; données existantes conservées"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed_local_sqlite",
+        "creation": "Création transactionnelle d'un ADMIN actif avec bcrypt sur SQLite jetable ; login HTTP /api/v1/auth/login obtenu.",
+        "rejeu": "Même username/email : aucun doublon ni changement de hash ; identités divergentes et admin désactivé refusés.",
+        "erreurs": "Identité et mot de passe invalides refusés sans ligne créée. CLI refuse la DB implicite, le nom différent et l'absence de TTY.",
+        "confidentialite": "Secret saisi par getpass uniquement, ni argument ni sortie ; seed de démonstration bloqué hors développement SQLite.",
+        "limits": "Test local avec seule table User créée au schéma courant ; ni chaîne Alembic PostgreSQL, ni compte réel, ni exécution VPS validés.",
+        "evidence": "backend/tests/test_bootstrap_admin.py ; notes/backend/sprint7.6/INT-126-bootstrap-admin.md"
+      }
     },
     {
       "id": "TC-INT-127-01",

@@ -1,6 +1,6 @@
 # Sprint 7.6 — Déploiement VPS et documentation entretien
 
-> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131 et INT-132 (console privée seule) validées ; application non encore déployée
+> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131, INT-132 (console privée seule) et INT-126 (tests locaux SQLite) validées ; application non encore déployée
 > **Dépendances :** Valider le périmètre livré et ses tests avant déploiement ; documenter explicitement le backlog restant.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.6/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -287,18 +287,22 @@ Je veux **créer le premier compte par une commande ponctuelle sécurisée**,
 Afin de **valider la production sans seed destructif ni inscription publique**.
 
 **Acceptance Criteria**
-- [ ] CLI versionnée, DB explicitement configurée, saisie privée du secret ; rien dans Git/arguments/logs partagés
-- [ ] Compte validé et mot de passe haché selon l'identité existante, création transactionnelle
-- [ ] Rejeu sans réinitialisation silencieuse du secret/rôle/données d'un compte existant ; conflits explicites
-- [ ] Aucun DELETE métier, seed automatique ou endpoint public d'inscription ajouté
-- [ ] Création/rejeu/échec/login testés sur DB jetable ; TD-B019 traité pour le bootstrap autorisé et limites de l'ancien seed documentées
+- [x] CLI versionnée, DB explicitement configurée et nom confirmé, saisie privée du secret via TTY ; rien dans Git/arguments/logs partagés
+- [x] Compte validé et mot de passe haché selon l'identité existante, création transactionnelle
+- [x] Rejeu sans réinitialisation silencieuse du secret/rôle/données d'un compte existant ; conflits explicites
+- [x] Aucun DELETE métier, seed automatique ou endpoint public d'inscription ajouté ; seed de démo refusé hors SQLite de développement
+- [x] Création/rejeu/échec/login testés sur SQLite jetable au schéma User courant ; TD-B019 traité pour ce bootstrap, limites de l'ancien seed documentées
 
 **Technical Notes**
 - Dépend du modèle identité existant, pas d'une DB de production peuplée.
 - Compte Linux, rôle DB et compte applicatif sont distincts. Ne pas modifier
   les comptes existants pour rendre une recette artificiellement verte.
-- Sources : module identité, CLI opérateur et procédures. Cas TC-INT-126-01.
+- Sources : `backend/app/bootstrap_admin.py`, module identité, cas TC-INT-126-01
+  et [note INT-126](../../../../notes/backend/sprint7.6/INT-126-bootstrap-admin.md).
   Cette tâche ne démarre pas le registre public historique TD-B002.
+- Tests locaux sur SQLite jetable, schéma `User` créé pour le test ; aucun
+  bootstrap sur PostgreSQL migré, aucune création d'admin sur le VPS.
+  Usage réel après migrations et décision de reprise en INT-111.
 
 ---
 

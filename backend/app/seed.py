@@ -1,8 +1,8 @@
 """
-Tervo — Seed script : utilisateurs + données demo.
+Tervo — Seed script : utilisateurs + données demo (SQLite dev uniquement).
 
-Idempotent : supprime toutes les données existantes avant de recréer.
-Utilisable en dev (SQLite) comme en prod (PostgreSQL).
+Réexécution destructive : supprime des données avant de recréer la démo.
+Destructif : jamais pour initialiser un administrateur en production.
 
 Usage:
     uv run python -m app.seed                # local
@@ -14,7 +14,9 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
 
+from app.config import settings
 from app.core.database import async_session, engine
 from app.core.security import get_password_hash
 from app.core.base import Base
@@ -28,6 +30,8 @@ from app.modules.identity.models import Role, User
 
 
 async def seed():
+    if settings.APP_ENV != "development" or make_url(settings.DATABASE_URL).get_backend_name() != "sqlite":
+        raise RuntimeError("Demo seed is destructive and restricted to development SQLite.")
     load_models()
     # ── 0. Créer les tables si elles n'existent pas ──────────
     async with engine.begin() as conn:
