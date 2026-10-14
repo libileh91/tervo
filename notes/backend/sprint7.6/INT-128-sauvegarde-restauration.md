@@ -25,6 +25,20 @@ Restic fournit chiffrement, authentification, publication atomique des snapshots
 et rétention. `sha256sum` vérifie les fichiers du bundle. Pas de crypto maison.
 Les scripts sont un support facultatif : les opérations utiles sont ci-dessous.
 
+### Comment lire les résultats
+
+Les tableaux des sections 2 à 6 donnent les **résultats attendus**, pas des
+captures d'une exécution VPS/mini-s1. Les observations réellement acquises
+sont identifiées comme **recette locale** et détaillées en section 8.
+Les identifiants, chemins temporaires, tailles et durées varient : aucune
+valeur d'exemple n'est une preuve d'exécution.
+
+Une commande silencieuse peut réussir : **code 0 + état/fichier contrôlé**,
+pas forcément une ligne `OK`. Les affectations (`VAR=...`), `export`, `unset`,
+définitions de fonctions, `set -e`, `umask` et `trap` n'affichent normalement
+rien. Une affectation avec `$(commande)` capture sa sortie dans la variable,
+elle ne l'affiche pas. Ne jamais imprimer les secrets pour « vérifier ».
+
 ## 2. Choisir explicitement le projet — sur le VPS
 
 Après déploiement validé, dans un terminal d'administration :
@@ -47,6 +61,18 @@ dans chaque commande. `config --quiet` ne montre pas les secrets.
 Attendu : configuration valide et les services identifiés. Un refus ou un
 projet inattendu impose l'arrêt, pas une purge ou une réinitialisation.
 
+| Commande | Résultat attendu |
+|---|---|
+| `sudo -i` | Session root ouverte ; peut demander le mot de passe sudo. Ne valide ni Docker ni la DB. |
+| `sh …/validate-env.sh …` | Code 0 et `Environment permissions and Compose configuration valid.` Ce message a été observé en recette locale, pas sur le VPS pour INT-128. |
+| `dc config --quiet` | Code 0, aucune sortie standard ; une erreur de configuration doit interrompre la suite. |
+| `dc ps` | Tableau des conteneurs du projet choisi ; PostgreSQL/backend/frontend doivent être présents et leurs healthchecks vérifiés. Leurs noms et IDs ne sont pas constants. |
+
+Si le fichier choisi est `deploy/.env`, à côté du Compose, l'affectation
+peut être `ENV_FILE="$(dirname "$COMPOSE_FILE")/.env"`. Elle reste silencieuse
+et donne un chemin absolu si `COMPOSE_FILE` est absolu ; elle ne prouve pas
+que le fichier existe ou est valide.
+
 ```bash
 BACKEND_ID=$(dc ps -a -q backend)
 DOCKGE_ID=$(docker compose -p dockge -f /opt/dockge/compose.yaml ps -a -q dockge)
@@ -62,6 +88,15 @@ On découvre le volume via le conteneur, sans supposer un nom issu du mini-s1.
 Cette recette manuelle exige les trois services initialement actifs ; sinon,
 examiner l'état et adapter la reprise. Ne pas démarrer un service volontairement
 arrêté. PostgreSQL reste actif pour fournir le dump.
+
+| Commande | Résultat attendu |
+|---|---|
+| `BACKEND_ID=$(dc ps -a -q backend)` | Variable contenant un seul ID de conteneur ; rien à l'écran. Absence ou multiplicité : ne pas poursuivre. |
+| `DOCKGE_ID=$(docker compose … ps -a -q dockge)` | Un seul ID du projet Dockge, sans publication de données d'auth. |
+| Les deux `test "$(docker inspect …)" = true` | Code 0, aucune sortie ; l'inspection sous-jacente doit donner `true` pour chaque conteneur. |
+| `systemctl is-active --quiet caddy.service` | Code 0, aucune sortie si actif ; non-zéro sinon. |
+| `UPLOADS_VOLUME=$(docker inspect …)` | Nom effectif du volume monté sur `/app/uploads`, capturé sans l'afficher. |
+| `test -n "$UPLOADS_VOLUME"` | Code 0, aucune sortie ; variable vide = refus de continuer. |
 
 ## 3. Une courte fenêtre cohérente
 
@@ -92,6 +127,18 @@ C'est une coordination entre outils, pas un RBAC qui empêcherait root de la
 contourner. Le `trap` tente la reprise en cas d'erreur ou d'interruption normale.
 **SIGKILL et perte de courant ne sont pas couverts** : inspecter puis reprendre
 les services. Ne jamais annoncer une récupération automatique universelle.
+
+| Commande | Résultat attendu |
+|---|---|
+| `exec 9>…` | Descripteur 9 ouvert sur le fichier de verrou, aucune sortie. Ce n'est pas encore l'acquisition du verrou. |
+| `flock -n 9` | Code 0 si acquis ; non-zéro immédiatement si déjà tenu. Pas d'attente ni de capture concurrente. |
+| `docker stop … >/dev/null` | Code 0 ; les IDs normalement retournés sont masqués. Backend et Dockge doivent être arrêtés. |
+| `systemctl stop caddy.service` | Code 0, normalement silencieux ; Caddy doit être arrêté. |
+| `SNAPSHOT_DIR=$(mktemp -d …)` | Chemin unique capturé dans la variable, dossier privé créé ; aucune sortie visible. |
+
+**Observé localement :** refus du verrou concurrent et reprise après échec
+testés. Les contrôles systemd/Dockge sont simulés ; ce tableau n'est pas une
+preuve que les services du VPS ont été arrêtés.
 
 ## 4. Dump, uploads et paramètres — toujours sur le VPS
 
@@ -128,6 +175,24 @@ curl --fail --show-error --silent --noproxy "*" \
   Attendre aussi les healthchecks `healthy` : un `docker start` avec code 0
   ne suffit pas à prouver la disponibilité. Recontrôler plutôt que masquer l'erreur.
 
+| Commande | Résultat attendu |
+|---|---|
+| `dc exec … pg_dump … > database.dump` | Code 0 ; flux binaire dans un fichier non vide, pas de dump affiché. Une erreur apparaît sur stderr. |
+| `dc run … tar … > uploads.tar` | Code 0 ; archive uploads créée. Compose peut afficher une progression sur stderr, pas les octets du tar dans le terminal. |
+| `cp --preserve=mode … private.env` | Code 0, silencieux ; copie privée avec le mode du fichier source conservé. Ne pas afficher son contenu. |
+| Les deux `cp` de l'unité et du Compose Dockge | Code 0, silencieux ; les deux fichiers existent dans le dossier de capture. |
+| Les trois `tar` des paramètres | Code 0, silencieux sans `-v` ; une archive par répertoire source, aucune restauration sur la machine. |
+| `printf … > source-project.txt` | Code 0 ; le nom du projet est écrit dans le fichier, pas à l'écran. |
+| `resume_services` | Code 0 seulement si les commandes de reprise réussissent ; les healthchecks restent à contrôler. |
+| `dc ps` après reprise | Conteneurs retrouvés ; attendre `healthy`, pas seulement `Up` ou `starting`. |
+| `systemctl is-active --quiet …` après reprise | Code 0 si Caddy est actif. |
+| `dc port backend 8000` dans le curl | Adresse publiée utilisée pour l'URL, normalement `127.0.0.1:8000` selon le port configuré. |
+| `curl … /health/ready` | HTTP 200, corps `{"status":"ready"}` et code 0. En cas d'indisponibilité DB : HTTP 503 et curl non-zéro avec `--fail`. |
+
+**Observé en recette locale :** dump/restauration et archives réussis ;
+le contrôle HTTP a donné 200 avec la DB disponible et 503 pendant sa panne.
+Le curl manuel de reprise sur le VPS n'a pas été exécuté.
+
 ```bash
 (
   cd "$SNAPSHOT_DIR"
@@ -143,9 +208,31 @@ exec 9>&-
 ```
 
 Attendu : neuf checksums `OK`. L'archive contient des secrets **en clair à ce
-stade** : directory privé, transfert SSH, puis chiffrement restic. Ni archive,
+stade** : répertoire privé, transfert SSH, puis chiffrement restic. Ni archive,
 ni `.env`, ni sorties de dump dans Git/chat. L'extraction est réservée à nos
 archives authentifiées, pas à un tar arbitraire reçu d'un tiers.
+
+| Commande | Résultat attendu |
+|---|---|
+| `cd "$SNAPSHOT_DIR"` dans le sous-shell | Code 0, pas d'affichage ; seul ce sous-shell change de dossier. |
+| `sha256sum … > SHA256SUMS` | Fichier contenant neuf lignes `HASH  NOM`, aucune sortie visible. |
+| `sha256sum --check SHA256SUMS` | Neuf lignes `NOM: OK`, code 0 ; `FAILED` ou fichier manquant interdit la suite. |
+| `tar … -cf …/tervo.tar …` | Code 0, bundle créé sans sortie standard ; cela ne le chiffre pas. |
+| `flock -u 9` puis `exec 9>&-` | Verrou libéré puis descripteur fermé, aucune sortie. |
+
+Forme **attendue**, non capturée sur le VPS :
+
+```text
+database.dump: OK
+uploads.tar: OK
+private.env: OK
+caddy.service: OK
+dockge-compose.yaml: OK
+caddy-config.tar: OK
+caddy-state.tar: OK
+dockge-data.tar: OK
+source-project.txt: OK
+```
 
 ## 5. Réception et chiffrement — sur mini-s1
 
@@ -178,6 +265,16 @@ relit les données chiffrées du dépôt. Attendre tous les codes 0 avant de com
 la sauvegarde comme exploitable. Retirer ensuite les copies temporaires en clair,
 uniquement aux emplacements créés pour cette capture.
 
+| Commande | Résultat attendu et preuve disponible |
+|---|---|
+| `restic version` | Version/Go/architecture affichés. Version **observée sur le poste de recette : 0.19.1** ; rien n'est encore relevé sur mini-s1. |
+| `restic init` | Dépôt chiffré créé et identifiant affiché, code 0. Réussi sur un dépôt local fictif ; son ID n'est pas celui du futur dépôt mini-s1. |
+| `RECEIVE_DIR=$(mktemp …)` | Nouveau dossier privé, chemin capturé sans affichage. |
+| `scp …` | Code 0, archive reçue ; une barre de progression peut apparaître. **Transfert réel non exécuté** : SSH était simulé dans les tests. |
+| `restic backup …` | Code 0 et confirmation d'un snapshot enregistré avec un ID variable. Sauvegarde chiffrée réussie localement ; sortie détaillée/ID non consignés. |
+| `restic check --read-data` | Code 0 après vérification du dépôt et lecture des packs ; des erreurs d'intégrité interdisent de compter le backup comme exploitable. Réussi en recette locale. |
+| `restic snapshots …` | Liste des snapshots correspondant à `tervo-vps`/`tervo`, avec IDs et dates ; ne prouve pas à elle seule qu'un restore fonctionne. |
+
 Rétention proposée, à approuver avant suppression :
 
 ```bash
@@ -185,6 +282,11 @@ restic forget --host tervo-vps --tag tervo --group-by host,tags \
   --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --dry-run
 # Après examen et accord, remplacer --dry-run par --prune.
 ```
+
+**Résultat attendu :** liste des snapshots qui seraient conservés/supprimés,
+sans suppression avec `--dry-run`. En recette locale, la politique a été appliquée
+sur un dépôt fictif et le snapshot de test est resté restaurable. Le dry-run
+manuel ci-dessus et une purge sur mini-s1 n'ont pas été exécutés.
 
 ## 6. Restaurer ailleurs, jamais sur la source
 
@@ -221,6 +323,23 @@ Pas de `--clean`, `DROP`, downgrade ni réutilisation de volume existant.
 partiel. Ne pas lancer les services HTTP avec les ports du VPS dans ce projet
 de recette. Le remplacement local demandé reste une opération finale distincte.
 
+| Commande | Résultat attendu |
+|---|---|
+| `RESTORE_DIR=$(mktemp …)` | Nouveau dossier privé ; aucune réutilisation d'un dossier de données. |
+| `restic dump … > …/tervo.tar` | Code 0 et bundle déchiffré écrit dans le fichier ; aucun contenu affiché. Mauvaise clé = échec. |
+| `tar -tf …` | Dix noms de fichiers : les neuf données listées ci-dessus plus `SHA256SUMS`, pas leurs contenus. |
+| `tar -xf … -C … --no-same-owner` | Code 0, fichiers extraits dans le dossier isolé ; pas de reprise des propriétaires de la source. |
+| `sha256sum --check …` après extraction | Les neuf `OK` ci-dessus ; corruption ou absence = arrêt. |
+| `RESTORE_PROJECT=…` | Nom unique `tervo-restore-UUID`, capturé sans affichage. |
+| `rdc up -d --wait postgres` | PostgreSQL du **nouveau** projet créé et healthy, code 0 ; ne doit pas utiliser les volumes du projet source. |
+| `rdc exec … pg_restore …` | Code 0, normalement silencieux sans `--verbose` ; schéma/données chargés. Les erreurs doivent interrompre la suite. |
+| `rdc exec … psql … app-grants.sql` | Code 0, messages `BEGIN`, plusieurs `GRANT`, `REVOKE`, `COMMIT`. Leur nombre dépend du schéma. |
+| `rdc run … tar … < uploads.tar` | Code 0, fichiers uploads restaurés dans le volume du projet isolé ; aucun serveur HTTP lancé par cette commande. |
+
+**Observé localement :** mauvaise clé refusée, bundle déchiffré identique,
+nouveau PostgreSQL healthy, restore/grants et uploads réussis. La source de
+recette n'a pas été remplacée.
+
 Contrôler les relations, chemins photo et métadonnées PDF sous cette cible :
 
 ```bash
@@ -232,6 +351,14 @@ SELECT id, sha256, size, octet_length(pdf), generated_at, transmitted_at
 FROM report_version;
 SQL
 ```
+
+**Résultat attendu :** deux tableaux SQL avec les lignes du jeu restauré.
+Les IDs/liens et chemins photo doivent correspondre à la source ; pour chaque
+PDF, `size` doit égaler `octet_length(pdf)`, avec le même SHA et les mêmes dates.
+Une base vide peut produire zéro ligne : ce n'est pas une preuve de restauration.
+En recette locale, une chaîne Client/Site/Intervention/Photo/Report et une
+version PDF fictives ont été comparées à la source avec succès ; les sorties
+SQL détaillées n'ont pas été consignées dans cette note.
 
 Comparer au jeu source autorisé. `size = octet_length(pdf)` ne suffit pas à
 prouver l'identité des octets. Pour **une version de test identifiée** :
@@ -248,6 +375,13 @@ base64 --decode "$RESTORE_DIR/pdf.base64" > "$RESTORE_DIR/report.pdf"
 sha256sum "$RESTORE_DIR/report.pdf"
 ```
 
+| Commande | Résultat attendu |
+|---|---|
+| Affectation de l'ID et `case` | Aucun affichage ; ID non numérique = sortie immédiate avec code 1. |
+| `psql … > pdf.base64` | Code 0, une version identifiée exportée vers le fichier ; aucun PDF/base64 affiché. Un ID absent peut donner un fichier vide : contrôler la ligne SQL avant l'export. |
+| `base64 --decode … > report.pdf` | Code 0, fichier PDF reconstitué ; contenu base64 invalide = échec. |
+| `sha256sum …/report.pdf` | Une ligne `HASH  CHEMIN`, le hash devant égaler le `sha256` enregistré. Cette commande ne compare pas automatiquement les deux valeurs. |
+
 Attendre le hash stocké pour cette version et les mêmes octets qu'avant backup.
 Ne pas afficher le PDF/base64 dans le terminal partagé. Pour une photo choisie,
 extraire l'archive uploads dans un dossier privé puis comparer `sha256sum` au
@@ -259,6 +393,11 @@ répertoire privé. Ne pas recopier directement sur `/etc/caddy`, `/var/lib/cadd
 ou `/opt/dockge/data`. Vérifier contenu et droits, puis adapter les propriétaires
 aux comptes de la cible, pas aux UID numériques de la source. Login Dockge,
 service Caddy et état TLS réels seront recontrôlés en INT-111.
+
+**Résultat attendu de ces contrôles de paramètres :** mêmes octets que les
+sources autorisées, fichiers encore privés, aucune copie sur les répertoires
+actifs. La recette locale a confirmé cela pour des fixtures ; elle n'a pas
+rejoué login Dockge, démarrage Caddy ou émission/renouvellement TLS réels.
 
 ## 7. Automatisation facultative et limites
 
@@ -296,12 +435,27 @@ uv run pytest ../deploy/test_snapshot.py tests/test_production_config.py -q
 refus d'écrasement et de dépôt Git, verrou concurrent, reprise des services
 simulés et refus de publication après échec SSH, plus configuration backend.
 
+Sortie de synthèse **observée lors de la livraison INT-128**, pas une nouvelle
+exécution pour cette correction documentaire :
+
+```text
+14 passed in 0.52s
+```
+
 La recette Docker existante a aussi réussi sur l'arbre Git
 `6fd18829bd6edc6240d15891396e7fce8c279261`, avec restic **0.19.1** :
 
 ```bash
 python3 deploy/check-stack.py --revision 6fd18829bd6edc6240d15891396e7fce8c279261 \
   --backup --restic /chemin/temporaire/restic-verifie
+```
+
+L'exécution locale a terminé avec **code 0**. Parmi les lignes réellement
+émises :
+
+```text
+PASS: encrypted restic bundle, wrong-key refusal, relationships/photo/PDF BYTEA and private config restore; source unchanged
+PASS: image revision labels match exported source object
 ```
 
 | Contrôle | Résultat observé |
