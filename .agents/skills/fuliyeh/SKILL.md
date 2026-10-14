@@ -273,7 +273,11 @@ indiquer la sortie attendue ou le silence normal, le code de succès et l'état
 ou fichier à contrôler. Ajouter les sorties observées seulement si elles sont
 disponibles ; sinon écrire « non exécuté » ou « sortie détaillée non consignée ».
 Ne jamais présenter un exemple de sortie comme une capture réelle ni afficher
-des secrets pour prouver le résultat. Les scripts restent des
+des secrets pour prouver le résultat. Compléter le tableau par un court bloc
+de retour terminal (`text`) quand utile : sortie observée si disponible,
+sinon exemple explicitement marqué « attendu/illustratif », avec placeholders.
+Pour une commande silencieuse, montrer le silence et le code plutôt qu'inventer
+un message `OK`. Les scripts restent des
 supports facultatifs ou des tests internes, pas le parcours pédagogique
 principal. Réutiliser les procédures existantes par lien plutôt que les
 dupliquer ; distinguer exemple à adapter, commande exécutée et résultat
