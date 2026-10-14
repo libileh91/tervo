@@ -3,7 +3,7 @@
 > **Chantier transverse du Stage 7, avant 7.4 ; pas un sprint de features.**
 > **Branche :** `refactor/modular-monolith`, déjà créée. **R0 :** validé, sans nouvel INT.
 > **Autorisation :** R1 à R9 validés et committés ; R9 : `205969a`, nettoyage : `17dfc11`. R10 accepté, commit autorisé ; feu vert distinct R11 reçu.
-> **Références :** [cadrage et baseline](README.md) · [plan](../../../../notes/backend/extras/tervo_plan_refactor_monolithe_modulaire.md) · [DAT](../../../DAT/new/00-sommaire.md).
+> **Références :** [cadrage et baseline](README.md) · [bilan R0–R11](../../../../notes/backend/refactor-monolithe-modulaire/bilan-R0-R11.md) · [DAT](../../../DAT/new/00-sommaire.md).
 > **Estimations :** estimation à confirmer pour chaque tâche.
 > **Notes futures :** `notes/backend/refactor-monolithe-modulaire/`. La preuve R0 reste dans `notes/backend/extras/refactor-monolithe-modulaire/`.
 
@@ -49,7 +49,7 @@ Afin de **préparer des déplacements progressifs en conservant une application 
 **Technical Notes**
 - Touchpoints prévus à l'implémentation : `backend/app/modules/`, `backend/app/router.py`, `backend/app/model_registry.py`, module technique propriétaire de Base, `backend/app/models/base.py`, `backend/app/main.py`, `backend/alembic/env.py` et tests de bootstrap. Ces chemins ne sont pas modifiés par ce planning.
 - Base est définie dans `app/core/base.py` ; son import seul reste pur. L'import legacy peut conserver temporairement les effets du package `app.models`, mais il doit réexporter le même objet ; isoler les tests de pureté dans des processus neufs.
-- Le registre utilise encore les modèles legacy pendant R1. Les exemples de modèles du plan ne sont pas exhaustifs : l'inventaire des 17 tables vient de `R0-metadata.json`.
+- Le registre utilise encore les modèles legacy pendant R1. L'inventaire historique des 17 tables vient de `R0-metadata.json`, pas d'un exemple de modèle.
 - Tester les ordres d'import technique → registre et legacy → registre, puis la réimportation du registre sans recharger les modules définissant les classes ORM.
 - Références : `R0-openapi.json`, `R0-metadata.json`, `R0-postgresql-results.json` et manifeste sous `notes/backend/extras/refactor-monolithe-modulaire/`. Ne pas les écraser.
 - Cas : `TC-INT-113-01` à `TC-INT-113-09`, vérifiés localement. Note et preuves : [INT-113 — R1](../../../../notes/backend/refactor-monolithe-modulaire/INT-113-R1-socle-modulaire.md). Suite finale : 285 tests ; groupes PostgreSQL : 56 + 39 ; contrôle Alembic limité à l'écart FK connu.

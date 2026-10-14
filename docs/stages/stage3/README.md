@@ -51,4 +51,5 @@ Phase 3 (First Deploy) ← dépend de Phase 1 + Phase 2 (code fonctionnel comple
 **Documents liés :**
 - `docs/DAT/07-implementation-roadmap.md`
 - `notes/backend/extras/restruct_roadmap-discussion.md`
-- `notes/backend/extras/postgres.docker-compose.yml`
+- Ancien exemple PostgreSQL sous `notes/` supprimé ; configuration actuelle :
+  [`deploy/docker-compose.yml`](../../../deploy/docker-compose.yml), distincte de ce sprint historique.

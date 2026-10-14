@@ -6,7 +6,7 @@
 
 ## Références et suivi
 
-- [Plan de refactorisation](../../../../notes/backend/extras/tervo_plan_refactor_monolithe_modulaire.md) : périmètre et ordre des vagues.
+- [Bilan R0–R11](../../../../notes/backend/refactor-monolithe-modulaire/bilan-R0-R11.md) : état final ; l'ancien plan intermédiaire sous `extras/` a été supprimé.
 - [Preuve R0](../../../../notes/backend/extras/refactor-monolithe-modulaire/R0-baseline.md) et [manifeste R0](../../../../notes/backend/extras/refactor-monolithe-modulaire/R0-baseline.json) : résultats réellement observés avant déplacement.
 - [Tâches](tasks.md) : user stories, critères d'acceptation et notes techniques.
 - [Cas de test](test-cases.json) : scénarios à exécuter, résultats attendus explicites et rattachement aux tâches.

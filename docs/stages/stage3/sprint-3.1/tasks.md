@@ -1,5 +1,9 @@
 # Sprint 3.1 : First Deploy via 1Panel + Cloudflare Tunnel (Semaine 4)
 
+> **Historique :** les noms des notes créées ci-dessous conservent leur provenance.
+> Les brouillons obsolètes ont été supprimés ; consulter [l'index actuel](../../../../notes/backend/deploy/README.md)
+> et [l'historique Cloudflare](../../../../notes/backend/deploy/cloudflare-tunnel-deploy.md), pas ces anciennes recettes.
+
 > **Duree :** 5 jours | **Points :** 32 | **Taches :** 9 (INT-48 a INT-51, INT-45, INT-47, INT-DPL, INT-DOC, INT-XX-internet)
 
 ---

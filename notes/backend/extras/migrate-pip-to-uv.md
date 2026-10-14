@@ -89,7 +89,9 @@ Plus besoin — `pyproject.toml` + `uv.lock` font le même travail proprement.
 - Arborescence : `requirements.txt` → `pyproject.toml` + `uv.lock`
 - Setup : `python -m venv` + `pip install` → `uv venv` + `uv sync`
 
-### 7. Mise à jour des docs — `rename-siteflow-to-tervo-venv.md`
+### 7. Mise à jour de l'ancien dépannage venv
+
+Le dépannage est désormais consolidé dans [le guide uv](guide-uv-usage.md#venv-déplacé-ou-cassé).
 
 - Solution A : `python -m venv` + `pip install` → `uv venv` + `uv sync`
 - Solution B : ajout de `uv run uvicorn` comme alternative

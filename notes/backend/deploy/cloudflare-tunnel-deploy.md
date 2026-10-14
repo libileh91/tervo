@@ -1,5 +1,10 @@
 # Deploiement Internet via Cloudflare Tunnel — Documentation complete
 
+> **Historique mini-s1 uniquement.** Les commandes de build/migration/seed ci-dessous
+> décrivent l'ancienne recette, pas une procédure à rejouer sur une base peuplée.
+> Pour le VPS, lire [l'index actuel](README.md) ; le [bootstrap admin](../sprint7.6/INT-126-bootstrap-admin.md)
+> remplace le seed pour la création du premier compte.
+
 > **Date :** 11/07/2026
 > **Objectif :** Rendre Tervo accessible sur internet depuis le serveur `mini-s1` (192.168.10.192) via Cloudflare Tunnel.
 > **Domaine :** `tervoapp.com` (registrar Hostinger, DNS Cloudflare)

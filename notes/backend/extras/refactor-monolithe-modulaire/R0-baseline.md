@@ -1,7 +1,7 @@
 # R0 — Baseline vérifiée avant le refactor modulaire
 
 > Chantier technique transverse, indépendant des évolutions métier de Sprint 7.4.
-> Référence : [plan du refactor](../tervo_plan_refactor_monolithe_modulaire.md).
+> Référence : [planning du refactor](../../../../docs/stages/stage7/refactor-monolithe-modulaire/README.md).
 > État : R0 validé par l'utilisateur ; branche `refactor/modular-monolith` créée et R1 autorisé. L'écart FK technicien est conservé sans correction. Les artefacts JSON restent ceux de la capture initiale, sans réécriture.
 
 ## 1. Pourquoi commencer par une baseline ?
