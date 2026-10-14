@@ -13,12 +13,12 @@ Le projet a **deux environnements de déploiement**, avec des contraintes diffé
 | ------------------ | -------------------------------------- | ----------------------------------- |
 | **Serveur**        | Machine locale, `192.168.10.192`       | Hostkey `vm.mini`, Debian 13 (inventaire reçu) |
 | **IP**             | Privée, derrière un routeur            | Publique fixe                       |
-| **Exposition**     | Cloudflare Tunnel (connexion sortante) | Caddy natif cible 80/443 ; dernier proxy vérifié OpenResty host |
+| **Exposition**     | Cloudflare Tunnel (connexion sortante) | Caddy natif actif sur HTTP80 ; ancien proxy OpenResty arrêté |
 | **SSL**            | Cloudflare Edge (automatique)          | Let's Encrypt via Caddy prévu, non validé |
 | **DNS**            | Cloudflare (`tervoapp.com`)            | Enregistrements A                   |
 | **Ports services** | Historiquement `0.0.0.0`               | **`127.0.0.1`** (Stage 6.1)         |
 | **PostgreSQL**     | Conteneur partagé préexistant          | Embarqué dans le compose            |
-| **Statut**         | ✅ opérationnel                        | ⏳ Caddy/Dockge approuvés en INT-131/132, bascule non faite ; preuves INT-124/125 conservées, app non déployée |
+| **Statut**         | ✅ opérationnel                        | Caddy actif, INT-131 terminée ; Dockge à installer, app et HTTPS non livrés |
 
 > **Pourquoi deux cibles ?** Le mini-s1 a servi à valider l'application et la chaîne de déploiement sans exposer la machine. Le VPS est la cible professionnelle (Sprint 7.6 (INT-111)).
 
@@ -104,6 +104,9 @@ Le dernier état vérifié reste 1Panel privé/OpenResty host, à basculer.
 
 ### 4.6 Réalisation guidée du VPS (INT-111/124, en cours)
 
+**Pour continuer : [guide court du VPS actuel](vps/04-transition-caddy.md).**
+Les notes 01 à 03 ci-dessous sont historiques, pas une nouvelle recette à suivre.
+
 | Note | Contenu |
 |---|---|
 | [Parcours VPS](vps/README.md) | Point d'entrée et avancement réel des étapes, distinct des procédures historiques |
@@ -114,11 +117,10 @@ Le dernier état vérifié reste 1Panel privé/OpenResty host, à basculer.
 | [Livraison INT-125](../sprint7.6/INT-125-stack-reproductible.md) | Images/configuration/readiness, recette Docker locale jetable et limites de déploiement |
 | [Cadrage INT-131/132](../sprint7.6/INT-131-132-cadrage-caddy-dockge.md) | Nouvelle cible Caddy natif/Dockge privé, bascule réversible et gate d'adoption |
 
-Ces notes enregistrent les commandes et résultats rapportés pendant la
-réalisation ; chaque étape précise ce qui est vérifié ou encore en attente.
-Le socle système, l'accès privé au panneau, le routage proxy sur cible
-jetable, son nettoyage et le retour après reboot sont contrôlés.
-HTTPS Tervo et le déploiement applicatif ne sont pas validés.
+Le socle système et les tests historiques 1Panel/OpenResty sont conservés.
+Caddy est maintenant le proxy actif, reload et reboot vérifiés ;
+1Panel/OpenResty retirés et INT-131 clôturée. Dockge reste à installer.
+HTTPS Tervo et le déploiement applicatif ne sont pas livrés.
 Le bilan du sprint sera rédigé séparément dans `notes/backend/sprint7.6/`.
 
 ---

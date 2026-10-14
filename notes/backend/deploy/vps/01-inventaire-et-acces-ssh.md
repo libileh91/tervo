@@ -1,5 +1,8 @@
 # 01 — Inventaire du VPS et sécurisation de l'accès SSH
 
+**Historique de préparation.** Pour reprendre le VPS aujourd'hui, utiliser
+[le guide actuel](04-transition-caddy.md), pas cette chronologie.
+
 > **Périmètre :** préparation du serveur pour INT-111, pas déploiement de Tervo.
 > **Repère temporel :** sorties du VPS et sauvegarde datées du 5 octobre 2026.
 > **Source des vérifications :** sorties de terminal fournies par l'utilisateur

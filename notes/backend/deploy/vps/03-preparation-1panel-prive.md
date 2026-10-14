@@ -1,5 +1,11 @@
 # 03 — Préparer une installation 1Panel privée
 
+**Historique INT-124.** 1Panel/OpenResty sont désormais désinstallés.
+La procédure actuelle est [le guide Caddy](04-transition-caddy.md).
+Les archives et installateurs de `/home/tervo/1panel-preparation` ont été
+retirés après désinstallation. Les commandes d'installation ci-dessous
+sont historiques, pas une procédure à relancer.
+
 > **Tâche :** INT-124, extraite du chantier INT-111 sans changement du
 > périmètre technique ; préparation puis installation 1Panel/OpenResty.
 > **État :** installation effectuée par l'utilisateur, puis panneau

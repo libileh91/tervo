@@ -1,5 +1,8 @@
 # 02 — Préparer les mises à jour et la sécurité système
 
+**Historique de préparation.** Pour reprendre le VPS aujourd'hui, utiliser
+[le guide actuel](04-transition-caddy.md), pas cette chronologie.
+
 > **État :** mise à jour effectuée par l'utilisateur et contrôlée à distance ;
 > redémarrage contrôlé, nouveau noyau actif. UFW actif et secours annulé ;
 > jail SSH fail2ban chargée. Dépôt Debian Security réactivé ;

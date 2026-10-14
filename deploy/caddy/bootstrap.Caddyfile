@@ -1,0 +1,14 @@
+# INT-131: HTTP-only bootstrap. No production imports or automatic ACME.
+{
+	auto_https off
+	admin 127.0.0.1:2019
+	servers {
+		protocols h1 h2
+	}
+}
+
+:80 {
+	handle {
+		respond "INT-131 bootstrap OK" 200
+	}
+}

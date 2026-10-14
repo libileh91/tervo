@@ -1,4 +1,4 @@
-# Tervo — production stack, OpenResty host mode (INT-124).
+# Tervo — production stack, Caddy host proxy (INT-131).
 # Always use: docker compose --env-file deploy/.env -f deploy/docker-compose.yml ...
 # Validate with config --quiet; do not print resolved secrets.
 # Migration/bootstrap/release are separate operations (INT-126 to INT-130).

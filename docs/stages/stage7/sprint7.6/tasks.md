@@ -1,6 +1,6 @@
 # Sprint 7.6 — Déploiement VPS et documentation entretien
 
-> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125 historiquement validées ; Caddy natif + Dockge privé approuvés, INT-131/132 à implémenter ; prochaine INT-131 après feu vert, application non déployée
+> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131 validées ; INT-132 à démarrer ; application non encore déployée
 > **Dépendances :** Valider le périmètre livré et ses tests avant déploiement ; documenter explicitement le backlog restant.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.6/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -227,28 +227,29 @@ Je veux **remplacer 1Panel/OpenResty par un proxy natif déclaratif**,
 Afin de **réduire les responsabilités implicites sans perdre les protections validées**.
 
 **Acceptance Criteria**
-- [ ] Inventaire live actualisé et sauvegarde privée des paramètres nécessaires de l'ancien panneau/proxy ; versions, restart policies, sockets et propriétaires de 80/443 relevés sans secrets
-- [ ] Installation Caddy depuis source officielle vérifiée, version/service/utilisateur et état persistant documentés ; aucun démarrage automatique surprise sur les ports déjà occupés
-- [ ] Deux profils versionnés : bootstrap actif HTTP seulement avec automatic HTTPS désactivé et sans vrais hostnames ; profil production des domaines choisis conservé inactif jusqu'à INT-111 ; validation avant reload et preuve d'absence de tentative ACME/état de certificat réel
-- [ ] Bascule explicitement autorisée, ancien proxy et core/agent neutralisés au boot (restart policy Docker incluse), Caddy seul proxy public selon profil actif (:80 bootstrap, 80/443 production) ; SSH/Docker/UFW et données inchangés
-- [ ] API admin locale/socket, aucun accès public 2019 ni administration 7410 ; profil initial TCP seulement, HTTP/3 désactivé sans exception UDP validée
-- [ ] Routage/reload sur cible jetable, contrôle extérieur et retour après reboot ; rollback vers état ancien testé sans réinstallation/effacement, toutes ressources de recette nettoyées
-- [ ] Note de livraison et inventaire des paramètres/état TLS à sauvegarder ; émission/renouvellement publics réellement testés seulement en INT-111
+- [x] Inventaire et sauvegarde privée de l'ancien panneau/proxy, retour aux services initiaux vérifié
+- [x] Caddy v2.11.7 officiel vérifié, installation native, compte/service/permissions documentés ; pas de démarrage initial surprise
+- [x] Deux profils versionnés : bootstrap HTTP actif sans vrais hostnames, automatic HTTPS désactivé et validation avant reload ; production inactive jusqu'à INT-111 ; état privé sans certificat et aucune tentative ACME dans le journal Caddy fourni
+- [x] Bascule autorisée et confirmée : Caddy actif/activé au démarrage, core/agent arrêtés/désactivés, OpenResty arrêté sans autorun ; SSH/Docker/UFW et données préservés ; états retrouvés après reboot
+- [x] API admin 127.0.0.1:2019, pas d'administration publique 2019/7410 ni d'écoute UDP443 ; IPv4 extérieur vérifié, IPv6 extérieur non testé
+- [x] Routage/reload sur cible locale jetable avec le binaire vérifié ; reload du bootstrap, contrôle public IPv4 et reboot sur VPS validés ; retour ancien testé avant suppression, fixtures locales arrêtées/nettoyées
+- [x] Guide court et note de livraison, configuration/état à sauvegarder identifiés ; émission/renouvellement publics réservés à INT-111
 
 **Technical Notes**
-- Réutilise INT-125 sans changer ses ports/réseaux ni les apps. Pas de
-  build en CI/registre ajouté et pas de migrations métier.
-- Sources envisagées : `deploy/caddy/`, guide de transition
-  `notes/backend/deploy/vps/`, note `notes/backend/sprint7.6/`.
-- Le bootstrap ne charge pas les hostnames Tervo et désactive explicitement
-  automatic HTTPS : ne pas laisser Caddy tenter ACME parce qu'un profil
-  production a été chargé avant l'autorisation DNS/TLS INT-111.
-  Le profil production inactif conserve les upstreams 127.0.0.1:3000
-  et 127.0.0.1:8000 et les domaines déjà choisis.
-- 1Panel installé reste l'état de référence tant que la bascule n'a pas
-  été exécutée. Son exception firewall historique n'est pas reconduite
-  comme règle cible Caddy. Ne pas faire tourner deux proxies sur 80/443.
-- Cas TC-INT-131-01/02, tous non exécutés au cadrage.
+- État courant et commandes : [guide VPS unique](../../../../notes/backend/deploy/vps/04-transition-caddy.md).
+- Sources : `deploy/caddy/`. Application, ports et volumes INT-125 inchangés.
+- Bootstrap HTTP seul ; exemple production inactif jusqu'à INT-111.
+- 1Panel retiré avec confirmation : dossiers/unités/binaires absents, conteneur
+  et image OpenResty supprimés. Ancien rollback direct invalide ; sauvegarde conservée.
+- INT-131 terminée : routage/reload jetables validés localement, bootstrap/
+  extérieur/reload/reboot sur VPS vérifiés. État Caddy privé sans certificat ;
+  journal courant sans tentative ACME, warning global tronqué à diagnostiquer séparément.
+- Pas de test d'upstream applicatif sur VPS ni de TLS public revendiqué.
+  Note : `notes/backend/sprint7.6/INT-131-132-cadrage-caddy-dockge.md`.
+- Suite simplifiée : commandes standard et note finale courte, sans nouveau
+  framework de déploiement ni nouvelle série de scripts/revues.
+- Nettoyage du dépôt : helpers/tests de préparation supprimés ; seuls les
+  profils Caddy, l'unité systemd et le README restent dans `deploy/caddy/`.
 
 ---
 
@@ -440,5 +441,7 @@ ne sont pas renommés et `origin_task` trace les transferts.
 TC-INT-111-01 conserve les observations partielles du socle VPS,
 TC-INT-111-02 les validations historiques 1Panel/OpenResty,
 TC-INT-111-03/08 la recette locale INT-125. Leurs résultats ne sont pas
-réattribués à Caddy/Dockge ; tous les cas INT-131/132 restent non exécutés.
+réattribués à Caddy/Dockge. TC-INT-131-01/02 sont validés avec leurs limites :
+routage jetable local, bootstrap/public IPv4/reload/reboot sur VPS, pas de TLS réel.
+INT-132 reste non exécutée.
 Le planning ne vaut pas implémentation ou validation de déploiement.

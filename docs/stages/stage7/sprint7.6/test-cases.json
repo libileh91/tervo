@@ -478,7 +478,19 @@
         "rollback": "État ancien retrouvable, politiques restaurées, données/SSH/Docker/UFW conservés",
         "limits": "Aucune tentative ACME/certificat Tervo pendant bootstrap, profil réel inactif ; certificats publics et release restent INT-111"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed",
+        "observed": "Caddy v2.11.7 officiel vérifié et installé, actif/activé au démarrage. Sauvegarde privée et retour à l'ancien proxy testés. Bascule HTTP confirmée ; core/agent arrêtés/désactivés, OpenResty arrêté sans autorun. SSH/Docker/UFW et règles préservés.",
+        "external": "IPv4 : HTTP80=200 avec le marqueur exact INT-131 bootstrap OK ; aucune connexion publique 443/2019/7410. Administration Caddy 127.0.0.1:2019 ; pas d'écoute UDP443. IPv6 extérieur non testé.",
+        "local_tests": "Tests des helpers et vraie recette Caddy isolée validés : routage/reload A/B, refus de configuration invalide et retour au bootstrap. Cela ne prouve pas la recette sur le VPS.",
+        "live_reload": "Opérateur : configuration valide, automatic HTTPS désactivé, systemctl reload réussi ; PID33887 inchangé, service actif/activé, réponse INT-131 bootstrap OK conservée. Validation/reload du bootstrap prouvés, pas d'un upstream applicatif.",
+        "reboot": "Opérateur après reboot (boot 2026-10-12 21:56:37) : Caddy PID969 actif/activé, SSH/Docker/UFW actifs/activés, core/agent arrêtés/désactivés, OpenResty running=false restart=no. HTTP local et public IPv4 : marqueur exact ; TCP80 public et127.0.0.1:2019 seulement, aucune connexion publique443/2019/7410 ni écouteUDP443.",
+        "old_components_removed": "Après confirmation : aucun conteneur Docker restant, /opt/1panel et /etc/1panel absents ; image OpenResty supprimée sans force/prune, anciennes unités not-found/inactive et aucun binaire 1pctl/core/agent trouvé. Caddy/Docker actifs/activés et marqueur HTTP conservé. Ancien rollback direct invalide après suppression ; sauvegarde conservée.",
+        "state_and_logs": "Après reboot : état caddy:caddy privé, répertoires0700/fichiers0600, autosave et housekeeping seulement. Journal Caddy fourni : automatic HTTPS désactivé, admin127.0.0.1:2019, aucune tentative ACME visible ; aucune matière certificat dans l'état listé.",
+        "remaining": "Aucun critère INT-131 restant. Diagnostic du journal global tronqué séparé.",
+        "limits": "Routage jetable testé localement, pas d'upstream applicatif VPS. Pas de déploiement Tervo, DNS/TLS réel ou restauration d'archive validés ; pas de santé globale journald revendiquée.",
+        "evidence": "notes/backend/deploy/vps/04-transition-caddy.md"
+      }
     },
     {
       "id": "TC-INT-131-02",
@@ -501,7 +513,16 @@
         "udp": "HTTP/3 désactivé tant qu'exception UDP non approuvée",
         "honesty": "Aucun certificat réel ou renouvellement déclaré validé sur une simple écoute"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed",
+        "observed": "Bootstrap COMMITTED : Caddyactive/enabled, SSH/Docker/UFW active/enabled, core/agentinactive/disabled, ancien conteneurstopped/restartno ; TCP80Caddy et127.0.0.1:2019 seulement, pas443TCP/UDP ni7410, règlesUFW inchangées etaucuneexceptionUDP",
+        "external": "Posteclient IPv4 avant/aprèscommit : HTTP80=200 corps exactbootstrap ;443refus,2019/7410sansconnexion3s. AucuneadresseIPv6globalerelevée lorslectureSSH antérieure ; IPv6extérieur non testé",
+        "reboot": "Boot 2026-10-12 21:56:37 : états/services attendus retrouvés, Caddy PID969 seul proxy HTTP80, admin2019 local ; aucun443TCP/UDP ni7410. Posteclient a revérifié HTTP public IPv4 et refus de connexion443/2019/7410.",
+        "state_and_logs": "Préflight avant confirmation refusant certificats/état inattendu ; après reboot, seuls autosave/UUID/last_clean/locks privés observés et journal Caddy sans tentative ACME. HTTPS automatique désactivé.",
+        "remaining": "Aucun critère de surface/bootstrap restant ; diagnostic du journal global tronqué séparé.",
+        "limits": "IPv6 extérieur non testé faute d'adresse globale ; aucune app/PG Tervo déployée, pas de certificat réel ni renouvellement public validé.",
+        "evidence": "notes/backend/deploy/vps/04-transition-caddy.md"
+      }
     },
     {
       "id": "TC-INT-132-01",
