@@ -268,7 +268,12 @@ Quand du code est en attente d'une dépendance future :
 **Règle permanente — commandes d'abord :** pour une opération, présenter les
 commandes complètes avant l'automatisation : où les exécuter, préconditions,
 but, options utiles, résultat attendu et conduite en cas d'échec. Le lecteur
-doit comprendre le processus sans lire du Python. Les scripts restent des
+doit comprendre le processus sans lire du Python. Pour chaque commande,
+indiquer la sortie attendue ou le silence normal, le code de succès et l'état
+ou fichier à contrôler. Ajouter les sorties observées seulement si elles sont
+disponibles ; sinon écrire « non exécuté » ou « sortie détaillée non consignée ».
+Ne jamais présenter un exemple de sortie comme une capture réelle ni afficher
+des secrets pour prouver le résultat. Les scripts restent des
 supports facultatifs ou des tests internes, pas le parcours pédagogique
 principal. Réutiliser les procédures existantes par lien plutôt que les
 dupliquer ; distinguer exemple à adapter, commande exécutée et résultat
