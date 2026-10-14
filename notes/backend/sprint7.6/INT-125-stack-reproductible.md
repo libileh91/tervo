@@ -285,6 +285,43 @@ recette navigateur authentifiée de photo réelle : elle appartient à INT-111.
 
 ## 7. Isolation, logs et limites opératoires
 
+### Lire les opérations sans passer par le helper
+
+Depuis la **racine du dépôt sur le poste local**, avec Docker Compose
+disponible et un fichier privé déjà renseigné ; remplacer le chemin ci-dessous :
+
+```bash
+sh deploy/validate-env.sh /chemin/absolu/deploy/.env
+docker compose --env-file /chemin/absolu/deploy/.env \
+  -f deploy/docker-compose.yml config --quiet
+```
+
+La première commande contrôle aussi permissions et exports ambiants ; la
+seconde résout le Compose sans l'afficher (`--quiet`), donc sans imprimer ses
+secrets. Succès attendu : code 0, pas un démarrage ni une preuve de connexion
+SQL. En cas de refus, corriger le fichier privé ou retirer uniquement les
+exports signalés ; ne pas contourner la garde ni afficher `config` sans
+`--quiet` dans un terminal partagé.
+
+Pour comprendre le build sous-jacent, **sur un poste de recette isolé**
+avec le même environnement validé :
+
+```bash
+docker compose --env-file /chemin/absolu/deploy/.env \
+  -f deploy/docker-compose.yml build backend frontend
+```
+
+`--env-file` fixe la source de configuration, `-f` le manifeste ; `build`
+construit les deux images sans démarrer les services. Attendu : deux builds
+terminés avec code 0. Un échec de téléchargement, lock ou configuration doit
+être diagnostiqué avant la suite, sans retirer les contrôles. Cette commande
+travaille sur le checkout courant et crée des images locales : contrairement
+à l'export Git testé historiquement, elle ne prouve pas l'identité d'une
+release. Migrations et grants sont expliqués dans INT-127 ; les commandes
+réelles de release INT-129/111 restent non livrées.
+
+### Support facultatif : recette automatisée
+
 `check-stack.py` exige un objet Git explicite :
 
 ```bash

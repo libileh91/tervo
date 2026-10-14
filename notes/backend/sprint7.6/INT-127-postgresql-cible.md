@@ -80,6 +80,42 @@ Ce sont les étapes SQL, **pas encore une procédure de production complète**.
 En cas d'échec, ne pas exposer l'API ; garder le volume et diagnostiquer.
 Pas de transfert source ni de rollback destructif dans INT-127.
 
+### Comprendre et contrôler ces étapes
+
+Les commandes ci-dessus partent de la **racine du dépôt sur l'hôte Docker
+ciblé** ; `CHEMIN_PRIVE` est à remplacer par le chemin du fichier env validé.
+Le projet et ses volumes doivent être identifiés avant toute écriture.
+`run --rm --no-deps migrate` crée un conteneur ponctuel puis le retire,
+sans démarrer PostgreSQL à sa place : la DB doit déjà être prête.
+Il exécute `alembic upgrade head` avec le rôle admin. Code 0 attendu avant
+les grants. `exec -T postgres` lance ensuite psql sans TTY ; les variables
+entre apostrophes sont résolues **dans le conteneur**, pas sur l'hôte.
+`ON_ERROR_STOP=1` arrête psql à la première erreur ; `-f` applique le fichier
+versionné de droits. Un succès ne prouve ni bootstrap ni restauration.
+
+Contrôle SQL lisible, sans modification, avec les mêmes préconditions :
+
+```bash
+docker compose --env-file CHEMIN_PRIVE -f deploy/docker-compose.yml exec -T postgres \
+  sh -c 'exec psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <<'SQL'
+SHOW server_version;
+SELECT current_database(), current_user;
+SELECT rolname, rolsuper, rolcreatedb, rolcreaterole, rolreplication
+FROM pg_roles WHERE rolname IN ('tervo_admin', 'tervo_app');
+SELECT version_num FROM public.alembic_version;
+SELECT has_table_privilege('tervo_app', 'public.alembic_version', 'UPDATE')
+  AS api_peut_modifier_version;
+SQL
+```
+
+Pour les noms retenus ici, attendre PostgreSQL 17.11, `tervo_db`,
+`tervo_admin`, les quatre flags faux pour `tervo_app`, la tête Alembic de
+l'image testée et `false` au dernier contrôle. Cela lit sous admin : ce
+n'est pas une preuve de connexion avec le secret API ni de tous ses droits.
+Si une valeur diverge ou si une table manque, conserver la sortie non sensible
+et examiner cible, migrations et grants ; ne pas purger le volume.
+Ces commandes explicitent les contrôles, elles n'ont pas été rejouées sur VPS.
+
 ## Recette observée
 
 La recette existante `deploy/check-stack.py --revision OBJET_GIT` a été adaptée,

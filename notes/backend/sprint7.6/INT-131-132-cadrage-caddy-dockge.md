@@ -95,3 +95,43 @@ aucun certificat et aucune tentative ACME visible.
 Limites : aucun upstream applicatif VPS ni TLS public livré ; journal global
 tronqué à diagnostiquer séparément. L'ancien rollback ne doit plus être lancé
 après désinstallation ; sauvegarde conservée.
+
+## Lire les commandes d'exploitation
+
+Les procédures complètes restent dans les guides liés plus haut. Pour
+comprendre les contrôles, **sur le VPS via SSH**, sans changer de configuration :
+
+```bash
+sudo systemctl status caddy --no-pager
+sudo journalctl -u caddy -b --no-pager
+curl --fail --show-error --silent --noproxy "*" http://127.0.0.1/
+```
+
+`status` attend un service actif ; `journalctl -u` sélectionne Caddy et `-b`
+le démarrage courant ; `--no-pager` évite un lecteur interactif. Le curl
+contourne les proxies ambiants et rend les erreurs HTTP visibles : dans le
+bootstrap décrit ici, attendre `INT-131 bootstrap OK`, pas Tervo ni HTTPS.
+En cas d'échec, lire l'état et les journaux avant toute modification ; ne
+pas effacer les logs tronqués ni relancer l'ancien rollback.
+
+Après un changement volontaire seulement, le guide utilise :
+
+```bash
+sudo /usr/local/bin/caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile \
+  && sudo systemctl reload caddy
+```
+
+`validate` contrôle le fichier, `&&` interdit le reload si ce contrôle échoue.
+Le reload applique la configuration sans redémarrage complet ; recontrôler
+ensuite service et HTTP. Validation réussie ne signifie pas upstream ou
+certificat fonctionnel. Si le reload échoue, préserver l'état et diagnostiquer
+avant de poursuivre, sans activer le profil HTTPS par déduction.
+
+Pour Dockge, la commande SSH complète est dans le guide dédié : elle part du
+**poste administrateur**, pas du VPS. `-N` n'ouvre pas de shell distant,
+`-L 127.0.0.1:15001:127.0.0.1:5001` relie le port local au loopback distant,
+et `ExitOnForwardFailure=yes` refuse un tunnel qui ne peut pas s'ouvrir.
+Attendu : SSH reste ouvert et `http://127.0.0.1:15001` demande le login.
+Si le port local est occupé ou SSH échoue, corriger le tunnel selon le guide,
+jamais publier 5001. `Ctrl-C` ferme le tunnel, pas Dockge.
+Ces explications ne constituent pas une nouvelle exécution ni une adoption Tervo.

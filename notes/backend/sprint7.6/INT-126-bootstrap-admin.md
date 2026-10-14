@@ -17,6 +17,19 @@ explicitement dans l'environnement (`DATABASE_URL` ou composants
 python -m app.bootstrap_admin --confirm-db-name NOM_DE_LA_BASE
 ```
 
+Cette forme s'exécute depuis **`backend/`**, avec le Python de l'environnement
+backend déjà installé et la configuration DB privée déjà fournie au processus.
+Avec uv, l'équivalent complet est :
+
+```bash
+uv run python -m app.bootstrap_admin --confirm-db-name NOM_DE_LA_BASE
+```
+
+`-m` lance le module du projet ; `--confirm-db-name` oblige à confirmer le
+nom exact de la cible, sans fournir de mot de passe SQL en argument.
+Ne pas lancer pour apprendre sur une base persistante : la création écrit
+un compte. Aucun export de secret dans une commande à partager.
+
 Sur un futur backend Compose **après migration**, elle pourra être exécutée
 ainsi (sans insérer de secret dans la commande) :
 
@@ -24,6 +37,15 @@ ainsi (sans insérer de secret dans la commande) :
 docker compose --env-file CHEMIN_PRIVE -f deploy/docker-compose.yml exec backend \
   python -m app.bootstrap_admin --confirm-db-name NOM_DE_LA_BASE
 ```
+
+Cette seconde forme part de la **racine du dépôt sur l'hôte Docker ciblé** :
+remplacer `CHEMIN_PRIVE` par le chemin du fichier env privé et le nom par la
+base contrôlée. `exec backend` entre dans le service déjà démarré et conserve
+le terminal interactif ; ne pas ajouter `-T` ici. Succès attendu : création
+confirmée ou « déjà présent » pour la même identité active, pas un affichage
+du secret. En cas de refus de TTY, cible, schéma ou conflit, arrêter et
+diagnostiquer la cause ; ne pas lancer le seed, supprimer un utilisateur ou
+réinitialiser la base pour forcer la réussite.
 
 Ce n'est pas une commande de release : la DB cible, l'environnement et
 l'absence de processus bootstrap concurrent sont à contrôler avant usage.

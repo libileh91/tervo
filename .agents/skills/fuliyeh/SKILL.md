@@ -265,6 +265,16 @@ Quand du code est en attente d'une dépendance future :
 - Pas de redondances — une note claire > deux notes confuses
 - Objectif : tu m'apprends les technos et le code du projet
 
+**Règle permanente — commandes d'abord :** pour une opération, présenter les
+commandes complètes avant l'automatisation : où les exécuter, préconditions,
+but, options utiles, résultat attendu et conduite en cas d'échec. Le lecteur
+doit comprendre le processus sans lire du Python. Les scripts restent des
+supports facultatifs ou des tests internes, pas le parcours pédagogique
+principal. Réutiliser les procédures existantes par lien plutôt que les
+dupliquer ; distinguer exemple à adapter, commande exécutée et résultat
+observé. Ne pas transformer une recette locale en procédure de production
+prétendue validée.
+
 **Niveau de détail proportionné à la tâche :** une note enseigne les choix
 utiles, sans imposer la longueur d'une autre tâche. Inspecter les fichiers
 réellement modifiés ; expliquer les invariants, contrats, transactions et
