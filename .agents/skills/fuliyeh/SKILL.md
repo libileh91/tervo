@@ -33,6 +33,12 @@ et feu vert utilisateur. Réutiliser l'existant ; ne pas multiplier les essais
 blocage, proposer une seule prochaine action simple et ne pas annoncer la tâche
 validée sans preuve. Le temps et les tokens font partie du coût à minimiser.
 
+**Accès VPS — préférence permanente :** si une opération nécessite le VPS,
+demander les accès temporaires à l'utilisateur plutôt que multiplier les
+contournements locaux. Confirmer le périmètre autorisé et vérifier SSH/sudo ;
+ne pas présumer les droits ou la durée de validité. Aucun mot de passe ni clé
+privée dans la conversation ou le dépôt ; faire retirer les accès à la fin.
+
 ---
 
 ## 📌 Contexte projet (mis à jour — Tervo v2)
