@@ -25,6 +25,14 @@ de revues supplémentaire sans besoin concret. Garder les notes proportionnées
 et pédagogiques, sans répétition ; ne jamais réduire les preuves en inventant
 une validation ou en masquant une limite.
 
+**Déploiement — priorité stricte à la simplicité :** commencer par les commandes
+natives et une validation manuelle ciblée. Ne pas ajouter de scripts,
+de harness de tests ni de matrices de pannes sans nécessité immédiate expliquée
+et feu vert utilisateur. Réutiliser l'existant ; ne pas multiplier les essais
+équivalents quand un téléchargement ou l'environnement bloque. Signaler le
+blocage, proposer une seule prochaine action simple et ne pas annoncer la tâche
+validée sans preuve. Le temps et les tokens font partie du coût à minimiser.
+
 ---
 
 ## 📌 Contexte projet (mis à jour — Tervo v2)
