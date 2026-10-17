@@ -12,8 +12,11 @@ Il n'est pas nécessaire de relire les anciennes sessions pour continuer.
 - Caddy est actif et activé au démarrage, en HTTP seul.
 - 1Panel désinstallé ; conteneur et image OpenResty supprimés.
 - Dockge privé est installé ; login par tunnel et logs de démo confirmés.
-- L'application, PostgreSQL Tervo et HTTPS ne sont pas encore livrés sur le VPS.
-- INT-131 terminée ; INT-132 limitée à la console privée, adoption Tervo reportée à INT-129.
+- INT-129 a validé une stack Tervo/PostgreSQL de recette et le gate Dockge ;
+  nettoyage déclaré exécuté par l'opérateur, Caddy/Dockge confirmés actifs.
+  Pas de production publique/HTTPS ; détail du nettoyage non consigné.
+- INT-131 terminée ; INT-132 reste la livraison de la console privée.
+  [Journal opérateur et cours de déploiement INT-129](../../sprint7.6/INT-129/README.md).
 
 ## Références
 

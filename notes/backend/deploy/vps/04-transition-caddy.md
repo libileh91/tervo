@@ -13,10 +13,13 @@ Ce guide remplace le journal détaillé de préparation et de bascule.
 | 1Panel | Désinstallé : dossiers, anciennes unités et binaires absents |
 | OpenResty | Conteneur et image supprimés |
 | SSH / Docker / UFW | Actifs ; règles du pare-feu inchangées |
-| Dockge | Privé sur 127.0.0.1:5001 ; login par tunnel et logs de démo confirmés, pas d'adoption Tervo |
-| Application / PostgreSQL / HTTPS Tervo | Pas encore déployés sur le VPS |
+| Dockge | Privé sur 127.0.0.1:5001 ; gate Tervo ensuite validé dans la recette INT-129, pas de mise en service publique |
+| Application / PostgreSQL / HTTPS Tervo | Recette isolée INT-129 validée, nettoyage déclaré par l'opérateur ; production publique et HTTPS Tervo non encore livrés |
 
-Le serveur affiche une **page de contrôle**, pas l'application Tervo.
+Le point d'entrée public de ce bootstrap affiche une **page de contrôle**,
+pas l'application Tervo. La recette INT-129 utilise des ports loopback distincts ;
+son [journal et ses cours](../../sprint7.6/INT-129/README.md) décrivent la suite
+sans attribuer à INT-131 ces nouvelles preuves.
 Le port 443 est autorisé par UFW pour la suite, mais aucun service n'y
 écoute actuellement. Aucun port UDP 443 n'est ouvert dans les règles relevées.
 Les contrôles extérieurs ont été faits en IPv4 ; aucune adresse IPv6 globale

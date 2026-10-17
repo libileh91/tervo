@@ -37,9 +37,6 @@ COPY alembic.ini main.py ./
 # ── Stage 2: Runtime ──────────────────────────────────────
 FROM python:3.11-slim@sha256:0dd364ba7e10242f07755449e3a3d0e35f9efd987952737b90def6709ab0c5ce AS runtime
 
-ARG VCS_REF=unknown
-LABEL org.opencontainers.image.revision="${VCS_REF}"
-
 # WeasyPrint libraries; retain the existing cairo/pixbuf stack.
 # Debian package versions remain mutable despite the pinned Python base.
 RUN apt-get update && \
@@ -71,5 +68,9 @@ RUN mkdir -p /app/uploads/photos
 VOLUME ["/app/uploads"]
 
 EXPOSE 8000
+
+# Revision metadata must not invalidate the OS/dependency layers on every commit.
+ARG VCS_REF=unknown
+LABEL org.opencontainers.image.revision="${VCS_REF}"
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

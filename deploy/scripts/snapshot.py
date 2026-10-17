@@ -82,7 +82,15 @@ def sha256(path):
 
 def capture(args, pause_host):
     """pause_host is explicit: production stops services; tests use offline fixtures."""
-    lock_fd = os.open(args.lock_file, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    inherited = getattr(args, "lock_fd", None)
+    if inherited is None:
+        lock_fd = os.open(args.lock_file, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    else:
+        lock_fd = os.dup(inherited)
+        actual, expected = os.fstat(lock_fd), os.stat(args.lock_file, follow_symlinks=False)
+        if (actual.st_dev, actual.st_ino) != (expected.st_dev, expected.st_ino):
+            os.close(lock_fd)
+            raise RuntimeError("Inherited operation lock does not match the configured file.")
     with os.fdopen(lock_fd, "w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         _capture_locked(args, pause_host)
@@ -188,6 +196,7 @@ def main():
     create.add_argument("--project", required=True)
     create.add_argument("--allow-maintenance", action="store_true", required=True)
     create.add_argument("--lock-file", default="/run/lock/tervo-operations.lock")
+    create.add_argument("--lock-fd", type=int, help="Inherited lock descriptor from the release command")
     create.add_argument("--caddy-config", default="/etc/caddy")
     create.add_argument("--caddy-state", default="/var/lib/caddy")
     create.add_argument("--caddy-unit-file", default="/etc/systemd/system/caddy.service")

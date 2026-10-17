@@ -140,7 +140,8 @@ systemctl stop caddy.service
 SNAPSHOT_DIR=$(mktemp -d /var/tmp/tervo-backup.XXXXXXXX)
 ```
 
-`flock -n` refuse une opération concurrente ; INT-129 devra réutiliser ce verrou.
+`flock -n` refuse une opération concurrente ; INT-129 réutilise ce verrou,
+avec refus sous verrou tenu et transmission au snapshot testés sur recette VPS.
 C'est une coordination entre outils, pas un RBAC qui empêcherait root de la
 contourner. Le `trap` tente la reprise en cas d'erreur ou d'interruption normale.
 **SIGKILL et perte de courant ne sont pas couverts** : inspecter puis reprendre
@@ -500,7 +501,7 @@ désactivée par défaut (`APPLY_RETENTION=0`).
 Avant activation : approuver la fenêtre, valider accès SSH/sudo limité,
 installer les fichiers privilégiés root-owned et non modifiables par l'utilisateur,
 tester une vraie récupération hors VPS et examiner les jobs déjà présents.
-Le verrou partagé devra être respecté par INT-129 ; il ne remplace pas la
+Le verrou partagé est intégré et testé dans INT-129 ; il ne remplace pas la
 discipline d'administration. Un échec doit être suivi dans le journal du service.
 
 La validation locale couvre PostgreSQL/restic réels, une photo, un PDF BYTEA

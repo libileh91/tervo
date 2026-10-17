@@ -6,17 +6,20 @@ Entrée unique : [état du VPS et références](vps/README.md).
 
 | Sujet | Référence |
 |---|---|
+| Cours progressif de déploiement Tervo (Linux, Docker/Compose, réseau, PostgreSQL, release) | [Cours](../../../deploy/cours/README.md) |
 | Caddy natif, HTTP seul, ancien proxy retiré | [Guide Caddy](vps/04-transition-caddy.md) |
-| Dockge privé : tunnel, login, logs ; pas d'adoption Tervo | [Guide Dockge](../../../deploy/dockge/README.md) |
+| Dockge privé : tunnel, login, logs et gate Tervo validé en recette | [Guide Dockge](../../../deploy/dockge/README.md) |
 | Stack reproductible, Compose/env explicites | [INT-125](../sprint7.6/INT-125-stack-reproductible.md) |
 | Premier admin sans seed destructif, tests locaux SQLite | [INT-126](../sprint7.6/INT-126-bootstrap-admin.md) |
 | DB vide, séparation admin/API et droits testés localement | [INT-127](../sprint7.6/INT-127-postgresql-cible.md) |
 | Sauvegarde/restauration : commandes expliquées, preuve locale, mini-s1 à préparer | [INT-128](../sprint7.6/INT-128-sauvegarde-restauration.md) |
 | Ordre DB → backups → release → publication | [Planning 7.6](../../../docs/stages/stage7/sprint7.6/tasks.md) |
 
-**L'application, PostgreSQL Tervo et HTTPS ne sont pas encore déployés sur
-le VPS.** Le gate d'adoption Dockge reste en INT-129 ; ne pas copier le Compose
-dans l'interface. Le seed n'est pas une procédure de production.
+**La mise en service publique et HTTPS Tervo restent à INT-111.** INT-129 a
+validé une stack jetable et le gate Dockge ; nettoyage déclaré par l'opérateur,
+Caddy/Dockge actifs confirmés, détails de nettoyage non consignés.
+Git reste autoritaire : ne pas copier/éditer le Compose dans l'interface.
+Le seed n'est pas une procédure de production.
 
 ## Mini-s1 : historique distinct
 

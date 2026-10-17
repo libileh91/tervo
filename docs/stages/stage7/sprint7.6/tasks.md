@@ -1,6 +1,6 @@
 # Sprint 7.6 — Déploiement VPS et documentation entretien
 
-> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131, INT-132 (console privée), INT-126/127/128 (recettes locales) validées ; application et sauvegarde réelle non encore déployées
+> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131, INT-132 (console privée), INT-126/127/128 (recettes locales) validées ; INT-129 livrée sur recette VPS et confirmation opérateur du nettoyage ; mise en service publique et sauvegarde régulière hors VPS non activées
 > **Dépendances :** Valider le périmètre livré et ses tests avant déploiement ; documenter explicitement le backlog restant.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.6/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -337,8 +337,9 @@ Afin de **choisir une reprise sans présumer un ancien conteneur ou rôle**.
   dans INT-127 et ne vaut pas une preuve d'accès sous ce nouveau compte.
 - Sources : Compose, `deploy/postgres/init-app.sql`, `app-grants.sql` et recette
   `deploy/check-stack.py` adaptée. Note : [INT-127](../../../../notes/backend/sprint7.6/INT-127-postgresql-cible.md).
-- Aucun PostgreSQL Tervo créé sur le VPS. `migrate` (profil `tools`) puis grants
-  seront intégrés à INT-129 avant exposition ; ce n'est pas une release réelle.
+- Au terme d'INT-127, aucun PostgreSQL Tervo n'avait été créé sur le VPS.
+  INT-129 a depuis testé `migrate` (profil `tools`) puis grants sur une stack
+  VPS jetable ; DB de production et exposition publique restent à INT-111.
   Cas TC-INT-127-01, preuves locales uniquement.
 
 ---
@@ -382,13 +383,16 @@ Je veux **une commande de release commune au manuel et à la CI**,
 Afin de **maîtriser artefacts, migrations, disponibilité et retour arrière**.
 
 **Acceptance Criteria**
-- [ ] Commande versionnée avec Compose/.env explicites, services Compose, verrou de déploiement et SHA enregistré ; interaction réelle avec Dockge testée (fenêtre d'administration gelée/absence d'action en cours), pas de seconde orchestration ni simple promesse de RBAC
-- [ ] Avant toute adoption Tervo dans Dockge, comparer source Git/CLI et configuration effective Dockge (chemins build, env explicite, projet, volumes) sur stack jetable ; bloquer si incompatibles
-- [ ] Build/version des images une fois, backup/maintenance avant migration si nécessaire, migration avant exposition, démarrage/attente puis GET readiness/smoke
-- [ ] Échec propagé pour build/migration/readiness/smoke ; conteneur Up ou OpenAPI seul ne rend pas la release verte
-- [ ] Images précédentes conservées sans prune immédiat, rollback vers artefact exact testé sans HEAD détaché laissé sur VPS
-- [ ] Schéma compatible vérifié, roll-forward/procédure contrôlée sinon ; aucun downgrade/restore/`down -v`/nettoyage de volumes implicite
-- [ ] Échec/rollback testés en isolation, commandes de secours et note de livraison documentées
+- [x] Commande avec Compose/.env explicites, services Compose, verrou et SHA enregistré ; gel/reprise Dockge réels et refus sous verrou tenu testés sur VPS, fenêtre sans opération concurrente confirmée par l'opérateur ; pas de seconde orchestration ni promesse de RBAC
+- [x] Source Git/CLI et modèle calculé dans Dockge comparés en mémoire sur stack jetable ; omission JSON des deux false qualifiée par refus réel de bind absent, logs et Stop/Start UI réussis, images/projet/données conservés sans modification UI cachée
+- [x] Première release locale : build/version des images une fois, migration avant démarrage HTTP, attente puis GET readiness/smoke, record automatique et rejeu sans rebuild/migration
+- [x] Upgrade A → B local puis VPS : HTTP arrêté, backup DB/uploads avant migration, démarrage/attente et GET ; adaptateur autorisé localement, vraie chaîne Caddy/Dockge passée sur VPS, restauration des paramètres réels restant à INT-111
+- [x] Échec de migration propagé avec code global 1 malgré le retour automatique aux images exactes A, sans downgrade/restore implicite ; réconciliation/revalidation puis reprise Dockge testées sur VPS
+- [x] Échecs build/readiness/smoke propagés code 1 sur VPS ; A reste en place après build raté, retour automatique aux images A après refus unhealthy ou GET /login 503 ; conteneur Up seul ne rend pas la release verte
+- [x] Images précédentes conservées sans prune immédiat, rollback B → A local puis VPS vers les IDs et contenus exacts testé, données préservées et branche Git toujours attachée
+- [x] Égalité schéma/tête vérifiée avant rollback, refus sur divergence testé sur VPS avec maintien de la console gelée et procédure de roll-forward documentée ; aucun downgrade/restore/`down -v`/nettoyage de volumes implicite
+- [x] Échec/rollback testés en isolation, commandes de secours et note pédagogique avec commandes root expliquées/résultats opérateur documentées
+- [x] Nettoyage déclaré exécuté par l'opérateur, Dockge vert et Caddy bootstrap HTTP 200 confirmés ; détails de suppression/archivage non consignés, pas de contrôle indépendant ; livraison regroupée dans le commit INT-129, sans démarrer la tâche suivante
 
 **Technical Notes**
 - Dépend d'INT-125/127/128. Script testé sur stack jetable avant sa première
@@ -397,6 +401,26 @@ Afin de **maîtriser artefacts, migrations, disponibilité et retour arrière**.
   Rebuild ancien n'est pas ancien artefact.
 - Cas TC-INT-111-10 et TC-INT-132-02 (transféré), propriétaires INT-129.
   La CI INT-130 appellera ce script.
+- Preuves et commandes root expliquées : [note INT-129](../../../../notes/backend/sprint7.6/INT-129-release-rollback.md).
+  Refonte documentaire demandée : journal des blocs complets/résultats/tableaux
+  dans `notes/backend/sprint7.6/INT-129/` et cinq cours progressifs dans
+  `deploy/cours/`.
+  Cette rédaction ne lance aucune nouvelle opération VPS.
+  Recette VPS opérateur : A `9111a2a1ecbb-79b422c7d71f`, upgrade B
+  `da8cfb3bd9f2-b84d560c73d5`, backup réel privé (204 800 octets, `600`),
+  rollback exact A, refus verrou/schéma et quatre échecs contrôlés réussis.
+- Gate Dockge validé sur la version épinglée : comparaison tenant compte
+  uniquement des deux false omis du JSON, sonde comportementale et logs/
+  Stop/Start UI réels. Les trois services sont ensuite associés à
+  `/opt/stacks/int129-vps-33c350b23010/compose.yaml`, images A exactes,
+  client/upload conservés, Git/env inchangés. Ne pas retirer les false
+  des fichiers ou artefacts runtime ; requalifier après changement de versions.
+- Clôture sur retour opérateur : bloc de nettoyage déclaré exécuté,
+  Dockge actif/vert, Caddy actif et bootstrap HTTP 200 confirmés.
+  Sortie complète de suppression/archivage non fournie ; ne pas la reconstruire.
+  Aucun nouveau test fonctionnel ajouté.
+  `--recover-from` non exercé, hors parcours validé. Ce n'est pas la mise
+  en service INT-111 ni une CI réussie ; aucun harness permanent ajouté.
 
 ---
 

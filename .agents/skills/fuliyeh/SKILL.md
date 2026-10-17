@@ -47,7 +47,7 @@ privée dans la conversation ou le dépôt ; faire retirer les accès à la fin.
 
 - **Nom du projet : Tervo** — nom conservé, pas de rebranding (ni « MB Chauffage », ni « ShowRoom »)
 - **DAT unique** : `docs/DAT/new/` (refonte en cours — voir structure ci-dessous)
-- **Sprint actif** : `docs/stages/stage7/sprint7.6/` ; INT-131 livrée, INT-132 limitée à la console privée, INT-126/127/128 testées localement ; prochaine INT-129 après feu vert. INT-128 cible mini-s1, mais aucune sauvegarde réelle ni timer activé. Relire `tasks.md` pour l'état courant.
+- **Sprint actif** : `docs/stages/stage7/sprint7.6/` ; INT-131 livrée, INT-132 console privée, INT-126/127/128 testées localement ; INT-129 livrée sur recettes locale/VPS et nettoyage déclaré par l'opérateur, Caddy/Dockge actifs confirmés (détail de nettoyage non consigné). Prochaine INT-111 après feu vert, avant INT-130. Bundles VPS privés de recette conservés ; aucune sauvegarde régulière mini-s1 ni timer activé. Cours transversaux dans `deploy/cours/`, journal INT-129 dans `notes/backend/sprint7.6/INT-129/`. Relire `tasks.md`.
 - **Planning V2** : `docs/stages/stage7/README.md` — sprints `sprint7.1` à `sprint7.6` ; relire les statuts actuels, ne pas déduire une livraison du cadrage
 - **Branche de travail DAT** : `chore/rewrite-dat`
 
@@ -347,7 +347,7 @@ frontend construit dans l'image avec URL API publique explicite.
 
 La validation isolée utilise `deploy/check-stack.py --revision <objet Git explicite>`
 sur Docker local, données fictives et projet UUID. La procédure de release
-réelle INT-129 reste à livrer ; aucune commande up puis seed n'est une
+INT-129 a été éprouvée sur recette VPS, pas en production publique ; aucune commande up puis seed n'est une
 procédure de production autorisée. `app.seed` peut supprimer des données.
 
 ### 3.2 Déploiement VPS (Sprint 7.6 — INT-111)
@@ -368,7 +368,7 @@ Poste admin → tunnel SSH → Dockge 127.0.0.1:5001 → console Compose
   HTTPS désactivé ; profil production gardé inactif jusqu'à INT-111,
   état privé sans certificat et journal Caddy fourni sans tentative ACME.
 - CI vérifie, build production VPS conservé ; GHCR hors périmètre.
-  INT-129 livrera la release (migration avant exposition, artefact de secours),
+  INT-129 livre la commande validée en recette (migration avant HTTP, artefact de secours),
   INT-130 l'automatisation après recette INT-111. Ancien job deploy retiré.
 - Dockge possède des droits Docker root-equivalent. `docker.sock:ro`
   n'est pas un contrôle API read-only ; convention de consultation ≠ RBAC.
@@ -377,7 +377,7 @@ Poste admin → tunnel SSH → Dockge 127.0.0.1:5001 → console Compose
 - Gate préalable : layout Dockge/paths/env/projet/volumes identiques au
   chemin Git/CLI d'INT-125 ; aucune copie/symlink non éprouvé ne vaut adoption.
 - INT-132 établit la gouvernance, pas une preuve de verrou/release futurs :
-  interaction réelle et gel de l'administration à tester en INT-129/111.
+  interaction réelle et gel testés dans INT-129, à appliquer en INT-111.
 
 ### 3.3 Documenter le déploiement
 
@@ -412,12 +412,12 @@ Dans `notes/backend/<nom-du-sprint>/` pour le compte rendu du sprint, et dans
 | Élément | Valeur |
 |---------|--------|
 | Proxy VPS cible | Caddy natif sous systemd, HTTP seul (INT-131 livrée) |
-| Console Compose cible | Dockge privé installé ; adoption Tervo non validée (gate INT-129) |
-| Base de données | Patch 17 épinglé dans Compose ; INT-127 : départ VPS vide, `tervo_admin` distinct de `tervo_app`, validés seulement sur Docker local |
+| Console Compose cible | Dockge privé installé ; gate Tervo validé en recette INT-129 sur version qualifiée, pas de production publique |
+| Base de données | Patch 17 épinglé ; `tervo_admin` distinct de `tervo_app`, préparation locale INT-127 et recette VPS INT-129 ; DB de production à créer en INT-111 |
 | Réseau Docker (mini-s1) | `postgres_postgres_network`, `1panel-network` |
 | Build / orchestration | Compose et `.env` explicites ; validation `sh deploy/validate-env.sh <fichier privé>` avant toute opération |
 | PostgreSQL | Service du Compose Tervo, sans port publié ; pas de seconde stack PG |
-| Migrations | Commande de release INT-129 à livrer, une fois avant exposition |
+| Migrations | Commande INT-129 livrée/testée en recette ; exécution avant exposition dans INT-111 |
 | Seed | Aucun seed production ; bootstrap INT-126 testé localement, pas d'admin VPS créé |
 | Accès local API | `http://192.168.10.192:8000` |
 | Accès local frontend | `http://192.168.10.192:3000` |

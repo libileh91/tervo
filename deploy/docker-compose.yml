@@ -51,6 +51,8 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
+      # Linux build downloads only; runtime remains on the private bridge.
+      network: host
       args:
         VCS_REF: ${TERVO_VCS_REF:?Set TERVO_VCS_REF to the full source SHA}
     restart: unless-stopped

@@ -67,7 +67,8 @@ tables métier et séquences. Il exclut explicitement `alembic_version`. Pas de
 droits par défaut sur toutes les tables : une nouvelle table n'est accessible
 à l'API qu'après cette étape de grants.
 
-Ordre à intégrer dans INT-129 **avant exposition applicative** :
+Ordre repris et testé dans INT-129 **avant démarrage HTTP**, localement puis
+sur une recette VPS jetable (pas encore sur la DB de production INT-111) :
 
 ```bash
 # Préconditions : image construite, DB prête, env privé explicite et projet contrôlé.

@@ -1,7 +1,7 @@
 {
   "$schema": "Stage 7 - Sprint 7.6 Test Cases",
   "sprint": "7.6",
-  "description": "Tervo V2 — Déploiement VPS et entretien ; cible Caddy natif/Dockge privé approuvée, nouveaux cas non exécutés, preuves 1Panel historiques conservées",
+  "description": "Tervo V2 — Déploiement VPS et entretien ; états et périmètres par cas (local, recette VPS opérateur, mise en service publique différée), preuves 1Panel historiques conservées",
   "test_cases": [
     {
       "id": "TC-INT-111-01",
@@ -331,7 +331,20 @@
         "rollback": "Version de secours fonctionnelle si schéma compatible, sans HEAD détaché laissé sur le VPS",
         "donnees": "Aucune opération destructive implicite ; récupération DB distincte, explicitement autorisée et testée en isolation"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed_vps_recipe",
+        "scope": "Recettes locales int129-a3e3b3e35185/int129-dee9431509a7 puis recette VPS int129-vps-33c350b23010 exécutée par l'opérateur, résultats issus de ses sorties. DB/uploads fictifs ; paramètres Caddy/Dockge réels dans les bundles privés VPS. Un adaptateur temporaire local autorisé, aucun harness permanent ni déploiement public.",
+        "observed": "Historique : correction create --no-build après échec initial. Reprise : premier essai échoué aux grants car SQL de fixture en 600, code 1, HTTP arrêté et console gelée. Après permissions SQL 644 et réinitialisation explicite des seuls volumes jetables : deploy complet code 0, migrations/grants, trois GET, record automatique 33b53d1e82de-d9339820cf4a. Rejeu sans build/migration et current.json inchangé. Rollback CLI vers ce record : mêmes IDs exacts vérifiés, trois GET réussis et console gelée.",
+        "upgrade_rollback": "A=150520d411cf-9e922ac31856, B=89aa49d30c4d-52046d448936, records automatiques, contenus et IDs backend/frontend distincts. Upgrade A vers B code 0 avec vrai backup DB/uploads avant migrate (153600 octets), verrou hérité, checksums/projet/permissions validés ; pg_restore en lecture retrouve le client fictif, upload et paramètres hôte fictifs byte-identiques. Rollback B vers A code 0 : IDs complets et marqueurs A retrouvés sans rebuild (tags toujours sur B), mêmes conteneur PG/volumes/ligne client/upload, current=A, branche attachée à B, console gelée. Schéma/tête inchangés.",
+        "vps_first_release": "Sorties utilisateur : projet isolé int129-vps-33c350b23010, release A 9111a2a1ecbb-79b422c7d71f réussie, build environ 106 s, PostgreSQL/backend/frontend healthy, migrations/grants COMMIT, trois GET et record publié. HTTP loopback 19829/19830, pas de route publique ajoutée. Aucun backup hôte exécuté à ce stade, upgrade B/rollback VPS à suivre.",
+        "vps_upgrade": "Sorties utilisateur : release B da8cfb3bd9f2-b84d560c73d5, build environ 26,6 s, client fictif inséré, déploiement sans adaptateur passé jusqu'au record après vraie capture/vérification backup, migration/grants et GET. Marqueur release B servi ; Caddy active et Dockge running true en fin de commande.",
+        "vps_rollback": "Sorties utilisateur : snapshot.py verify réussi, bundle 204800 octets en 600. Rollback B vers A réussi, IDs complets attendus/observés égaux (backend 24e9377d6247..., frontend 29a397ebb78b...), marqueur release A, client fictif count=1, upload conservé, conteneur PG inchangé, branche master attachée. Caddy active, Dockge false volontairement : Git/env encore B, réconciliation requise.",
+        "vps_guards": "Sorties utilisateur : appel CLI sous flock commun déjà tenu refusé code 1/BlockingIOError. Ajout de la seule table vide int129_schema_probe, rollback refusé code 1/Schema differs. Table supprimée explicitement, sans downgrade/restore implicite. Git/env réconciliés avec A sur branche recette-a-reconciliee (master garde B) ; rejeu réussi sans build/migration, trois GET, reprise explicite Dockge puis Caddy active/Dockge true. Ce n'est pas un RBAC contre les accès Docker privilégiés.",
+        "vps_migration_failure": "Sorties utilisateur : migration z129e0010001 de recette volontairement défaillante avant DDL, candidat échoué 059154f4df98-67d65659567b. Erreur propagée code 1, record failed, retour automatique aux IDs A 24e9377d6247.../29a397ebb78b... et trois GET réussis. Aucun downgrade/restore. Reprise branche recette-a-reconciliee/env A, rejeu sans build/migration et Caddy active/Dockge true.",
+        "vps_other_failures": "Sorties utilisateur : build 7b00252a5e64 refusé sur RUN exit 42, code 1, assertions d'identité backend A et marqueur HTTP A passées. Readiness 5c9f9dda77e4-4fd1121a7262 : unhealthy/code 1 et retour automatique A. Smoke b10f5e82d38a-09c6c34210e2 : /login 503 avec /health inchangé, erreur HTTP/code 1 et retour automatique A. Candidats readiness/smoke enregistrés failed, trois GET secours réussis. Fin : sources/env A, rejeu sans build/migration, Caddy active/Dockge true.",
+        "remaining": "Gate UI validé, nettoyage suivi dans TC-INT-132-02. Option avancée recover-from non exercée, hors parcours validé. Capture privilégiée réelle passée sur VPS ; restauration des paramètres/services réels et déploiement définitif restent à INT-111.",
+        "note": "notes/backend/sprint7.6/INT-129-release-rollback.md"
+      }
     },
     {
       "id": "TC-INT-126-01",
@@ -612,7 +625,16 @@
         "gate": "Adoption Tervo seulement après preuve et autorisation ; périmètre réduit soumis au développeur",
         "safety": "Pas de secrets affichés ni de données réelles modifiées"
       },
-      "actual_result": null
+      "actual_result": {
+        "status": "passed_vps_recipe_operator_report",
+        "scope": "Projet de recette VPS int129-vps-33c350b23010, données métier fictives ; sorties fournies par l'opérateur.",
+        "observed": "Après le Stop/Start UI confirmé : quatre conteneurs attendus seulement (stack de recette et Dockge), healthy ; images A exactes et labels config_files sur /opt/stacks/int129-vps-33c350b23010/compose.yaml pour les trois services. Readiness ready, marqueur A, upload conservé et client count=1. Le bloc terminal s'est terminé sans échec des contrôles Git/root .env.",
+        "config_comparison": "Différences identifiées par les sorties utilisateur : services.postgres.volumes[1].bind.create_host_path et volumes[2].bind.create_host_path présents seulement côté CLI. Le Compose source impose false pour les deux fichiers SQL. Aucun autre champ divergent signalé ; l'omission JSON est qualifiée par la sonde bind_behavior, pas par une supposition sur la valeur par défaut.",
+        "bind_behavior": "Sortie utilisateur : sonde isolée int129-bind-a732f9e4dd02 utilisant include et l'image frontend A déjà présente, aucun port/réseau applicatif ni téléchargement. Compose exécuté dans Dockge refuse le bind source absent avec code 1 et bind source path does not exist ; assertion source non créée passée. Fichiers de sonde nettoyés, aucune ressource résiduelle à supprimer selon Compose. Omission JSON qualifiée sur cette version installée uniquement.",
+        "ui_gate": "Sorties utilisateur : PASS modèles équivalents après rétablissement en mémoire des deux false SQL seulement, sans écraser true ni modifier les fichiers. Logs consultés, Stop UI : frontend/backend/postgres code 0 et arrêt PostgreSQL propre ; Start UI : ready to accept connections et API 200. Trois services healthy, même projet, images A exactes ; label config_files sur /opt/stacks/int129-vps-33c350b23010/compose.yaml pour les trois. Readiness ready, marqueur A, upload et client count=1 conservés ; bloc Git/root .env terminé sans erreur.",
+        "cleanup": "L'utilisateur déclare avoir exécuté le bloc final, puis confirme Dockge actif/vert et le résultat attendu du contrôle Caddy (active, INT-131 bootstrap OK, HTTP 200). Sorties détaillées de suppression des ressources, tags et archivage non consignées ; clôture sur déclaration opérateur, pas sur un contrôle indépendant de l'agent.",
+        "missing": "Capture complète du nettoyage non fournie, limite de traçabilité documentée sans résultat inventé. Aucun nouveau test fonctionnel requis ; compatibilité qualifiée pour la version épinglée, à requalifier si les versions/layout changent."
+      }
     }
   ]
 }

@@ -89,7 +89,7 @@
 | **Dépend de** | INT-125 (configuration), INT-127 (cible/décision SQL) |
 | **Fichiers**  | `deploy/docker-compose.yml`, `deploy/.env.example`, procédure INT-127 |
 | **Action**    | Préparer la DB cible avec les noms/rôles réellement choisis. INT-125 ne crée que des DB de recette jetables ; ne pas supposer le rôle `postgres`/`lob` ou un conteneur issu du mini-s1. Les anciennes commandes CREATE/GRANT sont des exemples historiques, pas une procédure VPS autorisée. |
-| **Statut**    | 🟡 INT-127 : cible vide et rôles préparés/testés sur PostgreSQL 17.11 jetable. Création réelle et inventaire du volume VPS encore à vérifier en INT-111. |
+| **Statut**    | 🟡 INT-127 : cible/rôles testés localement ; INT-129 : PostgreSQL jetable créé sur VPS pour la recette. La DB et le volume de production restent à créer/vérifier en INT-111, sans promouvoir les données fictives. |
 
 ---
 
@@ -101,7 +101,7 @@
 | **Dépend de** | TD-B008, INT-127 ; constat enrichi dans INT-125 |
 | **Fichiers**  | `deploy/docker-compose.yml`, `backend/app/config.py`, procédure SQL INT-127 |
 | **Action**    | Cadrer les rôles bootstrap/migration/application et tester leurs privilèges avant release réelle. `POSTGRES_USER` de l'image officielle crée un superuser ; le rôle partagé de la recette INT-125 ne prouve pas un moindre privilège. Vérifier le rôle courant et les accès réels, sans présumer `lob`/`postgres`, ni modifier une DB existante pour rendre la recette verte. |
-| **Statut**    | 🟡 INT-127 : admin séparé de l'API, CRUD/séquences et refus des opérations privilégiées vérifiés localement ; recontrôle SQL sur la DB réelle en INT-111 avant clôture. |
+| **Statut**    | 🟡 INT-127 : séparation admin/API, CRUD/refus vérifiés localement ; INT-129 : migrations/grants/readiness sur PG jetable VPS. Recontrôle des privilèges sur la DB de production en INT-111 avant clôture. |
 
 ---
 
@@ -114,7 +114,7 @@
 | **Fichiers**  | `deploy/docker-compose.yml`, `deploy/postgres.docker-compose.yml` |
 | **Action**    | Décision INT-127 : aucune reprise depuis les données locales obsolètes, démarrage VPS vide. Après validation du VPS, remplacer la base locale par sa copie ; identifier la cible exacte et sauvegarder son ancien état avant remplacement. |
 |               | Backup/restore vérifié en INT-128, application réelle en INT-111 ; ne pas présumer conteneur, rôle ou volume, ni effacer une base pour tester. |
-| **Statut**    | 🟡 INT-127 : choix enregistré/cible locale ; INT-128 : restore PostgreSQL isolé validé. DB VPS, vraie copie sur mini-s1 et remplacement local final restent à exécuter en INT-111. |
+| **Statut**    | 🟡 INT-127 : choix enregistré ; INT-128 : restore PG isolé validé ; INT-129 : release/backup/rollback sur recette VPS fictive. DB de production, vraie copie sur mini-s1 et remplacement local final restent à exécuter en INT-111. |
 
 ---
 

@@ -1,0 +1,6 @@
+# Dockge entry point. The checkout folder is the stack/project name.
+# Production: /opt/stacks/tervo. CLI must use the same explicit project name.
+# The deployment model and private environment remain in deploy/.
+include:
+  - path: ./deploy/docker-compose.yml
+    env_file: ./deploy/.env

@@ -1,6 +1,7 @@
 # Dockge privé — INT-132
 
-**INT-132 : console privée installée et testée. Tervo n'est pas adopté dans Dockge.**
+**INT-132 : console privée installée et testée. INT-129 : gate Tervo validé
+sur stack de recette VPS ; stack de production non encore déployée.**
 
 Le Compose suit le modèle officiel Dockge 1.5.0, avec image épinglée,
 port `127.0.0.1:5001`, données privées dans `/opt/dockge/data` et
@@ -12,7 +13,8 @@ L'opérateur a créé les dossiers et installé le fichier versionné en
 `/opt/dockge/compose.yaml`. Image épinglée téléchargée, conteneur démarré,
 publication loopback confirmée, puis conteneur `healthy`.
 Le poste client n'a pas pu joindre TCP5001 public (délai3s).
-Le login a ensuite été confirmé via tunnel ; l'adoption Tervo reste à vérifier.
+Le login a ensuite été confirmé via tunnel. À ce stade INT-132, l'adoption
+Tervo restait à vérifier ; le gate de recette a depuis été validé dans INT-129.
 
 ```bash
 sudo docker compose -p dockge --project-directory /opt/dockge \
@@ -50,9 +52,14 @@ Cela ne teste pas les chemins de build ou la configuration de Tervo.
 - Le socket Docker donne des droits équivalents à root, pas une vue read-only.
 - La console générale reste désactivée jusqu'à sécurisation et décision explicite.
 - Dockge ne remplace pas SSH, systemd ni Git.
-- INT-129 : avant toute adoption de Tervo, vérifier chemins/env/projet/volumes
-  face au Compose Git et contrôler l'interaction avec la release. Ne pas
-  copier/éditer le Compose Tervo via l'UI en attendant.
+- INT-129 : gate Git/CLI/Compose de la console, logs et Stop/Start validés sur
+  la stack jetable `int129-vps-33c350b23010`, images et données conservées.
+  Les deux `create_host_path: false` omis du JSON de la console ont été
+  qualifiés par un refus réel de bind absent. Tolérance dans la comparaison
+  en mémoire seulement, pas dans les fichiers/artefacts runtime ; tout autre
+  écart bloque. Requalifier si versions/layout changent.
+  Git reste autoritaire, pas d'édition/copie du Compose via l'UI.
+  [Commandes root, preuves et limites INT-129](../../notes/backend/sprint7.6/INT-129-release-rollback.md).
 - INT-128 : restauration isolée des données d'auth ; INT-111 : recontrôle
   après reboot et recette réelle. Pas de commandes hôte testées dans Dockge.
 
