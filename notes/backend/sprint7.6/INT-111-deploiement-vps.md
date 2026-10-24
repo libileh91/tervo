@@ -12,7 +12,7 @@ Reboot réel et retour services/HTTPS/ports/certificats vérifiés. Le nettoyage
 ciblé a été exécuté par l'opérateur ; ses sorties sont consignées en section 23
 et préservent la stack `tervo`, ses données, Dockge, les images et le dépôt
 restic. La clôture documentaire reste le commit de livraison ; le bilan de
-sprint dépend d'INT-112 et d'INT-130. Aucun timer ni élargissement SSH activé.
+sprint dépend d'INT-112 (INT-130 a été livrée depuis). Aucun timer ni élargissement SSH activé.
 Feu vert reçu après INT-129 `291f7ea`. Le `.gitignore` IDE local reste hors périmètre.
 
 Le [parcours opérateur](../deploy/vps/05-tervo-release-et-exploitation.md)
@@ -1572,4 +1572,5 @@ et le dépôt restic ne sont pas touchés par ces blocs.
   restauration le 24 octobre 2026, sur sortie opérateur, sans inventaire
   privilégié indépendant de l'agent (SSH `tervo` refusé par clé après reboot).
 - Restent le commit de livraison d'INT-111, le bilan de sprint porté par
-  INT-112/INT-130 et les retouches frontend mineures à préciser.
+  INT-112 (INT-130 livrée le 24 octobre 2026) et les retouches frontend
+  mineures à préciser.

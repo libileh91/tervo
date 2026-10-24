@@ -230,7 +230,19 @@
         "pipeline_fail_closed": "Pas de conclusion verte sur migration/readiness/smoke en échec ; ancien artefact conservé",
         "secrets_logs": "Aucun secret interpolé affiché ; validation Compose --quiet"
       },
-      "actual_result": null,
+      "actual_result": {
+        "status": "passed_vps_ci_deployment",
+        "scope": "Run GitHub 40083288592, tentative 2 (événement push, même SHA fd3a42c87e3798b2d6f3cdd7d791fdcb6ceb252b, rejouée après activation de DEPLOY_ENABLED). Sorties GitHub et lecture seule opérateur sur le VPS 22565.",
+        "workflow": "backend-tests et frontend-build verts ; Deploy — release VPS vert en 1 min 10 s. Étape empreinte : « Empreinte SSH vérifiée ». Aucun secret affiché ; Compose validé par validate-env.sh (config --quiet).",
+        "ordre": "Already up to date (checkout déjà au SHA) → env/Compose validés → Dockge gelé → build une fois sur le VPS → migration et grants avant HTTP → attente/smoke.",
+        "release": "PASS: backend readiness, frontend health and login page ; PASS: release fd3a42c87e37-6cc4ef39fc49.",
+        "images": "Images tervo-backend:fd3a42c… et tervo-frontend:fd3a42c… construites sur le VPS ; conteneurs HTTP recréés depuis la configuration de secours, donc .Config.Image = IDs sha256:339a3e…/sha256:e84a71… et label org.opencontainers.image.revision = fd3a42c… ; aucune prune, images de secours conservées.",
+        "vps": "current.json = {\"release_id\": \"fd3a42c87e37-6cc4ef39fc49\"} ; backend/frontend Up 23 minutes (healthy) ; PostgreSQL Up 11 hours (healthy), non recréé ; Dockge running=true ; Caddy active ; 8000/3000/5001 en 127.0.0.1, aucune écoute hôte 5432.",
+        "external": "Agent depuis mini-s1 après release : https://tervoapp.com/login 200, https://api.tervoapp.com/health/ready 200, HTTP 308 vers HTTPS, TLS vérifié (0).",
+        "identity": "Compte tervo-ci dédié, clé Ed25519 distincte (empreinte publique SHA256:F5PsB6dzeuOCtMaOrDQ4egc93WI0NYypSQmqG469lSE, privée supprimée après import du secret), authorized_keys restrict+command, une ligne sudoers vers /usr/local/sbin/tervo-ci-release. Pas de groupe Docker ni de NOPASSWD:ALL. Empreinte d'hôte SHA256:vQCE5tIGPYE11dl6jfRoyS1gMLKxUU1rkkxsKECMZew confirmée sur le VPS puis contrôlée par le workflow.",
+        "fail_closed": "Échecs hérités de release.py : code 1, job rouge, ancienne release restaurée si elle existe ; coupe-circuit documenté et testé par variable DEPLOY_ENABLED=false (le job était skipped avant activation). Aucun échec CI réel supplémentaire n'a été provoqué pendant cette validation.",
+        "limits": "Le déclenchement automatique d'un nouveau push de code n'a pas encore été observé : la tentative 2 rejoue le push de fd3a42c après activation. Environnement production sans reviewer obligatoire ; --maintenance-confirmed est un engagement sans page de maintenance ; seul le checkout détaché 291f7ea a nécessité une correction du wrapper (fd3a42c)."
+      },
       "legacy_id": "TC-INT-89-02"
     },
     {

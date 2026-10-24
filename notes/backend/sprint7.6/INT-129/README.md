@@ -92,7 +92,7 @@ INT-129. Pour les historiques détaillés :
 | Backup VPS | Capture et checksums validés ; paramètres hôte privés réels |
 | Reprise après sinistre complète | Non démontrée par INT-129 |
 | Application publique avec TLS et login métier | Réalisée en INT-111 après cette recette ; non prouvée par INT-129 elle-même |
-| CI/CD de production | INT-130 non exécutée dans cette recette |
+| CI/CD de production | Livrée par INT-130 le 24 octobre 2026 ; non exécutée par cette recette |
 | Nettoyage de la recette principale | Déclaré exécuté par l'opérateur ; santé Caddy/Dockge confirmée, détail terminal non consigné. Retrait effectif prouvé plus tard par la sortie du nettoyage INT-111 (section 23 du journal) |
 | Nettoyage de la sonde bind | Confirmé dans le journal 04 |
 

@@ -1,10 +1,11 @@
 # INT-130 — CI/CD de production sécurisée
 
-**Statut :** implémentation prête ; provisioning VPS, secrets GitHub et
-**déploiement réel** restent à exécuter et à observer. Aucun `DEPLOY_ENABLED`
-n'est activé par cette note. La CI n'a encore déployé aucun commit par ce
-chemin : ce document décrit la procédure et les preuves attendues, pas une
-réussite anticipée.
+**Livrée le 24 octobre 2026.** Premier déploiement CI observé : run push
+`40083288592` (tentative 2, même SHA après activation), commit `fd3a42c…`,
+release `fd3a42c87e37-6cc4ef39fc49`, migrations avant HTTP et smoke réussis.
+L'installation VPS, les secrets et `DEPLOY_ENABLED=true` sont en place. Un
+**nouveau** push de code doit encore exercer le déclenchement automatique : la
+première tentative du run avait été lancée avant l'activation, puis rejouée.
 
 Point de départ : [INT-111](INT-111-deploiement-vps.md) a validé la mise en
 service manuelle et [INT-129](INT-129-release-rollback.md) la commande de
@@ -41,7 +42,7 @@ flowchart TD
 | Objet | Valeur | Justification |
 |---|---|---|
 | Compte SSH | `tervo-ci`, sans groupe Docker | Ne peut pas administrer Docker directement |
-| Clé | dédiée à la CI, distincte de la clé personnelle | Révocation indépendante |
+| Clé | dédiée à la CI, distincte de la clé personnelle | Révocation indépendante ; empreinte publique `SHA256:F5PsB6dzeuOCtMaOrDQ4egc93WI0NYypSQmqG469lSE` |
 | `authorized_keys` | `restrict,command="sudo -n /usr/local/sbin/tervo-ci-release"` | La clé ne donne aucun shell, aucune redirection |
 | sudoers | une seule ligne, commande exacte sans argument | Pas de `NOPASSWD: ALL` |
 | Wrapper | `root:root`, `0755`, non modifiable par `tervo-ci` | Seul point d'entrée privilégié |
@@ -170,7 +171,9 @@ privée dans ce document, un ticket ou la conversation.
 ## 5. Activation et preuve attendue
 
 L'activation est le dernier geste, uniquement après la recette manuelle INT-111
-et le déploiement du wrapper :
+et le déploiement du wrapper. Elle a été effectuée le 24 octobre 2026 ; le
+premier déploiement a été obtenu en rejouant le run push déjà créé (section 6).
+Pour une prochaine activation :
 
 ```sh
 gh variable set DEPLOY_ENABLED --body true
@@ -194,7 +197,52 @@ reste aligné sur le SHA tenté : avant une release manuelle, remettre
 `TERVO_IMAGE_TAG`/`TERVO_VCS_REF` sur la release réellement active
 (`/var/lib/tervo/state/current.json`).
 
-## 6. Limites explicites
+## 6. Preuves observées le 24 octobre 2026
+
+**Installation VPS** (bloc root opérateur) : checkout avancé de `291f7ea` à
+`fd3a42c` par fast-forward, `/etc/sudoers.d/tervo-ci` et `/etc/sudoers`
+`parsed OK`, empreinte Ed25519 `SHA256:vQCE5tIGPYE11dl6jfRoyS1gMLKxUU1rkkxsKECMZew`
+confirmée sur le serveur, contrôle négatif `Invalid revision.` code 2 sans
+release ni accès Git/Docker.
+
+**Run GitHub [40083288592](https://github.com/libileh91/tervo/actions/runs/40083288592),
+tentative 2** (même événement `push`, même SHA `fd3a42c…`) :
+
+- `backend-tests` et `frontend-build` verts ; `Deploy — release VPS` vert en
+  1 min 10 s ;
+- `Empreinte SSH vérifiée` avant la connexion ;
+- sortie distante : `Already up to date.` puis `STEP:` validation env/Compose,
+  gel Dockge, build, `STEP: migrate, grant and check before starting HTTP`,
+  smoke ; `PASS: backend readiness, frontend health and login page` ;
+- `PASS: release fd3a42c87e37-6cc4ef39fc49`.
+
+**VPS, lecture seule opérateur après la release** :
+
+```text
+current.json : {"release_id": "fd3a42c87e37-6cc4ef39fc49"}
+tervo-backend-1  Up 23 minutes (healthy)  127.0.0.1:8000->8000/tcp
+tervo-frontend-1 Up 23 minutes (healthy)  80/tcp, 127.0.0.1:3000->3000/tcp
+tervo-postgres-1 Up 11 hours   (healthy)  5432/tcp
+revision=fd3a42c87e3798b2d6f3cdd7d791fdcb6ceb252b (backend et frontend)
+dockge-dockge-1 running=true ; Caddy active
+8000/3000/5001 en 127.0.0.1 ; aucune écoute hôte sur 5432
+```
+
+Les conteneurs HTTP sont créés depuis la configuration de secours de
+`release.py` : `.Config.Image` affiche l'ID exact (`sha256:339a3e…` /
+`sha256:e84a71…`) et le label `org.opencontainers.image.revision` porte le SHA
+déployé. PostgreSQL n'a pas été recréé (11 h de fonctionnement).
+
+**Agent, depuis mini-s1 après la release** : `https://tervoapp.com/login` 200,
+`https://api.tervoapp.com/health/ready` 200, `http://tervoapp.com/login` 308,
+TLS `0`.
+
+**Limite de cette preuve** : le déclenchement automatique d'un **nouveau** push
+n'a pas encore été observé ; la tentative 2 rejoue le push de `fd3a42c` après
+activation. Le prochain commit de code l'exercera ; un commit uniquement
+`docs/`, `notes/` ou `*.md` est ignoré par `paths-ignore`.
+
+## 7. Limites explicites
 
 - L'environnement `production` n'a **pas** de revue obligatoire dans cette
   version : `DEPLOY_ENABLED` est le seul frein, et un push de code déploie.
@@ -213,13 +261,14 @@ reste aligné sur le SHA tenté : avant une release manuelle, remettre
 - Aucun monitoring automatique d'un déploiement ni de la production n'est
   ajouté ; la preuve reste le run GitHub et les GET manuels.
 
-## 7. Dépannage
+## 8. Dépannage
 
 | Symptôme | Cause probable | Réaction |
 |---|---|---|
 | `Permission denied (publickey)` | Clé CI absente/retirée, ou mauvais compte | Vérifier `authorized_keys`, ne pas élargir sudo |
 | `Host key verification failed` | `DEPLOY_KNOWN_HOSTS` ne correspond pas à l'hôte | Relever l'empreinte sur le VPS, corriger le secret |
 | Job `Deploy` absent | `DEPLOY_ENABLED` ≠ `true`, push non-`main`, ou run sauté (docs) | Vérifier la variable et les fichiers poussés |
+| `fatal: HEAD does not point to a branch` | Ancien wrapper exigeant une branche attachée | Corrigé dans `fd3a42c` : pull `origin main` sur checkout attaché ou détaché |
 | `Server HEAD does not match` | Un autre commit est sur `main` | Relancer après le bon SHA, ne pas forcer le serveur |
 | `Another release operation holds the lock` | Release opérateur en cours | Attendre la fin, ne pas supprimer le verrou |
 | `Release failed: ...` | Migration/smoke/permissions | Lire la sortie, garder les images de secours, ne pas improviser de restore |

@@ -33,9 +33,11 @@ sur le VPS. Le périmètre validé reste une démo avec sauvegardes manuelles :
 TD-B024 reporte l'automatisation vers un stockage externe permanent avant
 clientèle réelle. Le reboot réel, les services, ports et certificats persistants
 sont vérifiés ; le nettoyage ciblé a été exécuté et ses sorties consignées, le
-commit de livraison clôt INT-111. La CI/CD reste INT-130, non automatisée.
-Le cache Docker défectueux du mini-s1 est documenté, pas réparé globalement,
-et aucun serveur mail n'a été installé.
+commit de livraison clôt INT-111. INT-130 a ensuite livré la release par CI :
+job `push main` conditionné par `DEPLOY_ENABLED`, run `40083288592` tentative 2
+et release `fd3a42c87e37-6cc4ef39fc49` observée. Les sauvegardes automatiques
+hors VPS restent reportées par TD-B024. Le cache Docker défectueux du mini-s1
+est documenté, pas réparé globalement, et aucun serveur mail n'a été installé.
 
 Les exemples `int129-vps-…` et ports `19829/19830` appartiennent à la recette
 jetable, désormais supprimée. La stack actuelle s'appelle `tervo` et utilise

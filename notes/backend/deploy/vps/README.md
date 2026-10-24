@@ -33,8 +33,10 @@ serveur. [Caddy](04-transition-caddy.md) traite séparément du proxy.
   ses volumes/réseaux et la cible de restauration supprimés ; `tervo`, Dockge,
   les images et le dépôt restic conservés. Sorties dans la
   [section 23 du journal](../../sprint7.6/INT-111-deploiement-vps.md#23-nettoyage-exécuté--sorties-reçues-le-24-octobre-2026).
-  Automatisation reportée TD-B024 avant clientèle réelle ; INT-130 n'est pas
-  démarrée et le bilan de sprint vient avec INT-112/INT-130.
+  Sauvegardes automatiques hors VPS toujours reportées par TD-B024. INT-130
+  livrée : release par CI observée (run `40083288592` tentative 2, release
+  `fd3a42c87e37-6cc4ef39fc49`), coupe-circuit `DEPLOY_ENABLED` ; le bilan de
+  sprint vient avec INT-112.
 - INT-131 terminée ; INT-132 a livré la console privée, sans adoption de la
   stack Tervo. Le gate Git/CLI/Dockge a été transféré à INT-129 et validé en recette.
   [Journal opérateur et cours de déploiement INT-129](../../sprint7.6/INT-129/README.md).

@@ -18,6 +18,7 @@ attendus et ce qu'il faut faire en cas d'échec.
 | PostgreSQL : rôles SQL distincts, initialisation et migrations avant HTTP | [INT-127](../sprint7.6/INT-127-postgresql-cible.md) |
 | Sauvegarde manuelle chiffrée sur mini-s1 et récupération SQL/photos isolée sur le VPS | [Journal INT-111](../sprint7.6/INT-111-deploiement-vps.md), [procédure INT-128](../sprint7.6/INT-128-sauvegarde-restauration.md) |
 | Ordre DB → backups → release → publication | [Planning 7.6](../../../docs/stages/stage7/sprint7.6/tasks.md) |
+| Release par CI, identité dédiée et empreinte SSH | [Note INT-130](../sprint7.6/INT-130-ci-cd.md) |
 
 **INT-111 : démo publique HTTPS, admin et recette navigateur confirmés,
 sauvegarde manuelle/restauration SQL et photos validées.** Le reboot est

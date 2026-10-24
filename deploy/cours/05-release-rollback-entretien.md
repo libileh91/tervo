@@ -318,16 +318,15 @@ l'opérateur, et le premier essai a pourtant échoué sur les permissions SQL.
 La CI ne contrôlait pas les modes des fichiers du checkout sur le VPS.
 
 Le choix du projet est de construire sur le VPS pour la release concernée,
-sans introduire GHCR dans ce périmètre. L'automatisation INT-130 réutilise ce
+sans introduire GHCR dans ce périmètre. L'automatisation INT-130 a réutilisé ce
 chemin, sans inventer une deuxième orchestration.
 
-**Ce que INT-130 ajoute, et ce qui reste à prouver :** un job CI conditionné par
-`DEPLOY_ENABLED`, une clé dédiée et une empreinte d'hôte vérifiée avant l'SSH.
-La CI ne construit aucune image : le VPS exécute `release.py` par un wrapper
-root borné. Détail des permissions, commandes d'installation et limites :
-[note INT-130](../../notes/backend/sprint7.6/INT-130-ci-cd.md). Tant que le
-déploiement réel n'est pas observé, « la CI/CD est automatisée » reste une
-configuration, pas une preuve.
+**Ce que INT-130 a livré :** job CI conditionné par `DEPLOY_ENABLED`, clé
+dédiée, empreinte d'hôte vérifiée avant l'SSH et wrapper root borné. Premier
+déploiement observé le 24 octobre 2026 : run `40083288592` tentative 2, release
+`fd3a42c87e37-6cc4ef39fc49`, migration avant HTTP et smoke réussis. La CI ne
+construit aucune image : le VPS exécute `release.py`. Détail des permissions,
+commandes et limites : [note INT-130](../../notes/backend/sprint7.6/INT-130-ci-cd.md).
 
 La recette INT-129 ne livrait pas cette automatisation :
 

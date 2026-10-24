@@ -1,6 +1,6 @@
 # Sprint 7.6 — Déploiement VPS et documentation entretien
 
-> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131, INT-132 (console privée), INT-126/127/128 (recettes locales) validées ; INT-129 livrée sur recette VPS et nettoyage confirmé ; INT-111 livrée pour une démo publique avec sauvegardes manuelles, nettoyage ciblé exécuté ; INT-130 (CI/CD) et INT-112 (doc entretien) restent ouvertes
+> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131, INT-132 (console privée), INT-126/127/128 (recettes locales) validées ; INT-129 livrée sur recette VPS et nettoyage confirmé ; INT-111 livrée pour une démo publique avec sauvegardes manuelles, nettoyage ciblé exécuté ; INT-130 livrée (release VPS par CI, premier déploiement observé) ; reste INT-112 (doc entretien) et le bilan de sprint
 > **Dépendances :** Valider le périmètre livré et ses tests avant déploiement ; documenter explicitement le backlog restant.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.6/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -488,19 +488,43 @@ Je veux **automatiser une release déjà validée manuellement**,
 Afin de **déployer les commits testés sans second chemin de déploiement**.
 
 **Acceptance Criteria**
-- [ ] INT-111 manuelle validée et INT-129 livrée ; workflow appelle cette commande, pas une seconde orchestration
-- [ ] Clé CI distincte de la clé personnelle, compte/permissions documentés, Git lecture si privé ; Docker root-equivalent traité, pas de `NOPASSWD: ALL` par facilité
-- [ ] Empreinte SSH vérifiée indépendamment et contrôlée par workflow, secrets GitHub scoped et autorisation production documentée
-- [ ] CI tests/build Vue de vérification, `git pull --ff-only`, puis release ; ni image CI jetée, ni nom de conteneur dur, ni prune des images de secours
-- [ ] `DEPLOY_ENABLED` activé après recette manuelle seulement, push autorisé et déploiement réellement exécuté/observé avec SHA/smoke
-- [ ] Échecs remontés, désactivation de l'automatisation et notes/todos/cas à jour
+- [x] INT-111 manuelle validée et INT-129 livrée ; workflow appelle cette commande, pas une seconde orchestration
+- [x] Clé CI distincte de la clé personnelle, compte/permissions documentés, Git lecture si privé ; Docker root-equivalent traité, pas de `NOPASSWD: ALL` par facilité
+- [x] Empreinte SSH vérifiée indépendamment et contrôlée par workflow, secrets GitHub scoped et autorisation production documentée
+- [x] CI tests/build Vue de vérification, `git pull --ff-only`, puis release ; ni image CI jetée, ni nom de conteneur dur, ni prune des images de secours
+- [x] `DEPLOY_ENABLED` activé après recette manuelle seulement, push autorisé et déploiement réellement exécuté/observé avec SHA/smoke
+- [x] Échecs remontés, désactivation de l'automatisation et notes/todos/cas à jour
 
 **Technical Notes**
 - Dépend d'INT-111/129 ; la CI n'est pas un prérequis de la recette manuelle.
-- Sources : workflow, identité SSH/Git et configuration GitHub. Ne pas
-  réutiliser la clé personnelle de l'agent pour les credentials CI.
-- Cas TC-INT-111-06, propriétaire INT-130. CI verte avec Deploy sauté ne
-  valide pas cette tâche ; anciens runs verts restent historiques.
+  Dépôt public : aucun credential Git de la CI n'est nécessaire ; la clé SSH
+  dédiée ne sert qu'à déclencher le wrapper.
+- Identité : `tervo-ci`, clé Ed25519 dédiée (empreinte publique
+  `SHA256:F5PsB6dzeuOCtMaOrDQ4egc93WI0NYypSQmqG469lSE`, privée supprimée après
+  import du secret), `authorized_keys` `restrict,command=...`, une seule ligne
+  sudoers vers `/usr/local/sbin/tervo-ci-release`. Pas de groupe Docker ni de
+  shell privilégié. Le wrapper root vient de `deploy/scripts/ci-release.sh`.
+- Empreinte d'hôte `SHA256:vQCE5tIGPYE11dl6jfRoyS1gMLKxUU1rkkxsKECMZew`
+  confirmée par `ssh-keygen -lf` sur le VPS, puis contrôlée par le workflow
+  avant chaque connexion. Environnement `production` pour les deux secrets ;
+  variables non secrètes au niveau dépôt car le `if:` du job est évalué avant
+  l'environnement. Pas de reviewer obligatoire dans cette version (limite
+  documentée), `DEPLOY_ENABLED` est le coupe-circuit.
+- Premier déploiement : run push `40083288592`, tentative 2 après activation
+  (même SHA `fd3a42c87e3798b2d6f3cdd7d791fdcb6ceb252b`), release
+  `fd3a42c87e37-6cc4ef39fc49`. `current.json` confirmé, label de révision des
+  deux images HTTP = SHA, backend/frontend healthy, PostgreSQL non recréé,
+  Dockge revenu, ports loopback et GET publics 200 après release. Le
+  déclenchement automatique d'un **nouveau** push de code reste à exercer ; un
+  commit purement `docs/`, `notes/` ou `*.md` est ignoré.
+- Le wrapper aligne `TERVO_IMAGE_TAG`/`TERVO_VCS_REF` dans `deploy/.env` avant
+  `release.py` (deux lignes, mode et propriétaire conservés). Après un échec,
+  l'env pointe sur le SHA tenté : le réaligner sur `current.json` avant une
+  release manuelle. Le nom Dockge reste explicite (hors Compose) ; aucun nom
+  de conteneur applicatif n'est codé dans la CI.
+- Cas TC-INT-111-06, propriétaire INT-130. Une CI verte avec Deploy sauté ne
+  valide pas cette tâche ; la validation est le run avec deploy vert et release
+  observée. Anciens runs verts restent historiques.
 
 ---
 

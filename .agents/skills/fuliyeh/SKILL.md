@@ -49,9 +49,9 @@ privée dans la conversation ou le dépôt ; faire retirer les accès à la fin.
 - **DAT unique** : `docs/DAT/new/` (refonte en cours — voir structure ci-dessous)
 - **Sprint actif** : `docs/stages/stage7/sprint7.6/` ; INT-129 livrée (`291f7ea`, `origin/main`, CI réussie). INT-111 livrée pour une **démo publique avec sauvegardes manuelles**, périmètre explicitement validé ; pas une qualification clientèle réelle.
   Release `291f7ead2482-ca71c575091e`, admin, emails, DNS direct, certificats et recette navigateur confirmés. Snapshot restic mini-s1 `03aca082` acquis, intégrité relue ; archive récupérée puis SQL/relations/deux photos restaurés en cible isolée sur le VPS, cible arrêtée puis supprimée, fichiers privés intègres. Pas de clone HTTP/Caddy/Dockge reconstruit depuis backup.
-  Aucun timer, wrapper privilégié ou élargissement de clé SSH activé. **TD-B024 bloque l'usage clientèle réel** jusqu'à automatisation testée vers un stockage externe permanent ; mini-s1 ne restera pas allumé. Clé de transfert conservée en SFTP lecture seule.
+  Aucun timer ni wrapper de sauvegarde activé, aucun élargissement de clé SSH de capture. **TD-B024 bloque l'usage clientèle réel** jusqu'à automatisation testée vers un stockage externe permanent ; mini-s1 ne restera pas allumé. Clé de transfert conservée en SFTP lecture seule.
   Cache Docker mini-s1 défectueux (couches `770 1000:1000`) : nettoyage ciblé autorisé effectué, défaut commun persistant, TD-B025 ouvert ; pas de nouvelle série d'essais ni de `chmod -R`. TD-B010 reste ouvert pour le remplacement local non exécuté, hors lot démo.
-  Reboot réel du VPS confirmé : boot ID `b82ade6e-b9ad-44a7-97c9-4eef4bf95dfa`, noyau `6.12.113`, services actifs, mêmes certificats, HTTPS 200, ports privés et photos intègres. **Nettoyage ciblé exécuté le 24 octobre 2026** : stack `int129-vps-33c350b23010` (3 conteneurs, 2 volumes, 2 réseaux), cible de restauration et son volume, copies temporaires mini-s1 supprimés ; sortie en section 23 du journal INT-111, `tervo`/Dockge/images/dépôt restic préservés. Accès SSH agent à `tervo` refusé après reboot, donc pas d'inventaire privilégié indépendant. Root VPS via l'opérateur ; agent sur mini-s1, compte `lob`, accès Docker local existant. Ne jamais rejouer seed ou `down -v` de l'init neuve. Prochaine tâche : INT-130 (CI/CD), puis bilan de sprint avec INT-112 ; retouches frontend mineures à préciser.
+  Reboot réel du VPS confirmé : boot ID `b82ade6e-b9ad-44a7-97c9-4eef4bf95dfa`, noyau `6.12.113`, services actifs, mêmes certificats, HTTPS 200, ports privés et photos intègres. **Nettoyage ciblé exécuté le 24 octobre 2026** : stack `int129-vps-33c350b23010` (3 conteneurs, 2 volumes, 2 réseaux), cible de restauration et son volume, copies temporaires mini-s1 supprimés ; sortie en section 23 du journal INT-111, `tervo`/Dockge/images/dépôt restic préservés. Accès SSH agent à `tervo` refusé après reboot, donc pas d'inventaire privilégié indépendant. Root VPS via l'opérateur ; agent sur mini-s1, compte `lob`, accès Docker local existant. Ne jamais rejouer seed ou `down -v` de l'init neuve. **INT-130 livrée** : job CI `push main` conditionné par `DEPLOY_ENABLED`, identité `tervo-ci` (clé dédiée, `authorized_keys` restrict+command, une ligne sudoers vers `/usr/local/sbin/tervo-ci-release`), wrapper root et empreinte d'hôte vérifiés. Premier déploiement observé le 24 octobre 2026 : run `40083288592` tentative 2 (même SHA `fd3a42c`), release `fd3a42c87e37-6cc4ef39fc49`, `current.json`/images/revision conformes, PostgreSQL non recréé, GET publics 200. Le déclenchement automatique d'un **nouveau** push de code reste à exercer ; `DEPLOY_ENABLED=false` est le coupe-circuit. Prochaine tâche : INT-112 (doc entretien), puis bilan de sprint ; retouches frontend mineures à préciser.
   Parcours : `notes/backend/deploy/vps/05-tervo-release-et-exploitation.md` ; cours : `deploy/cours/06-apres-la-recette-sauvegardes-restic-et-ssh.md` ; preuves/chemins de recette : `notes/backend/sprint7.6/INT-111-deploiement-vps.md`. Relire `tasks.md`.
 - **Planning V2** : `docs/stages/stage7/README.md` — sprints `sprint7.1` à `sprint7.6` ; relire les statuts actuels, ne pas déduire une livraison du cadrage
 - **Branche de travail DAT** : `chore/rewrite-dat`
@@ -358,9 +358,10 @@ confondre checkout Git propre, permissions adaptées et init SQL complète.
 La validation isolée utilise `deploy/check-stack.py --revision <objet Git explicite>`
 sur Docker local, données fictives et projet UUID. La commande de release
 INT-129 a servi la première release publique de démo en INT-111
-(`291f7ead2482-ca71c575091e`) ; upgrades, rollbacks et échecs restent éprouvés
-en recette, pas en production. Aucune commande up puis seed n'est une
-procédure de production autorisée. `app.seed` peut supprimer des données.
+(`291f7ead2482-ca71c575091e`) puis un upgrade réel en production via la CI
+INT-130 (`fd3a42c8…`) ; rollbacks et échecs restent éprouvés en recette, pas
+en production. Aucune commande up puis seed n'est une procédure de production
+autorisée. `app.seed` peut supprimer des données.
 
 ### 3.2 Déploiement VPS (Sprint 7.6 — INT-111)
 
@@ -379,9 +380,10 @@ Poste admin → tunnel SSH → Dockge 127.0.0.1:5001 → console Compose
 - INT-131 a livré le bootstrap HTTP sans vrais hostnames et HTTPS désactivé.
   INT-111 active ensuite le profil HTTPS : certificats Let's Encrypt des deux
   noms et GET publics vérifiés ; recette navigateur confirmée par l'opérateur.
-- CI vérifie, build production VPS conservé ; GHCR hors périmètre.
-  INT-129 livre la commande validée en recette (migration avant HTTP, artefact de secours),
-  INT-130 l'automatisation après recette INT-111. Ancien job deploy retiré.
+- CI vérifie puis déclenche la release ; build production sur le VPS, GHCR hors périmètre.
+  INT-129 livre la commande de release (migration avant HTTP, artefact de secours),
+  INT-130 l'automatise : job push conditionné par `DEPLOY_ENABLED`, identité dédiée,
+  premier déploiement observé. Ancien job deploy retiré et remplacé.
 - Dockge possède des droits Docker root-equivalent. `docker.sock:ro`
   n'est pas un contrôle API read-only ; convention de consultation ≠ RBAC.
   Console principale désactivée par défaut dans la version étudiée :
@@ -429,12 +431,13 @@ Dans `notes/backend/<nom-du-sprint>/` pour le compte rendu du sprint, et dans
 | Réseau Docker (mini-s1) | `postgres_postgres_network`, `1panel-network` |
 | Build / orchestration | Compose et `.env` explicites ; validation `sh deploy/validate-env.sh <fichier privé>` avant toute opération |
 | PostgreSQL | Service du Compose Tervo, sans port publié ; pas de seconde stack PG |
-| Migrations | Exécutées avant HTTP dans la release INT-111 ; publication HTTPS vérifiée |
+| Migrations | Exécutées avant HTTP dans la release manuelle INT-111 puis dans la release CI INT-130 ; publication HTTPS vérifiée |
 | Seed | Aucun seed production ; admin applicatif VPS créé selon confirmation opérateur |
 | Accès local API | `http://192.168.10.192:8000` |
 | Accès local frontend | `http://192.168.10.192:3000` |
 | Reverse proxy (mini-s1) | 1Panel → IPs statiques (OpenResty mode host) |
 | Reverse proxy (VPS) | Caddy HTTPS vers `127.0.0.1:3000` / `127.0.0.1:8000`, certificats et GET publics vérifiés ; recette de bout en bout confirmée par l'opérateur |
+| Release CI | GitHub Actions → SSH `tervo-ci` → wrapper root → `release.py` ; `DEPLOY_ENABLED` coupe-circuit |
 
 > ⚠️ **Cible Stage 6.1+** : les services doivent binder sur `127.0.0.1:PORT` (pas `0.0.0.0`), et PostgreSQL ne doit **pas** publier de port sur l'hôte.
 

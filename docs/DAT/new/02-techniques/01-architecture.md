@@ -714,13 +714,13 @@ L'orchestration complexe n'est pas nécessaire pour le périmètre initial.
 | HTTPS et routage public | Caddy, configuration versionnée |
 | Services/réseaux/volumes applicatifs | Compose suivi dans Git |
 | Secrets | Fichier privé explicitement fourni, jamais Git ni logs |
-| Release et rollback | Commande INT-129, puis CI INT-130 réutilisant cette commande |
+| Release et rollback | Commande INT-129 et CI INT-130 qui la réutilise (push conditionné par `DEPLOY_ENABLED`) |
 | Console Compose privée | Dockge, sans seconde définition autonome de Tervo |
 | Backups et alertes | Scripts versionnés et scheduler système explicite, INT-128/111 |
 
-La CI vérifie ; les images de production restent construites sur le VPS.
-GHCR et la construction/promotion d'images en CI ne sont pas introduits
-par ce changement de proxy.
+La CI vérifie et, depuis INT-130, déclenche la release ; les images de
+production restent construites sur le VPS. GHCR et la construction/promotion
+d'images en CI ne sont pas introduits par ce changement de proxy.
 
 Dockge dispose de capacités de modification et d'un accès Docker
 root-equivalent, pas d'un rôle lecture seule démontré. La convention

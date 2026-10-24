@@ -404,10 +404,12 @@ La CI conserve les tests backend et vérifie Bun 1.2.20/typecheck/build.
 Son URL `.invalid` est fictive et ne publie aucun artefact de production.
 **Le job deploy historique est supprimé**, pas simplement conditionné par
 un commentaire : `DEPLOY_ENABLED=true` ne peut pas lancer ce job absent.
-INT-130 le réintroduira avec la commande sûre INT-129.
+INT-130 l'a réintroduit le 24 octobre 2026 avec la commande sûre INT-129
+et une identité CI dédiée ; voir [INT-130](INT-130-ci-cd.md).
 
-Aucun run distant CI, push ou déploiement VPS n'est revendiqué.
-La CI configurée n'est pas une CI exécutée.
+À la clôture d'INT-125, aucun run distant CI, push ou déploiement VPS
+n'était revendiqué. Depuis, INT-111 et INT-130 ont des runs et un
+déploiement observés.
 
 TD-B008/009 restent ouverts pour la DB réelle et les privilèges SQL.
 TD-B010 attend décision/reprise/backup réels. Aucun todo débloqué n'a été
