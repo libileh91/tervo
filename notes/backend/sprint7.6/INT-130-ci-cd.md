@@ -53,11 +53,12 @@ les secrets, ni exécuter une autre commande, ni choisir les chemins ou les
 options de release. Le compte reste root-equivalent *à travers ce wrapper* ;
 c'est la limite de Docker Compose, pas un RBAC.
 
-Le wrapper répète les contrôles de `release.py` (branche `main`, checkout
-propre, `HEAD == SHA`) car il effectue le `git pull` avant la release. Il relâche
-le verrou avant `release.py`, qui le reprend : en cas de concurrence, la release
-de la CI échoue proprement au lieu de modifier le checkout pendant une release
-opérateur.
+Le wrapper répète les contrôles de `release.py` (checkout propre, `HEAD == SHA`)
+car il effectue le `git pull --ff-only origin main` avant la release. Le
+checkout VPS peut être sur `main` attaché ou détaché au SHA publié : le pull
+avance `HEAD` en fast-forward sans déplacer de branche. Il relâche le verrou
+avant `release.py`, qui le reprend : en cas de concurrence, la release de la CI
+échoue proprement au lieu de modifier le checkout pendant une release opérateur.
 
 ## 3. Préparation du VPS — root
 
@@ -70,13 +71,15 @@ l'opérateur lorsqu'il change dans le dépôt.
 Avant d'installer, contrôler le checkout en lecture seule :
 
 ```sh
-git -C /opt/stacks/tervo rev-parse --abbrev-ref HEAD   # attendu : main
-git -C /opt/stacks/tervo status --porcelain             # attendu : silence
-git -C /opt/stacks/tervo rev-parse HEAD                # SHA actuellement servi
+git -C /opt/stacks/tervo status --porcelain   # attendu : silence
+git -C /opt/stacks/tervo rev-parse HEAD      # SHA actuellement présent
+git -C /opt/stacks/tervo log -1 --oneline    # contrôle lisible
 ```
 
-Une branche détachée ou un checkout modifié arrête la procédure : le wrapper
-exige `main` propre et `HEAD == SHA` pour éviter de déployer un état inconnu.
+Un checkout modifié arrête la procédure. La branche `main` attachée n'est pas
+requise : le 24 octobre 2026, le checkout de production était détaché à
+`291f7ea` et propre ; le wrapper le fait avancer par
+`git pull --ff-only origin main`.
 
 ```sh
 (

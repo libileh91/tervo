@@ -11,9 +11,11 @@
 #   printf '%s\n' "$GITHUB_SHA" | ssh <ci>@<vps>
 #
 # The SSH key of the CI account is restricted to this command in
-# authorized_keys. The wrapper only releases a commit that is HEAD of main
-# with a clean checkout; build, migration, backup, smoke and rollback stay in
-# release.py. No second orchestration is introduced here.
+# authorized_keys. The wrapper only releases a commit that is HEAD after a
+# fast-forward of origin/main, with a clean checkout; build, migration,
+# backup, smoke and rollback stay in release.py. No second orchestration is
+# introduced here. The checkout may be on an attached main branch or detached
+# at the released SHA (the documented immutable release state).
 set -eu
 
 checkout=/opt/stacks/tervo
@@ -30,8 +32,7 @@ case "$revision" in
 esac
 [ "${#revision}" -eq 40 ] || { echo "Invalid revision length." >&2; exit 2; }
 
-# Only the attached main branch of a clean, explicit checkout.
-test "$(git -C "$checkout" symbolic-ref --short HEAD)" = main
+# Clean checkout only; main may be attached or detached at a released SHA.
 test -z "$(git -C "$checkout" status --porcelain)"
 
 # Same lock as release.py: never pull the checkout under a running release.
@@ -39,7 +40,7 @@ umask 077
 exec 9>>"$lock"
 flock -n 9 || { echo "Another release operation holds the lock." >&2; exit 1; }
 export GIT_TERMINAL_PROMPT=0
-git -C "$checkout" pull --ff-only
+git -C "$checkout" pull --ff-only origin main
 if [ "$(git -C "$checkout" rev-parse HEAD)" != "$revision" ]; then
   echo "Server HEAD does not match the requested commit." >&2
   exit 1
