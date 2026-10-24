@@ -3,6 +3,12 @@
 > **Date :** 13/07/2026
 > **Backend :** `backend/app/services/job.py`
 
+**Incident historique du modèle `jobs`.** Les extraits et tests ci-dessous
+décrivent le correctif de l'époque, pas les entités Intervention V2 ni un test
+rejoué aujourd'hui. L'usage de `datetime.utcnow()` était un contournement du
+schéma sans timezone, pas une règle pour le code neuf. La leçon générale est
+d'aligner type SQL, valeurs Python et contrat API avant toute migration.
+
 ---
 
 ## 1. Le bug
@@ -63,15 +69,16 @@ job.completed_at = datetime.now(timezone.utc)  # → datetime.utcnow()
 
 ---
 
-## 4. Recommandation long-terme
+## 4. Recommandation formulée à l'époque
 
 Pour une meilleure gestion des timezone, il faudrait :
 1. Changer la colonne : `Column(DateTime(timezone=True), nullable=True)`
 2. Utiliser `datetime.now(timezone.utc)` partout
 3. Adapter les calculs (comme `elapsed_minutes`) pour gérer les timezone
 
-Mais ce changement nécessite une migration Alembic et des ajustements dans tous
-les schémas Pydantic. Pour le sprint 4.1, `datetime.utcnow()` suffit.
+Mais ce changement nécessitait une migration Alembic et des ajustements dans
+les schémas concernés. Pour le sprint 4.1, le correctif retenait
+`datetime.utcnow()`. Cette note ne dit pas quels types sont utilisés aujourd'hui.
 
 ---
 

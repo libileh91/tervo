@@ -1,6 +1,6 @@
 # Sprint 7.6 — Déploiement VPS et documentation entretien
 
-> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131, INT-132 (console privée), INT-126/127/128 (recettes locales) validées ; INT-129 livrée sur recette VPS et confirmation opérateur du nettoyage ; mise en service publique et sauvegarde régulière hors VPS non activées
+> **Tervo V2** · INT-111/112 + INT-124 à INT-132 · **Statut :** INT-124/125/131, INT-132 (console privée), INT-126/127/128 (recettes locales) validées ; INT-129 livrée sur recette VPS et nettoyage confirmé ; INT-111 livrée pour une démo publique avec sauvegardes manuelles, nettoyage ciblé exécuté ; INT-130 (CI/CD) et INT-112 (doc entretien) restent ouvertes
 > **Dépendances :** Valider le périmètre livré et ses tests avant déploiement ; documenter explicitement le backlog restant.
 > **Cadrage commun :** [Stage 7](../README.md) · [DAT](../../../DAT/new/00-sommaire.md)
 > **Notes à produire :** `notes/backend/sprint7.6/` (guides transversaux et fiches entretien dans leurs dossiers dédiés).
@@ -55,20 +55,34 @@ travail déjà consommé. Le dossier reste `sprint7.6`, sans nouveau sprint.
 
 **User Story**
 En tant que **gérant**,
-Je veux **déployer Tervo v2 sur un VPS en production**,
+Je veux **déployer Tervo v2 sur un VPS public de démonstration**,
 Afin de **disposer d'une instance publique avec HTTPS**.
+
+**Périmètre de livraison validé**
+Livraison publique de **démonstration**, sauvegardes manuelles et récupération
+SQL/photos prouvée. Le mini-s1 ne sera pas allumé en permanence : aucun timer
+ni droit SSH de capture automatique n'est activé. La qualification pour données
+clientèle réelles exige TD-B024 avant le premier usage. Les exigences initiales
+reportées sont conservées ci-dessous, pas déclarées livrées.
 
 **Acceptance Criteria**
 - [x] VPS : Debian 13 (choix utilisateur, remplace Ubuntu 24.04 prévu), SSH clé, ufw (22/80/443), fail2ban
 - [x] SSH par clé uniquement, connexion root directe désactivée, utilisateur non-root et mises à jour de sécurité automatiques
-- [ ] Prérequis actifs INT-125 à INT-129 et INT-131/132 livrés/vérifiés ; les preuves historiques INT-124 restent conservées, périmètre et backlog explicités avant publication
-- [ ] Choix de reprise INT-127 appliqué après backup/restore INT-128 : transfert réel si nécessaire, aucune source présumée ; TD-B010 clôturé sur preuves
-- [ ] Release manuelle via INT-129 : SHA/images identifiés, migrations avant exposition et disponibilité effective des services
-- [ ] PostgreSQL non publié, services applicatifs loopback, Dockge 5001 privé recontrôlé après reboot et API admin Caddy locale ; ancien panneau/proxy neutralisés après INT-131, surface publique 22/80/443 TCP vérifiée
-- [ ] DNS frontend/API, Caddy vers les services locaux, certificats Let's Encrypt valides, renouvellement automatique et redirection HTTP vers HTTPS vérifiés ; état TLS persistant sauvegardable
-- [ ] GET réels frontend/API et recette navigateur : admin via INT-126, connexion, dashboard, upload/récupération photo sans compte démo
-- [ ] Backups planifiés et récupération INT-128 vérifiés sur le déploiement réel, y compris secrets/proxy ; seuils disque/RAM suivis
-- [ ] Procédure rejouable dans `notes/backend/deploy/vps/` (dossier demandé par l'utilisateur) : prérequis, commandes, erreurs/corrections, schéma et différences mini-s1/VPS ; bilan du sprint dans `notes/backend/sprint7.6/`
+- [x] Prérequis actifs INT-125 à INT-129 et INT-131/132 livrés/vérifiés ; les preuves historiques INT-124 restent conservées, périmètre et backlog explicités avant publication
+- [x] Volet VPS de la décision INT-127 appliqué : base neuve sans import local, copie externe et récupération isolée INT-128 validées ; aucun remplacement local présumé, TD-B010 maintenu ouvert pour son volet local
+- [x] Release manuelle via INT-129 : SHA/images identifiés, migrations avant exposition et disponibilité effective des services
+- [x] PostgreSQL non publié, services applicatifs loopback, Dockge 5001 privé recontrôlé après reboot et API admin Caddy locale ; ancien panneau/proxy neutralisés après INT-131, surface publique 22/80/443 TCP vérifiée
+- [x] DNS frontend/API, Caddy vers les services locaux, certificats Let's Encrypt valides, renouvellement automatique et redirection HTTP vers HTTPS vérifiés ; état TLS persistant sauvegardable
+- [x] GET réels frontend/API et recette navigateur : admin via INT-126, connexion, dashboard, upload/récupération photo sans compte démo
+- [x] Sauvegarde manuelle chiffrée hors VPS et récupération INT-128 du petit jeu SQL/photos validées ; fichiers privés/proxy récupérés intègres, sans revendiquer un clone HTTP ou une machine entièrement reconstruite
+- [x] Ressources disque/RAM recontrôlées et seuils d'exploitation documentés pour la démo, sans monitoring automatique revendiqué
+- [x] Procédure rejouable dans `notes/backend/deploy/vps/` (dossier demandé par l'utilisateur) : prérequis, commandes, erreurs/corrections, schéma Caddy et différences mini-s1/VPS
+- [ ] Bilan du sprint dans `notes/backend/sprint7.6/` : à produire au terme du sprint avec INT-112/INT-130, non revendiqué par INT-111
+
+**Exigences initiales reportées — non livrées**
+- [ ] Sauvegardes planifiées sur une destination externe permanente, déclenchement réel, remontée d'échecs et recette de récupération : TD-B024, bloquant avant clientèle réelle
+- [ ] Remplacement final de l'ancienne base locale et clôture globale TD-B010 : hors lot démo ; cible et backup préalables indispensables, aucune suppression autorisée implicitement
+- [ ] Réparation du cache Docker mini-s1 : TD-B025 ; ne pas redémarrer ses services existants uniquement pour tester
 
 **Technical Notes**
 - INT-111 garde son objectif public et ses critères système validés.
@@ -85,10 +99,52 @@ Afin de **disposer d'une instance publique avec HTTPS**.
 - Preuves et limites : [note SSH](../../../../notes/backend/deploy/vps/01-inventaire-et-acces-ssh.md)
   et [note système](../../../../notes/backend/deploy/vps/02-preparation-securite-systeme.md).
   Empreinte serveur indépendante non documentée et pare-feu fournisseur
-  non inventorié ; application, HTTPS, données et déploiement CI non validés.
+  non inventorié ; déploiement CI non validé.
 - Cas propriétaires : TC-INT-111-01/04/05/07. Le cas système reste
-  partiel sur les vérifications non retranscrites ; les autres ne sont
-  pas déclarés réussis.
+  partiel sur les vérifications non retranscrites ; configuration TLS et
+  persistance après reboot vérifiées, pas de renouvellement effectif revendiqué ;
+  parcours fonctionnel confirmé par l'opérateur ; procédure opérateur, cours
+  01→06 et journal de livraison écrits.
+- INT-111 démarrée après feu vert : [préflight et journal de mise en service](../../../../notes/backend/sprint7.6/INT-111-deploiement-vps.md).
+  SSH/Caddy/Docker actifs, sudo agent non interactif refusé. Noms confirmés
+  `tervoapp.com` (frontend) et `api.tervoapp.com` (API) ; `origin/main` publié
+  jusqu'à `291f7ea` sans force ; CI `39025284922` terminée avec succès.
+  Release `291f7ead2482-ca71c575091e` réussie : migrations/droits avant HTTP,
+  trois GET loopback, services healthy et ports applicatifs `127.0.0.1`.
+  Incident SQL `Permission denied` corrigé avant cette réussite ; la reprise
+  du projet neuf ne doit plus être rejouée depuis la création de l'admin.
+  Réception `admin@`/`contact@` et admin applicatif créé confirmés par l'opérateur.
+  DNS direct vers `151.241.228.152`, certificats Let's Encrypt des deux noms
+  et GET HTTPS publics `/login` et `/health/ready` vérifiés le 19 octobre 2026 ;
+  redirections HTTP 308 vérifiées. Le critère TLS reste partiel :
+  configuration automatique et persistance des mêmes certificats contrôlées,
+  sans renouvellement effectif revendiqué. Reboot réel confirmé par changement
+  de boot ID, noyau `6.12.113`, services actifs, endpoints HTTPS 200 et empreintes
+  de certificats inchangées. État TLS capturé, stocké hors VPS et récupéré intègre.
+  Recette de bout en bout confirmée par l'opérateur après demande de test
+  login/dashboard/photo ; pas de capture réseau détaillée fournie.
+  Premier snapshot mini-s1 `03aca082`, contrôle intégral restic sans erreur ;
+  récupération de l'archive vérifiée, puis restauration SQL/photos en cible
+  isolée sur le VPS réussie : compteurs `1/2/2/0/3/2`, deux relations et deux
+  originaux aux bonnes empreintes, miniatures présentes, cible arrêtée.
+  Origine HTTP des deux images également contrôlée par l'agent.
+  Cache Docker mini-s1 défectueux, réparation globale différée ; aucun
+  remplacement des volumes existants. Planification non activée et reportée
+  par arbitrage utilisateur vers TD-B024 : sauvegarde manuelle pour la démo,
+  stockage externe permanent et automatisation avant les vrais clients.
+  Clé dédiée conservée en SFTP lecture seule, aucun nouveau privilège sudo.
+  Reconstruction complète Caddy/Dockge/clone HTTP non exécutée à partir du backup.
+  Nettoyage ciblé exécuté par l'opérateur le 24 octobre 2026 : stack
+  `int129-vps-33c350b23010` avec deux volumes et deux réseaux, cible de
+  restauration et son volume, copies temporaires mini-s1 ; sorties reçues en
+  section 23 du journal. Quatre services conservés (backend/frontend/postgres,
+  Dockge). SSH agent `tervo` refusé par clé après reboot, donc pas d'inventaire
+  privilégié indépendant ; GET publics 200 et redirections 308 recontrôlés
+  depuis mini-s1 après le nettoyage.
+  Améliorations frontend mineures signalées, liste à préciser. Le
+  [parcours opérateur](../../../../notes/backend/deploy/vps/05-tervo-release-et-exploitation.md)
+  distingue ces preuves des étapes futures ; aucun nouveau déploiement effectué
+  pendant la relecture documentaire.
 
 ---
 

@@ -1,7 +1,11 @@
 # 01 — Inventaire du VPS et sécurisation de l'accès SSH
 
 **Historique de préparation.** Pour reprendre le VPS aujourd'hui, utiliser
-[le guide actuel](04-transition-caddy.md), pas cette chronologie.
+[le parcours actuel](05-tervo-release-et-exploitation.md), pas cette chronologie.
+Les états ci-dessous sont ceux de l'inventaire daté, pas un nouvel audit.
+Les blocs `tee`/`sed -i` modifient les configurations SSH : ne pas les rejouer
+sur l'accès maintenant fonctionnel. Une nouvelle modification exige une
+session de secours conservée et un test de reconnexion avant fermeture.
 
 > **Périmètre :** préparation du serveur pour INT-111, pas déploiement de Tervo.
 > **Repère temporel :** sorties du VPS et sauvegarde datées du 5 octobre 2026.

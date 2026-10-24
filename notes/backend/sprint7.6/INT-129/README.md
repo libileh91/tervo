@@ -91,9 +91,9 @@ INT-129. Pour les historiques détaillés :
 | CLI et Dockge compatibles | Qualifiés sur la configuration/version testée, avec traitement ciblé d'une omission JSON prouvée |
 | Backup VPS | Capture et checksums validés ; paramètres hôte privés réels |
 | Reprise après sinistre complète | Non démontrée par INT-129 |
-| Application publique avec TLS et login métier | Pas encore mise en service par INT-111 |
+| Application publique avec TLS et login métier | Réalisée en INT-111 après cette recette ; non prouvée par INT-129 elle-même |
 | CI/CD de production | INT-130 non exécutée dans cette recette |
-| Nettoyage de la recette principale | Déclaré exécuté par l'opérateur ; santé Caddy/Dockge confirmée, détail terminal non consigné |
+| Nettoyage de la recette principale | Déclaré exécuté par l'opérateur ; santé Caddy/Dockge confirmée, détail terminal non consigné. Retrait effectif prouvé plus tard par la sortie du nettoyage INT-111 (section 23 du journal) |
 | Nettoyage de la sonde bind | Confirmé dans le journal 04 |
 
 En entretien, le bon niveau de précision est : **« voici ce que j'ai construit,

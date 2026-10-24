@@ -48,6 +48,23 @@ indiquait qu'un serveur répondait ; les grants ont révélé l'absence du rôle
 On a corrigé et recréé **uniquement la fixture autorisée**, pas prescrit
 une réinitialisation d'une vraie base.
 
+Le premier déploiement INT-111 a rencontré le même type de refus de lecture
+après un clone sous `umask 077`. Voici l'enchaînement constaté :
+
+```text
+Volume neuf → initdb crée le cluster et la base
+           → lecture de 10-app.sql refusée → arrêt de l'entrypoint
+           → redémarrage automatique
+           → PGDATA existe : initialisation ignorée
+           → serveur joignable, mais rôle applicatif non créé
+```
+
+Le helper s'est arrêté avant les migrations. La correction des permissions
+et la recréation **du projet alors neuf** ont permis la release suivante.
+Depuis, un admin existe : cette suppression de volume n'est plus une recette
+de reprise applicable. Il faut diagnostiquer l'état SQL et conserver les données.
+Ne pas augmenter les délais du healthcheck pour masquer une erreur d'init.
+
 ## 3. Séparer administration et fonctionnement quotidien
 
 ```text
@@ -156,7 +173,29 @@ Il faut diagnostiquer le rôle, la base, le script et les permissions.
 Tervo possède [un bootstrap séparé](../../backend/app/bootstrap_admin.py#L1).
 La note [INT-126](../../notes/backend/sprint7.6/INT-126-bootstrap-admin.md) détaille ses protections.
 Aucun admin production VPS n'a été créé par les recettes INT-129.
-Un endpoint readiness 200 n'est donc pas une preuve de login métier.
+Sa création a ensuite été confirmée par l'opérateur pendant INT-111.
+Un endpoint readiness 200 n'est toujours pas une preuve de login métier.
+
+### Pourquoi `tervo_admin` existait, mais pas encore l'admin Tervo
+
+`POSTGRES_USER=tervo_admin` prépare une **identité du serveur SQL**. Le
+bootstrap ajoute une **ligne utilisateur applicative de rôle ADMIN** en se
+connectant via le rôle runtime `tervo_app`. Il n'a pas à créer des tables :
+les migrations et grants ont déjà préparé ce dont il a besoin.
+
+La commande interactive et ses retours sont dans le
+[guide opérateur](../../notes/backend/deploy/vps/05-tervo-release-et-exploitation.md).
+Trois règles à retenir :
+
+- ne pas ajouter `-T` ou passer le mot de passe en argument : le bootstrap
+  exige un terminal et masque la saisie ;
+- 12–72 **octets UTF-8**, pas simplement 12–72 caractères ; un caractère
+  accentué peut occuper plusieurs octets ;
+- l'email est enregistré, sans envoyer de courrier ni vérifier la boîte.
+  La réception Cloudflare et la création du compte sont deux opérations distinctes.
+
+Le bootstrap n'est pas un outil de changement de mot de passe : avec
+l'identité exacte d'un admin actif déjà présent, il ne modifie rien.
 
 ## 7. Sauvegarder : quels éléments doivent aller ensemble ?
 

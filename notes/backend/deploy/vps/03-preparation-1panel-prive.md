@@ -8,7 +8,7 @@ sont historiques, pas une procédure à relancer.
 
 > **Tâche :** INT-124, extraite du chantier INT-111 sans changement du
 > périmètre technique ; préparation puis installation 1Panel/OpenResty.
-> **État :** installation effectuée par l'utilisateur, puis panneau
+> **État lors de l'installation historique (pas aujourd'hui) :** installation effectuée par l'utilisateur, puis panneau
 > arrêté après échec du contrôle d'isolation : 7410 répondait depuis Internet.
 > Core et agent désormais actifs, bind 127.0.0.1:7410 contrôlé à distance,
 > HTTP local 200 et connexion TCP publique IPv4 sans succès.
@@ -596,6 +596,11 @@ contrôlés sur le conteneur créé. Les quotas à zéro ne signifient pas
 absence de consommation ; des limites éventuelles nécessiteront une mesure.
 
 ## 13. Installation OpenResty effectuée, routage encore à valider
+
+Cette section et les suivantes conservent les preuves INT-124.
+**OpenResty/1Panel sont depuis désinstallés** : ne pas réinstaller le proxy
+ni rejouer ses modifications UFW/services. [Caddy](04-transition-caddy.md)
+est la voie actuelle ; les succès HTTP historiques ne valident pas le HTTPS Tervo.
 
 L'utilisateur a confirmé l'installation depuis le catalogue 1Panel.
 Le journal fourni indique le téléchargement de l'archive de version,

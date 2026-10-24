@@ -10,6 +10,8 @@ Ce cours décrit Tervo ; il ne propose ni Kubernetes ni un second orchestrateur.
 
 Les commandes pédagogiques ci-dessous ne sont pas de nouvelles validations.
 Les captures réelles sont dans [le journal 02](../../notes/backend/sprint7.6/INT-129/journal/02-releases-sauvegarde-rollback.md).
+La première release de la stack définitive est consignée dans
+[INT-111](../../notes/backend/sprint7.6/INT-111-deploiement-vps.md).
 
 ## 1. Les quatre objets à ne pas confondre
 
@@ -24,6 +26,18 @@ Une image n'est pas un processus. Un conteneur arrêté existe encore.
 Supprimer/recréer un conteneur n'implique pas de supprimer son volume nommé.
 Inversement, supprimer le volume détruit les données qu'il contient, même
 si l'image du programme existe toujours.
+
+Repères concrets après la release INT-111 :
+
+| Objet présent | Exemple | Si on le remplace |
+|---|---|---|
+| Source sélectionnée | Checkout `/opt/stacks/tervo`, commit `291f7ea` | Les conteneurs actifs ne changent pas spontanément |
+| Image construite | `tervo-backend:291f7ead24822cf8f9c0164aaf9dc3420d351647` | Le tag seul ne recrée pas le conteneur |
+| Conteneur actif | `tervo-backend-1` | Une recréation peut conserver les volumes |
+| Données persistantes | `tervo_postgres_data`, `tervo_uploads_data` | Une suppression peut perdre comptes et fichiers, indépendamment de Git |
+
+On ne « sauvegarde » donc pas l'admin applicatif en committant le code :
+son compte est une ligne dans PostgreSQL.
 
 ```mermaid
 flowchart TD
@@ -210,6 +224,12 @@ Les binds SQL imposent `create_host_path: false` : si la source manque, on
 veut une erreur, pas un dossier vide créé à la place d'un fichier SQL.
 La divergence de rendu JSON entre les deux Compose a été qualifiée par
 [un test réel](../../notes/backend/sprint7.6/INT-129/journal/04-gate-dockge.md), pas neutralisée aveuglément.
+
+`read_only: true` empêche l'écriture depuis le montage ; il **n'accorde pas**
+un droit de lecture Unix qui manque. C'est la distinction révélée par le SQL
+illisible en INT-111 : fichier présent et monté, mais ouverture refusée à
+l'utilisateur PostgreSQL. Voir les [permissions](01-du-poste-local-au-vps.md)
+avant de changer les volumes ou le healthcheck.
 
 ## 8. Up, healthy et fonctionnel
 

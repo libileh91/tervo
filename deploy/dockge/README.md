@@ -60,8 +60,9 @@ Cela ne teste pas les chemins de build ou la configuration de Tervo.
   écart bloque. Requalifier si versions/layout changent.
   Git reste autoritaire, pas d'édition/copie du Compose via l'UI.
   [Commandes root, preuves et limites INT-129](../../notes/backend/sprint7.6/INT-129-release-rollback.md).
-- INT-128 : restauration isolée des données d'auth ; INT-111 : recontrôle
-  après reboot et recette réelle. Pas de commandes hôte testées dans Dockge.
+- INT-128 : restauration isolée des données d'auth ; INT-111 a recontrôlé Dockge
+  après reboot et réalisé la recette réelle. Pas de commandes hôte testées dans
+  Dockge.
 
 Sources : [release officielle](https://github.com/louislam/dockge/releases/tag/1.5.0),
 [Compose officiel](https://github.com/louislam/dockge/blob/1.5.0/compose.yaml).

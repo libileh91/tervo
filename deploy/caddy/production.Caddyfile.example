@@ -1,6 +1,7 @@
-# INACTIVE EXAMPLE ONLY. Do not load/import before INT-111 and explicit go-ahead.
-# Hostnames are examples, not evidence of certificate issuance or validation.
-# Loading this profile would enable automatic HTTPS; INT-131 never runs it.
+# Reference source, not a dynamic import. INT-111 copied it to /etc/caddy/Caddyfile;
+# editing this file alone does not change the running proxy. Revalidate then reload.
+# Loading this profile enables automatic HTTPS (frontend/API + HTTP->HTTPS redirects).
+# Hostnames are the confirmed public names; keep ports on 127.0.0.1 and h1/h2 only.
 {
 	admin 127.0.0.1:2019
 	servers {

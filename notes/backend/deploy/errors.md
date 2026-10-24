@@ -1,6 +1,8 @@
 # Registre des erreurs de déploiement — Tervo
 
-> Historique des erreurs rencontrées en production/dev, avec causes et corrections.
+> Historique de l'ancien modèle `jobs` et du mini-s1, avec causes et corrections.
+> Ne pas transposer les correctifs au VPS ou au modèle V2 sans relire le code.
+> Incident actuel de permissions SQL et reprise : [journal INT-111](../sprint7.6/INT-111-deploiement-vps.md).
 
 ---
 
@@ -8,9 +10,11 @@
 
 **Cause :** Un `proxy_pass http://tervo-backend-1:8000` a été ajouté par erreur dans le `frontend/Dockerfile`. Nginx tente de résoudre le nom du conteneur au démarrage → échec → `[emerg]` → crash en boucle (`Restarting (1)`) → rien sur le port 3000 → 502.
 
-**Fix :** Retour au Nginx statique pur dans le Dockerfile. Le routage API est géré par le tunnel Cloudflare (prod) ou le proxy Vite (dev).
+**Fix historique :** Retour au Nginx statique pur dans le Dockerfile. Le routage
+API était géré par le tunnel Cloudflare (mini-s1) ou le proxy Vite (dev).
+Le VPS actuel utilise Caddy.
 
-**Doc complète :** `notes/backend/deploy/incident-502-nginx-upstream.md`
+**Doc complète :** [Incident 502](incident-502-nginx-upstream.md).
 
 ---
 
@@ -18,7 +22,11 @@
 
 **Cause :** L'enum PostgreSQL `jobstatus` contient des valeurs sans accents (`planifie`) alors que le code Python utilise `planifié` avec accents. La migration a créé l'enum avec les valeurs par défaut Python.
 
-**Fix :** Modifier l'enum PostgreSQL pour accepter les valeurs accentuées. Voir `notes/backend/sprint-3.1/fix-postgresql-enum.md`.
+**Fix historique :** Modifier l'enum PostgreSQL pour accepter les valeurs
+accentuées. La note anciennement située dans
+`notes/backend/sprint-3.1/fix-postgresql-enum.md` n'est plus présente dans
+l'arborescence ; consulter l'historique Git si nécessaire. Ce n'est pas une
+migration à appliquer au modèle V2.
 
 ```
 asyncpg.exceptions.InvalidTextRepresentationError:
@@ -31,9 +39,11 @@ invalid input value for enum jobstatus: "planifié"
 
 **Cause :** `datetime.now(timezone.utc)` (datetime aware) inséré dans une colonne `TIMESTAMP` sans timezone → PostgreSQL rejette.
 
-**Fix :** Utiliser `datetime.utcnow()` (naive) dans `backend/app/services/job.py`.
+**Fix de l'époque :** Utiliser `datetime.utcnow()` (naive) dans l'ancien
+`backend/app/services/job.py`. Ce contournement d'une colonne sans timezone
+n'est pas une recommandation générale pour les nouveaux modèles.
 
-**Doc complète :** `notes/backend/deploy/fix-timezone-aware-datetime-500.md`
+**Doc complète :** [Incident datetime](fix-timezone-aware-datetime-500.md).
 
 ---
 
@@ -41,7 +51,10 @@ invalid input value for enum jobstatus: "planifié"
 
 **Cause :** Frontend buildé servi par Nginx sur le port 3000, avec `client.ts` qui utilise `/api/v1` relatif (hostname ≠ tervoapp.com). Nginx ne proxy pas → 405.
 
-**Fix :** En dev local, utiliser `bun run dev` (proxy Vite vers `localhost:8000`). En prod, le hostname est `tervoapp.com` → le client appelle `https://api.tervoapp.com/api/v1` via le tunnel.
+**Fix historique :** En dev local, utiliser `bun run dev` (proxy Vite vers
+`localhost:8000`). Le build mini-s1 appelait l'API via le tunnel. Désormais,
+`VITE_API_BASE_URL` est fourni explicitement au build de l'image frontend :
+ne pas réintroduire une détection du hostname pour corriger un 405.
 
 ---
 

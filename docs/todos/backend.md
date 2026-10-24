@@ -114,7 +114,7 @@
 | **Fichiers**  | `deploy/docker-compose.yml`, `deploy/postgres.docker-compose.yml` |
 | **Action**    | Décision INT-127 : aucune reprise depuis les données locales obsolètes, démarrage VPS vide. Après validation du VPS, remplacer la base locale par sa copie ; identifier la cible exacte et sauvegarder son ancien état avant remplacement. |
 |               | Backup/restore vérifié en INT-128, application réelle en INT-111 ; ne pas présumer conteneur, rôle ou volume, ni effacer une base pour tester. |
-| **Statut**    | 🟡 INT-127 : choix enregistré ; INT-128 : restore PG isolé validé ; INT-129 : release/backup/rollback sur recette VPS fictive. DB de production, vraie copie sur mini-s1 et remplacement local final restent à exécuter en INT-111. |
+| **Statut**    | 🟡 Volet VPS appliqué en INT-111 : départ neuf, release migrée, copie chiffrée réelle sur mini-s1 (`03aca082`), récupération de l'archive puis restauration SQL/photos en cible isolée sur le VPS validées. Remplacement de la base locale non exécuté et maintenu ouvert hors livraison publique de démo ; cache Docker mini-s1 à traiter (TD-B025), cible à identifier et ancien état à sauvegarder avant toute substitution. Ne pas clôturer globalement ce todo ni présumer une autorisation d'effacement. |
 
 ---
 
@@ -262,7 +262,7 @@
 | **Dépend de** | Volumétrie représentative, INT-128 (backup/restore BYTEA), INT-111 (déploiement réel) |
 | **Fichiers** | `app/modules/reports/{models,service}.py`, `deploy/`, procédure PostgreSQL INT-111 |
 | **Action attendue** | Mesurer taille cumulée des versions PDF `BYTEA`, temps de génération/lecture et volume des sauvegardes. Vérifier une restauration qui conserve PDF, empreinte et date de confirmation. Selon les mesures, décider si un stockage privé externe avec réconciliation transactionnelle est requis ; ne pas exposer les fichiers dans `/uploads`. |
-| **Statut** | 🟡 INT-128 : PDF BYTEA, taille/hash/dates préservés par restore PostgreSQL isolé ; pas de mesure représentative, backup/déploiement réel ou récupération VPS validés. |
+| **Statut** | 🟡 INT-128 : PDF BYTEA, taille/hash/dates préservés en recette locale. INT-111 : copie hors VPS et restauration réelle SQL/photos validées sur le petit jeu de recette, mais aucun PDF positif contrôlé sur cette capture et aucune mesure représentative. Ce todo reste ouvert. |
 
 ---
 
@@ -275,3 +275,27 @@
 | **Fichiers** | `app/modules/showroom/`, `app/modules/sales/`, migration et contrats API |
 | **Action attendue** | Définir comment enregistrer une vente provenant réellement d'une visite, sans inférer sa provenance d'un simple `client_id` ou du statut `SOLD` : un même client peut avoir plusieurs visites et plusieurs ventes. Choisir cardinalité, responsabilité de l'attribution et comportement d'un prospect non encore client avant implémentation. Ne pas inventer d'entité Quote V1. |
 | **Statut** | ⏳ Cadrage métier requis ; INT-109 conserve événements, clients, produits et suivi sans créer de lien vente non prouvé |
+
+---
+
+## TD-B024 — Automatiser les sauvegardes avant l'usage clientèle réel
+
+| Champ | Valeur |
+|---|---|
+| **Créé dans** | INT-111, sprint7.6 — arbitrage utilisateur : livraison publique de démo, sauvegarde manuelle |
+| **Dépend de** | Destination externe toujours disponible et budget/accès explicitement choisis ; passage à l'usage clientèle réelle |
+| **Fichiers** | `deploy/scripts/snapshot.py`, outillage restic, procédures `notes/backend/deploy/vps/` et cas de test du sprint |
+| **Action attendue** | Raccorder la capture validée à un stockage externe permanent, par exemple compatible S3, sans dépendre d'un mini-s1 éteint. Faire approuver horaire et maintenance, protéger les secrets hors Git et conserver une copie de secours de la clé. Vérifier déclenchement réel, remontée des échecs, intégrité et restauration isolée ; définir rétention et seuils d'exploitation avant activation. Ne pas détecter automatiquement « vrais clients » à partir du nombre de lignes : activation explicite avant la première donnée importante. |
+| **Statut** | ⛔ Non livré, bloquant avant usage clientèle réel. Pas de timer, wrapper de capture privilégié ou élargissement SSH activé. La sauvegarde manuelle/restauration du snapshot `03aca082` est acquise ; elle ne remplace pas cette automatisation. |
+
+---
+
+## TD-B025 — Réparer le cache Docker du mini-s1 sous maintenance contrôlée
+
+| Champ | Valeur |
+|---|---|
+| **Créé dans** | INT-111, sprint7.6 — tentative de restauration sur mini-s1 |
+| **Dépend de** | Inventaire des images/couches et services concernés, fenêtre et périmètre de réparation explicitement approuvés |
+| **Fichiers** | Stockage Docker local du mini-s1 ; preuves dans `notes/backend/sprint7.6/INT-111-deploiement-vps.md`, sections 17–18 |
+| **Action attendue** | Établir l'origine et l'étendue des permissions `770 1000:1000` observées dans une couche de base. Restaurer des métadonnées fiables sans `chmod -R`, prune général ni désactivation de sécurité ; ne retirer aucune image ou donnée utilisée sans sauvegarde et accord ciblé. Vérifier la capacité de redémarrage avant réutilisation du mini-s1 comme cible Docker de recette. |
+| **Statut** | ⏳ Ouvert, hors clôture de la démo publique VPS. La seule cible de recette échouée et sa référence d'image ont été nettoyées avec accord ; le défaut de couche commune persiste. Restic natif reste utilisable, les services existants n'ont pas été redémarrés pour tester. |

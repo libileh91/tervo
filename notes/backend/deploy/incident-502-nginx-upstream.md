@@ -4,6 +4,11 @@
 > **Environnement :** Production (`tervoapp.com`)
 > **Gravité :** Critique — site inaccessible (502 sur `tervoapp.com` et `api.tervoapp.com`)
 
+**Instantané historique mini-s1/Cloudflare Tunnel.** Les résultats ci-dessous
+ont été observés lors de cet incident, pas rejoués pendant la révision des
+notes. Le VPS actuel utilise Caddy et une API publique explicite au build :
+voir le [parcours opérateur](vps/05-tervo-release-et-exploitation.md).
+
 ---
 
 ## 1. Symptômes
@@ -134,7 +139,7 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/docs
 
 ---
 
-## 6. Règle d'or pour ce projet
+## 6. Règle retenue pour cette ancienne architecture
 
 | Environnement | Comment le frontend accède à l'API |
 |---------------|-----------------------------------|
@@ -142,4 +147,8 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/docs
 | **Dev local** | `bun run dev` → proxy Vite `/api` → `localhost:8000` |
 | **Docker local** | Nginx statique + tunnel — pas de proxy dans le conteneur |
 
-> ⚠️ **NE JAMAIS ajouter de `proxy_pass` vers un conteneur Docker dans le `frontend/Dockerfile`.** Le nom du conteneur peut ne pas être résolvable au démarrage → crash en boucle → 502. Le routage API est la responsabilité du tunnel Cloudflare (prod) ou du proxy Vite (dev).
+Dans cette architecture, le frontend reste statique : le tunnel (mini-s1)
+ou le proxy Vite (dev) gérait le routage. Ce n'est pas une interdiction
+universelle de `proxy_pass` vers Docker : il faut un réseau partagé et une
+résolution des noms prévue. Sur le VPS Tervo, **Caddy natif rejoint les ports
+loopback**, pas les noms DNS privés des conteneurs.

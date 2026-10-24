@@ -41,8 +41,9 @@ ports:
 ```
 
 De gauche à droite : adresse de l'hôte, port de l'hôte, port du conteneur.
-Dans la recette, `BACKEND_PORT=19829`. Dans la cible finale, les ports de
-service envisagés sont 8000/3000. Il ne faut pas mélanger ces contextes.
+Dans la recette, `BACKEND_PORT=19829`. Dans la stack `tervo` déployée en
+INT-111, les ports de service sont 8000/3000 sur loopback. Il ne faut pas
+mélanger ces contextes.
 
 PostgreSQL n'a pas de `ports` publié. Le backend le joint sur le réseau
 Docker `database` via son nom de service et le port interne PostgreSQL.
@@ -74,7 +75,7 @@ configuration UFW suffit toujours à neutraliser une publication Docker large.
 Un reverse proxy reçoit une requête puis la transmet à un service interne.
 Il permet notamment de centraliser les noms de domaine et la terminaison TLS.
 
-### Architecture publique cible — pas encore mise en service INT-111
+### Architecture publique de la démo — HTTPS vérifié
 
 ```mermaid
 flowchart TD
@@ -89,16 +90,41 @@ DNS indique où joindre le service ; il ne lance pas l'application et ne
 crée pas un certificat. TLS chiffre le transport et participe à
 l'authentification du serveur ; il ne remplace pas l'authentification métier.
 
+### Cloudflare : trois fonctions indépendantes
+
+| Fonction | Rôle | Situation Tervo |
+|---|---|---|
+| DNS | Publier les adresses/cibles des noms | Conservé chez Cloudflare ; cible web VPS en DNS seul |
+| Tunnel | Relier un service à Cloudflare via une connexion sortante | Ancien mini-s1, pas la cible VPS |
+| Email Routing | Transférer le courrier des alias vers une boîte existante | Réception `admin@` et `contact@` confirmée par l'opérateur |
+
+`A`/`AAAA` portent des adresses IP ; `CNAME` fait pointer un nom vers un autre ;
+`MX` désigne les serveurs de réception email ; `TXT` peut porter des règles
+d'authentification mail. Modifier le web ne demande pas d'effacer les MX/TXT.
+Un alias `admin@` fonctionnel n'est ni un compte Tervo ni un certificat HTTPS.
+Le routage entrant seul ne permet pas de répondre sous cet alias.
+
+### Pourquoi l'API doit aussi être publique en HTTPS
+
+La page et l'API ont deux origines (`https://tervoapp.com` et
+`https://api.tervoapp.com`). Le navigateur utilise l'URL API intégrée au build,
+pas le nom Docker `postgres` ni le loopback du VPS. L'API autorise l'origine
+frontend par CORS ; CORS n'est ni un mot de passe ni un pare-feu.
+Une page HTTPS appelant une API HTTP peut être bloquée comme contenu mixte.
+Si `/login` s'affiche mais la connexion échoue, examiner la requête API dans
+le navigateur avant de conclure à un problème de mot de passe.
+
 ### Ce qui est actif aujourd'hui dans le périmètre décrit
 
-Le [bootstrap Caddy](../caddy/bootstrap.Caddyfile#L1)
-désactive `auto_https`, garde l'API d'administration sur `127.0.0.1:2019`
-et répond en HTTP sur le port 80. Il ne route pas publiquement la recette Tervo.
+Le [bootstrap Caddy](../caddy/bootstrap.Caddyfile#L1) était le profil initial
+INT-131, HTTP seul sans routage public Tervo. Il est conservé comme référence,
+pas comme état actuel après la publication INT-111.
 
 Le [profil production](../caddy/production.Caddyfile.example#L1)
-est un **exemple inactif**. Le charger pourrait déclencher la gestion
-automatique HTTPS ; sa présence dans Git n'est pas une preuve d'émission
-de certificat. Il ne faut pas le charger pour « tester vite ».
+a été copié vers le Caddyfile actif lors de la mise en service autorisée.
+Les certificats Let's Encrypt des deux domaines, redirections HTTP et GET
+HTTPS ont ensuite été vérifiés. Le fichier du dépôt n'est pas un import
+dynamique : sa seule présence n'aurait pas prouvé l'activation.
 
 HTTP/3 est désactivé dans les profils concernés : le périmètre réseau retenu
 reste 22, 80 et 443 **TCP**, sans ouverture UDP ajoutée par facilité.
@@ -272,7 +298,8 @@ Cette qualification ne s'étend pas automatiquement à toute future version.
 | Évaluation initiale VPS | Installation privée de 1Panel/OpenResty | Historique conservé ; ne pas réexécuter sa procédure comme celle de Caddy |
 | VPS après INT-131/132 | Caddy natif HTTP bootstrap, Dockge privé | État réellement installé |
 | Recette INT-129 | App/PostgreSQL jetables, ports loopback, commandes de release testées | Pas une mise en service publique |
-| INT-111 à venir | DNS/HTTPS applicatif, bootstrap admin, vrai parcours navigateur, opérations définitives | Prévu, pas annoncé comme déjà validé |
+| INT-111, démo publique | Stack `tervo`, DNS direct, HTTPS, admin et recette navigateur ; backup manuel et récupération SQL/photos | Publication et récupération vérifiées ; pas une qualification clientèle réelle |
+| Clôture / suite | Reboot, ports et TLS persistants vérifiés ; nettoyage ciblé exécuté et sorties consignées ; commit de livraison | Aucun timer ; TD-B024 impose destination permanente et automatisation avant les vrais clients |
 
 Références historiques :
 [transition Caddy](../../notes/backend/deploy/vps/04-transition-caddy.md),

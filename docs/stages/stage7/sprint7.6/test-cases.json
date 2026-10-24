@@ -1,7 +1,7 @@
 {
   "$schema": "Stage 7 - Sprint 7.6 Test Cases",
   "sprint": "7.6",
-  "description": "Tervo V2 — Déploiement VPS et entretien ; états et périmètres par cas (local, recette VPS opérateur, mise en service publique différée), preuves 1Panel historiques conservées",
+  "description": "Tervo V2 — Démo publique VPS avec sauvegardes manuelles ; états et périmètres par cas (local, recette VPS, publication HTTPS, récupération, reboot), automatisation clientèle reportée TD-B024 et preuves 1Panel historiques conservées",
   "test_cases": [
     {
       "id": "TC-INT-111-01",
@@ -36,7 +36,17 @@
         "status": "partial_verified_vps",
         "evidence": "notes/backend/deploy/vps/01-inventaire-et-acces-ssh.md ; 02-preparation-securite-systeme.md",
         "observed": "Connexion neuve tervo par clé et sudo confirmés, tentative sans clé refusée ; root interdit dans la configuration chargée. UFW actif 22/80/443 IPv4/IPv6, jail sshd chargée, secours annulé avant exécution. Noyau Security actif, configuration APT quotidienne et dry-run code 0 relus",
-        "remaining": "Empreinte serveur indépendante non documentée ; tentative root négative non retranscrite ; pare-feu fournisseur non inventorié et future exécution automatique réelle non observée"
+        "remaining": "Empreinte serveur indépendante non documentée ; tentative root négative non retranscrite ; pare-feu fournisseur non inventorié et future exécution automatique réelle non observée",
+        "post_reboot": {
+          "evidence": "notes/backend/sprint7.6/INT-111-deploiement-vps.md, section 21",
+          "boot_id": "b82ade6e-b9ad-44a7-97c9-4eef4bf95dfa",
+          "kernel": "6.12.113+deb13-amd64",
+          "services": "Caddy, Docker, fail2ban et UFW actifs ; connexion SSH avec vérification stricte réussie.",
+          "surface": "Écoutes publiques TCP 22/80/443 seulement. App 8000/3000, Dockge 5001, Caddy admin 2019 et recette 19829/19830 loopback ; aucun 5432 hôte ni UDP 443. Les sept ports privés sont non joignables depuis mini-s1. Depuis, le nettoyage ciblé a supprimé la stack de recette et ses ports (sections 22-23).",
+          "https": "Frontend/API 200 avec TLS vérifié ; redirections 308 et certificats identiques à ceux d'avant reboot.",
+          "photos": "Deux originaux récupérés après reboot en HTTPS avec les SHA-256 source conformes.",
+          "resources": "98 Go libres, 11 % utilisés, RAM disponible 4910 MiB, swap utilisé 0."
+        }
       },
       "legacy_id": "TC-INT-85-01"
     },
@@ -148,7 +158,12 @@
         "renouvellement_auto": "configuré",
         "redirect_http_vers_https": "true"
       },
-      "actual_result": null,
+      "actual_result": {
+        "status": "passed_https_configuration_and_persistence",
+        "evidence": "notes/backend/sprint7.6/INT-111-deploiement-vps.md, sections 9 et 21",
+        "observed": "DNS direct des deux noms, certificats Let's Encrypt obtenus selon les logs opérateur ; GET HTTPS /login et /health/ready 200 depuis le poste agent sans -k, vérification TLS réussie ; HTTP 308 vers HTTPS pour ces chemins ; gestion automatique TLS activée",
+        "remaining": "Aucun renouvellement effectif observé ou provoqué. État TLS capturé et récupéré intègre via le snapshot 03aca082 ; reboot réel confirmé, séries/empreintes inchangées, HTTPS 200 et redirections 308 conservés. Pas de remise en service d'un proxy restauré sur autre machine. GET frontend consigné sur /login, pas sur la racine"
+      },
       "legacy_id": "TC-INT-88-01"
     },
     {
@@ -178,7 +193,12 @@
         "origines": "Domaines/client/proxy cohérents ; aucun hostname historique forcé ou wildcard CORS de production",
         "donnees_validation_disponibles": "true"
       },
-      "actual_result": null,
+      "actual_result": {
+        "status": "passed_functional_operator_report",
+        "evidence": "notes/backend/sprint7.6/INT-111-deploiement-vps.md, section 10",
+        "observed": "L'opérateur confirme le test de bout en bout réussi après demande de recette navigateur login, dashboard et upload/récupération photo ; améliorations frontend mineures signalées sans détail",
+        "limits": "Confirmation opérateur, pas de rejeu agent ni capture réseau fournie ; codes HTTP authentifiés non consignés et politique CORS non revue indépendamment"
+      },
       "legacy_id": "TC-INT-89-01"
     },
     {
@@ -234,7 +254,14 @@
         "cible_vs_preuve": "Cible, configuration, commandes effectuées et résultats réellement observés distingués",
         "diff_tunnel_vs_letsencrypt": "true"
       },
-      "actual_result": null,
+      "actual_result": {
+        "status": "passed_documentation",
+        "evidence": "notes/backend/deploy/vps/README.md, 04-transition-caddy.md, 05-tervo-release-et-exploitation.md, journal INT-111 sections 1-23, deploy/cours/README.md et chapitres 01-06",
+        "prerequis": "Comptes, clés, fichiers privés, modes SQL/.env et ordre de lecture sont décrits ; la différence mini-s1/VPS est tabulée et le trajet public est schématisé en Mermaid dans le guide Caddy.",
+        "commandes": "Chaque commande indique la machine, les droits, le résultat attendu et la conduite en cas d'écart ; les sorties réellement transmises sont distinguées des exemples.",
+        "erreurs": "Échec SQL 10-app.sql (permissions), faux positif 'Nouveau démarrage', blocage du cache Docker mini-s1 avec recette VPS en remplacement, et nettoyage ciblé sont documentés avec leurs limites.",
+        "limits": "Aucune commande de la révision documentaire n'a été rejouée ; la procédure n'est pas un script de réinstallation et ne remplace pas la lecture du journal pour les preuves."
+      },
       "legacy_id": "TC-INT-90-01"
     },
     {
@@ -298,13 +325,33 @@
       "actual_result": {
         "status": "passed_local_docker_restic",
         "snapshot": "6fd18829bd6edc6240d15891396e7fce8c279261",
-        "destination": "Mini-s1 explicitement autorisé par l'utilisateur ; dépôt de test local temporaire seulement, aucun transfert réel.",
+        "destination": "Recette initiale : dépôt local temporaire. Suite INT-111 : véritable copie chiffrée sur mini-s1, snapshot 03aca082, récupération de l'archive puis contrôle SQL/photos sur le VPS en cible isolée.",
         "backup": "pg_dump custom, archive uploads read-only et bundle tar/SHA256SUMS ; reprise backend avant publication. Restic 0.19.1 réel : sauvegarde, check --read-data, restitution et rétention sur dépôt fictif réussis ; mauvaise clé refusée.",
         "restore": "Second PostgreSQL UUID : relations, photo, PDF BYTEA/hash/taille/dates identiques ; source de recette préservée et ressources UUID nettoyées.",
         "config": "Env privé et fixtures offline Caddy/Dockge restitués byte-identiques. Le login d'un Dockge restauré et des certificats réels ne sont pas validés.",
         "tests": "14 tests snapshot/production_config réussis ; SSH et contrôle des services hôte simulés. Pas de suite backend complète revendiquée.",
-        "remaining": "INT-111 : accès/clé SSH et privilèges fixes, coupure approuvée, installation/timer, vraie copie hors VPS et restauration des paramètres réels. INT-129 : intégration du verrou partagé. TD-B010/022 restent ouverts pour opérations/mesures réelles.",
-        "evidence": "notes/backend/sprint7.6/INT-128-sauvegarde-restauration.md"
+        "remaining": "Arbitrage démo validé : sauvegardes manuelles, aucun timer ni élargissement SSH. TD-B024 reporte l'automatisation vers un stockage externe permanent, bloquant avant clientèle réelle. Reconstruction complète Caddy/Dockge et clone HTTP depuis les paramètres réels non exécutés ; rétention automatique non activée. TD-B010 reste ouvert pour le remplacement local non effectué ; TD-B022 reste ouvert faute de PDF positif réel et de mesure représentative.",
+        "evidence": "notes/backend/sprint7.6/INT-128-sauvegarde-restauration.md",
+        "vps_manual": {
+          "status": "passed_sql_and_photo_recovery",
+          "snapshot": "03aca082",
+          "archive_sha256": "f833b896eab77eb17e235d9b7b83b7516bd911bca7be6002092c9465ee144d7b",
+          "offsite": "SFTP réel vers mini-s1, SHA-256 conforme, dépôt restic 4f50c482, check --read-data sans erreur ; archive récupérée depuis ce snapshot, neuf checksums conformes.",
+          "restore": "Sur VPS 22565, cible neuve tervo-restore-vps-8fc7aaf9-18f7-48b7-8cb9-f4450b4bfec6, base tervo_restore, volume UUID distinct, réseau none, ports vides, mémoire 128 MiB ; cible arrêtée à la fin.",
+          "counts": {
+            "users": 1,
+            "clients": 2,
+            "sites": 2,
+            "equipment": 0,
+            "interventions": 3,
+            "photos": 2
+          },
+          "relations": "Client 2 → site 2 → intervention 2/photo 1 et intervention 3/photo 2.",
+          "photos": "Deux SHA-256 d'originaux identiques à ceux de la génération source ; miniatures présentes et non vides. Originaux source également récupérés en HTTPS par l'agent avec les mêmes empreintes.",
+          "config": "Env et archives Caddy/Dockge récupérés avec checksums conformes ; aucun secret affiché.",
+          "limits": "Petit jeu de recette. Pas de PDF positif contrôlé sur cette capture réelle, pas de clone HTTP ni remise en service des paramètres proxy/console. Tentative mini-s1 bloquée par des permissions de couches Docker ; nettoyage ciblé autorisé effectué, pas de réparation globale du cache. La cible de restauration et ses volumes ont ensuite été supprimés avec la stack de recette (section 23).",
+          "evidence": "notes/backend/sprint7.6/INT-111-deploiement-vps.md, sections 12 à 19"
+        }
       }
     },
     {
@@ -632,8 +679,8 @@
         "config_comparison": "Différences identifiées par les sorties utilisateur : services.postgres.volumes[1].bind.create_host_path et volumes[2].bind.create_host_path présents seulement côté CLI. Le Compose source impose false pour les deux fichiers SQL. Aucun autre champ divergent signalé ; l'omission JSON est qualifiée par la sonde bind_behavior, pas par une supposition sur la valeur par défaut.",
         "bind_behavior": "Sortie utilisateur : sonde isolée int129-bind-a732f9e4dd02 utilisant include et l'image frontend A déjà présente, aucun port/réseau applicatif ni téléchargement. Compose exécuté dans Dockge refuse le bind source absent avec code 1 et bind source path does not exist ; assertion source non créée passée. Fichiers de sonde nettoyés, aucune ressource résiduelle à supprimer selon Compose. Omission JSON qualifiée sur cette version installée uniquement.",
         "ui_gate": "Sorties utilisateur : PASS modèles équivalents après rétablissement en mémoire des deux false SQL seulement, sans écraser true ni modifier les fichiers. Logs consultés, Stop UI : frontend/backend/postgres code 0 et arrêt PostgreSQL propre ; Start UI : ready to accept connections et API 200. Trois services healthy, même projet, images A exactes ; label config_files sur /opt/stacks/int129-vps-33c350b23010/compose.yaml pour les trois. Readiness ready, marqueur A, upload et client count=1 conservés ; bloc Git/root .env terminé sans erreur.",
-        "cleanup": "L'utilisateur déclare avoir exécuté le bloc final, puis confirme Dockge actif/vert et le résultat attendu du contrôle Caddy (active, INT-131 bootstrap OK, HTTP 200). Sorties détaillées de suppression des ressources, tags et archivage non consignées ; clôture sur déclaration opérateur, pas sur un contrôle indépendant de l'agent.",
-        "missing": "Capture complète du nettoyage non fournie, limite de traçabilité documentée sans résultat inventé. Aucun nouveau test fonctionnel requis ; compatibilité qualifiée pour la version épinglée, à requalifier si les versions/layout changent."
+        "cleanup": "L'utilisateur déclare avoir exécuté le bloc final, puis confirme Dockge actif/vert et le résultat attendu du contrôle Caddy (active, INT-131 bootstrap OK, HTTP 200). Sorties détaillées de suppression des ressources, tags et archivage non consignées ; clôture sur déclaration opérateur, pas sur un contrôle indépendant de l'agent. Le retrait effectif de la stack de recette, de ses volumes/réseaux et de la cible de restauration a ensuite été prouvé par la sortie de la section 23 du journal INT-111 (24 octobre 2026).",
+        "missing": "Capture complète du nettoyage déclaré d'INT-129 non fournie, limite de traçabilité documentée sans résultat inventé ; le retrait réel est établi plus tard par la sortie INT-111. Aucun nouveau test fonctionnel requis ; compatibilité qualifiée pour la version épinglée, à requalifier si les versions/layout changent."
       }
     }
   ]

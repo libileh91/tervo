@@ -1,7 +1,11 @@
 # 02 — Préparer les mises à jour et la sécurité système
 
 **Historique de préparation.** Pour reprendre le VPS aujourd'hui, utiliser
-[le guide actuel](04-transition-caddy.md), pas cette chronologie.
+[le parcours actuel](05-tervo-release-et-exploitation.md), pas cette chronologie.
+Chronologie close : les activations UFW et redémarrages ci-dessous ne sont
+pas une checklist à réexécuter. Toute nouvelle opération réseau exige un
+accès de secours et un test SSH ; tout reboot demande une fenêtre autorisée.
+Les mises à jour automatiques décrites ici ne sont pas des sauvegardes.
 
 > **État :** mise à jour effectuée par l'utilisateur et contrôlée à distance ;
 > redémarrage contrôlé, nouveau noyau actif. UFW actif et secours annulé ;

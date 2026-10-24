@@ -12,7 +12,12 @@
 
 ---
 
-## Architecture finale
+## Architecture finale de l'ancienne recette mini-s1
+
+Ce schéma explique l'installation historique, pas le trajet VPS actuel.
+Cloudflare Tunnel (accès web), Cloudflare DNS et Email Routing (transfert
+d'emails) sont trois fonctions différentes. Le VPS utilise Caddy, sans tunnel
+web ; son état de publication est suivi dans le [parcours actuel](vps/README.md).
 
 ```
 internaute
@@ -266,7 +271,12 @@ try_files $uri $uri/ /index.html;      ← OK (les single quotes protegent deja 
 
 ---
 
-## Procedure de deploiement (resume)
+## Ancienne procédure mini-s1 — ne pas rejouer
+
+Ce bloc conserve l'ordre employé à l'époque, **pas une recette de production
+actuelle**. Le seed peut supprimer des données ; `CREATE DATABASE` n'est pas
+idempotent et ces anciennes commandes n'utilisent pas l'env explicite actuel.
+Pour le VPS, utiliser le [parcours release](vps/05-tervo-release-et-exploitation.md).
 
 ```bash
 # 1. Build frontend
@@ -306,6 +316,10 @@ curl -s -X POST -w "%{http_code}" https://api.tervoapp.com/api/v1/auth/login \
 
 ### Gestion du tunnel
 
+Exemples historiques, pas une séquence à coller. Les commandes de suppression
+ci-dessous nécessitent de confirmer le tunnel concerné et l'absence de trafic
+utile ; elles ne font pas partie de l'entretien du VPS.
+
 ```bash
 # Lister les tunnels existants
 cloudflared tunnel list
@@ -319,9 +333,9 @@ cloudflared tunnel info tervo
 cloudflared tunnel delete tervo
 # Utile pour : nettoyer un tunnel de test avant d'en creer un nouveau
 
-# Nettoyer les DNS d'un tunnel (avant de supprimer)
+# Nettoyer les connexions persistantes d'un tunnel
 cloudflared tunnel cleanup tervo
-# Utile pour : supprimer les enregistrements DNS CNAME crees par le tunnel
+# Ne supprime pas les enregistrements DNS CNAME : les examiner séparément.
 ```
 
 ### Gestion du service
@@ -369,6 +383,10 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:8000      # backend (404
 
 ### Autres usages possibles de cloudflared
 
+Les exemples ci-dessous appartiennent au mini-s1. Une mise à jour du binaire
+demande un choix de version, un moyen de retour et une validation du tunnel ;
+ce n'est pas une commande à lancer pendant la mise en service Caddy.
+
 | Usage                                 | Commande                                              | Description                                                                                                                                          |
 | ------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Tunnel rapide sans installation**   | `cloudflared tunnel --url http://localhost:3000`      | Cree un tunnel temporaire (pas de fichier config, pas de service). Utile pour montrer un projet en dev ou faire une demo sans deploiement permanent. |
@@ -409,7 +427,10 @@ Pas besoin de recreer le tunnel, juste un restart.
 
 ---
 
-## Acces
+## Accès observés dans l'ancienne recette
+
+Ces URLs et comptes de démonstration ne prouvent pas la disponibilité publique
+actuelle et ne doivent pas servir à se connecter à la nouvelle base VPS.
 
 | Point d'acces      | URL                          |
 | ------------------ | ---------------------------- |

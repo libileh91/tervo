@@ -222,11 +222,15 @@ cette limite pour la capture et les opérations effectivement décrites.
 
 ## Ce qui reste hors preuve
 
-- Aucun déploiement public INT-111, DNS/HTTPS Tervo, navigateur métier complet
-  ou nouvel administrateur production bootstrapé.
+- À la clôture d'INT-129 : aucun déploiement public INT-111, DNS/HTTPS Tervo,
+  navigateur métier complet ou nouvel administrateur production bootstrapé.
+  INT-111 a depuis publié HTTPS et la recette navigateur ; ses preuves propres
+  sont dans [son journal](../../INT-111-deploiement-vps.md).
 - Aucune nouvelle exécution de CI/CD INT-130 ni publication GHCR.
-- Pas de transfert réel de backup vers mini-s1, de timer activé ou de
-  restauration des paramètres/services hôte réels.
+- Pour INT-129 : pas de transfert réel de backup vers mini-s1, de timer activé
+  ou de restauration des paramètres/services hôte réels. Depuis, INT-111 a
+  réalisé une copie chiffrée sur mini-s1 (`03aca082`) et une récupération SQL/
+  photos isolée ; la reconstruction complète des services hôte reste non exécutée.
 - `--recover-from` non exercé : hors parcours validé.
 - Pas de démonstration de reprise après SIGKILL, perte de courant/disque, ni
   mesure sur un volume représentatif de vingt ans de données.

@@ -62,6 +62,20 @@ flowchart TD
 
 Source : [deploy](../scripts/release.py#L160).
 
+Pour lire les commandes natives sans commencer par le helper Python :
+
+| Étape | Commande / référence expliquée |
+|---|---|
+| Valider le modèle | `docker compose … config --quiet`, [cours 02](02-images-conteneurs-compose.md) |
+| Construire et démarrer | `build`, `create`, `up --wait`, `stop`, [cours 02](02-images-conteneurs-compose.md) |
+| Faire évoluer la DB | `run … migrate`, puis `exec … psql -f …`, [cours 04](04-postgresql-migrations-sauvegardes.md) |
+| Vérifier HTTP et les ports | `curl`, `ss`, `docker ps`, [guide opérateur](../../notes/backend/deploy/vps/05-tervo-release-et-exploitation.md) |
+
+Les `…` de ce tableau sont des repères de lecture, pas des commandes à coller :
+les liens donnent les lignes complètes, leurs préconditions et leurs retours.
+Le helper ajoute l'ordre, le verrou, la conservation des images et les records
+à ces outils natifs ; il ne remplace pas leur compréhension.
+
 ### Avant le build
 
 Le helper prend un verrou non bloquant. Il valide l'env et compare les
@@ -160,6 +174,12 @@ Les formes exactes utilisées et leurs sorties sont dans
 | `ID/before-migration.tar` | Capture préalable d'une installation existante | Pas une copie hors site ni une garantie de restauration |
 | `ID/failed.json` | Identifie le candidat échoué et l'état connu | Ce candidat n'est pas une release réussie |
 
+**Limite observée en INT-111 :** tous les échecs ne créent pas `failed.json`.
+Le démarrage PostgreSQL se trouve avant le bloc qui écrit ce record d'échec.
+Un arrêt à ce stade peut donc laisser un dossier de tentative, des tags de
+secours et un volume, sans `current.json` ni `failed.json`. L'absence de record
+n'autorise ni à déclarer la cible vide ni à supprimer ses données.
+
 Les écritures JSON passent par un fichier temporaire privé puis un remplacement
 du fichier cible. Cela évite une publication ordinaire partielle du JSON,
 mais ne transforme pas toute l'opération Docker/DB en transaction unique.
@@ -183,6 +203,19 @@ Cette sortie a été réellement observée après réconciliation.
 L'idempotence n'est pas « ignorer tout ce qui a changé » : une dérive des
 images ou du schéma doit au contraire conduire à un refus/diagnostic.
 Le helper peut encore demander le démarrage des services et vérifier HTTP.
+
+### Première installation échouée ≠ rejeu d'une release réussie
+
+En INT-111, le premier essai a construit les images mais échoué sur la lecture
+du SQL d'initialisation. Aucun record de succès n'existait. Le volume créé
+aurait fait refuser une nouvelle « première release », même si PostgreSQL
+était devenu healthy. Il fallait diagnostiquer les logs et permissions, puis
+choisir une reprise explicite — pas considérer le helper comme une transaction
+annulant tout ou utiliser `--recover-from` sans record compatible.
+
+La reprise du projet neuf a réussi, puis l'admin a été créé. **Ces données
+doivent maintenant être conservées.** Les détails et limites de cette preuve
+sont dans le [journal INT-111](../../notes/backend/sprint7.6/INT-111-deploiement-vps.md).
 
 ## 7. Rollback applicatif et compatibilité de la base
 
@@ -279,6 +312,10 @@ réconciliation est une action explicite, documentée et vérifiée.
 
 Une CI peut vérifier les tests et les builds. Une CD peut déclencher la
 commande de release déjà validée. Ce sont deux sujets distincts.
+Exemple concret : la [CI de `291f7ea`](https://github.com/libileh91/tervo/actions/runs/39025284922)
+a terminé avec succès ; la release VPS a été lancée manuellement par
+l'opérateur, et le premier essai a pourtant échoué sur les permissions SQL.
+La CI ne contrôlait pas les modes des fichiers du checkout sur le VPS.
 
 Le choix du projet est de construire sur le VPS pour la release concernée,
 sans introduire GHCR dans ce périmètre. La future automatisation INT-130
@@ -294,6 +331,11 @@ Mais elle n'est pas livrée par la recette INT-129 :
 
 Les preuves HTTP de recette ne remplacent pas DNS/TLS public, bootstrap
 admin, login métier et parcours navigateur complet.
+Pour INT-111, publication HTTPS et recette navigateur sont désormais confirmées.
+Le backup manuel hors VPS, la récupération SQL/photos et le retour après reboot
+sont aussi validés ; le nettoyage ciblé des ressources de recette a été exécuté
+et ses sorties consignées dans le journal INT-111. Le lot accepté est une démo,
+avec automatisation des sauvegardes reportée avant clientèle réelle.
 
 ## 11. Présenter le travail à l'entretien
 

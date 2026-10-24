@@ -167,6 +167,26 @@ du serveur DB. La création de `tervo_app` avait échoué. Le fichier secret
 doit être privé ; un fichier SQL non secret monté en lecture doit rester
 lisible par le processus qui le consomme.
 
+### Ce que l'incident INT-111 ajoute à cette règle
+
+Un `git clone` sous `umask 077` restreint aussi les permissions des nouveaux
+fichiers. Git distingue principalement le caractère exécutable d'un fichier ;
+un checkout « propre » ne prouve donc pas que ses permissions Unix conviennent
+aux processus qui le lisent. Le build Docker effectué par un acteur privilégié
+peut réussir alors que PostgreSQL ne peut pas lire un SQL monté.
+
+Dans INT-111, le log a montré `10-app.sql: Permission denied`. La correction
+ciblait les deux SQL non secrets en `644`, pas le `.env`. Leurs modes exacts
+avant correction n'ont pas été retranscrits : ne pas inventer une capture `stat`.
+
+Pour comprendre le masque, un fichier ordinaire demandé en `666` devient
+généralement `600` sous `077`, ou `644` sous `022`. Un dossier demandé en
+`777` devient `700` ou `755`. **Le masque retire des droits, il n'en ajoute pas.**
+Sur une future préparation neuve : `022` pour les sources non secrètes,
+`077` avant de créer les secrets ; le fichier `.env` reste explicitement privé.
+La commande `stat` applicable à la stack est dans le
+[guide opérateur](../../notes/backend/deploy/vps/05-tervo-release-et-exploitation.md).
+
 ## 5. Comprendre les blocs shell utilisés dans la recette
 
 Un petit exemple **pédagogique, sans accès au VPS** :
@@ -196,6 +216,16 @@ Attendu illustratif : `Cible : recette`, code 0.
 `set -e` n'est pas un mécanisme de rollback : si une commande a déjà créé
 un fichier, l'arrêt du bloc ne le supprime pas. C'est pourquoi on évitait
 de relancer aveuglément un bloc interrompu.
+
+Il faut aussi regarder **quel shell** s'arrête. Saisi directement dans le
+shell root obtenu par `sudo -i`, `set -e` peut faire sortir de root après
+une erreur et afficher le prompt `tervo`. Ce retour ne signifie pas que les
+commandes précédentes ont été exécutées sans droits root. Le sous-shell
+`( … )` du bloc pédagogique isole l'arrêt sans fermer le shell parent.
+
+Enfin, `ls chemin 2>/dev/null || echo absent` est trompeur : « Permission
+denied » et « fichier absent » deviennent le même message. Garder stderr
+visible lors d'un diagnostic, puis distinguer absence et droits insuffisants.
 
 Un heredoc cité `<<'SQL'` transmet un texte sans substitutions shell.
 Un heredoc non cité `<<EOF` remplace les variables : c'était voulu pour
