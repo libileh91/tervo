@@ -1,8 +1,8 @@
-# Tervo — Intégration continue ; déploiement différé à INT-129/130
+# Tervo — Intégration continue et release VPS (INT-130)
 #
 # Principe : UN SEUL BUILD.
 #   - GitHub Actions : vérifie (tests backend + build frontend)
-#   - Le VPS : construit et démarre les images
+#   - Le VPS : construit et démarre les images, via deploy/scripts/release.py
 #
 # Pourquoi ne pas builder dans GitHub Actions ET sur le VPS ?
 #   Les images construites dans la CI ne seraient pas réutilisées (aucun
@@ -11,9 +11,10 @@
 # Évolution possible (non implémentée) :
 #   CI → build → push GHCR → VPS → docker compose pull → up -d
 #
-# Aucun job de déploiement avant INT-129/130. Le script historique (up avant
-# migration, env implicite, prune) est retiré, pas seulement commenté.
-# INT-130 réintroduira le job après la release sûre et recette INT-111.
+# Le job deploy est désactivé par défaut : il ne s'exécute que si la variable
+# de dépôt DEPLOY_ENABLED vaut 'true'. Il appelle la commande de release
+# INT-129 sur le VPS via une identité SSH dédiée ; aucun second chemin de
+# déploiement n'est introduit. Voir notes/backend/sprint7.6/INT-130-ci-cd.md.
 #
 # Optimisations (20/09/2026) :
 #   1. paths-ignore  — un changement purement documentaire (docs/, notes/,
@@ -167,3 +168,48 @@ jobs:
         env:
           VITE_API_BASE_URL: https://api.example.invalid/api/v1
         run: bun run build
+
+  # ── Déploiement : release VPS (INT-130) ────────────────
+  deploy:
+    name: Deploy — release VPS
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-build]
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      vars.DEPLOY_ENABLED == 'true'
+    environment: production
+    permissions:
+      contents: read
+    timeout-minutes: 20
+    steps:
+      - name: Vérifier l'identité SSH et l'empreinte du serveur
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_HOST_FINGERPRINT: ${{ vars.DEPLOY_HOST_FINGERPRINT }}
+        run: |
+          set -eu
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          test "$(wc -l < "$HOME/.ssh/known_hosts")" -eq 1
+          test "$(ssh-keygen -lf "$HOME/.ssh/known_hosts" | awk '{print $2}')" = "$DEPLOY_HOST_FINGERPRINT"
+          echo "Empreinte SSH vérifiée ; release du commit poussé."
+
+      - name: Lancer la release du commit poussé
+        env:
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+        run: |
+          set -eu
+          test -n "$DEPLOY_HOST"
+          test -n "$DEPLOY_USER"
+          # La commande distante est forcée par authorized_keys ; stdin porte
+          # le SHA attendu. Aucun secret n'est interpolé dans une commande.
+          printf '%s\n' "$GITHUB_SHA" | ssh -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o ConnectTimeout=15 \
+            -i "$HOME/.ssh/id_ed25519" "$DEPLOY_USER@$DEPLOY_HOST" \
+            'sudo -n /usr/local/sbin/tervo-ci-release'
